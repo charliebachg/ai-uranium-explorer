@@ -1,0 +1,740 @@
+import { z } from "zod";
+
+/**
+ * The data contract for everything under web/public/data. The pipeline's export_web.py writes these shapes and
+ * `npm run validate:data` checks them before the app ever loads them.
+ *
+ * Rule 1: no bare numbers. Every numeric value shown to a user is a ValueId pointing at a Val record, except
+ * geometry coordinates, page boxes, array indices and the datum-grid arrays.
+ * Rule 2: the browser does no evidential maths. Offsets, shifts, misread positions, feet-to-metre geometry,
+ * counts and metrics all arrive from the pipeline as Vals.
+ */
+
+export const SCHEMA_VERSION = "1.0.0";
+
+// ---------- identifiers ----------
+
+/**
+ * Namespaces: x extracted, d derived, p provincial lithology, s bulk source property, m manifest stat,
+ * e eval metric, c cell and coverage value, g datum grid node, h histogram bin. Report-scoped ids carry the
+ * file number as the second
+ * segment (x:64L04-0075:9f2c1a7b) so a deep link can lazy-load the report.
+ */
+export const ValueId = z
+  .string()
+  .regex(/^(x|d|p|s|m|e|c|g|h):[^\s]+$/, "value id must be namespaced, e.g. x:<file>:<hash>")
+  .brand<"ValueId">();
+export type ValueId = z.infer<typeof ValueId>;
+
+export const BBox = z
+  .tuple([z.number(), z.number(), z.number(), z.number()])
+  .refine(
+    ([x0, y0, x1, y1]) => x0 >= 0 && y0 >= 0 && x1 <= 1 && y1 <= 1 && x1 >= x0 && y1 >= y0,
+    "bbox is normalised [x0,y0,x1,y1] on the upright page image",
+  );
+export type BBox = z.infer<typeof BBox>;
+
+export const LonLat = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
+export type LonLat = z.infer<typeof LonLat>;
+
+export const Status = z.enum(["pass", "flag", "miss", "corrected"]);
+export type Status = z.infer<typeof Status>;
+
+// ---------- values ----------
+
+export const ValidatorOutcome = z.object({
+  id: z.string(),
+  outcome: z.enum(["pass", "flag", "fail", "na"]),
+  severity: z.enum(["info", "warn", "error"]).optional(),
+  class_a: z.boolean().optional(),
+  message: z.string().optional(),
+});
+export type ValidatorOutcome = z.infer<typeof ValidatorOutcome>;
+
+export const Lineage = z.object({
+  file_num: z.string(),
+  file_sha256: z.string().length(64),
+  page: z.number().int().min(1),
+  bbox: BBox.nullable(),
+  quote: z.string(),
+  quote_located: z.boolean(),
+  unit_source: z
+    .enum(["cell", "column_header", "table_title", "page_note", "prev_page_header", "not_printed"])
+    .optional(),
+  model: z.string(),
+  prompt_version: z.string(),
+  run_id: z.string(),
+  extracted_at: z.string(),
+  validators: z.array(ValidatorOutcome),
+});
+export type Lineage = z.infer<typeof Lineage>;
+
+export const Derivation = z.object({
+  op: z.string(), // e.g. ft_to_m, identity, geodesic_offset, ntv2_shift, count, recall, clopper_pearson_upper95
+  inputs: z.array(ValueId),
+  tool: z.string(), // e.g. "pyproj 3.8.0 / PROJ 9.8.1", "legacy_reader 0.1.0"
+  params: z.record(z.string(), z.unknown()).optional(),
+});
+
+export const SourceRef = z.object({
+  dataset: z.enum(["compilation", "geods", "geods_lith", "file_index", "deposits", "assessment_info"]),
+  record_id: z.union([z.string(), z.number()]),
+  field: z.string(),
+  retrieved_at: z.string(),
+});
+
+export const Fmt = z.enum(["int", "year", "m1", "m2", "deg1", "deg5", "pct1", "ratio3", "text"]);
+export type Fmt = z.infer<typeof Fmt>;
+
+export const Val = z
+  .object({
+    id: ValueId,
+    kind: z.enum(["extracted", "derived", "source", "stat", "metric"]),
+    as_printed: z.string().nullable(), // exact printed tokens; extracted values display this
+    value: z.union([z.number(), z.string()]).nullable(), // parsed, in the printed unit, never converted
+    unit_as_printed: z.string().nullable(),
+    fmt: Fmt.optional(), // formatter for non-extracted kinds
+    unit: z.string().optional(), // display unit for non-extracted kinds (m, %, deg)
+    status: Status.optional(),
+    lineage: Lineage.optional(),
+    derivation: Derivation.optional(),
+    source: SourceRef.optional(),
+    note: z.string().optional(),
+  })
+  .superRefine((v, ctx) => {
+    if (v.kind === "extracted" && !v.lineage)
+      ctx.addIssue({ code: "custom", message: `extracted value ${v.id} has no lineage` });
+    if (v.kind === "derived" && !v.derivation)
+      ctx.addIssue({ code: "custom", message: `derived value ${v.id} has no derivation` });
+    if (v.kind === "source" && !v.source)
+      ctx.addIssue({ code: "custom", message: `source value ${v.id} has no source reference` });
+    if (v.kind !== "extracted" && !v.fmt)
+      ctx.addIssue({ code: "custom", message: `${v.kind} value ${v.id} needs fmt` });
+  });
+export type Val = z.infer<typeof Val>;
+
+export const ValRegistry = z.record(z.string(), Val).superRefine((reg, ctx) => {
+  for (const [k, v] of Object.entries(reg)) {
+    if (k !== v.id) ctx.addIssue({ code: "custom", message: `registry key ${k} != value id ${v.id}` });
+  }
+});
+export type ValRegistry = z.infer<typeof ValRegistry>;
+
+// ---------- manifest ----------
+
+export const DataSource = z.object({
+  id: z.string(),
+  title: z.string(),
+  publisher: z.string(),
+  licence: z.string(),
+  licence_url: z.string().url().optional(),
+  attribution_html: z.string(),
+  url: z.string().url(),
+  retrieved_at: z.string(),
+  redistributable: z.boolean(),
+});
+export type DataSource = z.infer<typeof DataSource>;
+
+export const Artifact = z.object({
+  path: z.string(),
+  bytes: z.number().int().nonnegative(),
+  sha256: z.string().length(64),
+  count: z.number().int().nonnegative().optional(),
+});
+
+export const Manifest = z.object({
+  schema_version: z.literal(SCHEMA_VERSION),
+  build: z.object({
+    id: z.string(),
+    created_at: z.string(),
+    pipeline_version: z.string(),
+    page_images: z.boolean(),
+    public_safe: z.boolean(),
+    fixture: z.boolean(),
+  }),
+  bbox: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+  stats: ValRegistry, // m:compilation_collars, m:uranium_files, m:files_read, ...
+  ref_points: z.array(z.object({ label: z.string(), lonlat: LonLat, shift_m: ValueId })),
+  sources: z.array(DataSource),
+  dictionaries: z.object({ companies: z.array(z.string()) }),
+  artifacts: z.record(z.string(), Artifact),
+});
+export type Manifest = z.infer<typeof Manifest>;
+
+// ---------- datum grid (raw arrays allowed: instrument data for the lens, not shown as numbers) ----------
+
+export const DatumGrid = z
+  .object({
+    from: z.literal("EPSG:4267"),
+    to: z.literal("EPSG:4269"),
+    operation: z.string(),
+    operation_code: z.string(),
+    grid_file: z.string(),
+    grid_sha256: z.string().length(64),
+    proj_version: z.string(),
+    pyproj_version: z.string(),
+    accuracy_m: z.number(),
+    lat0: z.number(),
+    lon0: z.number(),
+    dlat: z.number().positive(),
+    dlon: z.number().positive(),
+    nlat: z.number().int().positive(),
+    nlon: z.number().int().positive(),
+    order: z.string(),
+    de_m: z.array(z.number()),
+    dn_m: z.array(z.number()),
+    stats: z.object({ min_m: z.number(), max_m: z.number(), mean_m: z.number() }),
+    checks: z.array(
+      z.object({
+        label: z.string(),
+        lon: z.number(),
+        lat: z.number(),
+        shift_m: z.number(),
+        computed_m: z.number(),
+        bearing_deg: z.number(),
+      }),
+    ),
+    computed_at: z.string(),
+  })
+  .refine(
+    (g) => g.de_m.length === g.nlat * g.nlon && g.dn_m.length === g.nlat * g.nlon,
+    "grid size mismatch",
+  );
+export type DatumGrid = z.infer<typeof DatumGrid>;
+
+// ---------- bulk layers (GeoJSON by URL; properties validated on a sample) ----------
+
+export const CompilationProps = z.object({
+  n: z.string(), // DRILLHOLE_NAME
+  co: z.number().int().optional(), // index into manifest.dictionaries.companies
+  y: z.number().int().optional(), // year drilled
+  az: z.number().optional(),
+  dip: z.number().optional(),
+  len: z.number().optional(),
+  u: z.union([z.literal(0), z.literal(1)]), // uranium tag
+  rd: z.union([z.literal(0), z.literal(1)]), // belongs to one of the read files
+  src: z.string().optional(), // SOURCE (assessment file numbers)
+});
+export const GeodsProps = z.object({
+  n: z.string(),
+  af: z.string().optional(), // assessment file number
+  y: z.number().int().optional(),
+  td: z.number().optional(),
+  inc: z.number().optional(),
+  az: z.number().optional(),
+  dt: z.string().optional(), // UTM datum type as recorded
+  rd: z.union([z.literal(0), z.literal(1)]),
+});
+
+export const YearHistogram = z.object({
+  bins: z.array(z.object({ year: z.number().int(), cmp: ValueId, gds: ValueId })),
+  undated_cmp: ValueId,
+  undated_gds: ValueId,
+  values: ValRegistry,
+});
+export type YearHistogram = z.infer<typeof YearHistogram>;
+
+// ---------- reports ----------
+
+export const Era = z.enum(["1970s", "1980s-1990s", "2000s+"]);
+
+export const HoleStub = z.object({
+  hole_id: z.string(),
+  name: z.string(),
+  status: z.enum(["pass", "flag", "miss"]),
+  lonlat: LonLat.nullable(),
+  position_source: z.enum([
+    "extracted_transformed",
+    "extracted_nad83",
+    "provincial_geods",
+    "provincial_compilation",
+    "none",
+  ]),
+  datum_basis: z.enum(["printed", "none", "local_grid"]),
+  geods_id: z.number().int().optional(),
+  cmp_id: z.number().int().optional(),
+});
+
+export const ReportSummary = z.object({
+  file_num: z.string(),
+  company: z.string(),
+  property: z.string().optional(),
+  era: Era,
+  year: ValueId,
+  nts_sheets: z.array(z.string()),
+  page_count: ValueId,
+  scan_kind: z.enum(["scanned", "text", "mixed"]),
+  file_sha256: z.string().length(64),
+  source_url: z.string().url(),
+  split: z.enum(["dev", "heldout"]),
+  status_counts: z.object({ pass: ValueId, flag: ValueId, miss: ValueId }),
+  footprint: z.object({ type: z.literal("Polygon"), coordinates: z.array(z.array(LonLat)) }),
+  centroid: LonLat,
+  holes: z.array(HoleStub),
+});
+export type ReportSummary = z.infer<typeof ReportSummary>;
+
+export const ReportIndex = z.object({ reports: z.array(ReportSummary), values: ValRegistry });
+export type ReportIndex = z.infer<typeof ReportIndex>;
+
+export const Match = z.object({
+  dataset: z.enum(["geods", "compilation"]),
+  feature_id: z.number().int(),
+  lonlat: LonLat,
+  offset_m: ValueId,
+  bearing_deg: ValueId,
+  name_match: z.enum(["exact", "normalised", "fuzzy", "nearest"]),
+  datum_shift_signature: z.boolean(),
+  adjudication: z.enum(["none", "needed", "done"]),
+});
+
+export const Interval = z.object({
+  id: z.string(),
+  from: ValueId,
+  to: ValueId,
+  from_m: ValueId, // derived: ft_to_m or identity
+  to_m: ValueId,
+  code: ValueId.nullable(),
+  description: ValueId.nullable(),
+  table_id: z.string().nullable(),
+  row: z.number().int().nullable(),
+  status: z.enum(["pass", "flag", "miss"]),
+  depth_unit_as_printed: z.string().nullable(),
+});
+export type Interval = z.infer<typeof Interval>;
+
+export const AssayInterval = Interval.omit({ code: true, description: true }).extend({
+  sample_id: ValueId.nullable(),
+  grades: z.array(
+    z.object({
+      value: ValueId,
+      analyte_as_printed: z.string().nullable(),
+      species: z.enum(["U", "U3O8", "eU", "eU3O8", "other", "not_printed"]),
+      basis: z.enum(["chemical", "probe_equivalent", "not_printed"]),
+      method_as_printed: z.string().nullable(),
+    }),
+  ),
+});
+export type AssayInterval = z.infer<typeof AssayInterval>;
+
+export const Transform = z.object({
+  name: z.string(),
+  code: z.string(),
+  pipeline: z.string(),
+  grid_file: z.string().nullable(),
+  grid_sha256: z.string().nullable(),
+  from: z.string(),
+  to: z.string(),
+  shift_m: ValueId,
+  bearing_deg: ValueId,
+  accuracy_m: z.number(),
+});
+
+export const Hole = z.object({
+  hole_id: z.string(),
+  name: ValueId,
+  status: z.enum(["pass", "flag", "miss"]),
+  collar: z.object({
+    coord_kind: z.enum(["utm", "geographic", "local_grid", "not_printed"]),
+    easting: ValueId.nullable(),
+    northing: ValueId.nullable(),
+    lat: ValueId.nullable(),
+    lon: ValueId.nullable(),
+    grid_x: ValueId.nullable(),
+    grid_y: ValueId.nullable(),
+    utm_zone: ValueId.nullable(),
+    datum_printed: ValueId.nullable(), // null: the page states none
+    elevation: ValueId.nullable(),
+    azimuth: ValueId.nullable(),
+    dip: ValueId.nullable(),
+    total_depth: ValueId.nullable(),
+  }),
+  position: z
+    .object({
+      lonlat: LonLat,
+      source: z.enum([
+        "extracted_transformed",
+        "extracted_nad83",
+        "provincial_geods",
+        "provincial_compilation",
+      ]),
+      lon: ValueId,
+      lat: ValueId,
+      transform: Transform.nullable(),
+      misread_lonlat: LonLat.nullable(), // printed NAD27 numbers read as NAD83 (pipeline-computed)
+      alt_lonlat: LonLat.nullable(), // no-datum case: the other candidate position
+    })
+    .nullable(),
+  matches: z.array(Match),
+  provincial_lith: z.array(Interval),
+  lith: z.array(Interval),
+  assays: z.array(AssayInterval),
+});
+export type Hole = z.infer<typeof Hole>;
+
+export const TableRef = z.object({
+  table_id: z.string(),
+  page: z.number().int().min(1),
+  bbox: BBox.nullable(),
+  kind: z.enum(["collar", "assay", "lith", "probe"]),
+  rows_stored: ValueId,
+  rows_printed: ValueId.nullable(),
+  continues_from: z.string().nullable(),
+});
+
+export const Report = z.object({
+  summary: ReportSummary,
+  values: ValRegistry,
+  tables: z.array(TableRef),
+  holes: z.array(Hole),
+});
+export type Report = z.infer<typeof Report>;
+
+export const PagesIndex = z.object({
+  file_num: z.string(),
+  pages: z.array(
+    z.object({
+      page: z.number().int().min(1),
+      width_px: z.number().int(),
+      height_px: z.number().int(),
+      kind: z.enum(["collar_table", "lith_log", "assay_table", "probe_log", "certificate", "other"]),
+      image: z.string().nullable(), // null in public-safe builds
+      thumb: z.string().nullable(),
+      n_values: z.number().int().nonnegative(),
+    }),
+  ),
+});
+export type PagesIndex = z.infer<typeof PagesIndex>;
+
+// ---------- eval ----------
+
+const FieldScore = z.object({
+  field: z.string(),
+  n_gold: ValueId,
+  tp: ValueId,
+  fn: ValueId,
+  fp: ValueId,
+  recall: ValueId,
+  precision: ValueId,
+  miss_value_ids: z.array(z.string()),
+});
+
+const SplitScore = z.object({
+  fields: z.array(FieldScore),
+  traps: z.array(z.object({ trap: z.string(), n_gold: ValueId, recovered: ValueId, recall: ValueId })),
+  class_a: z.object({ n: ValueId, misses: ValueId, rate: ValueId, upper95: ValueId, method: z.string() }),
+  coord: z.object({
+    n: ValueId,
+    median_m: ValueId,
+    p90_m: ValueId,
+    max_m: ValueId,
+    datum_stated_share: ValueId,
+    per_hole: z.array(z.object({ file_num: z.string(), hole_id: z.string(), offset_m: ValueId })),
+  }),
+  evidence_validity: z.object({ n: ValueId, share: ValueId }),
+  unbacked_numbers: ValueId,
+});
+
+export const Scorecard = z.object({
+  run_id: z.string(),
+  config_id: z.string(),
+  created_at: z.string(),
+  label_provenance: z.literal("model-assisted labels"),
+  labeller: z.string(),
+  values: ValRegistry,
+  gold: z.object({
+    files: ValueId,
+    tables: ValueId,
+    intervals: ValueId,
+    field_values: ValueId,
+    dev_files: ValueId,
+    heldout_files: ValueId,
+    blind_tables: ValueId,
+    prefill_edit: z.object({
+      n_prefilled: ValueId,
+      n_changed: ValueId,
+      n_rows_added: ValueId,
+      n_rows_deleted: ValueId,
+    }),
+    anchoring_gap: ValueId.nullable(),
+    agreement: z.array(z.object({ metric: z.string(), value: ValueId, n: ValueId })),
+  }),
+  splits: z.object({ dev: SplitScore.nullable(), heldout: SplitScore.nullable() }),
+  heldout_run_count: z.number().int().nonnegative(),
+});
+export type Scorecard = z.infer<typeof Scorecard>;
+
+export const FailureCard = z.object({
+  id: z.string(),
+  real: z.literal(true),
+  failure_class: z.string(),
+  file_num: z.string(),
+  page: z.number().int().min(1),
+  table_id: z.string(),
+  values: ValRegistry,
+  rows_printed: ValueId,
+  rows_stored: ValueId,
+  missing_rows: z.array(z.object({ bbox: BBox, quote: z.string().nullable() })),
+  why_uncaught: z.string(),
+  consequence: z.string(),
+  fix: z.string(),
+  before: z.object({ recall: ValueId, upper95: ValueId, n: ValueId, config_id: z.string() }),
+  after: z.object({ recall: ValueId, upper95: ValueId, n: ValueId, config_id: z.string() }),
+  still_unknown: z.string(),
+});
+export type FailureCard = z.infer<typeof FailureCard>;
+
+// ---------- run summary (statistics before any gold labels exist) ----------
+
+const StatRef = ValueId;
+
+export const RunSummary = z.object({
+  schema_version: z.literal("1.0.0"),
+  generated_at: z.string(),
+  pipeline_version: z.string(),
+  /** null until a gold set has been labelled and `lr score` has written a scorecard. */
+  gold: z.null(),
+  caveats: z.array(z.string()),
+  run: z.object({
+    models: z.array(z.string()),
+    run_ids: z.array(z.string()),
+    calls: StatRef,
+    pages_read: StatRef,
+    cost_usd: StatRef,
+    tokens_in: StatRef,
+    tokens_out: StatRef,
+    minutes: StatRef,
+  }),
+  coverage: z.object({ files_read: StatRef, pages_read: StatRef, tables: StatRef, holes: StatRef }),
+  reading: z.object({
+    printed_values: StatRef,
+    located: StatRef,
+    located_share: StatRef,
+    empty_cells: StatRef,
+    empty_cells_boxed: StatRef,
+    illegible: StatRef,
+    digit_exact: StatRef,
+    digit_confusable: StatRef,
+    digit_mismatch: StatRef,
+  }),
+  placement: z.object({ from_page: StatRef, from_provincial: StatRef, not_placed: StatRef }),
+  crosscheck: z.object({
+    matches: StatRef,
+    independent: StatRef,
+    median_offset_m: StatRef,
+    max_offset_m: StatRef,
+    datum_shift_signatures: StatRef,
+  }),
+  checks: z.array(
+    z.object({
+      id: z.string(),
+      title: z.string(),
+      severity: z.enum(["info", "warn", "error"]),
+      flags: StatRef,
+      class_a: StatRef,
+      examples: z.array(
+        z.object({
+          value_id: z.string(),
+          file_num: z.string(),
+          page: z.number().int().nullable(),
+          message: z.string(),
+        }),
+      ),
+    }),
+  ),
+  per_file: z.array(
+    z.object({ file_num: z.string(), values: StatRef, located: StatRef, holes: StatRef, tables: StatRef }),
+  ),
+  values: ValRegistry,
+  build_id: z.string(),
+});
+export type RunSummary = z.infer<typeof RunSummary>;
+
+// ---------- prospect: what the data can support, before anything is scored
+
+/**
+ * The readiness scorecard. It is deliberately not a score of ground: it reports how much of the basin each
+ * feature actually covers, what each source is and under which licence, and what does not exist at all.
+ */
+export const ProspectFeature = z.object({
+  feature_key: z.string(),
+  title: z.string(),
+  bears_on: z.string(),
+  is_effort: z.boolean(), // an exploration-effort feature: the null model's world, not geology
+  unit: z.string().nullable(),
+  thin: z.boolean(), // coverage at or below the threshold: cannot carry a basin-wide model on its own
+  coverage: StatRef,
+  covered_cells: StatRef,
+  median_obs: StatRef.nullable(),
+  median_value: StatRef.nullable(),
+  notes: z.string(),
+  sources: z.array(z.string()),
+});
+export type ProspectFeature = z.infer<typeof ProspectFeature>;
+
+export const ProspectSource = z.object({
+  key: z.string(),
+  title: z.string(),
+  role: z.enum(["feature", "label", "context"]),
+  bears_on: z.string(),
+  tier: z.enum(["native", "read", "derived"]),
+  access: z.enum(["arcgis_rest", "stac", "file", "internal"]),
+  url: z.string(),
+  licence: z.string(),
+  licence_url: z.string(),
+  redistributable: z.boolean(),
+  verified: z.boolean(),
+  verified_at: z.string(),
+  record_count: z.number().int().nullable(),
+  notes: z.string(),
+  caveats: z.array(z.string()),
+});
+export type ProspectSource = z.infer<typeof ProspectSource>;
+
+export const ProspectGap = z.object({
+  key: z.string(),
+  title: z.string(),
+  status: z.enum(["not_addressable", "not_published", "not_public", "unverified"]),
+  why_it_matters: z.string(),
+  evidence: z.string(),
+  workaround: z.string(),
+});
+export type ProspectGap = z.infer<typeof ProspectGap>;
+
+export const MetricRow = z.object({
+  model: z.enum(["criteria", "learned", "effort"]),
+  fold: z.enum(["none", "random", "spatial", "camp"]),
+  metric: z.enum(["pr_auc", "roc_auc", "capture_top10", "base_rate"]),
+  value_id: StatRef,
+});
+export type MetricRow = z.infer<typeof MetricRow>;
+
+export const Readiness = z.object({
+  schema_version: z.literal(SCHEMA_VERSION),
+  generated_at: z.string(),
+  build_id: z.string(),
+  grid: z.object({
+    grid_id: z.string(),
+    epsg: z.number().int(),
+    cells: StatRef,
+    cell_m: StatRef,
+    in_basin: StatRef,
+    area_km2: StatRef,
+    buffer_km: StatRef,
+  }),
+  totals: z.object({
+    sources: StatRef,
+    verified_features: StatRef,
+    redistributable: StatRef,
+    gaps: StatRef,
+    geo_features: StatRef,
+    effort_features: StatRef,
+  }),
+  thin_coverage_threshold: z.number(),
+  metrics: z.object({ run_id: z.string().nullable(), rows: z.array(MetricRow) }).optional(),
+  /** What the fabrication gate scored on the adversarial suite: `lr prospect gate-eval`. */
+  gate: z
+    .object({
+      run_id: z.string(),
+      cells: z.array(z.string()),
+      cases: StatRef,
+      put: StatRef,
+      caught: StatRef,
+      missed: StatRef,
+      caught_rate: StatRef,
+      honest: StatRef,
+      wrongly_rejected: StatRef,
+      by_kind: z.record(z.string(), z.object({ caught: StatRef, missed: StatRef })),
+      escaped: z.array(z.object({ kind: z.string(), text: z.string(), note: z.string() })),
+    })
+    .optional(),
+  caveats: z.array(z.string()),
+  features: z.array(ProspectFeature),
+  sources: z.array(ProspectSource),
+  gaps: z.array(ProspectGap),
+  values: ValRegistry,
+});
+export type Readiness = z.infer<typeof Readiness>;
+
+// ---------- prospect scores: what the three models say, and what they are worth
+
+/** The evidence record for one cell, served by the local agent service (never bundled into the static build). */
+export const CellEvidence = z.object({
+  cell_id: z.string(),
+  lon: z.number().nullable(),
+  lat: z.number().nullable(),
+  in_basin: z.boolean().nullable(),
+  parts: z.record(
+    z.string(),
+    z.object({
+      tool: z.string(),
+      args: z.record(z.string(), z.unknown()),
+      note: z.string(),
+      rows: z.array(z.record(z.string(), z.unknown())),
+      values: ValRegistry,
+    }),
+  ),
+  values: ValRegistry,
+  memos: z.array(
+    z.object({
+      memo_id: z.string(),
+      role: z.enum(["proponent", "skeptic", "adjudicator"]),
+      verdict: z.string().nullable(),
+      published: z.boolean(),
+      created_at: z.string(),
+      claims: z.array(z.object({ claim_no: z.number(), text: z.string(), value_ids: z.array(z.string()) })),
+    }),
+  ),
+});
+export type CellEvidence = z.infer<typeof CellEvidence>;
+
+/** One answer from the conversational agent. `text` is null when the answer failed the evidence check. */
+export const ChatTurn = z.object({
+  question: z.string(),
+  text: z.string().nullable(),
+  claims: z.array(z.object({ text: z.string(), value_ids: z.array(z.string()) })).default([]),
+  caveats: z.array(z.string()).default([]),
+  cannot_answer: z.boolean().default(false),
+  published: z.boolean(),
+  problems: z.array(z.string()).default([]),
+  tools_used: z.array(z.string()).default([]),
+  cost_usd: z.number().optional(),
+});
+export type ChatTurn = z.infer<typeof ChatTurn>;
+
+/**
+ * A conversation that actually happened, recorded so the walkthrough can show one without waiting on a model
+ * or on a server being up. The turns are the gate's own record: a withheld one is kept, with its objection.
+ */
+export const RecordedChat = z.object({
+  cell_id: z.string(),
+  lon: z.number().nullable(),
+  lat: z.number().nullable(),
+  recorded_at: z.string(),
+  model: z.string(),
+  turns: z.array(ChatTurn),
+  values: ValRegistry,
+});
+export type RecordedChat = z.infer<typeof RecordedChat>;
+
+export const ChatResponse = z.object({
+  conversation_id: z.string(),
+  cell_id: z.string(),
+  turn: ChatTurn,
+  values: ValRegistry,
+  cost_usd: z.number().optional(),
+});
+export type ChatResponse = z.infer<typeof ChatResponse>;
+
+export const Candidate = z.object({
+  cell_id: z.string(),
+  score: z.number(),
+  known_share: z.number().nullable(),
+  lon: z.number(),
+  lat: z.number(),
+  in_basin: z.boolean(),
+  label_tier: z.string().nullable(),
+  label_name: z.string().nullable(),
+  km_to_label: z.number().nullable(),
+});
+export type Candidate = z.infer<typeof Candidate>;

@@ -1,0 +1,208 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/*
+ * Visual language: monochrome chrome, saturated colour reserved for extraction status and data source.
+ * Map palette checked for colour-blind separation (worst pair dE 10.1 on #0b0f14); status also uses shape.
+ */
+@theme {
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+  --font-quote: "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-ground: #0b0f14;
+  --color-panel: #0f141b;
+  --color-raised: #161c25;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-ink: #e8eef7;
+  --color-ink-2: #a9b4c2;
+  --color-ink-3: #6b7785;
+  --color-focus: #8ab4ff;
+
+  --color-src-compilation: #3987e5;
+  --color-src-geods: #199e70;
+  --color-st-pass: #e6f0ff;
+  --color-st-flag: #fab219;
+  --color-st-miss: #ff5fa2;
+
+  --color-paper: #ede6d6;
+  --color-paper-ink: #1b1b1b;
+
+  --ease-out-expo: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/*
+ * The light theme. Only the chrome tokens live here: the map's own colours are compiled into a MapLibre style
+ * and are swapped in config/layers.ts when the theme changes, because a stylesheet cannot reach inside a
+ * WebGL canvas. Source and status hues (compilation blue, GeoDS green, flag amber, miss pink) are deliberately
+ * unchanged — a data source that changed colour with the theme would make the legend a lie.
+ */
+[data-theme="light"] {
+  --color-ground: #f3f5f8;
+  --color-panel: #ffffff;
+  --color-raised: #e7ebf1;
+  --color-line: rgb(16 24 36 / 0.12);
+  --color-line-strong: rgb(16 24 36 / 0.22);
+  --color-ink: #10192a;
+  --color-ink-2: #3f4c60;
+  --color-ink-3: #6a7789;
+  --color-focus: #2563eb;
+
+  --color-src-compilation: #1d63c4;
+  --color-src-geods: #10795a;
+  --color-st-pass: #1f3b6b;
+  --color-st-flag: #a96a00;
+  --color-st-miss: #c2185b;
+}
+
+[data-theme="light"] .glass {
+  background: rgb(255 255 255 / 0.82);
+  border: 1px solid var(--color-line);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+.glass {
+  background: rgb(15 20 27 / 0.72);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid var(--color-line);
+}
+
+[data-perf="lite"] .glass {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: rgb(15 20 27 / 0.94);
+}
+
+/* MapLibre controls restyled to the dark chrome */
+.maplibregl-ctrl-group {
+  background: rgb(15 20 27 / 0.72) !important;
+  border: 1px solid var(--color-line);
+  box-shadow: none !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-line) !important;
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(0.9);
+}
+.maplibregl-ctrl-attrib {
+  background: rgb(11 15 20 / 0.7) !important;
+  color: var(--color-ink-3) !important;
+  font-size: 11px;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--color-ink-2) !important;
+}
+.maplibregl-ctrl-attrib-button {
+  filter: invert(0.85);
+}
+
+/* Three dots that say the agent is still working. The blanket reduced-motion rule below stops them. */
+@keyframes lr-blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.18;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.lr-dots span {
+  animation: lr-blink 1.4s infinite both;
+}
+.lr-dots span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.lr-dots span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+  /* a dot frozen at 18% opacity reads as broken, so hold them lit instead */
+  .lr-dots span {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+/* Selected hole: a ring that pulses three times, then rests (motion explains the selection, then gets out of the way) */
+.lr-select-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-st-pass);
+  box-shadow:
+    0 0 14px rgb(230 240 255 / 0.35),
+    inset 0 0 8px rgb(230 240 255 / 0.15);
+  pointer-events: none;
+}
+.lr-select-ring::after {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-st-pass);
+  animation: lr-pulse 2.4s var(--ease-out-expo) 3;
+  opacity: 0;
+}
+@keyframes lr-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lr-select-ring::after {
+    animation: none;
+  }
+}
+
+/* Compact attribution stays collapsed until the user opens it (maplibre re-opens it whenever sources change) */
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.lr-user-open) {
+  padding: 0 !important;
+  min-height: 24px;
+}
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.lr-user-open) .maplibregl-ctrl-attrib-inner {
+  display: none;
+}
+
+/* Walkthrough: the card stays put and its contents fade in, so stepping reads as one panel changing, not a new one */
+@keyframes lr-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
