@@ -1,0 +1,11 @@
+# Config A (to be frozen before the held-out unlock): row-count validator in shadow mode, no re-ask.
+[extract]
+model = "claude-sonnet-5"
+effort = "medium"
+page_classes = ["collar_table", "assay_table", "lith_log"]
+max_pages_per_file = 12
+reask = false
+validator_mode = "shadow"
+max_budget_usd = 0.60
+timeout_s = 420
+note = "A: validators recorded but not enforced; the baseline the failure card measures 'before' on."

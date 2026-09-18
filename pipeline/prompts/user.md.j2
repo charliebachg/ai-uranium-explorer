@@ -1,0 +1,25 @@
+Read the page image at {STAGE_DIR}/{{ image_name }}.
+
+{% if route_classes -%}
+A layout pass classified this page as: {{ route_classes | join(", ") }}. That guess may be wrong; report
+what the page actually shows in `page_kind` and in each table's `kind`.
+{%- else -%}
+No layout guess is available for this page. Report what the page actually shows.
+{%- endif %}
+
+Transcribe:
+1. The page header block: hole identifier, coordinates (say in `coordinate_kind` whether they are UTM,
+   geographic, a local grid, or not printed), datum, UTM zone, elevation, azimuth, dip, total depth,
+   dates, and any page note stating units for the whole page.
+2. Every table of drillhole data on the page. For each: its title and column headers as printed, the
+   printed row count, whether it continues from an earlier page or onto the next, and every row.
+{% if carry -%}
+
+Carried header text from the previous page of this table (printed there, not here). Use it only to fill
+`prev_page_header` sources and to recognise this page as a continuation. Never copy a value from it into
+a cell of this page.
+{% for item in carry %}- {{ item.label }}: {{ item.value }} (printed on page {{ item.page }}: "{{ item.quote }}")
+{% endfor %}
+{%- endif %}
+
+If this page prints no drillhole data, return an empty `tables` list and say so in `legibility_notes`.

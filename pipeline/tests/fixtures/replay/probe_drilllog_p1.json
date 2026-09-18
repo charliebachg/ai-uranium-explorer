@@ -1,0 +1,533 @@
+{
+  "cache_key": "ffdcddb9f2a1c2e4fe5c137feddddb7b62a46883e971491faa7797f295a76634",
+  "request": {
+    "task": "probe",
+    "model": "claude-sonnet-5",
+    "effort": "medium",
+    "prompt_version": "613ae1ef736f",
+    "schema_version": "a1888768f4ef",
+    "image_sha256": "86fe06922e4b96989ed24b848babb5afa1536cd682c98ddcf8d86c8edb9ca822",
+    "pdf": "drilllog_1980s.pdf",
+    "page": 1,
+    "render_params": {
+      "dpi": 200,
+      "mode": "gray",
+      "tool": "pdftoppm"
+    }
+  },
+  "response": {
+    "structured": {
+      "coordinates": {
+        "kind": "local_grid",
+        "datum_as_printed": null,
+        "value_as_printed": "L 11+00N, 1+60W",
+        "quote": "CO-ORDINATES:   L 11+00N, 1+60W"
+      },
+      "file_stamp": {
+        "printed": "printed",
+        "quote": "64 L 04- NW- 0075",
+        "value_as_printed": "64 L 04- NW- 0075"
+      },
+      "header_fields": [
+        {
+          "label_as_printed": "DDH#",
+          "value_as_printed": "Q9-5",
+          "unit_as_printed": null,
+          "quote": "DDH#  Q9-5",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CBS#",
+          "value_as_printed": "4413",
+          "unit_as_printed": null,
+          "quote": "CBS#  4413",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "ELEVATION:",
+          "value_as_printed": "434.38",
+          "unit_as_printed": "meters",
+          "quote": "ELEVATION:   434.38",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "UNCONFORMITY:",
+          "value_as_printed": "155.8",
+          "unit_as_printed": "meters",
+          "quote": "UNCONFORMITY:  155.8",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "UNC. ELEV.:",
+          "value_as_printed": "278.58",
+          "unit_as_printed": "meters",
+          "quote": "UNC. ELEV.: 278.58",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "GRID:",
+          "value_as_printed": "Q-9",
+          "unit_as_printed": null,
+          "quote": "GRID: Q-9",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CO-ORDINATES:",
+          "value_as_printed": "L 11+00N, 1+60W",
+          "unit_as_printed": null,
+          "quote": "CO-ORDINATES:   L 11+00N, 1+60W",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CORE ZERO IS:",
+          "value_as_printed": ".6",
+          "unit_as_printed": null,
+          "quote": "CORE ZERO IS:  .6   ABOVE GROUND, BEARING:  ----",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "ABOVE GROUND, BEARING:",
+          "value_as_printed": "----",
+          "unit_as_printed": null,
+          "quote": "ABOVE GROUND, BEARING:  ----",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DIP:",
+          "value_as_printed": "90",
+          "unit_as_printed": "\u00b0",
+          "quote": "DIP: 90\u00b0",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CASING:",
+          "value_as_printed": null,
+          "unit_as_printed": null,
+          "quote": "CASING:",
+          "printed": "not_printed"
+        },
+        {
+          "label_as_printed": "OVERBURDEN:",
+          "value_as_printed": "12.5",
+          "unit_as_printed": null,
+          "quote": "OVERBURDEN:  12.5",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "ATHABASCA:",
+          "value_as_printed": "155.8",
+          "unit_as_printed": null,
+          "quote": "ATHABASCA:  155.8",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "REGOLITH:",
+          "value_as_printed": "---------",
+          "unit_as_printed": null,
+          "quote": "REGOLITH:  ---------",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "BASEMENT:",
+          "value_as_printed": "155.8-190",
+          "unit_as_printed": null,
+          "quote": "BASEMENT: 155.8-190",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DIP TEST",
+          "value_as_printed": null,
+          "unit_as_printed": null,
+          "quote": "DIP TEST      @",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CORE TYPE:",
+          "value_as_printed": "B.Q.",
+          "unit_as_printed": null,
+          "quote": "CORE TYPE:  B.Q.",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "LOGGED BY:",
+          "value_as_printed": "L. Forand",
+          "unit_as_printed": null,
+          "quote": "LOGGED BY:  L. Forand",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DATE STARTED:",
+          "value_as_printed": "Feb. 7/80",
+          "unit_as_printed": null,
+          "quote": "DATE STARTED: Feb. 7/80",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DATE COMPLETED:",
+          "value_as_printed": "Feb. 9/80",
+          "unit_as_printed": null,
+          "quote": "DATE COMPLETED: Feb. 9/80",
+          "printed": "printed"
+        }
+      ],
+      "hole_id": {
+        "printed": "printed",
+        "quote": "DDH#  Q9-5",
+        "value_as_printed": "Q9-5"
+      },
+      "legibility": {
+        "smallest_text_readable": true,
+        "notes": "All printed text including small annotations and file stamp digits were legible. The handwritten '64' prefix on the file stamp is slightly faint but readable."
+      },
+      "page_kind": "collar_or_summary_log",
+      "probe_peaks": [
+        {
+          "reading_as_printed": "250cps/ .7",
+          "depth_as_printed": "153.6",
+          "quote": "250cps/ .7      153.6"
+        },
+        {
+          "reading_as_printed": "150cps/",
+          "depth_as_printed": "174.1",
+          "quote": "150cps/         174.1"
+        }
+      ],
+      "sample_zones": {
+        "printed": "printed",
+        "quote": "SAMPLE ZONES:  D 252 - 255 (152.5-156m)",
+        "value_as_printed": "D 252 - 255 (152.5-156m)"
+      }
+    },
+    "model_resolved": "claude-sonnet-5",
+    "num_turns": 4,
+    "duration_s": 18.42,
+    "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 7813,
+      "cache_read_input_tokens": 3531,
+      "output_tokens": 2099,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 7813,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1996,
+          "cache_read_input_tokens": 3531,
+          "cache_creation_input_tokens": 4282,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 4282
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard"
+    },
+    "cost_usd": 0.0540572,
+    "backend_version": "2.1.274"
+  },
+  "envelope": {
+    "duration_api_ms": 17221,
+    "stop_reason": "tool_use",
+    "session_id": "46b526a9-3b45-4e2c-b0f6-6551ced46f5b",
+    "total_cost_usd": 0.0540572,
+    "usage": {
+      "input_tokens": 4,
+      "cache_creation_input_tokens": 7813,
+      "cache_read_input_tokens": 3531,
+      "output_tokens": 2099,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 7813,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 1996,
+          "cache_read_input_tokens": 3531,
+          "cache_creation_input_tokens": 4282,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 4282
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard"
+    },
+    "modelUsage": {
+      "claude-haiku-4-5-20251001": {
+        "inputTokens": 1041,
+        "outputTokens": 12,
+        "cacheReadInputTokens": 0,
+        "cacheCreationInputTokens": 0,
+        "webSearchRequests": 0,
+        "costUSD": 0.001101,
+        "contextWindow": 200000,
+        "maxOutputTokens": 32000,
+        "thinkingTokens": 0,
+        "canonicalModel": "claude-haiku-4-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      },
+      "claude-sonnet-5": {
+        "inputTokens": 4,
+        "outputTokens": 2099,
+        "cacheReadInputTokens": 3531,
+        "cacheCreationInputTokens": 7813,
+        "webSearchRequests": 0,
+        "costUSD": 0.0529562,
+        "contextWindow": 1000000,
+        "maxOutputTokens": 64000,
+        "thinkingTokens": 0,
+        "canonicalModel": "claude-sonnet-5",
+        "provider": "firstParty",
+        "costBasis": "list"
+      }
+    },
+    "permission_denials": [],
+    "terminal_reason": "completed",
+    "fast_mode_state": "off",
+    "fast_mode_disabled_reason": "sdk_opt_in_required",
+    "subagent_stats": {
+      "spawned": 0,
+      "requested": {
+        "background": 0,
+        "foreground": 0,
+        "unset": 0
+      },
+      "started_in_background": 0,
+      "max_depth": 0,
+      "spawned_by_subagents": 0,
+      "completed": 0,
+      "failed": 0,
+      "killed": {
+        "parent": 0,
+        "user": 0,
+        "system": 0
+      },
+      "refused": {
+        "depth_limit": 0,
+        "concurrency_limit": 0,
+        "budget": 0
+      },
+      "by_type": {}
+    },
+    "is_error": false,
+    "num_turns": 4,
+    "subtype": "success",
+    "api_error_status": null,
+    "result": "{\"coordinates\":{\"kind\":\"local_grid\",\"datum_as_printed\":null,\"value_as_printed\":\"L 11+00N, 1+60W\",\"quote\":\"CO-ORDINATES:   L 11+00N, 1+60W\"},\"file_stamp\":{\"printed\":\"printed\",\"quote\":\"64 L 04- NW- 0075\",\"value_as_printed\":\"64 L 04- NW- 0075\"},\"header_fields\":[{\"label_as_printed\":\"DDH#\",\"value_as_printed\":\"Q9-5\",\"unit_as_printed\":null,\"quote\":\"DDH#  Q9-5\",\"printed\":\"printed\"},{\"label_as_printed\":\"CBS#\",\"value_as_printed\":\"4413\",\"unit_as_printed\":null,\"quote\":\"CBS#  4413\",\"printed\":\"printed\"},{\"label_as_printed\":\"ELEVATION:\",\"value_as_printed\":\"434.38\",\"unit_as_printed\":\"meters\",\"quote\":\"ELEVATION:   434.38\",\"printed\":\"printed\"},{\"label_as_printed\":\"UNCONFORMITY:\",\"value_as_printed\":\"155.8\",\"unit_as_printed\":\"meters\",\"quote\":\"UNCONFORMITY:  155.8\",\"printed\":\"printed\"},{\"label_as_printed\":\"UNC. ELEV.:\",\"value_as_printed\":\"278.58\",\"unit_as_printed\":\"meters\",\"quote\":\"UNC. ELEV.: 278.58\",\"printed\":\"printed\"},{\"label_as_printed\":\"GRID:\",\"value_as_printed\":\"Q-9\",\"unit_as_printed\":null,\"quote\":\"GRID: Q-9\",\"printed\":\"printed\"},{\"label_as_printed\":\"CO-ORDINATES:\",\"value_as_printed\":\"L 11+00N, 1+60W\",\"unit_as_printed\":null,\"quote\":\"CO-ORDINATES:   L 11+00N, 1+60W\",\"printed\":\"printed\"},{\"label_as_printed\":\"CORE ZERO IS:\",\"value_as_printed\":\".6\",\"unit_as_printed\":null,\"quote\":\"CORE ZERO IS:  .6   ABOVE GROUND, BEARING:  ----\",\"printed\":\"printed\"},{\"label_as_printed\":\"ABOVE GROUND, BEARING:\",\"value_as_printed\":\"----\",\"unit_as_printed\":null,\"quote\":\"ABOVE GROUND, BEARING:  ----\",\"printed\":\"printed\"},{\"label_as_printed\":\"DIP:\",\"value_as_printed\":\"90\",\"unit_as_printed\":\"\u00b0\",\"quote\":\"DIP: 90\u00b0\",\"printed\":\"printed\"},{\"label_as_printed\":\"CASING:\",\"value_as_printed\":null,\"unit_as_printed\":null,\"quote\":\"CASING:\",\"printed\":\"not_printed\"},{\"label_as_printed\":\"OVERBURDEN:\",\"value_as_printed\":\"12.5\",\"unit_as_printed\":null,\"quote\":\"OVERBURDEN:  12.5\",\"printed\":\"printed\"},{\"label_as_printed\":\"ATHABASCA:\",\"value_as_printed\":\"155.8\",\"unit_as_printed\":null,\"quote\":\"ATHABASCA:  155.8\",\"printed\":\"printed\"},{\"label_as_printed\":\"REGOLITH:\",\"value_as_printed\":\"---------\",\"unit_as_printed\":null,\"quote\":\"REGOLITH:  ---------\",\"printed\":\"printed\"},{\"label_as_printed\":\"BASEMENT:\",\"value_as_printed\":\"155.8-190\",\"unit_as_printed\":null,\"quote\":\"BASEMENT: 155.8-190\",\"printed\":\"printed\"},{\"label_as_printed\":\"DIP TEST\",\"value_as_printed\":null,\"unit_as_printed\":null,\"quote\":\"DIP TEST      @\",\"printed\":\"printed\"},{\"label_as_printed\":\"CORE TYPE:\",\"value_as_printed\":\"B.Q.\",\"unit_as_printed\":null,\"quote\":\"CORE TYPE:  B.Q.\",\"printed\":\"printed\"},{\"label_as_printed\":\"LOGGED BY:\",\"value_as_printed\":\"L. Forand\",\"unit_as_printed\":null,\"quote\":\"LOGGED BY:  L. Forand\",\"printed\":\"printed\"},{\"label_as_printed\":\"DATE STARTED:\",\"value_as_printed\":\"Feb. 7/80\",\"unit_as_printed\":null,\"quote\":\"DATE STARTED: Feb. 7/80\",\"printed\":\"printed\"},{\"label_as_printed\":\"DATE COMPLETED:\",\"value_as_printed\":\"Feb. 9/80\",\"unit_as_printed\":null,\"quote\":\"DATE COMPLETED: Feb. 9/80\",\"printed\":\"printed\"}],\"hole_id\":{\"printed\":\"printed\",\"quote\":\"DDH#  Q9-5\",\"value_as_printed\":\"Q9-5\"},\"legibility\":{\"smallest_text_readable\":true,\"notes\":\"All printed text including small annotations and file stamp digits were legible. The handwritten '64' prefix on the file stamp is slightly faint but readable.\"},\"page_kind\":\"collar_or_summary_log\",\"probe_peaks\":[{\"reading_as_printed\":\"250cps/ .7\",\"depth_as_printed\":\"153.6\",\"quote\":\"250cps/ .7      153.6\"},{\"reading_as_printed\":\"150cps/\",\"depth_as_printed\":\"174.1\",\"quote\":\"150cps/         174.1\"}],\"sample_zones\":{\"printed\":\"printed\",\"quote\":\"SAMPLE ZONES:  D 252 - 255 (152.5-156m)\",\"value_as_printed\":\"D 252 - 255 (152.5-156m)\"}}",
+    "structured_output": {
+      "coordinates": {
+        "kind": "local_grid",
+        "datum_as_printed": null,
+        "value_as_printed": "L 11+00N, 1+60W",
+        "quote": "CO-ORDINATES:   L 11+00N, 1+60W"
+      },
+      "file_stamp": {
+        "printed": "printed",
+        "quote": "64 L 04- NW- 0075",
+        "value_as_printed": "64 L 04- NW- 0075"
+      },
+      "header_fields": [
+        {
+          "label_as_printed": "DDH#",
+          "value_as_printed": "Q9-5",
+          "unit_as_printed": null,
+          "quote": "DDH#  Q9-5",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CBS#",
+          "value_as_printed": "4413",
+          "unit_as_printed": null,
+          "quote": "CBS#  4413",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "ELEVATION:",
+          "value_as_printed": "434.38",
+          "unit_as_printed": "meters",
+          "quote": "ELEVATION:   434.38",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "UNCONFORMITY:",
+          "value_as_printed": "155.8",
+          "unit_as_printed": "meters",
+          "quote": "UNCONFORMITY:  155.8",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "UNC. ELEV.:",
+          "value_as_printed": "278.58",
+          "unit_as_printed": "meters",
+          "quote": "UNC. ELEV.: 278.58",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "GRID:",
+          "value_as_printed": "Q-9",
+          "unit_as_printed": null,
+          "quote": "GRID: Q-9",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CO-ORDINATES:",
+          "value_as_printed": "L 11+00N, 1+60W",
+          "unit_as_printed": null,
+          "quote": "CO-ORDINATES:   L 11+00N, 1+60W",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CORE ZERO IS:",
+          "value_as_printed": ".6",
+          "unit_as_printed": null,
+          "quote": "CORE ZERO IS:  .6   ABOVE GROUND, BEARING:  ----",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "ABOVE GROUND, BEARING:",
+          "value_as_printed": "----",
+          "unit_as_printed": null,
+          "quote": "ABOVE GROUND, BEARING:  ----",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DIP:",
+          "value_as_printed": "90",
+          "unit_as_printed": "\u00b0",
+          "quote": "DIP: 90\u00b0",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CASING:",
+          "value_as_printed": null,
+          "unit_as_printed": null,
+          "quote": "CASING:",
+          "printed": "not_printed"
+        },
+        {
+          "label_as_printed": "OVERBURDEN:",
+          "value_as_printed": "12.5",
+          "unit_as_printed": null,
+          "quote": "OVERBURDEN:  12.5",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "ATHABASCA:",
+          "value_as_printed": "155.8",
+          "unit_as_printed": null,
+          "quote": "ATHABASCA:  155.8",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "REGOLITH:",
+          "value_as_printed": "---------",
+          "unit_as_printed": null,
+          "quote": "REGOLITH:  ---------",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "BASEMENT:",
+          "value_as_printed": "155.8-190",
+          "unit_as_printed": null,
+          "quote": "BASEMENT: 155.8-190",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DIP TEST",
+          "value_as_printed": null,
+          "unit_as_printed": null,
+          "quote": "DIP TEST      @",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "CORE TYPE:",
+          "value_as_printed": "B.Q.",
+          "unit_as_printed": null,
+          "quote": "CORE TYPE:  B.Q.",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "LOGGED BY:",
+          "value_as_printed": "L. Forand",
+          "unit_as_printed": null,
+          "quote": "LOGGED BY:  L. Forand",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DATE STARTED:",
+          "value_as_printed": "Feb. 7/80",
+          "unit_as_printed": null,
+          "quote": "DATE STARTED: Feb. 7/80",
+          "printed": "printed"
+        },
+        {
+          "label_as_printed": "DATE COMPLETED:",
+          "value_as_printed": "Feb. 9/80",
+          "unit_as_printed": null,
+          "quote": "DATE COMPLETED: Feb. 9/80",
+          "printed": "printed"
+        }
+      ],
+      "hole_id": {
+        "printed": "printed",
+        "quote": "DDH#  Q9-5",
+        "value_as_printed": "Q9-5"
+      },
+      "legibility": {
+        "smallest_text_readable": true,
+        "notes": "All printed text including small annotations and file stamp digits were legible. The handwritten '64' prefix on the file stamp is slightly faint but readable."
+      },
+      "page_kind": "collar_or_summary_log",
+      "probe_peaks": [
+        {
+          "reading_as_printed": "250cps/ .7",
+          "depth_as_printed": "153.6",
+          "quote": "250cps/ .7      153.6"
+        },
+        {
+          "reading_as_printed": "150cps/",
+          "depth_as_printed": "174.1",
+          "quote": "150cps/         174.1"
+        }
+      ],
+      "sample_zones": {
+        "printed": "printed",
+        "quote": "SAMPLE ZONES:  D 252 - 255 (152.5-156m)",
+        "value_as_printed": "D 252 - 255 (152.5-156m)"
+      }
+    },
+    "ttft_ms": 1644,
+    "type": "result",
+    "duration_ms": 16390,
+    "uuid": "38f26949-0492-4791-82da-bc6cf32ca693",
+    "ttft_stream_ms": 1007,
+    "time_to_request_ms": 30,
+    "first_content_frame_ms": 1008,
+    "queued_turn_count": 0,
+    "result_index": 0
+  }
+}

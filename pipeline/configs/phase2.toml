@@ -1,0 +1,13 @@
+# Phase 2 capped run: 4 dev files, one page per call, row-count validators enforced but no re-ask
+# (a re-ask doubles the calls for a page and this run has a hard cap of 48).
+[extract]
+model = "claude-sonnet-5"
+effort = "medium"
+page_classes = ["collar_table", "assay_table", "lith_log"]
+class_priority = ["collar_table", "assay_table", "lith_log", "probe_log", "certificate", "uncertain", "other"]
+max_pages_per_file = 12
+reask = false
+validator_mode = "enforce"
+max_budget_usd = 0.60
+timeout_s = 420
+note = "Phase 2 evaluated run: Sonnet 5, medium effort, 12 pages per dev file."

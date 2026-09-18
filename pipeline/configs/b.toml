@@ -1,0 +1,11 @@
+# Config B: validators enforced and one re-ask when a table's printed row count exceeds the rows returned.
+[extract]
+model = "claude-sonnet-5"
+effort = "medium"
+page_classes = ["collar_table", "assay_table", "lith_log"]
+max_pages_per_file = 12
+reask = true
+validator_mode = "enforce"
+max_budget_usd = 0.60
+timeout_s = 420
+note = "B: row-count enforcement plus re-ask; the failure card's 'after'."
