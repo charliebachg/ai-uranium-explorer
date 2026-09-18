@@ -1,0 +1,1284 @@
+{
+ "summary": {
+  "file_num": "64L04-0075",
+  "company": "Asamera Oil Corporation Ltd",
+  "property": "Grid Q-9",
+  "era": "1980s-1990s",
+  "year": "d:64L04-0075:year",
+  "nts_sheets": [
+   "64L04"
+  ],
+  "page_count": "d:64L04-0075:page_count",
+  "scan_kind": "scanned",
+  "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+  "source_url": "https://geoscience-data-system.saskatchewan.ca/",
+  "split": "dev",
+  "status_counts": {
+   "pass": "d:64L04-0075:n_pass",
+   "flag": "d:64L04-0075:n_flag",
+   "miss": "d:64L04-0075:n_miss"
+  },
+  "footprint": {
+   "type": "Polygon",
+   "coordinates": [
+    [
+     [
+      -104.0,
+      58.0
+     ],
+     [
+      -103.5,
+      58.0
+     ],
+     [
+      -103.5,
+      58.25
+     ],
+     [
+      -104.0,
+      58.25
+     ],
+     [
+      -104.0,
+      58.0
+     ]
+    ]
+   ]
+  },
+  "centroid": [
+   -103.75,
+   58.125
+  ],
+  "holes": [
+   {
+    "hole_id": "Q9-5",
+    "name": "Q9-5",
+    "status": "flag",
+    "lonlat": null,
+    "position_source": "none",
+    "datum_basis": "local_grid"
+   },
+   {
+    "hole_id": "Q9-6",
+    "name": "Q9-6",
+    "status": "flag",
+    "lonlat": null,
+    "position_source": "none",
+    "datum_basis": "none"
+   }
+  ]
+ },
+ "values": {
+  "x:64L04-0075:q95_name": {
+   "id": "x:64L04-0075:q95_name",
+   "kind": "extracted",
+   "as_printed": "Q9-5",
+   "value": "Q9-5",
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.8483,
+     0.1105,
+     0.9004,
+     0.1345
+    ],
+    "quote": "DDH# Q9-5",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q95_elev": {
+   "id": "x:64L04-0075:q95_elev",
+   "kind": "extracted",
+   "as_printed": "434.38",
+   "value": 434.38,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.2979,
+     0.1656,
+     0.3694,
+     0.192
+    ],
+    "quote": "ELEVATION: 434.38",
+    "quote_located": true,
+    "unit_source": "page_note",
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V01",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "unit comes from the page note '(all figures in meters)', not the cell"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q95_coords": {
+   "id": "x:64L04-0075:q95_coords",
+   "kind": "extracted",
+   "as_printed": "L 11+00N, 1+60W",
+   "value": null,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.6077,
+     0.2048,
+     0.7675,
+     0.2268
+    ],
+    "quote": "CO-ORDINATES: L 11+00N, 1+60W",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V10",
+      "outcome": "flag",
+      "severity": "warn",
+      "class_a": false,
+      "message": "local grid Q-9: no datum or UTM coordinates printed; cannot be transformed"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q95_dip": {
+   "id": "x:64L04-0075:q95_dip",
+   "kind": "extracted",
+   "as_printed": "90",
+   "value": 90,
+   "unit_as_printed": "\u00b0",
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": null,
+    "quote": "DIP: 90\u00b0",
+    "quote_located": false,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q95_unc": {
+   "id": "x:64L04-0075:q95_unc",
+   "kind": "extracted",
+   "as_printed": "155.8",
+   "value": 155.8,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.6173,
+     0.1677,
+     0.678,
+     0.1908
+    ],
+    "quote": "UNCONFORMITY: 155.8",
+    "quote_located": true,
+    "unit_source": "page_note",
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_name": {
+   "id": "x:64L04-0075:q96_name",
+   "kind": "extracted",
+   "as_printed": "Q9-6",
+   "value": "Q9-6",
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.1836,
+     0.0362,
+     0.2306,
+     0.0582
+    ],
+    "quote": "HOLE # Q9-6",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s1_sample": {
+   "id": "x:64L04-0075:q96_s1_sample",
+   "kind": "extracted",
+   "as_printed": "D 256",
+   "value": "D 256",
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.0903,
+     0.1321,
+     0.1523,
+     0.1528
+    ],
+    "quote": "D 256 152.2 153.7",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s1_from": {
+   "id": "x:64L04-0075:q96_s1_from",
+   "kind": "extracted",
+   "as_printed": "152.2",
+   "value": 152.2,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.1909,
+     0.1275,
+     0.255,
+     0.1545
+    ],
+    "quote": "D 256 152.2 153.7",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s1_to": {
+   "id": "x:64L04-0075:q96_s1_to",
+   "kind": "extracted",
+   "as_printed": "153.7",
+   "value": 153.7,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.2898,
+     0.1292,
+     0.3538,
+     0.1557
+    ],
+    "quote": "D 256 152.2 153.7",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "d:64L04-0075:q96_s1_from_m": {
+   "id": "d:64L04-0075:q96_s1_from_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 152.2,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s1_from"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "d:64L04-0075:q96_s1_to_m": {
+   "id": "d:64L04-0075:q96_s1_to_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 153.7,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s1_to"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "x:64L04-0075:q96_s1_u3o8": {
+   "id": "x:64L04-0075:q96_s1_u3o8",
+   "kind": "extracted",
+   "as_printed": null,
+   "value": null,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.3804,
+     0.1321,
+     0.4554,
+     0.1528
+    ],
+    "quote": "U3O8 (column empty on the page)",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V03",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "U3O8 column is printed but empty for this row: not printed"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q96_s2_sample": {
+   "id": "x:64L04-0075:q96_s2_sample",
+   "kind": "extracted",
+   "as_printed": "D 257",
+   "value": "D 257",
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.0919,
+     0.1606,
+     0.1563,
+     0.1839
+    ],
+    "quote": "D 257 153.7 155.2",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s2_from": {
+   "id": "x:64L04-0075:q96_s2_from",
+   "kind": "extracted",
+   "as_printed": "153.7",
+   "value": 153.7,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.191,
+     0.1583,
+     0.2549,
+     0.1861
+    ],
+    "quote": "D 257 153.7 155.2",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s2_to": {
+   "id": "x:64L04-0075:q96_s2_to",
+   "kind": "extracted",
+   "as_printed": "155.2",
+   "value": 155.2,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.2896,
+     0.1592,
+     0.3541,
+     0.1853
+    ],
+    "quote": "D 257 153.7 155.2",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "d:64L04-0075:q96_s2_from_m": {
+   "id": "d:64L04-0075:q96_s2_from_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 153.7,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s2_from"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "d:64L04-0075:q96_s2_to_m": {
+   "id": "d:64L04-0075:q96_s2_to_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 155.2,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s2_to"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "x:64L04-0075:q96_s2_u3o8": {
+   "id": "x:64L04-0075:q96_s2_u3o8",
+   "kind": "extracted",
+   "as_printed": null,
+   "value": null,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.3804,
+     0.1606,
+     0.4554,
+     0.1839
+    ],
+    "quote": "U3O8 (column empty on the page)",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V03",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "U3O8 column is printed but empty for this row: not printed"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q96_s3_sample": {
+   "id": "x:64L04-0075:q96_s3_sample",
+   "kind": "extracted",
+   "as_printed": "D 258",
+   "value": "D 258",
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.092,
+     0.1928,
+     0.1543,
+     0.2142
+    ],
+    "quote": "D 258 155.2 155.5",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s3_from": {
+   "id": "x:64L04-0075:q96_s3_from",
+   "kind": "extracted",
+   "as_printed": "155.2",
+   "value": 155.2,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.1928,
+     0.1916,
+     0.2531,
+     0.2183
+    ],
+    "quote": "D 258 155.2 155.5",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s3_to": {
+   "id": "x:64L04-0075:q96_s3_to",
+   "kind": "extracted",
+   "as_printed": "155.5",
+   "value": 155.5,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.2899,
+     0.1903,
+     0.3519,
+     0.2167
+    ],
+    "quote": "D 258 155.2 155.5",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "d:64L04-0075:q96_s3_from_m": {
+   "id": "d:64L04-0075:q96_s3_from_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 155.2,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s3_from"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "d:64L04-0075:q96_s3_to_m": {
+   "id": "d:64L04-0075:q96_s3_to_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 155.5,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s3_to"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "x:64L04-0075:q96_s3_u3o8": {
+   "id": "x:64L04-0075:q96_s3_u3o8",
+   "kind": "extracted",
+   "as_printed": null,
+   "value": null,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.3804,
+     0.1928,
+     0.4554,
+     0.2142
+    ],
+    "quote": "U3O8 (column empty on the page)",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V03",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "U3O8 column is printed but empty for this row: not printed"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q96_s4_sample": {
+   "id": "x:64L04-0075:q96_s4_sample",
+   "kind": "extracted",
+   "as_printed": "D 259",
+   "value": "D 259",
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.092,
+     0.2235,
+     0.1524,
+     0.2445
+    ],
+    "quote": "D 259 155.5 155.8",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s4_from": {
+   "id": "x:64L04-0075:q96_s4_from",
+   "kind": "extracted",
+   "as_printed": "155.5",
+   "value": 155.5,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.1929,
+     0.2223,
+     0.253,
+     0.2486
+    ],
+    "quote": "D 259 155.5 155.8",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "x:64L04-0075:q96_s4_to": {
+   "id": "x:64L04-0075:q96_s4_to",
+   "kind": "extracted",
+   "as_printed": "155.8",
+   "value": 155.8,
+   "unit_as_printed": null,
+   "status": "pass",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.2896,
+     0.2217,
+     0.3541,
+     0.2492
+    ],
+    "quote": "D 259 155.5 155.8",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": []
+   }
+  },
+  "d:64L04-0075:q96_s4_from_m": {
+   "id": "d:64L04-0075:q96_s4_from_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 155.5,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s4_from"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "d:64L04-0075:q96_s4_to_m": {
+   "id": "d:64L04-0075:q96_s4_to_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 155.8,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q96_s4_to"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "x:64L04-0075:q96_s4_u3o8": {
+   "id": "x:64L04-0075:q96_s4_u3o8",
+   "kind": "extracted",
+   "as_printed": null,
+   "value": null,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 6,
+    "bbox": [
+     0.3804,
+     0.2235,
+     0.4554,
+     0.2445
+    ],
+    "quote": "U3O8 (column empty on the page)",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V03",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "U3O8 column is printed but empty for this row: not printed"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q95_pk1_reading": {
+   "id": "x:64L04-0075:q95_pk1_reading",
+   "kind": "extracted",
+   "as_printed": "250cps/ .7",
+   "value": null,
+   "unit_as_printed": "cps",
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.3241,
+     0.3762,
+     0.4367,
+     0.3985
+    ],
+    "quote": "250cps/ .7 153.6",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V04",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "probe count rate, not a chemical grade: basis probe_equivalent"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q95_pk1_depth": {
+   "id": "x:64L04-0075:q95_pk1_depth",
+   "kind": "extracted",
+   "as_printed": "153.6",
+   "value": 153.6,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.511,
+     0.3705,
+     0.5824,
+     0.4172
+    ],
+    "quote": "250cps/ .7 153.6",
+    "quote_located": true,
+    "unit_source": "page_note",
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V16",
+      "outcome": "flag",
+      "severity": "warn",
+      "class_a": false,
+      "message": "OCR reads 154.4 where the page prints 153.6: the two readers disagree, check by eye"
+     }
+    ]
+   }
+  },
+  "d:64L04-0075:q95_pk1_depth_m": {
+   "id": "d:64L04-0075:q95_pk1_depth_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 153.6,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q95_pk1_depth"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "x:64L04-0075:q95_pk2_reading": {
+   "id": "x:64L04-0075:q95_pk2_reading",
+   "kind": "extracted",
+   "as_printed": "150cps/",
+   "value": null,
+   "unit_as_printed": "cps",
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.3296,
+     0.3919,
+     0.4069,
+     0.4133
+    ],
+    "quote": "150cps/ 174.1",
+    "quote_located": true,
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V04",
+      "outcome": "flag",
+      "severity": "warn",
+      "message": "probe count rate, not a chemical grade: basis probe_equivalent"
+     }
+    ]
+   }
+  },
+  "x:64L04-0075:q95_pk2_depth": {
+   "id": "x:64L04-0075:q95_pk2_depth",
+   "kind": "extracted",
+   "as_printed": "174.1",
+   "value": 174.1,
+   "unit_as_printed": null,
+   "status": "flag",
+   "lineage": {
+    "file_num": "64L04-0075",
+    "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+    "page": 1,
+    "bbox": [
+     0.511,
+     0.3705,
+     0.5824,
+     0.4172
+    ],
+    "quote": "150cps/ 174.1",
+    "quote_located": true,
+    "unit_source": "page_note",
+    "model": "fixture",
+    "prompt_version": "fixture",
+    "run_id": "fixture",
+    "extracted_at": "2026-09-18T00:00:00Z",
+    "validators": [
+     {
+      "id": "V16",
+      "outcome": "flag",
+      "severity": "warn",
+      "class_a": false,
+      "message": "OCR reads 154.4 where the page prints 174.1: the two readers disagree, check by eye"
+     }
+    ]
+   }
+  },
+  "d:64L04-0075:q95_pk2_depth_m": {
+   "id": "d:64L04-0075:q95_pk2_depth_m",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 174.1,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "derivation": {
+    "op": "identity",
+    "inputs": [
+     "x:64L04-0075:q95_pk2_depth"
+    ],
+    "tool": "fixture builder"
+   },
+   "note": "page note: all figures in meters"
+  },
+  "d:64L04-0075:year": {
+   "id": "d:64L04-0075:year",
+   "kind": "derived",
+   "as_printed": null,
+   "value": "1980",
+   "unit_as_printed": null,
+   "fmt": "text",
+   "derivation": {
+    "op": "work_date",
+    "inputs": [],
+    "tool": "fixture builder"
+   },
+   "note": "WRK_PERIOD 1980 and DATE STARTED Feb. 7/80"
+  },
+  "d:64L04-0075:page_count": {
+   "id": "d:64L04-0075:page_count",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 51,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "pdfinfo",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:n_pass": {
+   "id": "d:64L04-0075:n_pass",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:n_flag": {
+   "id": "d:64L04-0075:n_flag",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:n_miss": {
+   "id": "d:64L04-0075:n_miss",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:rows_t6": {
+   "id": "d:64L04-0075:rows_t6",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 4,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   },
+   "note": "rows stored from the page 6 sample table"
+  },
+  "d:64L04-0075:rows_t1": {
+   "id": "d:64L04-0075:rows_t1",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  }
+ },
+ "tables": [
+  {
+   "table_id": "t1",
+   "page": 1,
+   "bbox": null,
+   "kind": "probe",
+   "rows_stored": "d:64L04-0075:rows_t1",
+   "rows_printed": null,
+   "continues_from": null
+  },
+  {
+   "table_id": "t6",
+   "page": 6,
+   "bbox": null,
+   "kind": "assay",
+   "rows_stored": "d:64L04-0075:rows_t6",
+   "rows_printed": null,
+   "continues_from": null
+  }
+ ],
+ "holes": [
+  {
+   "hole_id": "Q9-5",
+   "name": "x:64L04-0075:q95_name",
+   "status": "flag",
+   "collar": {
+    "easting": null,
+    "northing": null,
+    "lat": null,
+    "lon": null,
+    "grid_x": "x:64L04-0075:q95_coords",
+    "grid_y": null,
+    "utm_zone": null,
+    "datum_printed": null,
+    "elevation": "x:64L04-0075:q95_elev",
+    "azimuth": null,
+    "dip": "x:64L04-0075:q95_dip",
+    "total_depth": null,
+    "coord_kind": "local_grid"
+   },
+   "position": null,
+   "matches": [],
+   "provincial_lith": [],
+   "lith": [],
+   "assays": [
+    {
+     "id": "q95_pk1",
+     "from": "x:64L04-0075:q95_pk1_depth",
+     "to": "x:64L04-0075:q95_pk1_depth",
+     "from_m": "d:64L04-0075:q95_pk1_depth_m",
+     "to_m": "d:64L04-0075:q95_pk1_depth_m",
+     "table_id": "t1",
+     "row": 0,
+     "status": "flag",
+     "depth_unit_as_printed": null,
+     "sample_id": null,
+     "grades": [
+      {
+       "value": "x:64L04-0075:q95_pk1_reading",
+       "analyte_as_printed": "probe peak (counts/interval)",
+       "species": "not_printed",
+       "basis": "probe_equivalent",
+       "method_as_printed": "ra probe"
+      }
+     ]
+    },
+    {
+     "id": "q95_pk2",
+     "from": "x:64L04-0075:q95_pk2_depth",
+     "to": "x:64L04-0075:q95_pk2_depth",
+     "from_m": "d:64L04-0075:q95_pk2_depth_m",
+     "to_m": "d:64L04-0075:q95_pk2_depth_m",
+     "table_id": "t1",
+     "row": 1,
+     "status": "flag",
+     "depth_unit_as_printed": null,
+     "sample_id": null,
+     "grades": [
+      {
+       "value": "x:64L04-0075:q95_pk2_reading",
+       "analyte_as_printed": "probe peak (counts/interval)",
+       "species": "not_printed",
+       "basis": "probe_equivalent",
+       "method_as_printed": "ra probe"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "hole_id": "Q9-6",
+   "name": "x:64L04-0075:q96_name",
+   "status": "flag",
+   "collar": {
+    "easting": null,
+    "northing": null,
+    "lat": null,
+    "lon": null,
+    "grid_x": null,
+    "grid_y": null,
+    "utm_zone": null,
+    "datum_printed": null,
+    "elevation": null,
+    "azimuth": null,
+    "dip": null,
+    "total_depth": null,
+    "coord_kind": "not_printed"
+   },
+   "position": null,
+   "matches": [],
+   "provincial_lith": [],
+   "lith": [],
+   "assays": [
+    {
+     "id": "q96_s1",
+     "from": "x:64L04-0075:q96_s1_from",
+     "to": "x:64L04-0075:q96_s1_to",
+     "from_m": "d:64L04-0075:q96_s1_from_m",
+     "to_m": "d:64L04-0075:q96_s1_to_m",
+     "table_id": "t6",
+     "row": 0,
+     "status": "flag",
+     "depth_unit_as_printed": null,
+     "sample_id": "x:64L04-0075:q96_s1_sample",
+     "grades": [
+      {
+       "value": "x:64L04-0075:q96_s1_u3o8",
+       "analyte_as_printed": "U3O8",
+       "species": "U3O8",
+       "basis": "not_printed",
+       "method_as_printed": null
+      }
+     ]
+    },
+    {
+     "id": "q96_s2",
+     "from": "x:64L04-0075:q96_s2_from",
+     "to": "x:64L04-0075:q96_s2_to",
+     "from_m": "d:64L04-0075:q96_s2_from_m",
+     "to_m": "d:64L04-0075:q96_s2_to_m",
+     "table_id": "t6",
+     "row": 1,
+     "status": "flag",
+     "depth_unit_as_printed": null,
+     "sample_id": "x:64L04-0075:q96_s2_sample",
+     "grades": [
+      {
+       "value": "x:64L04-0075:q96_s2_u3o8",
+       "analyte_as_printed": "U3O8",
+       "species": "U3O8",
+       "basis": "not_printed",
+       "method_as_printed": null
+      }
+     ]
+    },
+    {
+     "id": "q96_s3",
+     "from": "x:64L04-0075:q96_s3_from",
+     "to": "x:64L04-0075:q96_s3_to",
+     "from_m": "d:64L04-0075:q96_s3_from_m",
+     "to_m": "d:64L04-0075:q96_s3_to_m",
+     "table_id": "t6",
+     "row": 2,
+     "status": "flag",
+     "depth_unit_as_printed": null,
+     "sample_id": "x:64L04-0075:q96_s3_sample",
+     "grades": [
+      {
+       "value": "x:64L04-0075:q96_s3_u3o8",
+       "analyte_as_printed": "U3O8",
+       "species": "U3O8",
+       "basis": "not_printed",
+       "method_as_printed": null
+      }
+     ]
+    },
+    {
+     "id": "q96_s4",
+     "from": "x:64L04-0075:q96_s4_from",
+     "to": "x:64L04-0075:q96_s4_to",
+     "from_m": "d:64L04-0075:q96_s4_from_m",
+     "to_m": "d:64L04-0075:q96_s4_to_m",
+     "table_id": "t6",
+     "row": 3,
+     "status": "flag",
+     "depth_unit_as_printed": null,
+     "sample_id": "x:64L04-0075:q96_s4_sample",
+     "grades": [
+      {
+       "value": "x:64L04-0075:q96_s4_u3o8",
+       "analyte_as_printed": "U3O8",
+       "species": "U3O8",
+       "basis": "not_printed",
+       "method_as_printed": null
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

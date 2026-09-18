@@ -1,0 +1,274 @@
+{
+ "cell_id": "0201_0072",
+ "recorded_at": "2026-09-18T09:33:09+00:00",
+ "model": "claude-sonnet-5",
+ "cost_usd": 0.4475,
+ "tools_available": [
+  "cell_features",
+  "cell_scores",
+  "criteria_breakdown",
+  "label_context"
+ ],
+ "turns": [
+  {
+   "question": "What is actually measured in this cell, and what is only assumed?",
+   "text": null,
+   "claims": [],
+   "caveats": [],
+   "published": false,
+   "problems": [
+    "claim 14: the number 323 is not backed by any value this claim cites",
+    "claim 16: the number 877 is not backed by any value this claim cites"
+   ],
+   "tools_used": []
+  },
+  {
+   "question": "How much of this cell's score is explained by the fact that people have already drilled here?",
+   "text": "Three numbers matter here, and none of them let me hand you a clean \"X% is drilling.\"\n\nThe criteria score for this cell is 0.924 \u2014 that's the geology-based model, built from conductor proximity, fault proximity, graphitic host, lake sediment/water uranium, and unconformity depth. The effort score is 0.976 \u2014 that model is fitted purely on where people have historically explored, and it exists to predict onto ground the fit never saw; here it is not filtered out. The learned score, which blends signal from both under spatial cross-validation, comes out lower at 0.6834, and the tool's own framing warns that under spatial folds \"the exploration-effort model outscores the geological one on this grid,\" meaning a high learned score is weak evidence about rock and strong evidence about where people have already worked.\n\nThe label context confirms why effort would be elevated here specifically: this cell sits 0.0 km from the Horseshoe deposit, 1.99 km from the Parks Lake occurrence, 1.99 km from a second Horseshoe reference point, 2.0 km from drill hole HR-014, and 3.99 km from the Rabbit Lake deposit. A cell that contains a known deposit and sits within 2 km of an actual drill hole is exactly the situation the label_context tool itself flags as a leakage check, not a recommendation: proximity to prior drilling and known mineralization will inflate effort-model output independent of any geological criterion value.\n\nI cannot give you a percentage decomposition of the overall score into \"geology\" versus \"drilling history\" \u2014 that would require an arithmetic attribution I'm not permitted to compute, and no tool here exposes one directly. What the record does show is that the effort score (0.976) is higher than the criteria score (0.924), and that this cell is at zero distance from a mapped deposit and ~2 km from a recorded drill hole, so a substantial share of why this cell looks attractive is plausibly about who has already worked the ground rather than what the rock itself says. That is a qualitative reading of the scores and distances above, not a computed fraction, and I can't turn it into one.",
+   "claims": [
+    {
+     "text": "The criteria (geology-based) score for this cell is 0.924.",
+     "value_ids": [
+      "c:score:0201_0072:criteria"
+     ]
+    },
+    {
+     "text": "The effort (exploration-history-based) score for this cell is 0.976.",
+     "value_ids": [
+      "c:score:0201_0072:effort"
+     ]
+    },
+    {
+     "text": "The blended learned score for this cell is 0.6834.",
+     "value_ids": [
+      "c:score:0201_0072:learned"
+     ]
+    },
+    {
+     "text": "This cell is 0.0 km from the Horseshoe deposit.",
+     "value_ids": [
+      "c:near:0201_0072:0"
+     ]
+    },
+    {
+     "text": "This cell is 1.99 km from the Parks Lake occurrence.",
+     "value_ids": [
+      "c:near:0201_0072:1"
+     ]
+    },
+    {
+     "text": "This cell is 1.99 km from a second reference to the Horseshoe deposit.",
+     "value_ids": [
+      "c:near:0201_0072:2"
+     ]
+    },
+    {
+     "text": "This cell is 2.0 km from drill hole HR-014.",
+     "value_ids": [
+      "c:near:0201_0072:3"
+     ]
+    },
+    {
+     "text": "This cell is 3.99 km from the Rabbit Lake deposit.",
+     "value_ids": [
+      "c:near:0201_0072:4"
+     ]
+    }
+   ],
+   "caveats": [
+    "No tool provides a decomposition of the score into a percentage attributable to drilling versus geology; that would require computing an attribution, which is not permitted.",
+    "The effort model is fitted on every cell it scores, so its high value here reflects historical exploration pattern rather than an independent geological signal.",
+    "Proximity to a known deposit and drill hole is explicitly flagged by the label_context tool as a leakage check, not evidence of ore."
+   ],
+   "published": true,
+   "problems": [],
+   "tools_used": []
+  },
+  {
+   "question": "What single observation would most change your reading of this cell?",
+   "text": "The single most informative thing missing here is direct subsurface data: this cell's geology score is built entirely from regional proxies - distance to a mapped conductor trace, distance to a mapped fault, a lithology polygon, and an interpolated unconformity depth - with no drill intercept from within the cell itself telling you what the basement or the unconformity actually looks like at depth.\n\nSome specifics on how thin the direct evidence is:\n\nThe unconformity depth used here, 133.4758 m, is interpolated from only 8 nearby holes that reached the contact, not measured in this cell.\n\nThe conductor and fault distances each rest on a single mapped observation - one digitized line each, not a field-verified intercept.\n\nThe graphitic-host call comes from a 1:250,000 lithology polygon with 3 observations behind it, a regional generalization by the tool's own caveat.\n\nSeparately, the boulder-train/dispersal element is entirely unmeasured here - state 'unknown,' not 'absent' - with the nearest boulder observation 13802.9 m away. That is a large gap for a criterion that, elsewhere in the Basin, has pointed straight at ore (Patterson Lake: discovery hole 3.8 km up-ice of the boulder field).\n\nSo there are really two different single observations that would most change the picture, for different reasons:\n\nA drill intercept within this exact cell - actual basement lithology, graphite/conductor confirmation, and a directly logged unconformity depth - would convert four 'assumed' criteria (conductor_proximity, fault_proximity, graphitic_host, unconformity_depth) from map-inference to ground truth, and would also help separate 'this looks good because the rock says so' from 'this looks good because it is 0 km from a known deposit and drillers already came here.'\n\nA radioactive-boulder or till-geochemistry sample taken within or near this cell would close the 13.8 km gap on the dispersal element, which right now contributes nothing to the picture - not because it was tested and came back negative, but because nobody has sampled that close.\n\nNeither of these is something I can produce or infer; they are field or lab observations the tools show as absent or distant, not values I can compute.",
+   "claims": [
+    {
+     "text": "The interpolated unconformity depth for this cell is 133.4758 m.",
+     "value_ids": [
+      "c:cell:0201_0072:unconformity_depth_m"
+     ]
+    },
+    {
+     "text": "That depth interpolation rests on only 8 nearby holes that reached the contact.",
+     "value_ids": [
+      "c:cell:0201_0072:unconformity_depth_m:n_obs"
+     ]
+    },
+    {
+     "text": "The distance to the nearest mapped EM conductor rests on a single mapped observation.",
+     "value_ids": [
+      "c:cell:0201_0072:d_conductor_m:n_obs"
+     ]
+    },
+    {
+     "text": "The distance to the nearest mapped fault rests on a single mapped observation.",
+     "value_ids": [
+      "c:cell:0201_0072:d_fault_m:n_obs"
+     ]
+    },
+    {
+     "text": "The graphitic-host determination is backed by 3 observations behind the mapped bedrock polygon.",
+     "value_ids": [
+      "c:cell:0201_0072:graphitic_host:n_obs"
+     ]
+    },
+    {
+     "text": "The nearest boulder observation to this cell is 13802.9 m away, and the boulder_train criterion is unknown here, not absent.",
+     "value_ids": [
+      "c:cell:0201_0072:boulder_max_cps:nearest_m"
+     ]
+    }
+   ],
+   "caveats": [
+    "No tool in this session provides a direct drill intercept or lithology log from within cell 0201_0072 itself; the geology criteria here are all proximity- or interpolation-based.",
+    "This answer names what observation would most change the reading; it does not claim the observation exists or predict what it would show."
+   ],
+   "published": true,
+   "problems": [],
+   "tools_used": []
+  }
+ ],
+ "values": {
+  "c:cell:0201_0072:boulder_max_cps:nearest_m": {
+   "id": "c:cell:0201_0072:boulder_max_cps:nearest_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 13802.9,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "note": "distance from cell 0201_0072 to the nearest boulder_max_cps observation"
+  },
+  "c:cell:0201_0072:d_conductor_m:n_obs": {
+   "id": "c:cell:0201_0072:d_conductor_m:n_obs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "observations behind Distance to nearest EM conductor at cell 0201_0072"
+  },
+  "c:cell:0201_0072:d_fault_m:n_obs": {
+   "id": "c:cell:0201_0072:d_fault_m:n_obs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "observations behind Distance to nearest mapped fault or lineament at cell 0201_0072"
+  },
+  "c:cell:0201_0072:graphitic_host:n_obs": {
+   "id": "c:cell:0201_0072:graphitic_host:n_obs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "observations behind Mapped bedrock names a graphitic or pelitic host at cell 0201_0072"
+  },
+  "c:cell:0201_0072:unconformity_depth_m": {
+   "id": "c:cell:0201_0072:unconformity_depth_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 133.4758,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "m",
+   "note": "Interpolated depth to the base of the Athabasca sandstone for cell 0201_0072"
+  },
+  "c:cell:0201_0072:unconformity_depth_m:n_obs": {
+   "id": "c:cell:0201_0072:unconformity_depth_m:n_obs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "observations behind Interpolated depth to the base of the Athabasca sandstone at cell 0201_0072"
+  },
+  "c:near:0201_0072:0": {
+   "id": "c:near:0201_0072:0",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "unit": "km",
+   "note": "distance from cell 0201_0072 to deposit Horseshoe"
+  },
+  "c:near:0201_0072:1": {
+   "id": "c:near:0201_0072:1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.99,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "unit": "km",
+   "note": "distance from cell 0201_0072 to occurrence Parks Lake"
+  },
+  "c:near:0201_0072:2": {
+   "id": "c:near:0201_0072:2",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.99,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "unit": "km",
+   "note": "distance from cell 0201_0072 to deposit Horseshoe"
+  },
+  "c:near:0201_0072:3": {
+   "id": "c:near:0201_0072:3",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "unit": "km",
+   "note": "distance from cell 0201_0072 to occurrence Drill hole HR-014"
+  },
+  "c:near:0201_0072:4": {
+   "id": "c:near:0201_0072:4",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3.99,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "unit": "km",
+   "note": "distance from cell 0201_0072 to deposit Rabbit Lake"
+  },
+  "c:score:0201_0072:criteria": {
+   "id": "c:score:0201_0072:criteria",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.924,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "criteria score for cell 0201_0072"
+  },
+  "c:score:0201_0072:effort": {
+   "id": "c:score:0201_0072:effort",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.976,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "effort score for cell 0201_0072"
+  },
+  "c:score:0201_0072:learned": {
+   "id": "c:score:0201_0072:learned",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6834,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "learned score for cell 0201_0072"
+  }
+ },
+ "lon": -103.7255,
+ "lat": 58.1579
+}

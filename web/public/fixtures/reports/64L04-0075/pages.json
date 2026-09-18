@@ -1,0 +1,23 @@
+{
+ "file_num": "64L04-0075",
+ "pages": [
+  {
+   "page": 1,
+   "width_px": 1279,
+   "height_px": 1648,
+   "kind": "collar_table",
+   "image": "pages/64L04-0075/p0001.webp",
+   "thumb": "pages/64L04-0075/t0001.webp",
+   "n_values": 9
+  },
+  {
+   "page": 6,
+   "width_px": 1284,
+   "height_px": 1647,
+   "kind": "assay_table",
+   "image": "pages/64L04-0075/p0006.webp",
+   "thumb": "pages/64L04-0075/t0006.webp",
+   "n_values": 17
+  }
+ ]
+}

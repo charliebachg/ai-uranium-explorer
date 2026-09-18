@@ -1,0 +1,365 @@
+# AI Uranium Explorer — what it is and how it works
+
+A working guide to the dashboard: every control on screen, and what actually happens to a cell when you click
+it. Numbers here are the ones the current export measured, not round figures.
+
+---
+
+## 1. What this is, in one paragraph
+
+It reads public Saskatchewan uranium records — provincial GIS layers and scanned assessment reports — turns
+them into a checked, traceable table, scores 2 km cells over the Athabasca Basin three different ways, and puts
+an LLM agent beside each cell that can only speak from the same tools the scores were computed from. The
+argument it makes is not "here is good ground". It is: **here is how much of a prospectivity score is explained
+by where people already drilled**, and here is a way to let a model talk about evidence without letting it
+invent numbers.
+
+**What it is not.** It is not a targeting tool, it makes no geological judgement, and no geologist has reviewed
+any of it. Every score on the map is retrospective. See §8.
+
+---
+
+## 2. Running it
+
+    cd pipeline && uv sync
+    uv run lr prospect serve          # localhost:8787 — the evidence record and the live chat
+    cd ../web && npm install && npm run dev    # http://localhost:5173
+
+The map, the scores, the layers and the guided walkthrough are **static files** and work with nothing running.
+Only the evidence panel and the live chat need `lr prospect serve`; when it is down both panels say so and name
+the command, rather than erroring.
+
+For the chat on OpenAI, put a key in `legacy-reader/.env` (gitignored) and restart the service — it defaults to
+`--backend openai`. Check `uv run lr openai models` first (free) and `uv run lr openai budget` any time; spend
+is capped cumulatively on disk, default $2.00.
+
+---
+
+## 3. The dashboard, control by control
+
+### Top bar
+
+| Item | What it does |
+|---|---|
+| `4 of 5,822 uranium-tagged files read` | The honest coverage figure: how many assessment reports have actually been read end to end, against how many exist. |
+| **Map / Data / Eval / Limits** | The dashboard, then three reference pages (§7). |
+| **Search** (`⌘K`) | Command palette: reports, holes, layers, basemaps, tools. Highlighting a report peeks at it on the map and restores the camera when you leave. |
+| **Tour** (`G`) | The six-step guided walkthrough, ending on a recorded conversation with the agent. |
+
+### The honesty banner (top right)
+
+Normally it says colour encodes extraction status, not prospectivity. **The moment you switch on the score
+cells it changes**, because that sentence stops being true — those cells are the one layer allowed to colour by
+a value. This is enforced in code, not by convention (§5.4).
+
+### Layer rail (left)
+
+Grouped the way MineTRACE groups evidence, with one deliberate addition.
+
+- **Scores** — *Prospect scores* plus a four-way picker: **Criteria / Learned / Effort / Learned − effort**.
+- **Pathway and trap** — EM conductors, faults and lineaments, graphitic or pelitic host.
+- **Geochemistry** — lake sediment samples, lake water samples, radioactive boulders.
+- **Where people already looked** — compilation collars, GeoDS drillholes, airborne and ground survey
+  footprints. *This group exists because separating rock from exploration history is the whole argument.*
+- **Known uranium** — deposit footprints, occurrences.
+- **Base** — Athabasca basin outline, NTS sheets, relief shading.
+- **Geophysics** — **empty on purpose.** Magnetics, gravity and radiometrics are struck through and labelled
+  "no public grid". They are the three layers a prospectivity map usually leans on, and none is published as a
+  grid for Saskatchewan. A gap you can see beats a smooth map that quietly omits it.
+- **Basemap** (footer) — Ink / Streets / **Satellite** / None, and *Data sources and licences*.
+
+  *Satellite* is a Sentinel-2 cloudless mosaic from EOX — the same satellite this project computes its cover
+  features from, so the picture under the cells is genuinely one of the inputs rather than decoration. It costs
+  almost nothing: a whole-basin view fetches **24 tiles, 0.08 MB**, against 4.9 MB for the score cells alone.
+  A dark scrim sits between the imagery and the data so the score ramp, which runs dark to pale, stays
+  readable. Licence is CC BY-NC-SA 4.0 (attribution required, non-commercial); nothing is redistributed —
+  tiles are fetched by the viewer's browser — and the terms are stated in *Data sources and licences*.
+
+**Light theme.** The toggle sits beside the basemap picker, and `?t=light` carries it in a link. It is not just
+a palette swap: the map's colours are compiled into a MapLibre style, so switching rebuilds the style. Three
+things move with it — the basemap pairs to a pale one (a light page over a black map reads as broken), the
+score ramp **flips** so high scores are dark ink rather than pale, and the relief shading lightens (its dark
+ramp painted sea level near-black and turned every lake navy). What does **not** move are the source and status
+hues: compilation blue, GeoDS green, flag amber, miss pink stay put, because a data source that changed colour
+with the theme would make the legend a lie.
+
+Each evidence layer is **fetched the first time you switch it on**. Together they are 16 MB; a viewer who never
+opens them never pays for them.
+
+### The map
+
+Click a cell to open it in the agent rail. Hovering names whatever is under the cursor. The score legend sits
+bottom-left whenever the cells are on, and links to the fold tests.
+
+**Datum tools** (`D`, `M`) are a side exhibit: the NAD27→NAD83 shift is 34.2 m in the eastern basin and 50.8 m
+near Patterson Lake, and *Misread datum* shows where collars would land if that shift were skipped — a real
+failure mode in legacy data, not a hypothetical.
+
+**Timeline** (`T`) filters drillholes by year and says what it is hiding.
+
+### Agent rail (right)
+
+Opens on a selected cell. Header shows the cell id and its centre; under it, the three scores from the exported
+row so the rail still says something with the service down.
+
+- **Evidence tab** — the three model scores with their known-share and applicability; the criteria breakdown,
+  where *unknown* is visually distinct from *not met* (no bar, amber, "not measured"); the nearest labelled
+  deposit; and any memos three agents wrote about this cell, including rejected ones.
+- **Chat tab** — a conversation about that same cell. Question right, answer left, citations under each answer
+  as value chips, the tools it called, and what the turn cost. An answer that fails the check is **kept in the
+  transcript, marked withheld, with the checker's objection in its place**.
+
+---
+
+## 4. Cells to try
+
+| Cell | What it shows | Numbers |
+|---|---|---|
+| `0201_0072` | **The leakage cell.** It *is* the Horseshoe deposit. The null model that knows only where people drilled beats both real models. Three memos and the recorded conversation live here. | criteria 0.924 · learned 0.683 · **effort 0.976** |
+| `0152_0083` | **The interesting one.** High knowledge-driven score with almost no exploration history. The panel disagrees with itself: proponent *supports a closer look*, skeptic *insufficient evidence*. | criteria 0.901 · learned 0.025 · effort 0.034 · known 0.667 |
+| `0169_0116` | **Geology over effort.** 30 km from any labelled deposit. Switch to *Learned − effort* and this is where the map goes blue. | learned 0.830 · effort 0.041 |
+| `0000_0053` | **The coverage gap.** No score at all; 16 of 24 features measured. Every memo says *insufficient evidence*. Ask "what is actually measured here?" | known share 0.40 |
+| `0015_0065` | **The adjudicator overruling.** Well sampled, modest score; proponent says look closer, adjudicator says insufficient. | criteria 0.385 · known 0.933 |
+
+Suggested order: `0201_0072` → `0152_0083` → `0169_0116` on the difference view → `0000_0053`.
+
+---
+
+## 5. How a cell is analysed
+
+### 5.1 The grid
+
+The Athabasca Basin outline plus a 30 km buffer, cut into **2 km cells in EPSG:2957** (UTM 13N, NAD83):
+**30,534 cells over 122,136 km²**. A cell is a search area, never a target.
+
+### 5.2 Features — 24 of them, and the split that matters
+
+Each cell gets 24 features, each stored with the **count of observations behind it**, so "no reading" is never
+confused with "a low reading".
+
+- **18 geological features**: distance to the nearest EM conductor, conductor density, distance to a fault,
+  fault density, mapped graphitic/pelitic host, interpolated unconformity depth, lake-sediment and lake-water
+  uranium (two surveys), boulder counts-per-second, plus Sentinel-2 derived water/vegetation/bare fractions and
+  Copernicus DEM elevation, relief, landform grain and grain coherence.
+- **6 exploration-effort features**: drillholes in the cell, year of the first hole, airborne survey count,
+  ground survey count, sediment samples, boulder samples. **These describe where people looked, not what is in
+  the rock.**
+
+Features are computed from `native`-tier data only — as the province published it. Nothing a model read off a
+scanned page ever becomes a feature (§6.5).
+
+### 5.3 Four views, three scores
+
+**1 — Criteria (knowledge-driven).** A fuzzy-membership table written by hand from the research, with every
+threshold and weight recorded beside its citation in `knowledge/criteria.toml`. It is **not fitted to the
+labels at all**.
+
+| Criterion | Weight | Status | Element | Shape |
+|---|---|---|---|---|
+| conductor_proximity | 3.0 | assumed | pathway | falling 500 m → 5000 m |
+| graphitic_host | 2.0 | **published** | pathway | binary |
+| fault_proximity | 2.0 | assumed | trap | falling 500 m → 5000 m |
+| unconformity_depth | 2.0 | assumed | cover | band 50–120–700–1000 m |
+| lake_sediment_uranium | 2.0 | assumed | detection | percentile 75 → 97 |
+| boulder_train | 2.0 | assumed | dispersal | percentile 50 → 95 |
+| structural_density | 1.0 | assumed | trap | percentile 50 → 90 |
+| lake_water_uranium | 1.0 | assumed | detection | percentile 75 → 97 |
+| conductor_strength | **0.0** | **folklore** | pathway | may be named, never counted |
+| em_bright_spot | **0.0** | **folklore** | pathway | may be named, never counted |
+
+Two claims the research found repeated but never tested are carried at **weight zero** and the loader refuses
+to start if folklore ever gains weight. A cell is only scored when criteria covering at least **half the total
+weight** are actually known — otherwise it has *no score*, which is drawn as a gap, not as zero.
+
+**2 — Learned.** Positive-unlabelled learning: positives are the 60 deposit cells and 620 occurrence cells;
+the other 29,854 are unlabelled, not negative. Complete-case only — no imputation, because imputing a missing
+geochemical reading invents evidence. Folds are fixed **before** fitting.
+
+**3 — Effort (the null model).** The same learner given *only* the six exploration-effort features. It knows
+nothing about rock. **It exists to be beaten**, and the headline result is that it is not.
+
+**4 — Learned − effort (the fourth view).** Not a fourth model: the arithmetic difference between the two
+above, computed in the export so the number the map colours and the number a panel prints come from the same
+subtraction. It is the only view that answers the question the whole project is about — *where does the
+geology say something that exploration history does not already say?* Blue is where the learned score leads,
+pink where effort leads. Most of the basin is pink, which is the finding. `0169_0116` is the clearest cell
+where it goes the other way: learned 0.830 against effort 0.041, 30 km from any labelled deposit.
+
+It is also the honest one to demo, because it cannot be gamed by the leakage: a cell only shows blue if the
+geological model beats the "where people drilled" model *on that cell*.
+
+### 5.4 The machine learning: what, why, and what everyone else uses
+
+**What we use.** `HistGradientBoostingClassifier` from scikit-learn — histogram-based gradient-boosted decision
+trees, the same family as LightGBM. Settings, all in `prospect/models.py`:
+
+    max_depth=4, max_iter=200, learning_rate=0.08,
+    l2_regularization=1.0, class_weight="balanced", random_state=0
+
+**Why this and not something else:**
+
+- **Tabular, small-n, mixed types.** 680 positives against 30,534 cells, with features on wildly different
+  scales (metres, ppm, counts, fractions) and several categorical. Boosted trees are the default winner on
+  tabular data of this size; a neural network has nothing to learn from 680 examples that trees will not.
+- **It tolerates missing values natively.** That matters here, where 9 features cover under 40% of the grid.
+  We still run complete-case only (see below), but the algorithm not needing imputation removes a whole class
+  of quiet invention.
+- **`class_weight="balanced"`** because the base rate is 5.4%; without it the model learns to say "no".
+- **Shallow trees, few iterations, L2.** With 680 positives a deep forest memorises the camps. `max_depth=4`
+  is a deliberate underfit — we are trying to measure whether geology carries signal, not to win a leaderboard.
+- **`random_state=0` and folds fixed before fitting**, so the number is reproducible and the split cannot be
+  chosen after seeing the result.
+
+**What we deliberately did not do:**
+
+- **No imputation.** Complete-case only. Imputing a missing lake-sediment reading invents a measurement, and
+  this project's whole discipline is that it does not do that. The cost is honest: the learned and effort
+  models score only the 10,183 cells where every input exists.
+- **No SMOTE or synthetic positives.** Generating fake deposits to balance classes would be fabricating the
+  very thing being predicted.
+- **No hyperparameter search against the test folds.** There is no held-out tuning budget here, so tuning
+  against the folds would leak.
+
+**What the field actually uses.** From this project's research (report 02):
+
+| Approach | Who uses it | Note |
+|---|---|---|
+| **Random Forest / gradient boosting on gridded features** | The workhorse of published mineral prospectivity mapping | What we use, and what MineTRACE's scorer is |
+| **Weights of Evidence / fuzzy logic** | The classical knowledge-driven method, and the only peer-reviewed Athabasca precedent | This is essentially our **criteria** score |
+| **Positive-unlabelled learning** | Increasingly standard, because "not a known deposit" ≠ "barren" | The framing we use for labels |
+| **CNNs on geophysical grids** | Growing, where magnetics/gravity grids exist | **Not available to us** — no public grids for Saskatchewan (§3, Geophysics) |
+| **Deep learning on drill-core imagery / hyperspectral** | Active research | Needs company core, not public data |
+
+The one thing the literature does far less often, and which this project treats as the headline, is
+**running an exploration-effort null model alongside the real one**. Published prospectivity papers typically
+report AUC against known occurrences without asking how much of that AUC a model would get from drilling
+density alone. When we asked, the answer was: most of it.
+
+### 5.5 The colour exception
+
+Everywhere else on this map, colour encodes a data source or an extraction status. Score cells break that, so
+the exception is **declared and tested**: the layer carries `metadata["lr:score"]`, the honesty check in
+`composeStyle.ts` allows only score fields on such a layer, and refuses both an undeclared layer that colours
+by a computed key and a declared layer that colours by anything else. The banner changes and a legend appears.
+
+### 5.6 What the scores are actually worth
+
+Measured on the 10,183 cells all three models can score, base rate 5.4%:
+
+| Model | Fold | PR-AUC | ROC-AUC | Capture @ top 10% |
+|---|---|---|---|---|
+| Criteria (unfitted) | none | 0.069 | 0.547 | 14.5% |
+| Learned | random | 0.183 | 0.797 | 37.0% |
+| **Effort (null)** | random | **0.386** | 0.879 | **57.1%** |
+| Learned | **spatial** | 0.133 | 0.762 | 28.9% |
+| **Effort (null)** | **spatial** | **0.347** | 0.852 | **53.1%** |
+| Learned | camp | 0.080 | 0.641 | 15.6% |
+| **Effort (null)** | camp | **0.241** | 0.773 | **38.8%** |
+
+**Read the spatial row.** Under folds drawn so nearby cells cannot leak between training and test, a model given
+nothing but drilling history scores **0.347** against **0.133** for the model trained on geology. Under
+leave-one-camp-out it is 0.241 against 0.080. The knowledge-driven criteria score, which nobody fitted, reaches
+ROC-AUC 0.547 — near chance.
+
+That is the finding this system was built to be able to report. Known deposits sit where people looked, so any
+model trained on public labels partly learns exploration history.
+
+---
+
+## 6. The LLM layer
+
+### 6.1 Six tools, all deterministic Python
+
+`cell_features`, `cell_scores`, `criteria_breakdown`, `label_context`, `coverage`, `retrieve`.
+
+Every number a tool returns arrives inside a **Val with an id**. The model never computes anything — no
+arithmetic, no distances, no conversions — because that boundary is where documented GIS-agent failures happen.
+If a tool shows the model a number, that number has an id it can cite; a test enforces it.
+
+### 6.2 The panel — three roles per cell
+
+**Proponent** argues from the tools. **Skeptic** attacks coverage gaps, effort-model artefacts, folklore
+criteria and proximity to known deposits. **Adjudicator** rules: *supports a closer look* / *insufficient
+evidence* / *evidence against*, names which criteria are **unknown** versus **absent**, and states the one
+observation that would change the verdict. The verdict scale tops out at "supports a closer look" — there is no
+"drill here".
+
+The skeptic has already earned its place: on one run it noticed the criteria model had no validation metric
+while the other two did. That is why §5.6 has a criteria row at all.
+
+### 6.3 The chat
+
+Same tools, same evidence record, same gate. A conversation is bound to one cell; selecting another starts a
+fresh one rather than carrying stale context.
+
+### 6.4 The fabrication gate — and how it is measured
+
+**The rule:** every number in an answer must resolve to a value the tools returned *and that the claim cites*,
+or appear verbatim in text a tool returned.
+
+Asserting that is easy; the honest problem was that the gate had rejected four things and **all four were false
+positives** — a check that has only ever been wrong when it fired is an untested check. So `lr prospect
+gate-eval` puts real claims and deliberately corrupted ones to it — digit slipped, decimal moved, precision
+invented, conversion done by hand, a real number cited to the wrong value, a number cited to nothing — with no
+model in the loop, so it is deterministic and free.
+
+**Result: 210 of 223 fabrications refused, 0 of 90 true claims wrongly refused.** The 13 that get through are
+small round numbers that also appear in quotable text. The full breakdown is on the **Eval** page.
+
+Running it changed the system three times: the allowance used to be a substring test over the whole tool
+payload (so the value-id binding did nothing, and *none* of the 40 wrong-citation cases were caught); a tool
+showed a number with no id, so a memo was refused for a number it could not cite; and the handbook and criteria
+file were part of the allowance, making every threshold an uncited number.
+
+### 6.5 Provenance tiers — the rule underneath everything
+
+Four DuckDB schemas, enforced by a `tier` column with CHECK constraints and an audit that refuses a mixed table:
+
+| Tier | What lives there |
+|---|---|
+| `native` | Data as published by a REST/STAC service. Trusted as far as the publisher is. |
+| `read` | What a model read off a scanned page. **Unvalidated.** Never becomes a feature or a label. |
+| `derived` | Anything computed — grid, features, scores, metrics. Records its inputs. |
+| `agent` | What a model argued. **Never a source of numbers.** |
+
+### 6.6 Backends, cost and caching
+
+The chat runs on OpenAI (`family = "openai"`); reading, the memo panel and the evals stay on Claude Code. The
+cache key carries the backend family, so one backend's answer can never be served for the other. Spend is
+checked **before** each call against a cumulative on-disk ledger — a restart does not hand back a fresh budget.
+Tokens are recorded as the API reports them; dollars are arithmetic over prices you set in `.env`, because a
+price this code guessed would be exactly the kind of fabricated number the rest of the system exists to prevent.
+
+**Known issue:** the cache key covers the user prompt but not the system prompt or schema, so editing a rule
+re-serves the old answer until `PROMPT_VERSION` is bumped. This was observed, not theorised. Bump the version
+when you change a prompt.
+
+---
+
+## 7. The other three pages
+
+- **Data** — how much of the grid each feature actually covers, every source with its licence and verification
+  date, and four recorded gaps (including the missing geophysical grids).
+- **Eval** — what the reading run did, what the checks caught, the fold tests from §5.6, and the gate scorecard
+  from §6.4. It states at the top that these are run statistics, not accuracy, because no gold set has been
+  labelled.
+- **Limits** — what this demo can and cannot claim, carried from the project's research with each line cited.
+
+---
+
+## 8. What to say out loud
+
+> This is a public-data engineering demo. It reads what old Saskatchewan assessment reports print and measures
+> how often it reads them wrongly. It makes no geological judgement and proposes no drill targets. I am not a
+> geologist.
+
+And on the map specifically:
+
+> Retrospective scoring of public data. No geologist has seen this, and the fold tests show how much of the
+> ranking is explained by where people already drilled.
+
+The strongest thing the system produces is not a score. It is **the next observation** — the single measurement
+that would most change the reading of a cell. That is what a geologist can act on.
+
+**To trust any of this for drilling** you would need geologist-defined error classes, a hand-labelled sample,
+drill outcomes, and folds fixed before modelling. That is the first ask, not the last.

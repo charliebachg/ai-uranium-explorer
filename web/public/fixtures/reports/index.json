@@ -1,0 +1,141 @@
+{
+ "reports": [
+  {
+   "file_num": "64L04-0075",
+   "company": "Asamera Oil Corporation Ltd",
+   "property": "Grid Q-9",
+   "era": "1980s-1990s",
+   "year": "d:64L04-0075:year",
+   "nts_sheets": [
+    "64L04"
+   ],
+   "page_count": "d:64L04-0075:page_count",
+   "scan_kind": "scanned",
+   "file_sha256": "f397588df3d4261eb56ab0eaedbe857c6512f50dc58fbb59efad664817d489d8",
+   "source_url": "https://geoscience-data-system.saskatchewan.ca/",
+   "split": "dev",
+   "status_counts": {
+    "pass": "d:64L04-0075:n_pass",
+    "flag": "d:64L04-0075:n_flag",
+    "miss": "d:64L04-0075:n_miss"
+   },
+   "footprint": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -104.0,
+       58.0
+      ],
+      [
+       -103.5,
+       58.0
+      ],
+      [
+       -103.5,
+       58.25
+      ],
+      [
+       -104.0,
+       58.25
+      ],
+      [
+       -104.0,
+       58.0
+      ]
+     ]
+    ]
+   },
+   "centroid": [
+    -103.75,
+    58.125
+   ],
+   "holes": [
+    {
+     "hole_id": "Q9-5",
+     "name": "Q9-5",
+     "status": "flag",
+     "lonlat": null,
+     "position_source": "none",
+     "datum_basis": "local_grid"
+    },
+    {
+     "hole_id": "Q9-6",
+     "name": "Q9-6",
+     "status": "flag",
+     "lonlat": null,
+     "position_source": "none",
+     "datum_basis": "none"
+    }
+   ]
+  }
+ ],
+ "values": {
+  "d:64L04-0075:year": {
+   "id": "d:64L04-0075:year",
+   "kind": "derived",
+   "as_printed": null,
+   "value": "1980",
+   "unit_as_printed": null,
+   "fmt": "text",
+   "derivation": {
+    "op": "work_date",
+    "inputs": [],
+    "tool": "fixture builder"
+   },
+   "note": "WRK_PERIOD 1980 and DATE STARTED Feb. 7/80"
+  },
+  "d:64L04-0075:page_count": {
+   "id": "d:64L04-0075:page_count",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 51,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "pdfinfo",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:n_pass": {
+   "id": "d:64L04-0075:n_pass",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:n_flag": {
+   "id": "d:64L04-0075:n_flag",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  },
+  "d:64L04-0075:n_miss": {
+   "id": "d:64L04-0075:n_miss",
+   "kind": "derived",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "derivation": {
+    "op": "count",
+    "inputs": [],
+    "tool": "fixture builder"
+   }
+  }
+ }
+}

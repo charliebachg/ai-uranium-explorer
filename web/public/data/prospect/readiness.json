@@ -1,0 +1,2547 @@
+{
+ "schema_version": "1.0.0",
+ "generated_at": "2026-09-18T09:33:31+00:00",
+ "grid": {
+  "grid_id": "8e52ffbca2f1",
+  "epsg": 2957,
+  "cells": "c:grid:cells",
+  "cell_m": "c:grid:cell_m",
+  "in_basin": "c:grid:in_basin",
+  "area_km2": "c:grid:area_km2",
+  "buffer_km": "c:grid:buffer_km"
+ },
+ "totals": {
+  "sources": "c:src:total",
+  "verified_features": "c:src:verified_features",
+  "redistributable": "c:src:redistributable",
+  "gaps": "c:src:gaps",
+  "geo_features": "c:grid:geo_features",
+  "effort_features": "c:grid:effort_features"
+ },
+ "thin_coverage_threshold": 0.4,
+ "caveats": [
+  "This is a coverage map, not a prospectivity map: it shows where measurements exist, not where uranium is.",
+  "A feature covering a small share of the basin cannot carry a basin-wide model: what it would mostly encode is where people sampled.",
+  "Absence of a measurement is not absence of the thing measured; cells with no observation are drawn as gaps, not as low values.",
+  "The single most-used Athabasca datasets, airborne magnetics, radiometrics and gravity, are not published as grids by URL and are missing here entirely."
+ ],
+ "features": [
+  {
+   "feature_key": "d_conductor_m",
+   "title": "Distance to nearest EM conductor",
+   "bears_on": "pathway",
+   "is_effort": false,
+   "unit": "m",
+   "thin": false,
+   "coverage": "c:cov:d_conductor_m",
+   "covered_cells": "c:covn:d_conductor_m",
+   "median_obs": "c:obs:d_conductor_m",
+   "median_value": "c:med:d_conductor_m",
+   "notes": "Graphitic basement units are the key empirical locators for Athabasca uranium; a conductor trace plots up-dip of blind ore, so proximity is a hint, not a position.",
+   "sources": [
+    "em_conductors"
+   ]
+  },
+  {
+   "feature_key": "d_fault_m",
+   "title": "Distance to nearest mapped fault or lineament",
+   "bears_on": "trap",
+   "is_effort": false,
+   "unit": "m",
+   "thin": false,
+   "coverage": "c:cov:d_fault_m",
+   "covered_cells": "c:covn:d_fault_m",
+   "median_obs": "c:obs:d_fault_m",
+   "median_value": "c:med:d_fault_m",
+   "notes": "",
+   "sources": [
+    "faults_250k"
+   ]
+  },
+  {
+   "feature_key": "elevation_m",
+   "title": "Elevation m",
+   "bears_on": "cover",
+   "is_effort": false,
+   "unit": "m",
+   "thin": false,
+   "coverage": "c:cov:elevation_m",
+   "covered_cells": "c:covn:elevation_m",
+   "median_obs": "c:obs:elevation_m",
+   "median_value": "c:med:elevation_m",
+   "notes": "Mean elevation from Copernicus DEM GLO-30.",
+   "sources": [
+    "cop_dem_glo_30"
+   ]
+  },
+  {
+   "feature_key": "grain_coherence",
+   "title": "Grain coherence",
+   "bears_on": "dispersal",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:grain_coherence",
+   "covered_cells": "c:covn:grain_coherence",
+   "median_obs": "c:obs:grain_coherence",
+   "median_value": "c:med:grain_coherence",
+   "notes": "How rank-one the structure tensor is, 0 to 1. On this terrain it sits above 0.98 for three quarters of the cells, so it does not separate cells with a grain from cells without one and must not be used as a quality filter. It is published because the measurement was made, not because it discriminates.",
+   "sources": [
+    "cop_dem_glo_30"
+   ]
+  },
+  {
+   "feature_key": "landform_grain_deg",
+   "title": "Landform grain deg",
+   "bears_on": "dispersal",
+   "is_effort": false,
+   "unit": "deg",
+   "thin": false,
+   "coverage": "c:cov:landform_grain_deg",
+   "covered_cells": "c:covn:landform_grain_deg",
+   "median_obs": "c:obs:landform_grain_deg",
+   "median_value": "c:med:landform_grain_deg",
+   "notes": "Orientation of the terrain's grain, 0 to 180 degrees, from the structure tensor of a detrended DEM. It is an axis, not a direction: which end the ice came from cannot be read from an axis. Measured on this grid it peaks sharply between 120 and 150 degrees, and nothing here establishes that this is glacial rather than structural or drainage grain, so no criterion may use it as an ice-flow direction until a geologist sets both the sense and whether it is ice flow at all.",
+   "sources": [
+    "cop_dem_glo_30"
+   ]
+  },
+  {
+   "feature_key": "relief_m",
+   "title": "Relief m",
+   "bears_on": "dispersal",
+   "is_effort": false,
+   "unit": "m",
+   "thin": false,
+   "coverage": "c:cov:relief_m",
+   "covered_cells": "c:covn:relief_m",
+   "median_obs": "c:obs:relief_m",
+   "median_value": "c:med:relief_m",
+   "notes": "Local relief within the cell: the terrain grain that carries glacial landforms, which is how a boulder train is turned into a direction.",
+   "sources": [
+    "cop_dem_glo_30"
+   ]
+  },
+  {
+   "feature_key": "bare_fraction",
+   "title": "Bare fraction",
+   "bears_on": "cover",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:bare_fraction",
+   "covered_cells": "c:covn:bare_fraction",
+   "median_obs": "c:obs:bare_fraction",
+   "median_value": "c:med:bare_fraction",
+   "notes": "Share classified as bare ground, the nearest public proxy for where rock is exposed rather than covered.",
+   "sources": [
+    "sentinel2_l2a"
+   ]
+  },
+  {
+   "feature_key": "vegetation_fraction",
+   "title": "Vegetation fraction",
+   "bears_on": "cover",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:vegetation_fraction",
+   "covered_cells": "c:covn:vegetation_fraction",
+   "median_obs": "c:obs:vegetation_fraction",
+   "median_value": "c:med:vegetation_fraction",
+   "notes": "Share classified as vegetation: how much of the ground is obscured from any surface observation.",
+   "sources": [
+    "sentinel2_l2a"
+   ]
+  },
+  {
+   "feature_key": "water_fraction",
+   "title": "Water fraction",
+   "bears_on": "detection",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:water_fraction",
+   "covered_cells": "c:covn:water_fraction",
+   "median_obs": "c:obs:water_fraction",
+   "median_value": "c:med:water_fraction",
+   "notes": "Share of the cell classified as water. The lake-sediment and lake-water surveys can only sample where there is a lake, so this says whether a cell could ever have carried one of those measurements.",
+   "sources": [
+    "sentinel2_l2a"
+   ]
+  },
+  {
+   "feature_key": "graphitic_host",
+   "title": "Mapped bedrock names a graphitic or pelitic host",
+   "bears_on": "pathway",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:graphitic_host",
+   "covered_cells": "c:covn:graphitic_host",
+   "median_obs": "c:obs:graphitic_host",
+   "median_value": "c:med:graphitic_host",
+   "notes": "Null where the 1:250,000 map has no polygon: unmapped is not the same as absent.",
+   "sources": [
+    "bedrock_250k"
+   ]
+  },
+  {
+   "feature_key": "surficial_class",
+   "title": "Dominant surficial environment",
+   "bears_on": "cover",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:surficial_class",
+   "covered_cells": "c:covn:surficial_class",
+   "median_obs": "c:obs:surficial_class",
+   "median_value": null,
+   "notes": "",
+   "sources": [
+    "surficial_250k"
+   ]
+  },
+  {
+   "feature_key": "unconformity_depth_m",
+   "title": "Interpolated depth to the base of the Athabasca sandstone",
+   "bears_on": "cover",
+   "is_effort": false,
+   "unit": "m",
+   "thin": false,
+   "coverage": "c:cov:unconformity_depth_m",
+   "covered_cells": "c:covn:unconformity_depth_m",
+   "median_obs": "c:obs:unconformity_depth_m",
+   "median_value": "c:med:unconformity_depth_m",
+   "notes": "Only holes that reached the contact carry this depth, so the interpolation is capped at 25 km from the nearest observation and null beyond it.",
+   "sources": [
+    "compilation"
+   ]
+  },
+  {
+   "feature_key": "fault_density",
+   "title": "Fault and lineament length per km2",
+   "bears_on": "trap",
+   "is_effort": false,
+   "unit": "km/km2",
+   "thin": false,
+   "coverage": "c:cov:fault_density",
+   "covered_cells": "c:covn:fault_density",
+   "median_obs": "c:obs:fault_density",
+   "median_value": "c:med:fault_density",
+   "notes": "",
+   "sources": [
+    "faults_250k"
+   ]
+  },
+  {
+   "feature_key": "sed_u_max_ppm",
+   "title": "Highest lake-sediment uranium within 5 km",
+   "bears_on": "detection",
+   "is_effort": false,
+   "unit": "ppm",
+   "thin": true,
+   "coverage": "c:cov:sed_u_max_ppm",
+   "covered_cells": "c:covn:sed_u_max_ppm",
+   "median_obs": "c:obs:sed_u_max_ppm",
+   "median_value": "c:med:sed_u_max_ppm",
+   "notes": "A dispersion signal: it says something upstream sheds uranium, not that ore is here.",
+   "sources": [
+    "lake_sediment_gsc"
+   ]
+  },
+  {
+   "feature_key": "conductor_density",
+   "title": "EM conductor length per km2",
+   "bears_on": "pathway",
+   "is_effort": false,
+   "unit": "km/km2",
+   "thin": true,
+   "coverage": "c:cov:conductor_density",
+   "covered_cells": "c:covn:conductor_density",
+   "median_obs": "c:obs:conductor_density",
+   "median_value": "c:med:conductor_density",
+   "notes": "",
+   "sources": [
+    "em_conductors"
+   ]
+  },
+  {
+   "feature_key": "sed_u_max_ppm_sgs",
+   "title": "Highest lake-sediment uranium within 5 km (1975-1978 survey)",
+   "bears_on": "detection",
+   "is_effort": false,
+   "unit": "ppm",
+   "thin": true,
+   "coverage": "c:cov:sed_u_max_ppm_sgs",
+   "covered_cells": "c:covn:sed_u_max_ppm_sgs",
+   "median_obs": "c:obs:sed_u_max_ppm_sgs",
+   "median_value": "c:med:sed_u_max_ppm_sgs",
+   "notes": "",
+   "sources": [
+    "lake_sediment_sgs"
+   ]
+  },
+  {
+   "feature_key": "boulder_max_cps",
+   "title": "Highest radioactive-boulder count rate within 5 km",
+   "bears_on": "dispersal",
+   "is_effort": false,
+   "unit": "cps",
+   "thin": true,
+   "coverage": "c:cov:boulder_max_cps",
+   "covered_cells": "c:covn:boulder_max_cps",
+   "median_obs": "c:obs:boulder_max_cps",
+   "median_value": "c:med:boulder_max_cps",
+   "notes": "A boulder train points up-ice: at Patterson Lake the discovery hole sat 3.8 km up-ice of the boulders, so this is a vector, not a location.",
+   "sources": [
+    "radioactive_boulders"
+   ]
+  },
+  {
+   "feature_key": "water_u_max_ppm",
+   "title": "Highest lake-water uranium within 5 km",
+   "bears_on": "detection",
+   "is_effort": false,
+   "unit": "ppm",
+   "thin": true,
+   "coverage": "c:cov:water_u_max_ppm",
+   "covered_cells": "c:covn:water_u_max_ppm",
+   "median_obs": "c:obs:water_u_max_ppm",
+   "median_value": "c:med:water_u_max_ppm",
+   "notes": "",
+   "sources": [
+    "lake_water_sgs"
+   ]
+  },
+  {
+   "feature_key": "airborne_surveys_n",
+   "title": "Airborne survey footprints covering the cell",
+   "bears_on": "effort",
+   "is_effort": true,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:airborne_surveys_n",
+   "covered_cells": "c:covn:airborne_surveys_n",
+   "median_obs": "c:obs:airborne_surveys_n",
+   "median_value": "c:med:airborne_surveys_n",
+   "notes": "",
+   "sources": [
+    "survey_footprints_airborne"
+   ]
+  },
+  {
+   "feature_key": "boulder_samples_n",
+   "title": "Radioactive-boulder records within 5 km",
+   "bears_on": "effort",
+   "is_effort": true,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:boulder_samples_n",
+   "covered_cells": "c:covn:boulder_samples_n",
+   "median_obs": "c:obs:boulder_samples_n",
+   "median_value": "c:med:boulder_samples_n",
+   "notes": "",
+   "sources": [
+    "radioactive_boulders"
+   ]
+  },
+  {
+   "feature_key": "ground_surveys_n",
+   "title": "Ground survey footprints covering the cell",
+   "bears_on": "effort",
+   "is_effort": true,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:ground_surveys_n",
+   "covered_cells": "c:covn:ground_surveys_n",
+   "median_obs": "c:obs:ground_surveys_n",
+   "median_value": "c:med:ground_surveys_n",
+   "notes": "",
+   "sources": [
+    "survey_footprints_ground"
+   ]
+  },
+  {
+   "feature_key": "holes_n",
+   "title": "Provincial drillhole collars within 2 km",
+   "bears_on": "effort",
+   "is_effort": true,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:holes_n",
+   "covered_cells": "c:covn:holes_n",
+   "median_obs": "c:obs:holes_n",
+   "median_value": "c:med:holes_n",
+   "notes": "",
+   "sources": [
+    "compilation"
+   ]
+  },
+  {
+   "feature_key": "sed_samples_n",
+   "title": "Lake-sediment samples within 5 km",
+   "bears_on": "effort",
+   "is_effort": true,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:sed_samples_n",
+   "covered_cells": "c:covn:sed_samples_n",
+   "median_obs": "c:obs:sed_samples_n",
+   "median_value": "c:med:sed_samples_n",
+   "notes": "",
+   "sources": [
+    "lake_sediment_gsc"
+   ]
+  },
+  {
+   "feature_key": "holes_first_year",
+   "title": "Earliest drilling year within 5 km",
+   "bears_on": "effort",
+   "is_effort": true,
+   "unit": "year",
+   "thin": true,
+   "coverage": "c:cov:holes_first_year",
+   "covered_cells": "c:covn:holes_first_year",
+   "median_obs": "c:obs:holes_first_year",
+   "median_value": "c:med:holes_first_year",
+   "notes": "When someone first drilled nearby: exploration history, not geology.",
+   "sources": [
+    "compilation"
+   ]
+  }
+ ],
+ "metrics": {
+  "run_id": "2026-09-18T08:04:01+00:00",
+  "rows": [
+   {
+    "model": "criteria",
+    "fold": "none",
+    "metric": "base_rate",
+    "value_id": "c:m:criteria.none.base_rate"
+   },
+   {
+    "model": "criteria",
+    "fold": "none",
+    "metric": "capture_top10",
+    "value_id": "c:m:criteria.none.capture_top10"
+   },
+   {
+    "model": "criteria",
+    "fold": "none",
+    "metric": "pr_auc",
+    "value_id": "c:m:criteria.none.pr_auc"
+   },
+   {
+    "model": "criteria",
+    "fold": "none",
+    "metric": "roc_auc",
+    "value_id": "c:m:criteria.none.roc_auc"
+   },
+   {
+    "model": "effort",
+    "fold": "camp",
+    "metric": "base_rate",
+    "value_id": "c:m:effort.camp.base_rate"
+   },
+   {
+    "model": "effort",
+    "fold": "camp",
+    "metric": "capture_top10",
+    "value_id": "c:m:effort.camp.capture_top10"
+   },
+   {
+    "model": "effort",
+    "fold": "camp",
+    "metric": "pr_auc",
+    "value_id": "c:m:effort.camp.pr_auc"
+   },
+   {
+    "model": "effort",
+    "fold": "camp",
+    "metric": "roc_auc",
+    "value_id": "c:m:effort.camp.roc_auc"
+   },
+   {
+    "model": "effort",
+    "fold": "random",
+    "metric": "base_rate",
+    "value_id": "c:m:effort.random.base_rate"
+   },
+   {
+    "model": "effort",
+    "fold": "random",
+    "metric": "capture_top10",
+    "value_id": "c:m:effort.random.capture_top10"
+   },
+   {
+    "model": "effort",
+    "fold": "random",
+    "metric": "pr_auc",
+    "value_id": "c:m:effort.random.pr_auc"
+   },
+   {
+    "model": "effort",
+    "fold": "random",
+    "metric": "roc_auc",
+    "value_id": "c:m:effort.random.roc_auc"
+   },
+   {
+    "model": "effort",
+    "fold": "spatial",
+    "metric": "base_rate",
+    "value_id": "c:m:effort.spatial.base_rate"
+   },
+   {
+    "model": "effort",
+    "fold": "spatial",
+    "metric": "capture_top10",
+    "value_id": "c:m:effort.spatial.capture_top10"
+   },
+   {
+    "model": "effort",
+    "fold": "spatial",
+    "metric": "pr_auc",
+    "value_id": "c:m:effort.spatial.pr_auc"
+   },
+   {
+    "model": "effort",
+    "fold": "spatial",
+    "metric": "roc_auc",
+    "value_id": "c:m:effort.spatial.roc_auc"
+   },
+   {
+    "model": "learned",
+    "fold": "camp",
+    "metric": "base_rate",
+    "value_id": "c:m:learned.camp.base_rate"
+   },
+   {
+    "model": "learned",
+    "fold": "camp",
+    "metric": "capture_top10",
+    "value_id": "c:m:learned.camp.capture_top10"
+   },
+   {
+    "model": "learned",
+    "fold": "camp",
+    "metric": "pr_auc",
+    "value_id": "c:m:learned.camp.pr_auc"
+   },
+   {
+    "model": "learned",
+    "fold": "camp",
+    "metric": "roc_auc",
+    "value_id": "c:m:learned.camp.roc_auc"
+   },
+   {
+    "model": "learned",
+    "fold": "random",
+    "metric": "base_rate",
+    "value_id": "c:m:learned.random.base_rate"
+   },
+   {
+    "model": "learned",
+    "fold": "random",
+    "metric": "capture_top10",
+    "value_id": "c:m:learned.random.capture_top10"
+   },
+   {
+    "model": "learned",
+    "fold": "random",
+    "metric": "pr_auc",
+    "value_id": "c:m:learned.random.pr_auc"
+   },
+   {
+    "model": "learned",
+    "fold": "random",
+    "metric": "roc_auc",
+    "value_id": "c:m:learned.random.roc_auc"
+   },
+   {
+    "model": "learned",
+    "fold": "spatial",
+    "metric": "base_rate",
+    "value_id": "c:m:learned.spatial.base_rate"
+   },
+   {
+    "model": "learned",
+    "fold": "spatial",
+    "metric": "capture_top10",
+    "value_id": "c:m:learned.spatial.capture_top10"
+   },
+   {
+    "model": "learned",
+    "fold": "spatial",
+    "metric": "pr_auc",
+    "value_id": "c:m:learned.spatial.pr_auc"
+   },
+   {
+    "model": "learned",
+    "fold": "spatial",
+    "metric": "roc_auc",
+    "value_id": "c:m:learned.spatial.roc_auc"
+   }
+  ]
+ },
+ "gate": {
+  "run_id": "648fee62fd6a",
+  "cells": [
+   "0000_0053",
+   "0015_0065",
+   "0118_0119",
+   "0152_0083",
+   "0201_0072"
+  ],
+  "cases": "c:gate:cases",
+  "put": "c:gate:put",
+  "caught": "c:gate:caught",
+  "missed": "c:gate:missed",
+  "caught_rate": "c:gate:caught_rate",
+  "honest": "c:gate:honest",
+  "wrongly_rejected": "c:gate:wrongly_rejected",
+  "by_kind": {
+   "cited_to_the_wrong_value": {
+    "caught": "c:gate:cited_to_the_wrong_value:caught",
+    "missed": "c:gate:cited_to_the_wrong_value:missed"
+   },
+   "decimal_shift": {
+    "caught": "c:gate:decimal_shift:caught",
+    "missed": "c:gate:decimal_shift:missed"
+   },
+   "digit_slip": {
+    "caught": "c:gate:digit_slip:caught",
+    "missed": "c:gate:digit_slip:missed"
+   },
+   "false_precision": {
+    "caught": "c:gate:false_precision:caught",
+    "missed": "c:gate:false_precision:missed"
+   },
+   "hand_conversion": {
+    "caught": "c:gate:hand_conversion:caught",
+    "missed": "c:gate:hand_conversion:missed"
+   },
+   "invented": {
+    "caught": "c:gate:invented:caught",
+    "missed": "c:gate:invented:missed"
+   },
+   "transposed": {
+    "caught": "c:gate:transposed:caught",
+    "missed": "c:gate:transposed:missed"
+   },
+   "uncited": {
+    "caught": "c:gate:uncited:caught",
+    "missed": "c:gate:uncited:missed"
+   }
+  },
+  "escaped": [
+   {
+    "kind": "invented",
+    "text": "weight carried by conductor_strength is 1.2.",
+    "note": ""
+   },
+   {
+    "kind": "invented",
+    "text": "Fault and lineament length per km2 for cell 0015_0065 is 1.1 km/km2.",
+    "note": ""
+   },
+   {
+    "kind": "digit_slip",
+    "text": "observations behind Highest radioactive-boulder count rate within 5 km at cell 0015_0065 is 1.3.",
+    "note": ""
+   },
+   {
+    "kind": "cited_to_the_wrong_value",
+    "text": "Fault and lineament length per km2 for cell 0015_0065 is 4 km/km2.",
+    "note": "the number belongs to c:cell:0015_0065:sed_u_max_ppm:n_obs"
+   },
+   {
+    "kind": "cited_to_the_wrong_value",
+    "text": "p_hi threshold for em_bright_spot, status folklore is 1.",
+    "note": "the number belongs to c:cell:0015_0065:d_conductor_m:n_obs"
+   },
+   {
+    "kind": "invented",
+    "text": "Radioactive-boulder records within 5 km for cell 0118_0119 is 1.2.",
+    "note": ""
+   },
+   {
+    "kind": "decimal_shift",
+    "text": "weight carried by lake_water_uranium is 10.",
+    "note": ""
+   },
+   {
+    "kind": "invented",
+    "text": "weight carried by lake_water_uranium is 1.1.",
+    "note": ""
+   },
+   {
+    "kind": "decimal_shift",
+    "text": "observations behind EM conductor length per km2 at cell 0152_0083 is 10.",
+    "note": ""
+   },
+   {
+    "kind": "invented",
+    "text": "observations behind EM conductor length per km2 at cell 0152_0083 is 1.1.",
+    "note": ""
+   },
+   {
+    "kind": "decimal_shift",
+    "text": "observations behind Bare fraction at cell 0152_0083 is 10.",
+    "note": ""
+   },
+   {
+    "kind": "cited_to_the_wrong_value",
+    "text": "observations behind Bare fraction at cell 0152_0083 is 1.",
+    "note": "the number belongs to c:cell:0152_0083:fault_density:n_obs"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "key": "em_conductors",
+   "title": "EM conductors (interpreted)",
+   "role": "feature",
+   "bears_on": "pathway",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Regional_Datasets_and_Compilations/FeatureServer/7",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 28458,
+   "notes": "Graphitic basement units are \"the source of most significant conductors in the Athabasca Basin, and are key empirical locators for U deposits\" (Jefferson et al. 2007, via research report 02 section 1.1.3). This is the single most valuable public feature here.",
+   "caveats": [
+    "Conductor traces plot up-dip of blind ore, so a buffer must extend down-dip rather than being symmetric (report 02, 1.1.3).",
+    "Silicification can turn graphitic gneiss from a conductor into a resistor, so absence is not evidence of absence.",
+    "The Wolverine Point Formation is itself a conductor and hinders detection of graphitic units beneath it.",
+    "Attribute list not yet confirmed: do not assume a conductance field exists.",
+    "Compiled as it stands today, partly from surveys flown after the discoveries it now sits near: a hindcast using it is optimistic."
+   ]
+  },
+  {
+   "key": "faults_250k",
+   "title": "Faults and lineaments, 1:250,000",
+   "role": "feature",
+   "bears_on": "trap",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/250K_Scale_Geology/FeatureServer/2",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 17571,
+   "notes": "The trap element: \"the unconformity offset where footwall faults meet the P2 fault hosts the McArthur River ore pods\" (report 02, 1.1.5). Fault intersections matter more than fault proximity alone.",
+   "caveats": [
+    "YEAR was 0 in every sampled row: treat it as unpopulated, not as a compilation date.",
+    "A 1:250,000 line has map-scale position error far larger than an ore body."
+   ]
+  },
+  {
+   "key": "bedrock_250k",
+   "title": "Bedrock geology, 1:250,000",
+   "role": "feature",
+   "bears_on": "pathway",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/250K_Scale_Geology/FeatureServer/3",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 9596,
+   "notes": "Magnetic lows mark \"pelitic-psammopelitic gneiss, the host of graphitic conductors\" (report 02, 1.1.2); with no public magnetic grid, the mapped lithology is the only way to reach that element. LITHOLOGY carries the graphitic and pelitic descriptors a criterion can key on.",
+   "caveats": [
+    "Better than the 1:1,000,000 compilation already pulled, but still a regional map."
+   ]
+  },
+  {
+   "key": "surficial_250k",
+   "title": "Surficial geology, 1:250,000",
+   "role": "feature",
+   "bears_on": "cover",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/250K_Scale_Geology/FeatureServer/1",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 8567,
+   "notes": "Whether a surface sample means anything depends on what lies between it and bedrock; also the glacial context for boulder dispersal.",
+   "caveats": [
+    "Two attributes only: it classifies the environment, not the thickness of cover."
+   ]
+  },
+  {
+   "key": "lake_sediment_gsc",
+   "title": "Lake sediment geochemistry (Geological Survey of Canada analyses)",
+   "role": "feature",
+   "bears_on": "detection",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Analytical_and_Rock_Property_Data/FeatureServer/2",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 13195,
+   "notes": "The densest direct uranium pathfinder available publicly; U_INA is neutron activation.",
+   "caveats": [
+    "Uranium in lake sediment is a dispersion signal, not a deposit: it says something upstream is shedding uranium.",
+    "Sampling is lake-limited, so a cell with no lake has no measurement rather than a low one."
+   ]
+  },
+  {
+   "key": "lake_sediment_sgs",
+   "title": "Lake sediment geochemistry (provincial survey, 1975-1978)",
+   "role": "feature",
+   "bears_on": "detection",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Analytical_and_Rock_Property_Data/FeatureServer/1",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 3001,
+   "notes": "Collected 1975-1978 around the Athabasca sandstone, before most mining: a pre-mining baseline (report 02, 1.2).",
+   "caveats": [
+    "Same lake-limited sampling frame; carries its own year field, so it can be used in a dated hindcast."
+   ]
+  },
+  {
+   "key": "lake_water_sgs",
+   "title": "Lake water geochemistry",
+   "role": "feature",
+   "bears_on": "detection",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Analytical_and_Rock_Property_Data/FeatureServer/0",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 566,
+   "notes": "Small but carries pH and Eh, which let a uranium-in-water anomaly be conditioned rather than read raw.",
+   "caveats": [
+    "566 points over a narrow latitude band: coverage is thin and the readiness scorecard must say so."
+   ]
+  },
+  {
+   "key": "radioactive_boulders",
+   "title": "Radioactive boulders",
+   "role": "feature",
+   "bears_on": "dispersal",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Regional_Datasets_and_Compilations/FeatureServer/4",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 6591,
+   "notes": "A boulder train is a vector, not a location: at Patterson Lake the discovery hole cut over 1% U3O8 3.8 km up-ice of the boulders (report 02, 1.2). The only layer here with a populated year, so it also dates exploration effort.",
+   "caveats": [
+    "The source lies up-ice, so the criterion is a corridor in the ice-flow direction, not a buffer.",
+    "Zircon in till travelled over 100 km up-ice in one study: transport distance is not fixed."
+   ]
+  },
+  {
+   "key": "magnetic_domains",
+   "title": "Magnetic domains (interpreted)",
+   "role": "feature",
+   "bears_on": "pathway",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Magnetic_Domains/FeatureServer/0",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": false,
+   "verified_at": "2026-09-18",
+   "record_count": null,
+   "notes": "Interpreted domain polygons: the nearest public stand-in for a magnetic grid, which is not published by URL.",
+   "caveats": [
+    "An interpretation, not a measurement.",
+    "Report 02 records that the magnetic signature is contested: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign."
+   ]
+  },
+  {
+   "key": "compilation",
+   "title": "Minerals and Quaternary Drillhole Compilation",
+   "role": "feature",
+   "bears_on": "cover",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Exploration/FeatureServer/3",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-17",
+   "record_count": 33490,
+   "notes": "Two jobs: the depth fields interpolate an unconformity-depth surface, and DATE_DRILLED gives the effort model its dated drilling history. Holds no assay or lithology values.",
+   "caveats": [
+    "Depth fields are populated only where a hole reached the contact, so the interpolation carries its own coverage count."
+   ]
+  },
+  {
+   "key": "assessment_surveys",
+   "title": "Assessment survey footprints (airborne, ground, underground)",
+   "role": "feature",
+   "bears_on": "effort",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Assessment_File_Information/FeatureServer/2",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-17",
+   "record_count": 1831,
+   "notes": "Where surveys were flown or walked: a direct measure of exploration effort, and the backbone of the null model. Layers 0 and 1 carry the underground and ground surveys.",
+   "caveats": [
+    "A footprint says a survey happened, not what it measured: this is effort, never a geophysical value."
+   ]
+  },
+  {
+   "key": "basin_geology",
+   "title": "Athabasca Supergroup outline (1:1,000,000 bedrock geology)",
+   "role": "context",
+   "bears_on": "study_area",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Million_Scale_Geology/FeatureServer/6",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-17",
+   "record_count": 197,
+   "notes": "Defines the study area. Buffered 30 km so the margin discoveries at Patterson Lake fall inside the grid.",
+   "caveats": []
+  },
+  {
+   "key": "geods_holes",
+   "title": "GeoDS subsurface drilling layer",
+   "role": "feature",
+   "bears_on": "effort",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://geoscience-data-system.saskatchewan.ca/arcgis/rest/services/P_GeoDS_DrillingPage_EM/FeatureServer/2",
+   "licence": "no licence stated",
+   "licence_url": "",
+   "redistributable": false,
+   "verified": true,
+   "verified_at": "2026-09-17",
+   "record_count": 29762,
+   "notes": "A second drilling history, keyed to assessment files. Used but never redistributed.",
+   "caveats": [
+    "No licence stated, so the public-safe build keeps only what is matched to redistributable records."
+   ]
+  },
+  {
+   "key": "uranium_deposit_footprints",
+   "title": "Uranium deposit footprints",
+   "role": "label",
+   "bears_on": "label",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Regional_Datasets_and_Compilations/FeatureServer/5",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 200,
+   "notes": "The positive class, tier A. Named, but carrying no deposit type, grade, tonnage or date.",
+   "caveats": [
+    "A label, never a feature: using it as an input is leakage, and a test enforces that.",
+    "SOURCE holds report titles with publication dates, which are a lagging and biased proxy for discovery, not a discovery date."
+   ]
+  },
+  {
+   "key": "smdi_uranium",
+   "title": "Saskatchewan Mineral Deposit Index, uranium-primary records",
+   "role": "label",
+   "bears_on": "label",
+   "tier": "native",
+   "access": "arcgis_rest",
+   "url": "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Exploration/FeatureServer/2",
+   "licence": "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0",
+   "licence_url": "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": 1698,
+   "notes": "6,012 records in all, 1,698 uranium-primary, 1,989 inside the region box. The weaker positive tier: an occurrence is a place uranium was observed, not a deposit.",
+   "caveats": [
+    "DISCOVERYTYPE is a method (Drillhole, Lake Sediment, Outcrop grab), not a year: there is no discovery date in this layer.",
+    "PRODUCTION and RESERVESRESOURCES are yes/no flags with no grade or tonnage.",
+    "Occurrences sit where people looked, which is what the null model exists to measure."
+   ]
+  },
+  {
+   "key": "sentinel2_l2a",
+   "title": "Sentinel-2 L2A surface reflectance",
+   "role": "feature",
+   "bears_on": "cover",
+   "tier": "native",
+   "access": "stac",
+   "url": "https://earth-search.aws.element84.com/v1",
+   "licence": "Copernicus Sentinel Data Licence",
+   "licence_url": "https://sentinels.copernicus.eu/web/sentinel/terms-conditions",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": null,
+   "notes": "COGs on the public sentinel-cogs bucket; a SWIR asset returned HTTP 200 unauthenticated and a 0.5 by 0.3 degree box over the basin matched 27 scenes under 10% cloud in one summer. Jobs: a lake and wetland mask (the sampling frame for the lake geochemistry), cover versus outcrop, and true-colour and SWIR chips for each candidate cell.",
+   "caveats": [
+    "Athabasca deposits sit 100 to 900 m down under 1 to 2 km of sandstone: no optical sensor sees them, and this layer is never an ore detector here.",
+    "A frontier model scored 0.369 on geological map understanding (report 02, 4.4), so an agent may describe ground context from a chip but must not claim alteration from it.",
+    "Clay alteration is detectable by SWIR only where it reaches the surface; in this basin it generally does not."
+   ]
+  },
+  {
+   "key": "cop_dem_glo_30",
+   "title": "Copernicus DEM GLO-30",
+   "role": "feature",
+   "bears_on": "dispersal",
+   "tier": "native",
+   "access": "stac",
+   "url": "https://earth-search.aws.element84.com/v1",
+   "licence": "Copernicus Sentinel Data Licence",
+   "licence_url": "https://sentinels.copernicus.eu/web/sentinel/terms-conditions",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": null,
+   "notes": "Terrain, drainage, and the orientation of glacial landforms, which is what turns a radioactive boulder field into an up-ice search corridor.",
+   "caveats": [
+    "The STAC asset href is an s3:// URL; read it through the public HTTPS mirror.",
+    "Ice-flow direction inferred from landform orientation is an interpretation, and the criterion carries it as one."
+   ]
+  },
+  {
+   "key": "landsat_c2_l2",
+   "title": "Landsat Collection 2 Level 2",
+   "role": "context",
+   "bears_on": "cover",
+   "tier": "native",
+   "access": "stac",
+   "url": "https://earth-search.aws.element84.com/v1",
+   "licence": "USGS public domain",
+   "licence_url": "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": null,
+   "notes": "Archive to 1982, so it can show ground as it looked before a discovery: useful context for the hindcast.",
+   "caveats": [
+    "30 m and older sensors; used for change and context, not for measurement."
+   ]
+  },
+  {
+   "key": "sentinel1_grd",
+   "title": "Sentinel-1 GRD radar",
+   "role": "context",
+   "bears_on": "cover",
+   "tier": "native",
+   "access": "stac",
+   "url": "https://earth-search.aws.element84.com/v1",
+   "licence": "Copernicus Sentinel Data Licence",
+   "licence_url": "https://sentinels.copernicus.eu/web/sentinel/terms-conditions",
+   "redistributable": true,
+   "verified": false,
+   "verified_at": "2026-09-18",
+   "record_count": null,
+   "notes": "Deferred. Eight scenes matched over the basin, but the assets are SAFE manifests and calibration schemas, not analysis-ready COGs, so using it means building a preprocessing chain this demo does not need yet.",
+   "caveats": []
+  },
+  {
+   "key": "read_assay_intervals",
+   "title": "Assay intervals read from assessment reports",
+   "role": "label",
+   "bears_on": "label",
+   "tier": "read",
+   "access": "internal",
+   "url": "read.record where kind = 'assay_interval'",
+   "licence": "no licence stated",
+   "licence_url": "",
+   "redistributable": false,
+   "verified": true,
+   "verified_at": "2026-09-18",
+   "record_count": null,
+   "notes": "The province publishes no assay values, so every uranium grade in this system came out of a PDF. That makes these intervals the one label source no public layer can supply, and an optional second positive class.",
+   "caveats": [
+    "Tier B: read by a model and unvalidated until a check says otherwise. Every value carries its page, box, quote and validator outcomes.",
+    "A class-A flagged value may not silently become a label: the model is run with and without this source, and both results are reported.",
+    "Four files read so far, so the coverage is tiny and clustered; it cannot be treated as a survey of the basin."
+   ]
+  }
+ ],
+ "gaps": [
+  {
+   "key": "aeromagnetic_grids",
+   "title": "Airborne magnetic, radiometric and gravity grids",
+   "status": "not_addressable",
+   "why_it_matters": "Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin.",
+   "evidence": "The federal Geoscience Data Repository serves the Northern Saskatchewan 100 m magnetic and radiometric compilation through an interactive portal (HTTP 302, no direct file URL, no WMS or WCS). The provincial Geophysics service publishes survey footprint polygons only, not values. Checked 2026-09-18.",
+   "workaround": "Mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy; nothing stands in for radiometrics or gravity."
+  },
+  {
+   "key": "discovery_dates",
+   "title": "Discovery dates for deposits and occurrences",
+   "status": "not_published",
+   "why_it_matters": "Without them there is no honest train-before, test-after split, which is the strongest test available short of drilling.",
+   "evidence": "No discovery-year, year-found or first-reported field exists in the SMDI REST layer or on an SMDI detail page; DISCOVERYTYPE is a method. Deposit footprints carry only report titles. Checked 2026-09-18.",
+   "workaround": "A hand-built table of about ten dated discoveries, each cited to a public technical report, used only as a hold-out; plus leave-one-camp-out spatial folds, which need no dates."
+  },
+  {
+   "key": "em_conductor_attributes",
+   "title": "Conductance or strength on the EM conductor layer",
+   "status": "unverified",
+   "why_it_matters": "The folklore that stronger conductors make better targets could only be tested with a conductance value.",
+   "evidence": "Feature count confirmed at 28,458; the attribute list was not enumerated. Checked 2026-09-18.",
+   "workaround": "Criteria use distance and density only. The strength claims stay in the handbook marked as untested folklore, with weight zero."
+  },
+  {
+   "key": "alteration_measurements",
+   "title": "Clay alteration and geochemical footprints at depth",
+   "status": "not_public",
+   "why_it_matters": "Alteration is the largest expression of the system: the Cigar Lake halo reaches about 100 m below and 300 m above the unconformity.",
+   "evidence": "Halo extents and Hinckley index ranges exist in the literature, but the measurements are in company drill logs, not in any public layer. Report 02 section 1.2.",
+   "workaround": "None. The handbook states the extents so an agent can say what would settle a cell, and the adjudicator is required to name it as an unknown rather than an absence."
+  }
+ ],
+ "values": {
+  "c:grid:cells": {
+   "id": "c:grid:cells",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells in the analysis grid"
+  },
+  "c:grid:cell_m": {
+   "id": "c:grid:cell_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2000,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "unit": "m",
+   "note": "cell size in metres"
+  },
+  "c:grid:in_basin": {
+   "id": "c:grid:in_basin",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18898,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells over the Athabasca sandstone"
+  },
+  "c:grid:area_km2": {
+   "id": "c:grid:area_km2",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 122136.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "km2",
+   "note": "area the grid covers"
+  },
+  "c:grid:buffer_km": {
+   "id": "c:grid:buffer_km",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "km",
+   "note": "how far outside the basin outline the grid reaches"
+  },
+  "c:src:total": {
+   "id": "c:src:total",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 20,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "data sources in the register"
+  },
+  "c:src:verified_features": {
+   "id": "c:src:verified_features",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 13,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "feature sources confirmed by a live call"
+  },
+  "c:src:redistributable": {
+   "id": "c:src:redistributable",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "sources whose licence allows redistribution"
+  },
+  "c:src:gaps": {
+   "id": "c:src:gaps",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "datasets that do not exist publicly, recorded as gaps"
+  },
+  "c:cov:d_conductor_m": {
+   "id": "c:cov:d_conductor_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind d_conductor_m"
+  },
+  "c:covn:d_conductor_m": {
+   "id": "c:covn:d_conductor_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind d_conductor_m"
+  },
+  "c:obs:d_conductor_m": {
+   "id": "c:obs:d_conductor_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one d_conductor_m value"
+  },
+  "c:med:d_conductor_m": {
+   "id": "c:med:d_conductor_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4799.95,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median d_conductor_m across cells that have a value"
+  },
+  "c:cov:d_fault_m": {
+   "id": "c:cov:d_fault_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind d_fault_m"
+  },
+  "c:covn:d_fault_m": {
+   "id": "c:covn:d_fault_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind d_fault_m"
+  },
+  "c:obs:d_fault_m": {
+   "id": "c:obs:d_fault_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one d_fault_m value"
+  },
+  "c:med:d_fault_m": {
+   "id": "c:med:d_fault_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 675.48,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median d_fault_m across cells that have a value"
+  },
+  "c:cov:elevation_m": {
+   "id": "c:cov:elevation_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind elevation_m"
+  },
+  "c:covn:elevation_m": {
+   "id": "c:covn:elevation_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind elevation_m"
+  },
+  "c:obs:elevation_m": {
+   "id": "c:obs:elevation_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 332.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one elevation_m value"
+  },
+  "c:med:elevation_m": {
+   "id": "c:med:elevation_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 416.73,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median elevation_m across cells that have a value"
+  },
+  "c:cov:grain_coherence": {
+   "id": "c:cov:grain_coherence",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind grain_coherence"
+  },
+  "c:covn:grain_coherence": {
+   "id": "c:covn:grain_coherence",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind grain_coherence"
+  },
+  "c:obs:grain_coherence": {
+   "id": "c:obs:grain_coherence",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 332.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one grain_coherence value"
+  },
+  "c:med:grain_coherence": {
+   "id": "c:med:grain_coherence",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median grain_coherence across cells that have a value"
+  },
+  "c:cov:landform_grain_deg": {
+   "id": "c:cov:landform_grain_deg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind landform_grain_deg"
+  },
+  "c:covn:landform_grain_deg": {
+   "id": "c:covn:landform_grain_deg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind landform_grain_deg"
+  },
+  "c:obs:landform_grain_deg": {
+   "id": "c:obs:landform_grain_deg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 332.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one landform_grain_deg value"
+  },
+  "c:med:landform_grain_deg": {
+   "id": "c:med:landform_grain_deg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 130.83,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median landform_grain_deg across cells that have a value"
+  },
+  "c:cov:relief_m": {
+   "id": "c:cov:relief_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind relief_m"
+  },
+  "c:covn:relief_m": {
+   "id": "c:covn:relief_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind relief_m"
+  },
+  "c:obs:relief_m": {
+   "id": "c:obs:relief_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 332.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one relief_m value"
+  },
+  "c:med:relief_m": {
+   "id": "c:med:relief_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 38.65,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median relief_m across cells that have a value"
+  },
+  "c:cov:bare_fraction": {
+   "id": "c:cov:bare_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.999,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind bare_fraction"
+  },
+  "c:covn:bare_fraction": {
+   "id": "c:covn:bare_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30493,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind bare_fraction"
+  },
+  "c:obs:bare_fraction": {
+   "id": "c:obs:bare_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 100.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one bare_fraction value"
+  },
+  "c:med:bare_fraction": {
+   "id": "c:med:bare_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median bare_fraction across cells that have a value"
+  },
+  "c:cov:vegetation_fraction": {
+   "id": "c:cov:vegetation_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.999,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind vegetation_fraction"
+  },
+  "c:covn:vegetation_fraction": {
+   "id": "c:covn:vegetation_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30493,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind vegetation_fraction"
+  },
+  "c:obs:vegetation_fraction": {
+   "id": "c:obs:vegetation_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 100.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one vegetation_fraction value"
+  },
+  "c:med:vegetation_fraction": {
+   "id": "c:med:vegetation_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.27,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median vegetation_fraction across cells that have a value"
+  },
+  "c:cov:water_fraction": {
+   "id": "c:cov:water_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.999,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind water_fraction"
+  },
+  "c:covn:water_fraction": {
+   "id": "c:covn:water_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30493,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind water_fraction"
+  },
+  "c:obs:water_fraction": {
+   "id": "c:obs:water_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 100.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one water_fraction value"
+  },
+  "c:med:water_fraction": {
+   "id": "c:med:water_fraction",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.06,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median water_fraction across cells that have a value"
+  },
+  "c:cov:graphitic_host": {
+   "id": "c:cov:graphitic_host",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.933,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind graphitic_host"
+  },
+  "c:covn:graphitic_host": {
+   "id": "c:covn:graphitic_host",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 28491,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind graphitic_host"
+  },
+  "c:obs:graphitic_host": {
+   "id": "c:obs:graphitic_host",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one graphitic_host value"
+  },
+  "c:med:graphitic_host": {
+   "id": "c:med:graphitic_host",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median graphitic_host across cells that have a value"
+  },
+  "c:cov:surficial_class": {
+   "id": "c:cov:surficial_class",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.908,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind surficial_class"
+  },
+  "c:covn:surficial_class": {
+   "id": "c:covn:surficial_class",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 27712,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind surficial_class"
+  },
+  "c:obs:surficial_class": {
+   "id": "c:obs:surficial_class",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one surficial_class value"
+  },
+  "c:cov:unconformity_depth_m": {
+   "id": "c:cov:unconformity_depth_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.788,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind unconformity_depth_m"
+  },
+  "c:covn:unconformity_depth_m": {
+   "id": "c:covn:unconformity_depth_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 24065,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind unconformity_depth_m"
+  },
+  "c:obs:unconformity_depth_m": {
+   "id": "c:obs:unconformity_depth_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one unconformity_depth_m value"
+  },
+  "c:med:unconformity_depth_m": {
+   "id": "c:med:unconformity_depth_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 170.31,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median unconformity_depth_m across cells that have a value"
+  },
+  "c:cov:fault_density": {
+   "id": "c:cov:fault_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.682,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind fault_density"
+  },
+  "c:covn:fault_density": {
+   "id": "c:covn:fault_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 20809,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind fault_density"
+  },
+  "c:obs:fault_density": {
+   "id": "c:obs:fault_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one fault_density value"
+  },
+  "c:med:fault_density": {
+   "id": "c:med:fault_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.49,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median fault_density across cells that have a value"
+  },
+  "c:cov:sed_u_max_ppm": {
+   "id": "c:cov:sed_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.379,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind sed_u_max_ppm"
+  },
+  "c:covn:sed_u_max_ppm": {
+   "id": "c:covn:sed_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 11579,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind sed_u_max_ppm"
+  },
+  "c:obs:sed_u_max_ppm": {
+   "id": "c:obs:sed_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one sed_u_max_ppm value"
+  },
+  "c:med:sed_u_max_ppm": {
+   "id": "c:med:sed_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.5,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median sed_u_max_ppm across cells that have a value"
+  },
+  "c:cov:conductor_density": {
+   "id": "c:cov:conductor_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.241,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind conductor_density"
+  },
+  "c:covn:conductor_density": {
+   "id": "c:covn:conductor_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 7357,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind conductor_density"
+  },
+  "c:obs:conductor_density": {
+   "id": "c:obs:conductor_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one conductor_density value"
+  },
+  "c:med:conductor_density": {
+   "id": "c:med:conductor_density",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median conductor_density across cells that have a value"
+  },
+  "c:cov:sed_u_max_ppm_sgs": {
+   "id": "c:cov:sed_u_max_ppm_sgs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.124,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind sed_u_max_ppm_sgs"
+  },
+  "c:covn:sed_u_max_ppm_sgs": {
+   "id": "c:covn:sed_u_max_ppm_sgs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3772,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind sed_u_max_ppm_sgs"
+  },
+  "c:obs:sed_u_max_ppm_sgs": {
+   "id": "c:obs:sed_u_max_ppm_sgs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one sed_u_max_ppm_sgs value"
+  },
+  "c:med:sed_u_max_ppm_sgs": {
+   "id": "c:med:sed_u_max_ppm_sgs",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3.4,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median sed_u_max_ppm_sgs across cells that have a value"
+  },
+  "c:cov:boulder_max_cps": {
+   "id": "c:cov:boulder_max_cps",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.088,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind boulder_max_cps"
+  },
+  "c:covn:boulder_max_cps": {
+   "id": "c:covn:boulder_max_cps",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2692,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind boulder_max_cps"
+  },
+  "c:obs:boulder_max_cps": {
+   "id": "c:obs:boulder_max_cps",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one boulder_max_cps value"
+  },
+  "c:med:boulder_max_cps": {
+   "id": "c:med:boulder_max_cps",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1600.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median boulder_max_cps across cells that have a value"
+  },
+  "c:cov:water_u_max_ppm": {
+   "id": "c:cov:water_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.026,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind water_u_max_ppm"
+  },
+  "c:covn:water_u_max_ppm": {
+   "id": "c:covn:water_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 792,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind water_u_max_ppm"
+  },
+  "c:obs:water_u_max_ppm": {
+   "id": "c:obs:water_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one water_u_max_ppm value"
+  },
+  "c:med:water_u_max_ppm": {
+   "id": "c:med:water_u_max_ppm",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median water_u_max_ppm across cells that have a value"
+  },
+  "c:cov:airborne_surveys_n": {
+   "id": "c:cov:airborne_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind airborne_surveys_n"
+  },
+  "c:covn:airborne_surveys_n": {
+   "id": "c:covn:airborne_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind airborne_surveys_n"
+  },
+  "c:obs:airborne_surveys_n": {
+   "id": "c:obs:airborne_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one airborne_surveys_n value"
+  },
+  "c:med:airborne_surveys_n": {
+   "id": "c:med:airborne_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median airborne_surveys_n across cells that have a value"
+  },
+  "c:cov:boulder_samples_n": {
+   "id": "c:cov:boulder_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind boulder_samples_n"
+  },
+  "c:covn:boulder_samples_n": {
+   "id": "c:covn:boulder_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind boulder_samples_n"
+  },
+  "c:obs:boulder_samples_n": {
+   "id": "c:obs:boulder_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one boulder_samples_n value"
+  },
+  "c:med:boulder_samples_n": {
+   "id": "c:med:boulder_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median boulder_samples_n across cells that have a value"
+  },
+  "c:cov:ground_surveys_n": {
+   "id": "c:cov:ground_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind ground_surveys_n"
+  },
+  "c:covn:ground_surveys_n": {
+   "id": "c:covn:ground_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind ground_surveys_n"
+  },
+  "c:obs:ground_surveys_n": {
+   "id": "c:obs:ground_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one ground_surveys_n value"
+  },
+  "c:med:ground_surveys_n": {
+   "id": "c:med:ground_surveys_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median ground_surveys_n across cells that have a value"
+  },
+  "c:cov:holes_n": {
+   "id": "c:cov:holes_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind holes_n"
+  },
+  "c:covn:holes_n": {
+   "id": "c:covn:holes_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind holes_n"
+  },
+  "c:obs:holes_n": {
+   "id": "c:obs:holes_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one holes_n value"
+  },
+  "c:med:holes_n": {
+   "id": "c:med:holes_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median holes_n across cells that have a value"
+  },
+  "c:cov:sed_samples_n": {
+   "id": "c:cov:sed_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind sed_samples_n"
+  },
+  "c:covn:sed_samples_n": {
+   "id": "c:covn:sed_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 30534,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind sed_samples_n"
+  },
+  "c:obs:sed_samples_n": {
+   "id": "c:obs:sed_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one sed_samples_n value"
+  },
+  "c:med:sed_samples_n": {
+   "id": "c:med:sed_samples_n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median sed_samples_n across cells that have a value"
+  },
+  "c:cov:holes_first_year": {
+   "id": "c:cov:holes_first_year",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.346,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind holes_first_year"
+  },
+  "c:covn:holes_first_year": {
+   "id": "c:covn:holes_first_year",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 10559,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind holes_first_year"
+  },
+  "c:obs:holes_first_year": {
+   "id": "c:obs:holes_first_year",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 7.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one holes_first_year value"
+  },
+  "c:med:holes_first_year": {
+   "id": "c:med:holes_first_year",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1979.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median holes_first_year across cells that have a value"
+  },
+  "c:grid:geo_features": {
+   "id": "c:grid:geo_features",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "geological features built per cell"
+  },
+  "c:grid:effort_features": {
+   "id": "c:grid:effort_features",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "exploration-effort features per cell"
+  },
+  "c:m:criteria.none.base_rate": {
+   "id": "c:m:criteria.none.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0536,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the criteria model under none folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:criteria.none.capture_top10": {
+   "id": "c:m:criteria.none.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1447,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the criteria model under none folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:criteria.none.pr_auc": {
+   "id": "c:m:criteria.none.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0694,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the criteria model under none folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:criteria.none.roc_auc": {
+   "id": "c:m:criteria.none.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5469,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the criteria model under none folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.camp.base_rate": {
+   "id": "c:m:effort.camp.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0564,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the effort model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:effort.camp.capture_top10": {
+   "id": "c:m:effort.camp.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3883,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the effort model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:effort.camp.pr_auc": {
+   "id": "c:m:effort.camp.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2407,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the effort model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:effort.camp.roc_auc": {
+   "id": "c:m:effort.camp.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7728,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the effort model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:effort.random.base_rate": {
+   "id": "c:m:effort.random.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0536,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the effort model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.random.capture_top10": {
+   "id": "c:m:effort.random.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5714,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the effort model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.random.pr_auc": {
+   "id": "c:m:effort.random.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3859,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the effort model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.random.roc_auc": {
+   "id": "c:m:effort.random.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8788,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the effort model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.spatial.base_rate": {
+   "id": "c:m:effort.spatial.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0536,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the effort model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.spatial.capture_top10": {
+   "id": "c:m:effort.spatial.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5311,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the effort model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.spatial.pr_auc": {
+   "id": "c:m:effort.spatial.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3465,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the effort model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:effort.spatial.roc_auc": {
+   "id": "c:m:effort.spatial.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8524,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the effort model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.camp.base_rate": {
+   "id": "c:m:learned.camp.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0564,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the learned model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:learned.camp.capture_top10": {
+   "id": "c:m:learned.camp.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1557,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the learned model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:learned.camp.pr_auc": {
+   "id": "c:m:learned.camp.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0802,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the learned model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:learned.camp.roc_auc": {
+   "id": "c:m:learned.camp.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6407,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the learned model under camp folds, 546 positives in 9686 scored cells"
+  },
+  "c:m:learned.random.base_rate": {
+   "id": "c:m:learned.random.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0536,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the learned model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.random.capture_top10": {
+   "id": "c:m:learned.random.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.37,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the learned model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.random.pr_auc": {
+   "id": "c:m:learned.random.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1831,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the learned model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.random.roc_auc": {
+   "id": "c:m:learned.random.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7968,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the learned model under random folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.spatial.base_rate": {
+   "id": "c:m:learned.spatial.base_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0536,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "base_rate for the learned model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.spatial.capture_top10": {
+   "id": "c:m:learned.spatial.capture_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2894,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "capture_top10 for the learned model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.spatial.pr_auc": {
+   "id": "c:m:learned.spatial.pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1325,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc for the learned model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:m:learned.spatial.roc_auc": {
+   "id": "c:m:learned.spatial.roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7619,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc for the learned model under spatial folds, 546 positives in 10183 scored cells"
+  },
+  "c:gate:cases": {
+   "id": "c:gate:cases",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 313,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "claims put to the gate"
+  },
+  "c:gate:put": {
+   "id": "c:gate:put",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 223,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "corrupted claims in the suite"
+  },
+  "c:gate:caught": {
+   "id": "c:gate:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 210,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "corrupted claims the gate refused"
+  },
+  "c:gate:missed": {
+   "id": "c:gate:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 13,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "corrupted claims that got through"
+  },
+  "c:gate:caught_rate": {
+   "id": "c:gate:caught_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9417,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of corrupted claims the gate refused"
+  },
+  "c:gate:honest": {
+   "id": "c:gate:honest",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 90,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "true claims in the suite"
+  },
+  "c:gate:wrongly_rejected": {
+   "id": "c:gate:wrongly_rejected",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "true claims the gate refused"
+  },
+  "c:gate:cited_to_the_wrong_value:caught": {
+   "id": "c:gate:cited_to_the_wrong_value:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 36,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cited_to_the_wrong_value claims the gate refused"
+  },
+  "c:gate:cited_to_the_wrong_value:missed": {
+   "id": "c:gate:cited_to_the_wrong_value:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cited_to_the_wrong_value claims that got through"
+  },
+  "c:gate:decimal_shift:caught": {
+   "id": "c:gate:decimal_shift:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 28,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "decimal_shift claims the gate refused"
+  },
+  "c:gate:decimal_shift:missed": {
+   "id": "c:gate:decimal_shift:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "decimal_shift claims that got through"
+  },
+  "c:gate:digit_slip:caught": {
+   "id": "c:gate:digit_slip:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 39,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "digit_slip claims the gate refused"
+  },
+  "c:gate:digit_slip:missed": {
+   "id": "c:gate:digit_slip:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "digit_slip claims that got through"
+  },
+  "c:gate:false_precision:caught": {
+   "id": "c:gate:false_precision:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 39,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "false_precision claims the gate refused"
+  },
+  "c:gate:false_precision:missed": {
+   "id": "c:gate:false_precision:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "false_precision claims that got through"
+  },
+  "c:gate:hand_conversion:caught": {
+   "id": "c:gate:hand_conversion:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "hand_conversion claims the gate refused"
+  },
+  "c:gate:hand_conversion:missed": {
+   "id": "c:gate:hand_conversion:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "hand_conversion claims that got through"
+  },
+  "c:gate:invented:caught": {
+   "id": "c:gate:invented:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 34,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "invented claims the gate refused"
+  },
+  "c:gate:invented:missed": {
+   "id": "c:gate:invented:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "invented claims that got through"
+  },
+  "c:gate:transposed:caught": {
+   "id": "c:gate:transposed:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 19,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "transposed claims the gate refused"
+  },
+  "c:gate:transposed:missed": {
+   "id": "c:gate:transposed:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "transposed claims that got through"
+  },
+  "c:gate:uncited:caught": {
+   "id": "c:gate:uncited:caught",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 10,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "uncited claims the gate refused"
+  },
+  "c:gate:uncited:missed": {
+   "id": "c:gate:uncited:missed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "uncited claims that got through"
+  }
+ },
+ "build_id": "13309707de4b"
+}

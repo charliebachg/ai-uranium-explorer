@@ -1,0 +1,955 @@
+{
+ "schema_version": "1.0.0",
+ "generated_at": "2026-09-18T01:21:33+00:00",
+ "pipeline_version": "0.1.0",
+ "gold": null,
+ "caveats": [
+  "These are run statistics, not accuracy. No gold set has been labelled yet, so there is no denominator for how often a reading is wrong.",
+  "A located quote means the words were found on the page, not that the value is right.",
+  "A hole placed at a provincial position was not placed from the page, so its distance to that provincial record measures nothing.",
+  "Pages were chosen by a router that prefers collar, assay and lithology pages; they are not a random sample of the file."
+ ],
+ "run": {
+  "models": [
+   "claude-sonnet-5"
+  ],
+  "run_ids": [
+   "20260917T201713Z-phase2",
+   "20260917T201929Z-phase2"
+  ],
+  "calls": "e:run:calls",
+  "pages_read": "e:run:pages_read",
+  "cost_usd": "e:run:cost_usd",
+  "tokens_in": "e:run:tokens_in",
+  "tokens_out": "e:run:tokens_out",
+  "minutes": "e:run:minutes"
+ },
+ "coverage": {
+  "files_read": "e:cov:files_read",
+  "pages_read": "e:cov:pages_read",
+  "tables": "e:cov:tables",
+  "holes": "e:cov:holes"
+ },
+ "reading": {
+  "printed_values": "e:read:printed",
+  "located": "e:read:located",
+  "located_share": "e:read:located_share",
+  "empty_cells": "e:read:empty_cells",
+  "empty_cells_boxed": "e:read:empty_cells_boxed",
+  "illegible": "e:read:illegible",
+  "digit_exact": "e:read:digit_exact",
+  "digit_confusable": "e:read:digit_confusable",
+  "digit_mismatch": "e:read:digit_mismatch"
+ },
+ "placement": {
+  "from_page": "e:place:from_page",
+  "from_provincial": "e:place:from_provincial",
+  "not_placed": "e:place:not_placed"
+ },
+ "crosscheck": {
+  "matches": "e:xc:matches",
+  "independent": "e:xc:independent",
+  "median_offset_m": "e:xc:median_m",
+  "max_offset_m": "e:xc:max_m",
+  "datum_shift_signatures": "e:xc:signatures"
+ },
+ "checks": [
+  {
+   "id": "V09",
+   "title": "Rows stored, rows the model counted and rows the page geometry shows all agree",
+   "severity": "error",
+   "flags": "e:check:V09:flags",
+   "class_a": "e:check:V09:class_a",
+   "examples": [
+    {
+     "value_id": "x:74H09-0039:5871e8379c",
+     "file_num": "74H09-0039",
+     "page": 2,
+     "message": "7 rows stored, 7 counted, 15 from the page geometry: one counter disagrees"
+    },
+    {
+     "value_id": "x:74H09-0039:4bd1112061",
+     "file_num": "74H09-0039",
+     "page": 2,
+     "message": "7 rows stored, 7 counted, 15 from the page geometry: one counter disagrees"
+    },
+    {
+     "value_id": "x:74H09-0039:516227bc02",
+     "file_num": "74H09-0039",
+     "page": 2,
+     "message": "7 rows stored, 7 counted, 15 from the page geometry: one counter disagrees"
+    }
+   ]
+  },
+  {
+   "id": "V16",
+   "title": "The second reader's digits match the transcribed digits",
+   "severity": "warn",
+   "flags": "e:check:V16:flags",
+   "class_a": "e:check:V16:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:908c1241f2",
+     "file_num": "74F08-0021",
+     "page": 28,
+     "message": "OCR reads '62' where the model transcribed '2': the two readers disagree, check by eye"
+    },
+    {
+     "value_id": "x:74F08-0021:db34557a55",
+     "file_num": "74F08-0021",
+     "page": 28,
+     "message": "OCR reads '63' where the model transcribed '3': the two readers disagree, check by eye"
+    },
+    {
+     "value_id": "x:74F08-0021:9e32a309f0",
+     "file_num": "74F08-0021",
+     "page": 28,
+     "message": "OCR reads '64' where the model transcribed '4': the two readers disagree, check by eye"
+    }
+   ]
+  },
+  {
+   "id": "V01",
+   "title": "Depth unit is printed, and feet were not read as metres",
+   "severity": "warn",
+   "flags": "e:check:V01:flags",
+   "class_a": "e:check:V01:class_a",
+   "examples": [
+    {
+     "value_id": "x:74H09-0039:77bcb740af",
+     "file_num": "74H09-0039",
+     "page": 9,
+     "message": "deepest stored depth 190.0 m is 3.28 times the province's 57.9 m for this hole: the printed feet were read as metres"
+    },
+    {
+     "value_id": "x:74H09-0039:d79c6ab66a",
+     "file_num": "74H09-0039",
+     "page": 17,
+     "message": "deepest stored depth 109.0 m is 3.28 times the province's 33.2 m for this hole: the printed feet were read as metres"
+    },
+    {
+     "value_id": "x:74H09-0039:db78d2e3f6",
+     "file_num": "74H09-0039",
+     "page": 17,
+     "message": "deepest stored depth 109.0 m is 3.28 times the province's 33.2 m for this hole: the printed feet were read as metres"
+    }
+   ]
+  },
+  {
+   "id": "V15",
+   "title": "The printed value appears inside its own quote",
+   "severity": "error",
+   "flags": "e:check:V15:flags",
+   "class_a": "e:check:V15:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:f586939429",
+     "file_num": "74F08-0021",
+     "page": 31,
+     "message": "the value 'DF-44 44' does not appear in its own quote 'DF-44 38347 44 38 82 25 52 72'"
+    },
+    {
+     "value_id": "x:74H09-0039:4d422abffb",
+     "file_num": "74H09-0039",
+     "page": 16,
+     "message": "the value 'U    Ni' does not appear in its own quote 'ASSAYS ppm'"
+    }
+   ]
+  },
+  {
+   "id": "V13",
+   "title": "The PDF's own text layer agrees with the transcribed digits",
+   "severity": "warn",
+   "flags": "e:check:V13:flags",
+   "class_a": "e:check:V13:class_a",
+   "examples": [
+    {
+     "value_id": "x:74G07-0054:7f00d80bee",
+     "file_num": "74G07-0054",
+     "page": 6,
+     "message": "the PDF text layer reads '007' where the model transcribed '0.047'"
+    },
+    {
+     "value_id": "x:74G07-0054:dfe287b408",
+     "file_num": "74G07-0054",
+     "page": 6,
+     "message": "the PDF text layer reads '19856' where the model transcribed '61.396'"
+    },
+    {
+     "value_id": "x:74G07-0054:be4155f61c",
+     "file_num": "74G07-0054",
+     "page": 6,
+     "message": "the PDF text layer reads '1986519866' where the model transcribed '1.966'"
+    }
+   ]
+  },
+  {
+   "id": "V19",
+   "title": "A hole identifier taken from a header or a previous page is marked as carried",
+   "severity": "info",
+   "flags": "e:check:V19:flags",
+   "class_a": "e:check:V19:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:be2bb50b9d",
+     "file_num": "74F08-0021",
+     "page": 5,
+     "message": "rows of this hole carry no hole identifier of their own: it was taken from the page header"
+    },
+    {
+     "value_id": "x:74F08-0021:1257c84dfd",
+     "file_num": "74F08-0021",
+     "page": 10,
+     "message": "rows of this hole carry no hole identifier of their own: it was taken from the page header"
+    },
+    {
+     "value_id": "x:74F08-0021:3dfca2e9e0",
+     "file_num": "74F08-0021",
+     "page": 16,
+     "message": "rows of this hole carry no hole identifier of their own: it was taken from the page header"
+    }
+   ]
+  },
+  {
+   "id": "V14",
+   "title": "The same hole is not stored twice with different numbers",
+   "severity": "warn",
+   "flags": "e:check:V14:flags",
+   "class_a": "e:check:V14:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:8b2c2d95d5",
+     "file_num": "74F08-0021",
+     "page": 23,
+     "message": "hole KL10 has 2 different printed values for dip: [86.0, 88.0]"
+    },
+    {
+     "value_id": "x:74F08-0021:299f035ee7",
+     "file_num": "74F08-0021",
+     "page": 23,
+     "message": "hole KL10 has 2 different printed values for dip: [86.0, 88.0]"
+    },
+    {
+     "value_id": "x:74H16-0072:a367a4a386",
+     "file_num": "74H16-0072",
+     "page": 48,
+     "message": "hole PK48 has 4 different printed values for dip: [-90.0, -87.7, -87.5, -87.4]"
+    }
+   ]
+  },
+  {
+   "id": "V06",
+   "title": "Depths run down the hole without unexplained overlaps",
+   "severity": "warn",
+   "flags": "e:check:V06:flags",
+   "class_a": "e:check:V06:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:8b77fc9c61",
+     "file_num": "74F08-0021",
+     "page": 5,
+     "message": "lith interval 0.00-76.00 m overlaps the previous 0.00-7.60 m"
+    },
+    {
+     "value_id": "x:74F08-0021:7656cf9f2c",
+     "file_num": "74F08-0021",
+     "page": 7,
+     "message": "lith interval 0.00-76.00 m overlaps the previous 0.00-7.60 m"
+    },
+    {
+     "value_id": "x:74H09-0039:e109fcebf6",
+     "file_num": "74H09-0039",
+     "page": 9,
+     "message": "lith interval 134.40-190.00 m overlaps the previous 134.40-159.00 m"
+    }
+   ]
+  },
+  {
+   "id": "V08",
+   "title": "No interval runs past the hole's total depth",
+   "severity": "error",
+   "flags": "e:check:V08:flags",
+   "class_a": "e:check:V08:class_a",
+   "examples": [
+    {
+     "value_id": "x:74H09-0039:77bcb740af",
+     "file_num": "74H09-0039",
+     "page": 9,
+     "message": "deepest interval ends at 190.0 m but the total depth is 57.9 m (the provincial record for this hole)"
+    },
+    {
+     "value_id": "x:74H09-0039:d79c6ab66a",
+     "file_num": "74H09-0039",
+     "page": 17,
+     "message": "deepest interval ends at 109.0 m but the total depth is 33.2 m (the provincial record for this hole)"
+    },
+    {
+     "value_id": "x:74H09-0039:1b88d73f69",
+     "file_num": "74H09-0039",
+     "page": 26,
+     "message": "deepest interval ends at 165.0 m but the total depth is 50.3 m (the provincial record for this hole)"
+    }
+   ]
+  },
+  {
+   "id": "V05",
+   "title": "Interval starts above where it ends",
+   "severity": "error",
+   "flags": "e:check:V05:flags",
+   "class_a": "e:check:V05:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:9e1bc9dd81",
+     "file_num": "74F08-0021",
+     "page": 7,
+     "message": "interval runs from 76.0 to 71.6: the start is below the end"
+    },
+    {
+     "value_id": "x:74F08-0021:9ead9cdfbf",
+     "file_num": "74F08-0021",
+     "page": 7,
+     "message": "interval runs from 76.0 to 71.6: the start is below the end"
+    }
+   ]
+  },
+  {
+   "id": "V02",
+   "title": "Grade unit is printed and internally consistent",
+   "severity": "warn",
+   "flags": "e:check:V02:flags",
+   "class_a": "e:check:V02:class_a",
+   "examples": [
+    {
+     "value_id": "x:74F08-0021:9c28827607",
+     "file_num": "74F08-0021",
+     "page": 7,
+     "message": "no grade unit is printed for this value: it cannot be compared with any other grade"
+    },
+    {
+     "value_id": "x:74F08-0021:758ade78ba",
+     "file_num": "74F08-0021",
+     "page": 10,
+     "message": "no grade unit is printed for this value: it cannot be compared with any other grade"
+    }
+   ]
+  }
+ ],
+ "per_file": [
+  {
+   "file_num": "74F08-0021",
+   "values": "e:file:74F08-0021:values",
+   "located": "e:file:74F08-0021:located",
+   "holes": "e:file:74F08-0021:holes",
+   "tables": "e:file:74F08-0021:tables"
+  },
+  {
+   "file_num": "74G07-0054",
+   "values": "e:file:74G07-0054:values",
+   "located": "e:file:74G07-0054:located",
+   "holes": "e:file:74G07-0054:holes",
+   "tables": "e:file:74G07-0054:tables"
+  },
+  {
+   "file_num": "74H09-0039",
+   "values": "e:file:74H09-0039:values",
+   "located": "e:file:74H09-0039:located",
+   "holes": "e:file:74H09-0039:holes",
+   "tables": "e:file:74H09-0039:tables"
+  },
+  {
+   "file_num": "74H16-0072",
+   "values": "e:file:74H16-0072:values",
+   "located": "e:file:74H16-0072:located",
+   "holes": "e:file:74H16-0072:holes",
+   "tables": "e:file:74H16-0072:tables"
+  }
+ ],
+ "values": {
+  "e:file:74F08-0021:values": {
+   "id": "e:file:74F08-0021:values",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 616,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values extracted from 74F08-0021"
+  },
+  "e:file:74F08-0021:located": {
+   "id": "e:file:74F08-0021:located",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 555,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values in 74F08-0021 whose quote was located on the page"
+  },
+  "e:file:74F08-0021:holes": {
+   "id": "e:file:74F08-0021:holes",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 12,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes assembled from 74F08-0021"
+  },
+  "e:file:74F08-0021:tables": {
+   "id": "e:file:74F08-0021:tables",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 19,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "tables read from 74F08-0021"
+  },
+  "e:file:74G07-0054:values": {
+   "id": "e:file:74G07-0054:values",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 500,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values extracted from 74G07-0054"
+  },
+  "e:file:74G07-0054:located": {
+   "id": "e:file:74G07-0054:located",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 358,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values in 74G07-0054 whose quote was located on the page"
+  },
+  "e:file:74G07-0054:holes": {
+   "id": "e:file:74G07-0054:holes",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes assembled from 74G07-0054"
+  },
+  "e:file:74G07-0054:tables": {
+   "id": "e:file:74G07-0054:tables",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "tables read from 74G07-0054"
+  },
+  "e:file:74H09-0039:values": {
+   "id": "e:file:74H09-0039:values",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 303,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values extracted from 74H09-0039"
+  },
+  "e:file:74H09-0039:located": {
+   "id": "e:file:74H09-0039:located",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 215,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values in 74H09-0039 whose quote was located on the page"
+  },
+  "e:file:74H09-0039:holes": {
+   "id": "e:file:74H09-0039:holes",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 9,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes assembled from 74H09-0039"
+  },
+  "e:file:74H09-0039:tables": {
+   "id": "e:file:74H09-0039:tables",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 19,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "tables read from 74H09-0039"
+  },
+  "e:file:74H16-0072:values": {
+   "id": "e:file:74H16-0072:values",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 199,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values extracted from 74H16-0072"
+  },
+  "e:file:74H16-0072:located": {
+   "id": "e:file:74H16-0072:located",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 184,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values in 74H16-0072 whose quote was located on the page"
+  },
+  "e:file:74H16-0072:holes": {
+   "id": "e:file:74H16-0072:holes",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 13,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes assembled from 74H16-0072"
+  },
+  "e:file:74H16-0072:tables": {
+   "id": "e:file:74H16-0072:tables",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "tables read from 74H16-0072"
+  },
+  "e:check:V09:flags": {
+   "id": "e:check:V09:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 115,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V09"
+  },
+  "e:check:V09:class_a": {
+   "id": "e:check:V09:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V09"
+  },
+  "e:check:V16:flags": {
+   "id": "e:check:V16:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 92,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V16"
+  },
+  "e:check:V16:class_a": {
+   "id": "e:check:V16:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 84,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V16"
+  },
+  "e:check:V01:flags": {
+   "id": "e:check:V01:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 51,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V01"
+  },
+  "e:check:V01:class_a": {
+   "id": "e:check:V01:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V01"
+  },
+  "e:check:V15:flags": {
+   "id": "e:check:V15:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 16,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V15"
+  },
+  "e:check:V15:class_a": {
+   "id": "e:check:V15:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V15"
+  },
+  "e:check:V13:flags": {
+   "id": "e:check:V13:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 16,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V13"
+  },
+  "e:check:V13:class_a": {
+   "id": "e:check:V13:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V13"
+  },
+  "e:check:V19:flags": {
+   "id": "e:check:V19:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 14,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V19"
+  },
+  "e:check:V19:class_a": {
+   "id": "e:check:V19:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V19"
+  },
+  "e:check:V14:flags": {
+   "id": "e:check:V14:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 9,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V14"
+  },
+  "e:check:V14:class_a": {
+   "id": "e:check:V14:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V14"
+  },
+  "e:check:V06:flags": {
+   "id": "e:check:V06:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V06"
+  },
+  "e:check:V06:class_a": {
+   "id": "e:check:V06:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V06"
+  },
+  "e:check:V08:flags": {
+   "id": "e:check:V08:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V08"
+  },
+  "e:check:V08:class_a": {
+   "id": "e:check:V08:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V08"
+  },
+  "e:check:V05:flags": {
+   "id": "e:check:V05:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V05"
+  },
+  "e:check:V05:class_a": {
+   "id": "e:check:V05:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V05"
+  },
+  "e:check:V02:flags": {
+   "id": "e:check:V02:flags",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values flagged by V02"
+  },
+  "e:check:V02:class_a": {
+   "id": "e:check:V02:class_a",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "class-A failures raised by V02"
+  },
+  "e:run:calls": {
+   "id": "e:run:calls",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 42,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "model calls that returned a usable answer"
+  },
+  "e:run:pages_read": {
+   "id": "e:run:pages_read",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 42,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "distinct pages sent to the model"
+  },
+  "e:run:cost_usd": {
+   "id": "e:run:cost_usd",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5.76,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "list-price equivalent of the calls in this run log"
+  },
+  "e:run:tokens_in": {
+   "id": "e:run:tokens_in",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1296064,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "input tokens including cache reads and creation"
+  },
+  "e:run:tokens_out": {
+   "id": "e:run:tokens_out",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 403289,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "output tokens"
+  },
+  "e:run:minutes": {
+   "id": "e:run:minutes",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 52.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "model time, summed over calls"
+  },
+  "e:cov:files_read": {
+   "id": "e:cov:files_read",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "assessment files read by this run"
+  },
+  "e:cov:pages_read": {
+   "id": "e:cov:pages_read",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 42,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "pages sent to the model"
+  },
+  "e:cov:tables": {
+   "id": "e:cov:tables",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 46,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "tables read"
+  },
+  "e:cov:holes": {
+   "id": "e:cov:holes",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 40,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes assembled"
+  },
+  "e:read:printed": {
+   "id": "e:read:printed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1618,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values the page prints, extracted"
+  },
+  "e:read:located": {
+   "id": "e:read:located",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1312,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "printed values whose quote was found on the page"
+  },
+  "e:read:located_share": {
+   "id": "e:read:located_share",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.811,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "located quotes over printed values"
+  },
+  "e:read:empty_cells": {
+   "id": "e:read:empty_cells",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 304,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells the page leaves empty, recorded as not printed"
+  },
+  "e:read:empty_cells_boxed": {
+   "id": "e:read:empty_cells_boxed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 255,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "empty cells with a synthesised box on the page"
+  },
+  "e:read:illegible": {
+   "id": "e:read:illegible",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells the model marked illegible"
+  },
+  "e:read:digit_exact": {
+   "id": "e:read:digit_exact",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1074,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values whose digits match the second reader (OCR)"
+  },
+  "e:read:digit_confusable": {
+   "id": "e:read:digit_confusable",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 8,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values matching the second reader only after folding confusable characters"
+  },
+  "e:read:digit_mismatch": {
+   "id": "e:read:digit_mismatch",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 84,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "values whose digits differ from the second reader"
+  },
+  "e:place:from_page": {
+   "id": "e:place:from_page",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 6,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes placed from coordinates printed on the page"
+  },
+  "e:place:from_provincial": {
+   "id": "e:place:from_provincial",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 25,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes placed at a provincial position, not from the page"
+  },
+  "e:place:not_placed": {
+   "id": "e:place:not_placed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 9,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "holes that could not be placed at all"
+  },
+  "e:xc:matches": {
+   "id": "e:xc:matches",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 62,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "provincial records matched to extracted holes"
+  },
+  "e:xc:independent": {
+   "id": "e:xc:independent",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 12,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "matches where the collar was placed from the page, so the offset means something"
+  },
+  "e:xc:median_m": {
+   "id": "e:xc:median_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.25,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median independent offset"
+  },
+  "e:xc:max_m": {
+   "id": "e:xc:max_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.29,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "largest independent offset"
+  },
+  "e:xc:signatures": {
+   "id": "e:xc:signatures",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "offsets that look like a datum shift"
+  }
+ },
+ "build_id": "aa69559bf043"
+}
