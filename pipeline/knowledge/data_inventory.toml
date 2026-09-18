@@ -1,0 +1,481 @@
+# Every data source this project can legally use over the Athabasca Basin, what it bears on, and what it costs
+# to get. Counts and field lists were confirmed by live calls on the dates recorded here; anything not
+# confirmed carries `verified = false` and must not be relied on until it is.
+#
+# `bears_on` uses the mineral-systems vocabulary, restricted to what the research reports actually support for
+# the Athabasca: pathway, trap, detection (a measurable expression), dispersal (glacial transport of a signal),
+# cover (what sits above the target), effort (where people looked, for the null model), label, study_area.
+# Source and preservation are deliberately absent: research reports 01 and 02 do not give Athabasca-specific
+# proxies for either, so no criterion may claim one.
+#
+# `tier` is the provenance tier the rows land in (see store/schema.sql). `role` is feature, label or context:
+# a label may never enter a feature set.
+
+schema_version = "1.0.0"
+region_bbox = [-112.0, 55.5, -101.5, 60.0]
+region_note = "the Athabasca Basin and its margins; the grid is the basin outline buffered 30 km"
+
+# ---------------------------------------------------------------- vector, Saskatchewan Geological Survey
+# One licence covers every `gis.saskatchewan.ca/egis` layer below.
+
+[licence.sk]
+name = "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0"
+url = "https://gisappl.saskatchewan.ca/Html5Ext/Resources/GOS_Standard_Unrestricted_Use_Data_Licence_v2.0.pdf"
+terms = "worldwide, royalty-free, perpetual, non-exclusive, commercial use permitted, attribution required"
+redistributable = true
+
+[licence.copernicus]
+name = "Copernicus Sentinel Data Licence"
+url = "https://sentinels.copernicus.eu/web/sentinel/terms-conditions"
+terms = "free, worldwide, commercial use permitted, attribution required"
+redistributable = true
+
+[licence.usgs_pd]
+name = "USGS public domain"
+url = "https://www.usgs.gov/information-policies-and-instructions/copyrights-and-credits"
+terms = "public domain, no restriction"
+redistributable = true
+
+[licence.not_stated]
+name = "no licence stated"
+url = ""
+terms = "used but never redistributed; the public-safe build omits it"
+redistributable = false
+
+[[source]]
+key = "em_conductors"
+title = "EM conductors (interpreted)"
+tier = "native"
+role = "feature"
+bears_on = "pathway"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Regional_Datasets_and_Compilations/FeatureServer/7"
+where = "1=1"
+geometry = "polyline"
+record_count = 28458
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = false
+notes = """Graphitic basement units are "the source of most significant conductors in the Athabasca Basin, and are key empirical locators for U deposits" (Jefferson et al. 2007, via research report 02 section 1.1.3). This is the single most valuable public feature here."""
+caveats = [
+  "Conductor traces plot up-dip of blind ore, so a buffer must extend down-dip rather than being symmetric (report 02, 1.1.3).",
+  "Silicification can turn graphitic gneiss from a conductor into a resistor, so absence is not evidence of absence.",
+  "The Wolverine Point Formation is itself a conductor and hinders detection of graphitic units beneath it.",
+  "Attribute list not yet confirmed: do not assume a conductance field exists.",
+  "Compiled as it stands today, partly from surveys flown after the discoveries it now sits near: a hindcast using it is optimistic.",
+]
+
+[[source]]
+key = "faults_250k"
+title = "Faults and lineaments, 1:250,000"
+tier = "native"
+role = "feature"
+bears_on = "trap"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/250K_Scale_Geology/FeatureServer/2"
+where = "1=1"
+geometry = "polyline"
+record_count = 17571
+fields = ["FEAT_TYPE", "FEAT_NAME", "TYPE", "DIRECTION", "YEAR", "CRIT_MAIN", "SOURCE1", "SOURCE2", "COMPILERS"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = """The trap element: "the unconformity offset where footwall faults meet the P2 fault hosts the McArthur River ore pods" (report 02, 1.1.5). Fault intersections matter more than fault proximity alone."""
+caveats = [
+  "YEAR was 0 in every sampled row: treat it as unpopulated, not as a compilation date.",
+  "A 1:250,000 line has map-scale position error far larger than an ore body.",
+]
+
+[[source]]
+key = "bedrock_250k"
+title = "Bedrock geology, 1:250,000"
+tier = "native"
+role = "feature"
+bears_on = "pathway"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/250K_Scale_Geology/FeatureServer/3"
+where = "1=1"
+geometry = "polygon"
+record_count = 9596
+fields = ["ROCK_CODE", "EON", "ERA", "PERIOD", "GROUP_", "FORMATION", "MEMBER", "DOMAIN", "LITHOLOGY", "NAME"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = """Magnetic lows mark "pelitic-psammopelitic gneiss, the host of graphitic conductors" (report 02, 1.1.2); with no public magnetic grid, the mapped lithology is the only way to reach that element. LITHOLOGY carries the graphitic and pelitic descriptors a criterion can key on."""
+caveats = ["Better than the 1:1,000,000 compilation already pulled, but still a regional map."]
+
+[[source]]
+key = "surficial_250k"
+title = "Surficial geology, 1:250,000"
+tier = "native"
+role = "feature"
+bears_on = "cover"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/250K_Scale_Geology/FeatureServer/1"
+where = "1=1"
+geometry = "polygon"
+record_count = 8567
+fields = ["CODE", "MAIN_ENVIRONMENT"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "Whether a surface sample means anything depends on what lies between it and bedrock; also the glacial context for boulder dispersal."
+caveats = ["Two attributes only: it classifies the environment, not the thickness of cover."]
+
+[[source]]
+key = "lake_sediment_gsc"
+title = "Lake sediment geochemistry (Geological Survey of Canada analyses)"
+tier = "native"
+role = "feature"
+bears_on = "detection"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Analytical_and_Rock_Property_Data/FeatureServer/2"
+where = "1=1"
+geometry = "point"
+record_count = 13195
+fields = ["U", "U_INA", "TH_INA", "LOI", "LK_DEPTH", "LK_AREA", "GSC_OF", "NTS_SHT"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "The densest direct uranium pathfinder available publicly; U_INA is neutron activation."
+caveats = [
+  "Uranium in lake sediment is a dispersion signal, not a deposit: it says something upstream is shedding uranium.",
+  "Sampling is lake-limited, so a cell with no lake has no measurement rather than a low one.",
+]
+
+[[source]]
+key = "lake_sediment_sgs"
+title = "Lake sediment geochemistry (provincial survey, 1975-1978)"
+tier = "native"
+role = "feature"
+bears_on = "detection"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Analytical_and_Rock_Property_Data/FeatureServer/1"
+where = "1=1"
+geometry = "point"
+record_count = 3001
+fields = ["U_PPM", "LOI_PERC", "PB_PPM", "NI_PPM", "YR", "SM", "TYPE"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "Collected 1975-1978 around the Athabasca sandstone, before most mining: a pre-mining baseline (report 02, 1.2)."
+caveats = ["Same lake-limited sampling frame; carries its own year field, so it can be used in a dated hindcast."]
+
+[[source]]
+key = "lake_water_sgs"
+title = "Lake water geochemistry"
+tier = "native"
+role = "feature"
+bears_on = "detection"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Analytical_and_Rock_Property_Data/FeatureServer/0"
+where = "1=1"
+geometry = "point"
+record_count = 566
+fields = ["U_PPM", "PH", "EH_MV", "O2_PPM", "COND_MICROSIEMENS_CM", "LAKE_DEPTH", "YR", "TECHNIQUE"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "Small but carries pH and Eh, which let a uranium-in-water anomaly be conditioned rather than read raw."
+caveats = ["566 points over a narrow latitude band: coverage is thin and the readiness scorecard must say so."]
+
+[[source]]
+key = "radioactive_boulders"
+title = "Radioactive boulders"
+tier = "native"
+role = "feature"
+bears_on = "dispersal"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Regional_Datasets_and_Compilations/FeatureServer/4"
+where = "1=1"
+geometry = "point"
+record_count = 6591
+fields = ["YEAR", "CPS", "BACKGROUND", "CPS_RANGE", "LITHOLOGY", "U308_ASSAY_RESULTS", "ASSESSMENT_NUMBER"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = """A boulder train is a vector, not a location: at Patterson Lake the discovery hole cut over 1% U3O8 3.8 km up-ice of the boulders (report 02, 1.2). The only layer here with a populated year, so it also dates exploration effort."""
+caveats = [
+  "The source lies up-ice, so the criterion is a corridor in the ice-flow direction, not a buffer.",
+  "Zircon in till travelled over 100 km up-ice in one study: transport distance is not fixed.",
+]
+
+[[source]]
+key = "magnetic_domains"
+title = "Magnetic domains (interpreted)"
+tier = "native"
+role = "feature"
+bears_on = "pathway"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Magnetic_Domains/FeatureServer/0"
+where = "1=1"
+geometry = "polygon"
+licence = "sk"
+verified = false
+verified_at = "2026-09-18"
+fields_verified = false
+notes = "Interpreted domain polygons: the nearest public stand-in for a magnetic grid, which is not published by URL."
+caveats = [
+  "An interpretation, not a measurement.",
+  "Report 02 records that the magnetic signature is contested: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign.",
+]
+
+# ---------------------------------------------------------------- already pulled by `lr index pull`
+
+[[source]]
+key = "compilation"
+title = "Minerals and Quaternary Drillhole Compilation"
+tier = "native"
+role = "feature"
+bears_on = "cover"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Exploration/FeatureServer/3"
+where = "1=1"
+geometry = "point"
+record_count = 33490
+fields = ["DATE_DRILLED", "BASE_OF_ATHABASCA_SG_DEPTH_M", "TOP_CRYSTALLINE_BSMT_DEPTH_M", "TOTAL_DH_LENGTH_M"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-17"
+fields_verified = true
+notes = "Two jobs: the depth fields interpolate an unconformity-depth surface, and DATE_DRILLED gives the effort model its dated drilling history. Holds no assay or lithology values."
+caveats = ["Depth fields are populated only where a hole reached the contact, so the interpolation carries its own coverage count."]
+
+[[source]]
+key = "assessment_surveys"
+title = "Assessment survey footprints (airborne, ground, underground)"
+tier = "native"
+role = "feature"
+bears_on = "effort"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Assessment_File_Information/FeatureServer/2"
+where = "1=1"
+geometry = "polygon"
+record_count = 1831
+licence = "sk"
+verified = true
+verified_at = "2026-09-17"
+fields_verified = true
+notes = "Where surveys were flown or walked: a direct measure of exploration effort, and the backbone of the null model. Layers 0 and 1 carry the underground and ground surveys."
+caveats = ["A footprint says a survey happened, not what it measured: this is effort, never a geophysical value."]
+
+[[source]]
+key = "basin_geology"
+title = "Athabasca Supergroup outline (1:1,000,000 bedrock geology)"
+tier = "native"
+role = "context"
+bears_on = "study_area"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Million_Scale_Geology/FeatureServer/6"
+where = "GEOLOGICAL_REGION_1M = 'Athabasca Supergroup'"
+geometry = "polygon"
+record_count = 197
+licence = "sk"
+verified = true
+verified_at = "2026-09-17"
+fields_verified = true
+notes = "Defines the study area. Buffered 30 km so the margin discoveries at Patterson Lake fall inside the grid."
+
+[[source]]
+key = "geods_holes"
+title = "GeoDS subsurface drilling layer"
+tier = "native"
+role = "feature"
+bears_on = "effort"
+access = "arcgis_rest"
+url = "https://geoscience-data-system.saskatchewan.ca/arcgis/rest/services/P_GeoDS_DrillingPage_EM/FeatureServer/2"
+where = "SYS_SRC = 'DH'"
+geometry = "point"
+record_count = 29762
+licence = "not_stated"
+verified = true
+verified_at = "2026-09-17"
+fields_verified = true
+notes = "A second drilling history, keyed to assessment files. Used but never redistributed."
+caveats = ["No licence stated, so the public-safe build keeps only what is matched to redistributable records."]
+
+# ---------------------------------------------------------------- labels (never features)
+
+[[source]]
+key = "uranium_deposit_footprints"
+title = "Uranium deposit footprints"
+tier = "native"
+role = "label"
+bears_on = "label"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Regional_Datasets_and_Compilations/FeatureServer/5"
+where = "1=1"
+geometry = "polygon"
+record_count = 200
+fields = ["DEPOSIT", "NAME_ZONE", "SOURCE", "ID"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "The positive class, tier A. Named, but carrying no deposit type, grade, tonnage or date."
+caveats = [
+  "A label, never a feature: using it as an input is leakage, and a test enforces that.",
+  "SOURCE holds report titles with publication dates, which are a lagging and biased proxy for discovery, not a discovery date.",
+]
+
+[[source]]
+key = "smdi_uranium"
+title = "Saskatchewan Mineral Deposit Index, uranium-primary records"
+tier = "native"
+role = "label"
+bears_on = "label"
+access = "arcgis_rest"
+url = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Exploration/FeatureServer/2"
+where = "PRIMARYCOMMODITIES LIKE '%ranium%'"
+geometry = "point"
+record_count = 1698
+fields = ["SMDI", "NAME", "PRIMARYCOMMODITIES", "GROUPING", "DISCOVERYTYPE", "PRODUCTION", "RESERVESRESOURCES", "STATUS"]
+licence = "sk"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "6,012 records in all, 1,698 uranium-primary, 1,989 inside the region box. The weaker positive tier: an occurrence is a place uranium was observed, not a deposit."
+caveats = [
+  "DISCOVERYTYPE is a method (Drillhole, Lake Sediment, Outcrop grab), not a year: there is no discovery date in this layer.",
+  "PRODUCTION and RESERVESRESOURCES are yes/no flags with no grade or tonnage.",
+  "Occurrences sit where people looked, which is what the null model exists to measure.",
+]
+
+# ---------------------------------------------------------------- raster and imagery (STAC, no account)
+
+[[source]]
+key = "sentinel2_l2a"
+title = "Sentinel-2 L2A surface reflectance"
+tier = "native"
+role = "feature"
+bears_on = "cover"
+access = "stac"
+url = "https://earth-search.aws.element84.com/v1"
+collection = "sentinel-2-l2a"
+resolution_m = 10
+licence = "copernicus"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = """COGs on the public sentinel-cogs bucket; a SWIR asset returned HTTP 200 unauthenticated and a 0.5 by 0.3 degree box over the basin matched 27 scenes under 10% cloud in one summer. Jobs: a lake and wetland mask (the sampling frame for the lake geochemistry), cover versus outcrop, and true-colour and SWIR chips for each candidate cell."""
+caveats = [
+  "Athabasca deposits sit 100 to 900 m down under 1 to 2 km of sandstone: no optical sensor sees them, and this layer is never an ore detector here.",
+  "A frontier model scored 0.369 on geological map understanding (report 02, 4.4), so an agent may describe ground context from a chip but must not claim alteration from it.",
+  "Clay alteration is detectable by SWIR only where it reaches the surface; in this basin it generally does not.",
+]
+
+[[source]]
+key = "cop_dem_glo_30"
+title = "Copernicus DEM GLO-30"
+tier = "native"
+role = "feature"
+bears_on = "dispersal"
+access = "stac"
+url = "https://earth-search.aws.element84.com/v1"
+collection = "cop-dem-glo-30"
+resolution_m = 30
+licence = "copernicus"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "Terrain, drainage, and the orientation of glacial landforms, which is what turns a radioactive boulder field into an up-ice search corridor."
+caveats = [
+  "The STAC asset href is an s3:// URL; read it through the public HTTPS mirror.",
+  "Ice-flow direction inferred from landform orientation is an interpretation, and the criterion carries it as one.",
+]
+
+[[source]]
+key = "landsat_c2_l2"
+title = "Landsat Collection 2 Level 2"
+tier = "native"
+role = "context"
+bears_on = "cover"
+access = "stac"
+url = "https://earth-search.aws.element84.com/v1"
+collection = "landsat-c2-l2"
+resolution_m = 30
+licence = "usgs_pd"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "Archive to 1982, so it can show ground as it looked before a discovery: useful context for the hindcast."
+caveats = ["30 m and older sensors; used for change and context, not for measurement."]
+
+[[source]]
+key = "sentinel1_grd"
+title = "Sentinel-1 GRD radar"
+tier = "native"
+role = "context"
+bears_on = "cover"
+access = "stac"
+url = "https://earth-search.aws.element84.com/v1"
+collection = "sentinel-1-grd"
+resolution_m = 10
+licence = "copernicus"
+verified = false
+verified_at = "2026-09-18"
+fields_verified = true
+notes = "Deferred. Eight scenes matched over the basin, but the assets are SAFE manifests and calibration schemas, not analysis-ready COGs, so using it means building a preprocessing chain this demo does not need yet."
+
+# ---------------------------------------------------------------- tier B: what this project read itself
+
+[[source]]
+key = "read_assay_intervals"
+title = "Assay intervals read from assessment reports"
+tier = "read"
+role = "label"
+bears_on = "label"
+access = "internal"
+url = "read.record where kind = 'assay_interval'"
+licence = "not_stated"
+verified = true
+verified_at = "2026-09-18"
+fields_verified = true
+notes = """The province publishes no assay values, so every uranium grade in this system came out of a PDF. That makes these intervals the one label source no public layer can supply, and an optional second positive class."""
+caveats = [
+  "Tier B: read by a model and unvalidated until a check says otherwise. Every value carries its page, box, quote and validator outcomes.",
+  "A class-A flagged value may not silently become a label: the model is run with and without this source, and both results are reported.",
+  "Four files read so far, so the coverage is tiny and clustered; it cannot be treated as a survey of the basin.",
+]
+
+# ---------------------------------------------------------------- gaps: recorded so nothing pretends otherwise
+
+[[gap]]
+key = "aeromagnetic_grids"
+title = "Airborne magnetic, radiometric and gravity grids"
+why_it_matters = "Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin."
+status = "not_addressable"
+evidence = "The federal Geoscience Data Repository serves the Northern Saskatchewan 100 m magnetic and radiometric compilation through an interactive portal (HTTP 302, no direct file URL, no WMS or WCS). The provincial Geophysics service publishes survey footprint polygons only, not values. Checked 2026-09-18."
+workaround = "Mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy; nothing stands in for radiometrics or gravity."
+
+[[gap]]
+key = "discovery_dates"
+title = "Discovery dates for deposits and occurrences"
+why_it_matters = "Without them there is no honest train-before, test-after split, which is the strongest test available short of drilling."
+status = "not_published"
+evidence = "No discovery-year, year-found or first-reported field exists in the SMDI REST layer or on an SMDI detail page; DISCOVERYTYPE is a method. Deposit footprints carry only report titles. Checked 2026-09-18."
+workaround = "A hand-built table of about ten dated discoveries, each cited to a public technical report, used only as a hold-out; plus leave-one-camp-out spatial folds, which need no dates."
+
+[[gap]]
+key = "em_conductor_attributes"
+title = "Conductance or strength on the EM conductor layer"
+why_it_matters = "The folklore that stronger conductors make better targets could only be tested with a conductance value."
+status = "unverified"
+evidence = "Feature count confirmed at 28,458; the attribute list was not enumerated. Checked 2026-09-18."
+workaround = "Criteria use distance and density only. The strength claims stay in the handbook marked as untested folklore, with weight zero."
+
+[[gap]]
+key = "alteration_measurements"
+title = "Clay alteration and geochemical footprints at depth"
+why_it_matters = "Alteration is the largest expression of the system: the Cigar Lake halo reaches about 100 m below and 300 m above the unconformity."
+status = "not_public"
+evidence = "Halo extents and Hinckley index ranges exist in the literature, but the measurements are in company drill logs, not in any public layer. Report 02 section 1.2."
+workaround = "None. The handbook states the extents so an agent can say what would settle a cell, and the adjudicator is required to name it as an unknown rather than an absence."

@@ -1,0 +1,267 @@
+-- The store's four provenance tiers. A fact never changes tier, and no table mixes tiers:
+--
+--   native   exactly what a public service returned (ArcGIS REST, STAC). As published.
+--   read     what OCR and the vision model read off document pages. Unvalidated until a check says so.
+--   derived  anything this pipeline computed, recording its inputs.
+--   agent    model-written argument. Never a source of numbers.
+--
+-- Every fact table carries a `tier` column defaulted and CHECK-constrained to its schema, so a row can only
+-- be inserted into the tier it belongs to. Cross-tier questions go through the views at the bottom, which
+-- carry the tier column through rather than hiding it.
+
+create schema if not exists native;
+create schema if not exists read;
+create schema if not exists derived;
+create schema if not exists agent;
+
+-- ---------------------------------------------------------------- tier A: native
+
+-- One row per pull. `payload_sha256` is the hash of the exact response body the service returned, so a later
+-- pull that changes the data is visible rather than silent.
+create table if not exists native.layer (
+  layer_key       text primary key,
+  title           text not null,
+  service_url     text not null,
+  layer_id        integer,
+  where_clause    text,
+  out_sr          integer,
+  record_count    bigint not null,
+  payload_sha256  text,
+  licence         text not null,
+  licence_url     text,
+  redistributable boolean not null,
+  retrieved_at    text not null,
+  bears_on        text,                 -- the deposit-model element this layer speaks to
+  role            text not null,        -- feature | label | context
+  notes           text,
+  tier            text not null default 'native' check (tier = 'native')
+);
+
+-- Features verbatim: geometry as WKB in the CRS it was requested in, attributes as the service's own JSON.
+-- Typed access is through the views at the bottom, so nothing here is reshaped or renamed on the way in.
+create table if not exists native.feature (
+  layer_key  text not null,
+  record_id  bigint not null,
+  geom_wkb   blob,
+  geom_type  text,
+  epsg       integer,
+  minx       double, miny double, maxx double, maxy double,
+  attrs      json not null,
+  tier       text not null default 'native' check (tier = 'native'),
+  primary key (layer_key, record_id)
+);
+
+-- Raster provenance: one row per STAC asset actually read, so every per-cell statistic can name its scene.
+create table if not exists native.scene (
+  collection   text not null,
+  stac_id      text not null,
+  asset_key    text not null,
+  href         text not null,
+  datetime     text,
+  cloud_cover  double,
+  epsg         integer,
+  gsd          double,
+  licence      text not null,
+  retrieved_at text not null,
+  tier         text not null default 'native' check (tier = 'native'),
+  primary key (collection, stac_id, asset_key)
+);
+
+-- One row per assessment file in the searchable corpus: what the province's own index says about it, and
+-- where the holes it reported actually are. No document has been opened to write this row.
+create table if not exists native.corpus_file (
+  file_num         text primary key,
+  company          text,
+  property         text,
+  work_period      text,
+  nts              text,
+  work_description text,
+  lon              double,
+  lat              double,
+  n_holes          integer not null default 0,
+  hole_names       text,
+  retrieved_at     text not null,
+  tier             text not null default 'native' check (tier = 'native')
+);
+
+-- ---------------------------------------------------------------- tier B: read
+
+-- A page of a document, as text. This is tier B even though no model was asked to read it: the text layer of
+-- a scanned report is usually somebody's OCR pass, and this project has already seen one turn 121.7 into
+-- "L2L.-7". It is searchable evidence, not a measurement, and anything quoted from it says which page it
+-- came from.
+create table if not exists read.corpus_page (
+  file_num     text not null,
+  doc_name     text not null,
+  doc_sha256   text not null,
+  page         integer not null,
+  chars        integer not null,
+  text         text not null,
+  extracted_at text not null,
+  tier         text not null default 'read' check (tier = 'read'),
+  primary key (doc_sha256, page)
+);
+
+-- ---------------------------------------------------------------- tier C: derived
+
+-- The analysis grid. Cells are addressed by a stable id built from the grid definition, not by row order.
+create table if not exists derived.grid (
+  grid_id     text primary key,
+  cell_m      integer not null,
+  epsg        integer not null,
+  buffer_m    integer not null,
+  extent_wkt  text not null,
+  n_cells     bigint not null,
+  built_at    text not null,
+  tier        text not null default 'derived' check (tier = 'derived')
+);
+
+create table if not exists derived.cell (
+  cell_id  text not null,
+  grid_id  text not null,
+  col      integer not null,
+  row      integer not null,
+  cx       double not null,          -- centre, in the grid's own CRS
+  cy       double not null,
+  lon      double not null,          -- centre in WGS84, for the web export
+  lat      double not null,
+  geom_wkb blob not null,
+  in_basin boolean not null,
+  tier     text not null default 'derived' check (tier = 'derived'),
+  primary key (cell_id)
+);
+
+-- One row per cell per feature, with the coverage that produced it. A null value with n_obs 0 means "we do
+-- not know", never zero: the readiness scorecard reads this table directly.
+create table if not exists derived.cell_feature (
+  cell_id     text not null,
+  feature_key text not null,
+  value       double,
+  value_text  text,
+  unit        text,
+  n_obs       integer not null default 0,
+  nearest_m   double,
+  from_tier   text not null,          -- which tier the inputs came from: native | read | derived
+  op          text not null,
+  tool        text not null,
+  params      json,
+  inputs      json,                   -- layer keys, scene ids or value ids behind this number
+  computed_at text not null,
+  tier        text not null default 'derived' check (tier = 'derived'),
+  primary key (cell_id, feature_key)
+);
+
+create table if not exists derived.feature_spec (
+  feature_key text primary key,
+  title       text not null,
+  unit        text,
+  from_tier   text not null,
+  source_keys json not null,
+  bears_on    text,
+  is_effort   boolean not null,       -- true: an exploration-effort feature, for the null model
+  is_label    boolean not null,       -- true: never allowed into a feature set
+  is_count    boolean not null default false,  -- true: zero is a real answer, so the feature is known everywhere
+  notes       text,
+  tier        text not null default 'derived' check (tier = 'derived')
+);
+
+-- One row per cell per model: the criteria score, the learned score, the exploration-effort null model.
+-- `known_share` and `in_aoa` are how a cell says it should not be read: a score computed from a fraction of
+-- the criteria, or one extrapolated outside the data the model was fitted on, is not the same number.
+-- Labels, camps and folds. A cell is positive, or unlabelled: never barren, because nobody has drilled most
+-- of this basin. `block_id` and `camp_id` are assigned from position alone, before any model is fitted.
+create table if not exists derived.cell_label (
+  cell_id     text not null,
+  label_tier  text not null,          -- deposit | occurrence | unlabelled
+  label_name  text,
+  camp_id     bigint not null,        -- -1 where the cell is unlabelled
+  block_id    bigint not null,
+  computed_at text not null,
+  tier        text not null default 'derived' check (tier = 'derived'),
+  primary key (cell_id)
+);
+
+create table if not exists derived.cell_score (
+  cell_id     text not null,
+  model       text not null,          -- criteria | learned | effort
+  score       double,                 -- null where the cell cannot honestly be scored
+  known_share double,
+  in_aoa      boolean not null default true,
+  params      json,
+  computed_at text not null,
+  tier        text not null default 'derived' check (tier = 'derived'),
+  primary key (cell_id, model)
+);
+
+-- What each criterion contributed to a cell's criteria score, so the number can be argued with rather than
+-- just shown. Folklore criteria appear here with weight zero and a contribution of zero.
+create table if not exists derived.cell_criterion (
+  cell_id      text not null,
+  criterion    text not null,
+  membership   double,
+  weight       double not null,
+  contribution double,
+  computed_at  text not null,
+  tier         text not null default 'derived' check (tier = 'derived'),
+  primary key (cell_id, criterion)
+);
+
+create table if not exists derived.metric (
+  metric_key  text not null,
+  run_id      text not null,
+  value       double,
+  fmt         text,
+  note        text,
+  computed_at text not null,
+  tier        text not null default 'derived' check (tier = 'derived'),
+  primary key (metric_key, run_id)
+);
+
+-- ---------------------------------------------------------------- tier D: agent
+
+create table if not exists agent.memo (
+  memo_id        text primary key,
+  cell_id        text not null,
+  role           text not null,       -- proponent | skeptic | adjudicator
+  verdict        text,
+  model          text not null,
+  prompt_version text not null,
+  run_id         text not null,
+  cache_key      text,
+  cost_usd       double,
+  duration_s     double,
+  created_at     text not null,
+  published      boolean not null,    -- false: the fabrication gate rejected it
+  tier           text not null default 'agent' check (tier = 'agent')
+);
+
+create table if not exists agent.memo_claim (
+  memo_id   text not null,
+  claim_no  integer not null,
+  text      text not null,
+  value_ids json not null,            -- every number in `text` must resolve to one of these
+  tier      text not null default 'agent' check (tier = 'agent'),
+  primary key (memo_id, claim_no)
+);
+
+create table if not exists agent.memo_check (
+  memo_id text not null,
+  check_id text not null,
+  outcome text not null,              -- pass | fail
+  detail  text,
+  tier    text not null default 'agent' check (tier = 'agent'),
+  primary key (memo_id, check_id)
+);
+
+-- ---------------------------------------------------------------- cross-tier views
+--
+-- The only sanctioned way to read across tiers. Each view keeps a tier column, so a consumer always knows
+-- what it is holding.
+
+create or replace view derived.v_feature_matrix as
+  select c.cell_id, c.lon, c.lat, c.in_basin, f.feature_key, f.value, f.n_obs, f.from_tier, f.tier
+  from derived.cell c left join derived.cell_feature f using (cell_id);
+
+create or replace view native.v_layer_summary as
+  select layer_key, title, role, record_count, licence, redistributable, retrieved_at, tier
+  from native.layer;
