@@ -1,0 +1,19 @@
+# data never committed: PDFs have no named licence; rasters, caches and databases are rebuildable
+pipeline/data/
+pipeline/.venv/
+web/node_modules/
+web/dist/
+web/public/data/pages/
+web/public/basemap/*.pmtiles
+web/test-results/
+web/playwright-report/
+gold/prefill/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+.env
+
+# copied from node_modules by plugins/maplibreVendor.ts
+web/public/vendor/
+web/public/fixtures/pages/

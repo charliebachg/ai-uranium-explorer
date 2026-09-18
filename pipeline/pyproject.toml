@@ -1,0 +1,50 @@
+[project]
+name = "legacy-reader"
+version = "0.1.0"
+description = "Reads public Saskatchewan uranium assessment reports into drillhole tables with provenance, and measures how often the reading is wrong."
+requires-python = ">=3.13,<3.14"
+dependencies = [
+  "pydantic==2.13.5",
+  "typer==0.26.8",
+  "httpx==0.28.1",
+  "tenacity==9.1.4",
+  "duckdb==1.5.5",
+  "pyarrow==25.0.1",
+  "geopandas==1.1.4",
+  "shapely==2.1.2",
+  "pyproj==3.8.0",
+  "rapidfuzz==3.14.6",
+  "pillow==12.3.0",
+  "pypdfium2==5.13.0",
+  "ocrmac==1.0.1",
+  "openpyxl",
+  "xlrd",
+  "jinja2",
+  "scikit-learn>=1.9.1",
+  "rasterio>=1.5.1",
+  "pystac-client>=0.9.0",
+]
+
+[project.optional-dependencies]
+layout = ["docling[ocrmac]==2.128.0"]
+mlflow = ["mlflow==3.16.1"]
+
+[dependency-groups]
+dev = ["pytest==9.1.1"]
+
+[project.scripts]
+lr = "legacy_reader.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/legacy_reader"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "network: needs internet (grid download, live endpoints)",
+  "backend: calls the real claude CLI",
+]

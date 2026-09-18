@@ -1,0 +1,148 @@
+{
+  "version": "heldout-lock/v1",
+  "seed": "legacy-reader-split-v1:",
+  "rule": "lowest sha256(seed + file_num) per era, plus the lowest remaining hash that keeps at least one likely NAD27-or-no-datum file held out",
+  "heldout": [
+    {
+      "file_num": "74H06-0039",
+      "era": "1970s",
+      "split_hash": "0b4a20b8dd080da94b470c0e224c0421d51e4863a37ecfe52db5b7e4ede0a53a",
+      "reason": "lowest split hash in 1970s",
+      "report_pdfs": [
+        {
+          "name": "74H06-0039_1978 SUMMARY EXPLORATION REPORT.pdf",
+          "path": "74H06-0039/74H06-0039_1978 SUMMARY EXPLORATION REPORT.pdf",
+          "kind": "report_pdf",
+          "bytes": 10570990,
+          "sha256": "719614a158a5e5d66f24e7e8bd752164694dc84cc763fcb071ddd599ed76eeb5"
+        },
+        {
+          "name": "74H06-0039_ELECTROMAGNETIC AND MAGNETIC SURVEYS.pdf",
+          "path": "74H06-0039/74H06-0039_ELECTROMAGNETIC AND MAGNETIC SURVEYS.pdf",
+          "kind": "report_pdf",
+          "bytes": 2006073,
+          "sha256": "fd9c9ac7e47004c7ffc18d5d55adc0be09a83829b185323e423e2ec9219d80ed"
+        },
+        {
+          "name": "74H06-0039_HORIZONTAL LOOP ELECTROMAGNETIC SURVEY.pdf",
+          "path": "74H06-0039/74H06-0039_HORIZONTAL LOOP ELECTROMAGNETIC SURVEY.pdf",
+          "kind": "report_pdf",
+          "bytes": 1778222,
+          "sha256": "450cf156ba654a6a997f5adc80ba0207ff2da84d0cdb20e317879458c257c98d"
+        }
+      ]
+    },
+    {
+      "file_num": "74I02-0089",
+      "era": "2000s+",
+      "split_hash": "1685abdcf2b334c6c0fd98c7af76d8c4f3276e889f4bb56c34f47d2d32797bc3",
+      "reason": "lowest split hash in 2000s+",
+      "report_pdfs": [
+        {
+          "name": "GB 2008-2010 Assessment Report.FINAL.21.12.10.pdf",
+          "path": "74I02-0089/GB 2008-2010 Assessment Report.FINAL.21.12.10.pdf",
+          "kind": "report_pdf",
+          "bytes": 14932273,
+          "sha256": "f7b830613de2e3ae6cfe76a584dc109caac57d980448212541c73ed4154d1069"
+        }
+      ]
+    },
+    {
+      "file_num": "74H11-0131",
+      "era": "2000s+",
+      "split_hash": "27e3c58452235e8958cda5a6153ad0414d1b2e49864368ad205198b5a68a4443",
+      "reason": "lowest remaining split hash (held-out already has a likely NAD27/no-datum file)",
+      "report_pdfs": [
+        {
+          "name": "Mann_Lake_2009_AER.pdf",
+          "path": "74H11-0131/Mann_Lake_2009_AER.pdf",
+          "kind": "report_pdf",
+          "bytes": 213099,
+          "sha256": "d6b7478466ca0873ba56575e90a4e7673dcddccad1cf4ccc253fb3636ee3d970"
+        },
+        {
+          "name": "MN-022.pdf",
+          "path": "74H11-0131/appendix/MN-022.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 225909,
+          "sha256": "807670347cdab0f5500a53d36231301c6de77ac80852d7264fb2e83bcc18999d"
+        },
+        {
+          "name": "MN-023.pdf",
+          "path": "74H11-0131/appendix/MN-023.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 83202,
+          "sha256": "a9e6e587430056318a63994d51de039df9ba513a74a4636e213e4f957cd3de73"
+        },
+        {
+          "name": "MN-024.pdf",
+          "path": "74H11-0131/appendix/MN-024.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 73860,
+          "sha256": "cee674b8009b3c2daf14d549d951128874df9df4cde2112ac49616d6c0cb4d0f"
+        },
+        {
+          "name": "MN-025.pdf",
+          "path": "74H11-0131/appendix/MN-025.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 89727,
+          "sha256": "a28c9be5dd2377a4308b3e0ab3de79f40174b6d9bf5af4b79c0ce7f157026765"
+        },
+        {
+          "name": "MN-026.pdf",
+          "path": "74H11-0131/appendix/MN-026.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 76565,
+          "sha256": "cd851e55e52499fb6a8c214cd04ddbb5aa238898abc684898c586e6a8c02e27f"
+        },
+        {
+          "name": "MN-027.pdf",
+          "path": "74H11-0131/appendix/MN-027.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 76660,
+          "sha256": "3627eaf72a602cf1ab335620c6461490730b4233d94a305a2f023a76a8cce527"
+        },
+        {
+          "name": "Mann Lake 2009 Lithogeochemical Results.pdf",
+          "path": "74H11-0131/appendix/Mann Lake 2009 Lithogeochemical Results.pdf",
+          "kind": "appendix_pdf",
+          "bytes": 147099,
+          "sha256": "00f6c4cbaaed2369ea37312a3dfd662881950146878379a3a6072fd9fa2e6a86"
+        }
+      ]
+    },
+    {
+      "file_num": "74G08-0023",
+      "era": "1980s-1990s",
+      "split_hash": "41af18e568c58e8d842a138b2987a71e509b9af778af1ce1e4f75ae07b9c683d",
+      "reason": "lowest split hash in 1980s-1990s",
+      "report_pdfs": [
+        {
+          "name": "74G08-0023_Diamond Drilling Perpete Lake Uranium Project 1980.PDF",
+          "path": "74G08-0023/74G08-0023_Diamond Drilling Perpete Lake Uranium Project 1980.PDF",
+          "kind": "report_pdf",
+          "bytes": 1154625,
+          "sha256": "c6155a6a649af25a9a8899f8dec20ed4ce5e1327929376fb1a79084f863999e0"
+        }
+      ]
+    }
+  ],
+  "file_nums": [
+    "74H06-0039",
+    "74I02-0089",
+    "74H11-0131",
+    "74G08-0023"
+  ],
+  "dev": [
+    "74H09-0039",
+    "74H16-0072",
+    "74P10-0005",
+    "74F08-0021",
+    "MAW00649",
+    "74G07-0054",
+    "74H04-0094",
+    "74G08-0029"
+  ],
+  "selection_sha256": "73c6175324e991f501d3342cbb3c50766b100ab9afbe9f9f9f9be700944d03b5",
+  "locked_at": "2026-09-17T18:45:14+00:00"
+}
