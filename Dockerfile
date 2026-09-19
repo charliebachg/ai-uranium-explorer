@@ -1,0 +1,25 @@
+# One image: the built site and the API that serves it. The analytics store (pipeline/data) is mounted, not
+# copied: it is a gigabyte of pulls and a DuckDB file, and it belongs to the machine that computed it.
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+# the API serves the site, so service calls go to the same origin
+ENV VITE_SERVICE_ROOT=""
+RUN npm run build
+
+FROM python:3.13-slim AS api
+COPY --from=ghcr.io/astral-sh/uv:0.9.1 /uv /usr/local/bin/uv
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy LR_ROOT=/app
+WORKDIR /app/pipeline
+COPY pipeline/pyproject.toml pipeline/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+COPY pipeline/src ./src
+COPY pipeline/knowledge ./knowledge
+COPY pipeline/configs ./configs
+COPY pipeline/alembic.ini pipeline/migrations ./
+RUN uv sync --frozen --no-dev
+COPY --from=web /web/dist /app/web/dist
+EXPOSE 8787
+CMD ["uv", "run", "lr", "prospect", "serve", "--host", "0.0.0.0", "--port", "8787", "--backend", "openai", "--web-dist", "/app/web/dist"]

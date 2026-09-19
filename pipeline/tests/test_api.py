@@ -172,3 +172,18 @@ def test_evidence_assembles_memos_and_claims_from_the_store(tmp_path: Path, monk
     monkeypatch.setattr(T, "call", lambda tool, args: T.ToolResult(tool, args, rows=[], values={}))
     ev = S.evidence("0001_0001")
     assert ev["lon"] == -105.1 and ev["memos"][0]["claims"] == [{"claim_no": 1, "text": "score 0.5", "value_ids": ["c:score:x"]}]
+
+
+def test_the_built_site_is_served_from_the_same_process_behind_the_api(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    dist = tmp_path / "dist"
+    (dist / "assets").mkdir(parents=True)
+    (dist / "index.html").write_text("<!doctype html><title>AI Uranium Explorer</title>")
+    (dist / "assets" / "app.js").write_text("console.log(1)")
+    monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [])
+    app = A.create_app(lambda: None, model="m", db_path=tmp_path / "t.duckdb", web_dist=dist)
+    c = TestClient(app)
+    assert c.get("/api/health").json()["ok"] is True, "the API is not shadowed by the site"
+    assert c.get("/").text.startswith("<!doctype html>")
+    assert c.get("/eval").text.startswith("<!doctype html>"), "the app's own routes fall back to index.html"
+    assert c.get("/assets/app.js").text == "console.log(1)"
+    assert c.get("/../etc/passwd").status_code in (200, 404) and "root:" not in c.get("/../etc/passwd").text

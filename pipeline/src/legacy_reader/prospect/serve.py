@@ -120,7 +120,8 @@ def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
 
 
 def serve(port: int = DEFAULT_PORT, model: str = "", effort: str = "medium",
-          backend: str = "openai", log: Callable[[str], None] = print) -> None:
+          backend: str = "openai", log: Callable[[str], None] = print, host: str = "127.0.0.1",
+          web_dist: str | None = None) -> None:
     """Run the FastAPI service on localhost. The routes and the NDJSON events are unchanged from the stdlib
     server this replaced; conversations are now persisted turn by turn in the agent tier."""
     import uvicorn
@@ -128,11 +129,15 @@ def serve(port: int = DEFAULT_PORT, model: str = "", effort: str = "medium",
     from ..api.app import create_app
 
     chosen, model = make_backend(backend, model)
-    app = create_app(lambda: chosen, model, effort, backend_name=backend)
-    log(f"  listening on http://127.0.0.1:{port}  ({backend}, model {model}, effort {effort})")
+    from pathlib import Path
+
+    dist = Path(web_dist) if web_dist else None
+    app = create_app(lambda: chosen, model, effort, backend_name=backend, web_dist=dist)
+    log(f"  listening on http://{host}:{port}  ({backend}, model {model}, effort {effort})"
+        + (f", serving the built site from {dist}" if dist else ""))
     log("    GET  /api/cells             candidates, highest criteria score first")
     log("    GET  /api/cell/<cell_id>    the evidence record and any stored memos")
     log("    POST /api/chat              {cell_id, question, conversation_id?}; /api/chat/stream for NDJSON")
     log("    GET  /api/conversation/<id> a persisted transcript; /docs for the OpenAPI page")
     log("  local only, and the public-safe build does not offer the chat at all")
-    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
+    uvicorn.run(app, host=host, port=port, log_level="warning")

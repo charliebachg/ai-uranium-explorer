@@ -579,11 +579,13 @@ def prospect_serve_cmd(
     model: str = typer.Option("", "--model", help="default: OPENAI_MODEL for openai, sonnet for claude"),
     effort: str = typer.Option("medium", "--effort"),
     backend: str = typer.Option("openai", "--backend", help="openai | claude"),
+    host: str = typer.Option("127.0.0.1", "--host", help="0.0.0.0 inside a container"),
+    web_dist: str = typer.Option(None, "--web-dist", help="serve the built site (web/dist) from this process"),
 ) -> None:
     """Serve the evidence record and the per-cell conversation to the web app, on localhost."""
     from .prospect.serve import serve
 
-    serve(port=port, model=model, effort=effort, backend=backend, log=typer.echo)
+    serve(port=port, model=model, effort=effort, backend=backend, log=typer.echo, host=host, web_dist=web_dist)
 
 
 @prospect_app.command("record-chat")

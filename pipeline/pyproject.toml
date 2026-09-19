@@ -16,7 +16,7 @@ dependencies = [
   "rapidfuzz==3.14.6",
   "pillow==12.3.0",
   "pypdfium2==5.13.0",
-  "ocrmac==1.0.1",
+  "ocrmac==1.0.1; sys_platform == 'darwin'",   # Apple Vision OCR: reading pages happens on the Mac, never in the serving image
   "openpyxl",
   "xlrd",
   "jinja2",

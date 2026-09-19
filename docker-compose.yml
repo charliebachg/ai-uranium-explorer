@@ -2,6 +2,20 @@
 # and tiles, Redis for the job queue. DuckDB stays the analytics engine and lives in pipeline/data, not here.
 # `docker compose up -d` brings the three up; `lr store migrate` then `lr store sync-pg` fill the database.
 services:
+  app:
+    build: .
+    ports: ["8787:8787"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      LR_PG_DSN: postgresql://${LR_PG_USER:-lr}:${LR_PG_PASSWORD:-lr}@db:5432/${LR_PG_DB:-lr}
+      LR_S3_ENDPOINT: http://minio:9000
+      LR_REDIS_URL: redis://redis:6379/0
+    env_file:
+      - path: pipeline/.env      # the OpenAI key and its spend ceiling; gitignored, never copied into the image
+        required: false
+    volumes: ["./pipeline/data:/app/pipeline/data"]   # the analytics store, computed on the host
   db:
     image: ghcr.io/baosystems/postgis:16-3.5   # multi-arch (arm64 + amd64); postgis/postgis has no arm64 build
     environment:

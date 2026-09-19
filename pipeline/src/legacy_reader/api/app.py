@@ -21,7 +21,8 @@ from typing import Any, Callable, Iterator
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from ..prospect import serve as S
@@ -86,7 +87,7 @@ def _done_payload(conv: Conversation, cell_id: str, turn: dict[str, Any]) -> dic
 
 
 def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "medium", backend_name: str = "openai",
-               db_path: Path | None = None) -> FastAPI:
+               db_path: Path | None = None, web_dist: Path | None = None) -> FastAPI:
     app = FastAPI(title="AI Uranium Explorer service", version="0.2.0")
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
     registry = Registry(db_path)
@@ -166,5 +167,19 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
 
         return StreamingResponse(lines(), media_type="application/x-ndjson",
                                  headers={"Cache-Control": "no-store", "Connection": "close"})
+
+    if web_dist is not None and (web_dist / "index.html").is_file():
+        # the built site, from the same process: assets and data as files, every other path the app's own
+        # router handles from index.html. Declared after the API routes so /api/* is never shadowed.
+        for sub in ("assets", "data", "vendor", "tiles"):
+            if (web_dist / sub).is_dir():
+                app.mount(f"/{sub}", StaticFiles(directory=web_dist / sub), name=sub)
+
+        @app.get("/{path:path}", include_in_schema=False)
+        def site(path: str) -> FileResponse:
+            candidate = (web_dist / path) if path else None
+            if candidate and candidate.is_file() and web_dist in candidate.resolve().parents:
+                return FileResponse(candidate)
+            return FileResponse(web_dist / "index.html")
 
     return app
