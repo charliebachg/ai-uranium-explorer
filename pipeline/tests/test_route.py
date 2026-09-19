@@ -171,3 +171,46 @@ def test_continuation_chains_group_consecutive_table_pages():
     assert pages[5]["chain_id"] is None
     assert [p["chain_pos"] for p in pages[1:4]] == [1, 2, 3]
     assert chains[pages[1]["chain_id"]]["header_text"] == "h2"
+
+
+# ---------------------------------------------------------------- front matter
+
+
+def _page_of(lines: list[tuple[str, float]]) -> list[dict]:
+    """Words laid out as rows: each (text, y0) becomes a row of tokens spaced across the page."""
+    out = []
+    for text, y in lines:
+        for i, tok in enumerate(text.split()):
+            out.append(word(tok, 0.1 + i * 0.08, y))
+    return out
+
+
+def test_a_table_of_contents_is_front_matter_not_an_assay_table():
+    """The Fission 2012 report's contents page lists 'Core Sampling', 'Analyses' and 'Drill Hole Locations' with
+    page numbers in a column: keywords and a numeric column, which the banks read as an assay table."""
+    words = _page_of([
+        ("TABLE OF CONTENTS", 0.10),
+        ("7.1 Diamond Drilling 11", 0.20), ("7.2 Dual Rotary Drilling 18", 0.23),
+        ("8.0 CORE SAMPLING METHOD AND APPROACH 24", 0.26),
+        ("9.0 CORE SAMPLE PREPARATION, ANALYSES AND SECURITY 24", 0.29),
+        ("Table 3 Fall 2012 Diamond Drill Hole Locations 12", 0.32),
+        ("Table 4 Winter 2013 Diamond Drill Hole Locations 15", 0.35),
+        ("Appendix 3 Diamond Drill Hole Core Sample and Assay Data", 0.38),
+    ])
+    r = route_page(words, prefer_text_layer=False)
+    assert r["features"]["front_matter"] is True
+    assert r["route_class"] == "other" and r["route_candidates"] == []
+    assert any("front matter" in w for w in r["route_why"])
+
+
+def test_the_phrase_lower_on_the_page_does_not_make_it_front_matter():
+    """A drill log whose remarks cite 'see list of tables' half-way down keeps its own class."""
+    words = _page_of([
+        ("Hole From To Sample U3O8 %", 0.10),
+        ("PLS13-050 210.0 211.0 65701 0.018", 0.14), ("PLS13-050 211.0 212.0 65702 0.005", 0.17),
+        ("PLS13-050 212.0 213.0 65703 0.019", 0.20), ("PLS13-050 213.0 214.0 65704 0.198", 0.23),
+        ("see list of tables for the full set", 0.60),
+    ])
+    r = route_page(words, prefer_text_layer=False)
+    assert r["features"]["front_matter"] is False
+    assert r["route_class"] != "other"

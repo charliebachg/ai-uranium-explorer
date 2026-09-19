@@ -86,6 +86,9 @@ _DEPTH = re.compile(r"^(\d{1,4}(?:\.\d{1,2})?)$")
 _DEPTH_PAIR_TOKEN = re.compile(r"^(\d{1,4}(?:\.\d{1,2})?)\s*[-–]\s*(\d{1,4}(?:\.\d{1,2})?)(?:\s?m)?$")
 _CONTINUED = re.compile(r"cont(?:'?d|inued|\.)", re.IGNORECASE)
 _UTM_LIKE = re.compile(r"^\d{6,7}$")
+# Front matter of a modern digital report: the phrase sits in the top quarter of the page and the page lists
+# section titles that mention assays, samples and drill holes, which is exactly what fools the keyword banks.
+_FRONT_MATTER = re.compile(r"\b(table\s+of\s+contents|list\s+of\s+(tables|figures|appendices|plates|maps))\b", re.IGNORECASE)
 
 MAX_DEPTH_M = 3000.0
 MAX_INTERVAL_M = 500.0
@@ -107,6 +110,7 @@ class PageFeatures:
     table_like: bool = False
     strong_hits: dict[str, list[str]] = field(default_factory=dict)
     continued_marker: bool = False
+    front_matter: bool = False
     header_text: str = ""
     engine: str = ""
 
@@ -271,6 +275,8 @@ def page_features(words: list[dict[str, Any]], engine: str = "") -> PageFeatures
                     or (f.numeric_ratio >= 0.35 and f.n_rows >= 5))
     f.strong_hits = {c: sorted(set(f.keyword_hits.get(c, [])) & set(STRONG[c])) for c in KEYWORDS}
     f.continued_marker = any(_CONTINUED.search(row_text(r)) for r in rows[:4])
+    top = [r for r in rows if r and min(w.get("y0", 1.0) for w in r) < 0.25]
+    f.front_matter = any(_FRONT_MATTER.search(row_text(r)) for r in top)
     f.header_text = " | ".join(row_text(r) for r in rows[:3])
     return f, rows, pairs
 
@@ -291,6 +297,10 @@ def classify(f: PageFeatures) -> dict[str, Any]:
     if f.n_tokens < 15:
         return {"route_class": "other", "route_scores": {}, "route_candidates": [],
                 "route_why": ["fewer than 15 tokens: blank or image-only page"]}
+    if f.front_matter:
+        return {"route_class": "other", "route_scores": {}, "route_candidates": [],
+                "route_why": ["front matter: a table of contents or list of tables/figures/appendices in the top "
+                              "quarter of the page; its section titles mention assays and holes without holding any"]}
 
     for cls in KEYWORDS:
         if k.get(cls, 0) > 0:
