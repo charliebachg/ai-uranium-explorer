@@ -2,7 +2,7 @@
 
 **Status:** draft v0.1 · 2026-09-19 · owner: Charlie
 **Scope:** turn the demo into a working prototype that a geologist could use and an engineer could scale.
-**How to read:** §1–9 set the frame; §6 is the architecture in two diagrams, §7 the bias and leak register, §8 the
+**How to read:** FINDINGS.md holds the measured results that changed the claims. §1–9 set the frame; §6 is the architecture in two diagrams, §7 the bias and leak register, §8 the
 three agents, and §9 the boundary of what this prototype will actually run. §A–E are the five workstreams, each with *current state → requirement →
 how we will know → open questions*. §12 is the order we do them in. We go deeper into one section at a time
 after this document is agreed.
@@ -61,9 +61,11 @@ every agent answer from a versioned input, and can deploy the whole thing on a f
 - **Corpus:** 1,534 in-area assessment files at metadata level, 1,846 pages read, 22 of 60 target PDFs fetched.
 - **Sources:** 20 registered, 18 redistributable, 4 recorded gaps (aeromagnetic grids, discovery dates, EM
   conductor attributes, alteration measurements).
-- **Headline measurement:** under spatial folds, the effort-only model reaches PR-AUC 0.347 against 0.133
-  for the geology-trained model. **A literature review found a mechanism that could produce this result as a
-  sampling artefact** (naive unlabelled-as-negative, uncorrected). It is a hypothesis until §C tests it.
+- **Headline measurement, Phase 0 done (FINDINGS.md F1):** under spatial folds the effort-only model reaches
+  PR-AUC 0.346 against 0.133 for the geology model, and after matched background and thinned positives it is
+  still ahead, 0.178 against 0.111, intervals separate, on both label sets. **Confirmed, not an artefact.**
+  Effort alone ranks the 60 deposit cells at ROC-AUC 0.90 to 0.95; the geology model does not transfer across
+  camps. Thinning showed a third of effort's apparent skill was counting one camp many times.
 - **Gate:** 210 of 223 corrupted claims refused, 0 of 90 true claims wrongly refused — on synthetic corruption
   only. Two named holes: a correct value from the wrong cell passes; negated evidence passes.
 - **Stack:** Python 3.13 / uv / typer / DuckDB / scikit-learn / rasterio / pystac; React 19 / Vite 8 / TS 6 /
@@ -198,7 +200,7 @@ handled.
 | Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
 |---|---|---|---|---|---|---|
 | B1 | Exploration-effort confound | labels exist where people drilled; features are measured where people looked | any model learns *where people went*, and reports it as geology | the effort-only null on the same rows; capture stratified by effort decile | effort-adjusted metrics; PU negatives sampled at matched effort; report every score beside the null | partly |
-| B2 | Label crossover from naive PU sampling | unlabelled cells treated as negatives | shrinks the positive area, inflates variance, depresses the geology model most | Phase 0 re-test (§C.2.1) against bagging PU and recursive reliable-negatives | reliable-negative selection; spatial negatives away from positives; bagging PU | open |
+| B2 | Label crossover from naive PU sampling | unlabelled cells treated as negatives | shrinks the positive area, inflates variance, depresses the geology model most | Phase 0 re-test (§C.2.1): matched background moved the geology model by 0.001; the headline held | measured and reported (FINDINGS.md F1); reliable-negative selection stays a Phase 3 candidate | handled |
 | B3 | Spatial autocorrelation leakage | random cross-validation | neighbouring cells in train and test; metrics inflate | gap between random, spatial and camp folds | spatial blocks fixed before the first fit; camp holdout; all three reported | handled |
 | B4 | Label definition bias | deposit vs occurrence; compiler-dependent definitions in SMDI | "positives" mix ore bodies with a single radioactive boulder | metrics reported deposits-only and with occurrences | both label sets kept; base rate stated beside every number | partly |
 | B5 | Camp clustering | deposits sit in a handful of camps | a model memorises camps and looks skilled | leave-one-camp-out fold | camp fold is one of the three standard folds | handled |
@@ -670,7 +672,7 @@ fitting; metrics PR-AUC, ROC-AUC, capture@10%, calibration; one run, no tracking
 
 ### C.2 Requirements — the experiment programme
 
-**C.2.1 Settle the headline first (must)**
+**C.2.1 Settle the headline first (must) — done 2026-09-19, see FINDINGS.md F1: confirmed**
 The effort-beats-geology result is the claim everything rests on and it has a named confound. Before any
 other modelling:
 - Re-run learned vs effort with **target-group background sampling** (background matched to the effort
@@ -906,7 +908,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 
 | Phase | Weeks | What ships | Gate to next phase |
 |---|---|---|---|
-| **0 · Settle the headline** | 1 | §C.2.1 corrected sampling, both folds, intervals, area-budget capture | The effort-vs-geology claim is confirmed or retracted, in writing |
+| **0 · Settle the headline** | done | §C.2.1: 48 configurations, three folds, intervals, area-budget capture, MineTRACE protocol | **Confirmed in writing, FINDINGS.md F1** |
 | **1 · Platform** | 2–3 | §A: FastAPI + Postgres/PostGIS, vector tiles, jobs, persisted conversations, one-command deploy; §B catalogue + lineage | All current e2e pass against the API; fresh clone runs in one command |
 | **2 · Data ownership** | 1–2 | §B: gap re-verification (magnetics first); freeze the 15 enabled cells with their selection rule (§9.3); fetch and text-index their 47 files; pre-read the top two drilling files per cell with the existing pipeline (17 files, about 230 routed pages, unattended — **can start now, in parallel with Phase 0**); versioned snapshots | Every on-screen value walks to a hashed source pull; **the §9.1 readiness checklist is green for the focused tasks** |
 | **3 · ML programme** | 2 | §C.2.2–C.2.4: MLflow, registry, candidate models, ablations, sensitivity, CI regression | Eval page links every number to a run |

@@ -253,6 +253,10 @@ Measured on the 10,183 cells all three models can score, base rate 5.4%:
 | **Effort (null)** | random | **0.386** | 0.879 | **57.1%** |
 | Learned | **spatial** | 0.133 | 0.762 | 28.9% |
 | **Effort (null)** | **spatial** | **0.347** | 0.852 | **53.1%** |
+
+The Phase 0 re-test (FINDINGS.md, F1) repeated this with negatives matched to the positives' effort profile and
+one positive per 10 km block: effort 0.178 against learned 0.111 under spatial folds, intervals separate. The
+gap narrows because thinning stops one camp counting many times; it does not close.
 | Learned | camp | 0.080 | 0.641 | 15.6% |
 | **Effort (null)** | camp | **0.241** | 0.773 | **38.8%** |
 
