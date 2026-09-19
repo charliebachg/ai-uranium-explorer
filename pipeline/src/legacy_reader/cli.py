@@ -648,6 +648,40 @@ def store_rebuild_cmd() -> None:
     rebuild(log=typer.echo)
 
 
+@store_app.command("migrate")
+def store_migrate_cmd(dsn: str = typer.Option(None, "--dsn", help="default: LR_PG_DSN or the compose default")) -> None:
+    """Apply the Alembic migrations to the serving database (Postgres + PostGIS)."""
+    from .store.pg import migrate, pg_dsn
+
+    migrate(dsn)
+    typer.echo(f"  migrated {dsn or pg_dsn()} to head")
+
+
+@store_app.command("sync-pg")
+def store_sync_pg_cmd(dsn: str = typer.Option(None, "--dsn")) -> None:
+    """Copy every tiered table from DuckDB into Postgres, set the cell geometry, and audit the tiers there."""
+    from .store.pg import sync
+
+    counts = sync(dsn, log=typer.echo)
+    typer.echo(f"  {sum(counts.values()):,} rows across {len(counts)} tables")
+
+
+@store_app.command("pg-audit")
+def store_pg_audit_cmd(dsn: str = typer.Option(None, "--dsn")) -> None:
+    """The tier audit against the serving database."""
+    from .store.pg import connect_pg, tier_audit_pg
+
+    conn = connect_pg(dsn)
+    try:
+        problems = tier_audit_pg(conn)
+    finally:
+        conn.close()
+    for p in problems:
+        typer.echo("  " + p)
+    typer.echo("tier audit clean" if not problems else f"{len(problems)} problem(s)")
+    raise typer.Exit(1 if problems else 0)
+
+
 @store_app.command("audit")
 def store_audit_cmd() -> None:
     """Check that no table mixes provenance tiers (native, read, derived, agent)."""

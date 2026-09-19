@@ -1,0 +1,31 @@
+# The serving stack for the prototype (PRD section A): Postgres 16 with PostGIS for serving, MinIO for objects
+# and tiles, Redis for the job queue. DuckDB stays the analytics engine and lives in pipeline/data, not here.
+# `docker compose up -d` brings the three up; `lr store migrate` then `lr store sync-pg` fill the database.
+services:
+  db:
+    image: ghcr.io/baosystems/postgis:16-3.5   # multi-arch (arm64 + amd64); postgis/postgis has no arm64 build
+    environment:
+      POSTGRES_USER: ${LR_PG_USER:-lr}
+      POSTGRES_PASSWORD: ${LR_PG_PASSWORD:-lr}
+      POSTGRES_DB: ${LR_PG_DB:-lr}
+    ports: ["${LR_PG_PORT:-5432}:5432"]
+    volumes: ["lr-pg:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LR_PG_USER:-lr} -d ${LR_PG_DB:-lr}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${LR_S3_KEY:-lr}
+      MINIO_ROOT_PASSWORD: ${LR_S3_SECRET:-lr-minio-secret}
+    ports: ["9000:9000", "9001:9001"]
+    volumes: ["lr-minio:/data"]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+volumes:
+  lr-pg: {}
+  lr-minio: {}
