@@ -98,6 +98,8 @@ company surveys in the assessment files, and a residual field is not an interpre
 
 ## F1 · Phase 0: effort beats geology, and the sampling confound does not explain it (2026-09-19)
 
+*Re-run 2026-09-19 pinned to store snapshot `77cd52b0e9ee` as MLflow run `5b74757a603d`: every number below reproduced exactly (seeded fits). The full table is on the Eval page, each row naming that run.*
+
 **Claim under test.** Under spatial folds, a model given nothing but exploration effort (drillhole counts,
 survey footprints, sample counts) predicts the deposit and occurrence labels better than a model given the
 geology (PR-AUC 0.347 against 0.133). The literature review found a mechanism that could manufacture this:
