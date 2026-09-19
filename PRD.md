@@ -254,6 +254,167 @@ handled.
 
 ---
 
+## 8. The agentic system — three agents, one runtime
+
+Three agents, one runtime, one gate. Each agent is a loop over the same tool contract, and the gate is
+middleware that runs at every handoff, not a check at the end. The analyst design starts from MineAgent and
+STA-CoT, translated from images to a structured evidence record; neither is ground truth, both are the
+only measured starting points.
+
+### 8.1 Shared runtime (must)
+
+- **One tool contract** over MCP (§E.3): every tool returns values with ids, every call is traced with its
+  arguments, result ids, cost and latency. A model never computes; a tool always does.
+- **Gate as middleware**: every message that crosses an agent boundary (tool → agent, agent → agent,
+  agent → store, agent → screen) is checked for number-to-id resolution, cell identity and polarity before it
+  is passed on. A rejected message goes back to its producer with the unresolved number, never forward.
+- **Run manifest** per invocation: prompt versions, model per role, fold and model version of every score the
+  agent saw, retrieval blind-list, seed, budget. A run is replayable from its manifest and the cache; the cache
+  key covers system prompt and schema (closes B22).
+- **Budgets** per run and per configuration, checked before each call, with the spend ledger already built.
+- **Tracing** with OpenTelemetry so the benchmark can compute per-stage metrics from the traces, not from logs.
+
+### 8.2 Extractor agent — reading loop (must, with §B and §C)
+
+For each page or chip: locate → read under a schema → validate → file under `read`.
+
+1. **Locate**: layout and OCR where a text layer is missing; page, box and verbatim quote recorded for every
+   candidate value (already the contract for the 1,846 pages read).
+2. **Read**: a VLM call constrained to the value schema for that page type (collar, assay interval,
+   lithology log, legend, map unit). Output is a set of candidate values, each with quote and box.
+3. **Validate**: deterministic checks — CRS and datum, units, physical ranges, the quote located on the page,
+   collar within the claim block. A value that fails stays flagged and never becomes a feature.
+4. **Agree**: a second read by a different model family; values the two readings disagree on go to a review
+   queue with both readings shown. Agreement rate is a tracked metric.
+5. **File** under `read` with reader model, prompt version and validator results, so §C can choose which
+   readings feed a feature.
+
+Scored by Tier 4 against hand-keyed gold; the published bars are in §D.3.1.
+
+### 8.3 Interface agent — router (must, with §E)
+
+The chat panel. It adds no signal; it finds, explains, records and invokes.
+
+- **Intent router** over a fixed set of question kinds: lookup, compare, explain a score, what is unknown
+  here, what would change the reading, record an insight, run the analyst. Unrouted questions go to a plain
+  tool loop capped at a small number of calls.
+- **Explicit abstain tool.** GeoBenchX showed refusal is only measurable when there is a tool to call; ours
+  returns the reason (not measured here, outside the grid, would need a value the store lacks).
+- **Record insight**: writes a geologist's statement to the `expert` tier with author, time and cell, and
+  returns its id. Only then can any agent cite it.
+- **Invoke analyst**: hands over the cell, the out-of-fold score ids, the expert-tier ids and the reason for
+  invoking; receives a gated chain and reports the verdict with the diff against the run without the insight.
+- Scored on tiers 1–3 and by the MineTRACE rating protocol (§D.3.1, §D.3.4).
+
+### 8.4 Analyst agent — multi-step reasoning over the evidence record (must)
+
+MineAgent judges each *image* and aggregates; STA-CoT plans, executes each step against a *target area*, and
+verifies the chain. We judge each **criterion**, execute each step against the **cell and its neighbourhood**,
+and verify the chain twice: once mechanically, once with a model.
+
+```mermaid
+flowchart TB
+  IN["Cell id + fold + blind-list"] --> S0
+
+  S0["Stage 0 · Triage (deterministic)<br/>criteria, learned, effort scores<br/>coverage flags, score disagreement"]
+  S0 -- "shallow" --> S6
+  S0 -- "full" --> S1
+
+  S1["Stage 1 · Plan<br/>segments from the handbook criteria:<br/>one per criterion, cross-checks, retrieval passes"]
+  S1 --> S2
+
+  S2["Stage 2 · Execute, per segment<br/>tool calls only: cell_features, nearby,<br/>coverage, crosscheck, retrieve<br/>node = status, strength, evidence ids, text"]
+  S2 --> S3
+
+  S3{"Stage 3 · Mechanical verify (gate)<br/>ids resolve · cell identity · polarity<br/>unknown vs absent · no arithmetic"}
+  S3 -- "reject node" --> S2
+  S3 -- "pass" --> S4
+
+  S4{"Stage 4 · Chain verify (model)<br/>does the verdict follow from the nodes?<br/>contradictions · effort acknowledged<br/>returns isValid + faulty nodes + feedback"}
+  S4 -- "faulty nodes, round < K" --> S2
+  S4 -- "valid, or K rounds" --> S5
+
+  S5["Stage 5 · Decide<br/>(a) weighted sum, weights fitted out-of-fold<br/>(b) model adjudicator over nodes + effort null<br/>majority vote over rounds if K reached"]
+  S5 --> S6
+
+  S6["Stage 6 · Publish<br/>chain + verdict + the one observation<br/>that would change it → gate → agent tier"]
+```
+
+**Stage 0 — Triage.** Deterministic and free. Computes the three scores, the effort null, coverage and the
+disagreement between them for the cell. Decides depth: a cell where all scores agree and coverage is full may
+take the shallow path (a single gated summary); disagreement, gaps or an expert-tier value force the full
+chain. GeoDecider's design: numerical prediction first, tool-assisted reasoning only for the hard intervals.
+Whether triage is used at all is a configuration, because it is also a place to hide cost.
+
+**Stage 1 — Plan.** The handbook and the criteria table are K_domain; the tools are T_set. The plan is a
+list of segments: one per criterion (conductor distance, conductor density, fault distance and intersections,
+graphitic host, unconformity depth, lake sediment conditioned on sampling density, lake water with pH and Eh,
+boulder field with up-ice corridor, alteration where measured), then cross-checks (conductor ∧ fault,
+geochemistry ∧ sampling density), then retrieval passes with the queries to run. A fixed template is the
+"without planner" arm; a model planner may reorder, add retrieval queries and drop criteria the coverage flags
+mark unmeasurable.
+
+**Stage 2 — Execute.** One call per segment on the cheap model. The executor may only call tools and must
+return a **node** in the fixed protocol: criterion, status ∈ {met, not met, unknown}, strength 0–5, the value
+ids that support it, one sentence. This is MineAgent's communication protocol, and the component their
+ablation shows carries the gain (Pos.F1 32.5 without it, 61.2 with). `nearby(cell, layer, radius)` is our box
+maker; `crosscheck` is our spatial-relationship explorer; both are deterministic.
+
+**Stage 3 — Mechanical verify.** The gate on every node: every number resolves to an id returned in this
+run, the id carries the cell in question or a declared neighbour, polarity matches (a "not met" node cannot
+cite evidence the handbook lists as favourable without saying so), unknown is used only where coverage says
+unmeasured, and no arithmetic appears. A rejected node goes back to Stage 2 with the reason. Free, so it runs
+every time.
+
+**Stage 4 — Chain verify.** One call per chain on the strong model, with the skeptic's brief: does the
+verdict follow from the nodes, do any nodes contradict, is the effort null acknowledged, is a folklore
+criterion carrying weight, is proximity to a known deposit doing the work. Returns isValid, the faulty node
+ids and corrective feedback; faulty nodes are re-executed and the chain re-verified, up to K rounds. STA-CoT's
+finding that the verifier is where capacity pays (strong verifier + weak executor beats the reverse) is why
+the executor is the cheap model and the verifier the expensive one, and why that pairing is a configuration.
+
+**Stage 5 — Decide.** Two deciders, always both, compared:
+(a) a **weighted sum** over node strengths with weights fitted on training folds only — MineAgent's decision
+module and MineTRACE's fitted expert weights, and the fitted-weights criteria arm of §C in one place;
+(b) a **model adjudicator** reading the nodes and the effort null, producing the three-level verdict
+(evidence against / insufficient / supports a closer look), the unknown-vs-absent list and the one observation
+that would change the reading. For the benchmark's binary question, (a) supplies a calibrated score and (b)
+supplies a label. If K rounds were exhausted, the label is the majority over rounds.
+
+**Stage 6 — Publish.** The chain, the verdict and its inputs go through the gate once more as a whole and
+land in the `agent` tier with the run manifest. Nothing here is a source of numbers.
+
+**Leakage controls, enforced by tests, not policy**: the scores in Stage 0 and Stage 5 are out-of-fold for
+the cell's block (B18); `retrieve` refuses files on the blind-list for the cell and its neighbours (B17);
+expert-tier ids are labelled as such in every node that cites them (B19).
+
+### 8.5 Ablation matrix — the configurations §D compares (must)
+
+Each row is one switch on the loop above, run on the same frozen benchmark at matched compute. The matrix
+replaces the six configurations formerly listed in §D.3.3.
+
+| Switch | Arms | What it tests |
+|---|---|---|
+| Triage | off / on | whether the shallow path loses correctness for the cost it saves |
+| Planner | fixed template / model | STA-CoT's −14.6 Pos.F1 without a planner — does it hold on structured evidence |
+| Executor | single shot over the whole pack / per segment | STA-CoT's −56 without an executor; ours is where the protocol lives |
+| Mechanical gate | off / on | the free layer; the only arm allowed to publish is "on" |
+| Chain verifier | none / neutral / skeptic brief | STA-CoT's −29 without a verifier; the skeptic brief is today's panel |
+| Model pairing | cheap executor + strong verifier / strong both / reverse | the executor–verifier trade-off |
+| Decider | weighted sum / adjudicator / both | fitted weights vs judgement |
+| Rounds K | 1 / 3 | repair vs cost |
+| Self-consistency | n = 1 / 5 with vote | majority vote as a fallback vs as a default |
+| Retrieval | off / on / on with blind-list | B17, measured |
+| Families | homogeneous / heterogeneous across roles | B20 |
+| Baselines | random · copy the learned score · criteria · learned · effort null · single-shot model with no tools | the rows every arm must beat |
+
+Per-stage metrics from the traces: node rejection rate at Stage 3, verifier catch rate and rounds-to-valid
+at Stage 4, agreement between the two deciders at Stage 5, calls and cost per chain, and the correctness of
+each arm against the labels with the effort null on the same row.
+
+
+---
+
 ## A. Web application — a real frontend and backend
 
 ### A.1 Current state
@@ -525,16 +686,12 @@ model, with and without, under spatial folds — QueryPlot's design) lives in §
 - Cost and latency per answer, measured.
 - Self-consistency: agreement across 3 runs at temperature.
 
-**D.3.3 Configurations to compare (must)** — same benchmark, matched compute budget
-1. Single agent, no tools beyond the four opening ones.
-2. Single agent + self-consistency (n=5, vote).
-3. Panel, homogeneous (today's design).
-4. Panel, heterogeneous (proponent and skeptic on different model families).
-5. Panel + voting adjudicator over drafted positions (not consensus prose).
-6. Any of the above ± retrieval over the corpus; ± the gate; ± reasoning/serialisation split.
-
-Report the full matrix. The prototype ships whichever wins on tier 2 correctness at acceptable tier 3
-faithfulness — chosen by the table, not by preference.
+**D.3.3 Configurations to compare (must)** — same frozen benchmark, matched compute budget
+The configurations are the ablation matrix in §8.5: each switch on the analyst loop (triage, planner,
+executor, mechanical gate, chain verifier, model pairing, decider, rounds, self-consistency, retrieval,
+families) plus the baseline rows every arm must beat. Report the full matrix. The prototype ships whichever
+wins on tier 2 correctness at acceptable tier 3 faithfulness, and beats the effort null on the analyst rows —
+chosen by the table, not by preference.
 
 **D.3.4 Human adjudication (must, bounded)**
 One geologist-day: 30 questions × the top 2 configurations, rated on a fixed rubric (MineTRACE's protocol,
@@ -614,10 +771,19 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | **1 · Platform** | 2–3 | §A: FastAPI + Postgres/PostGIS, vector tiles, jobs, persisted conversations, one-command deploy; §B catalogue + lineage | All current e2e pass against the API; fresh clone runs in one command |
 | **2 · Data ownership** | 1–2 | §B: gap re-verification (magnetics first), corpus completed, versioned snapshots | Every on-screen value walks to a hashed source pull |
 | **3 · ML programme** | 2 | §C.2.2–C.2.4: MLflow, registry, candidate models, ablations, sensitivity, CI regression | Eval page links every number to a run |
-| **4 · Tools over MCP** | 1–2 | §E: MCP server, geologist tools, gate hardened at every boundary | A stock client gets a gated answer |
-| **5 · Agent benchmark** | 2 | §D: UraniumBench, six configurations, one geologist-day | A results table decides the shipped configuration |
+| **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
+| **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured against them |
+| **4c · Interface agent** | 1 | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff | Tier 1 pass rate, refusal and false-refusal rates measured with a denominator; the 30 rating questions drafted |
+| **4d · Analyst agent v1** | 2 | §8.4: stages 0–6 on the structured arm; both deciders; out-of-fold scores and blind-list enforced by tests | Runs end to end on the eval subset within budget; every node gated; B17 and B18 have failing-then-passing tests |
+| **5a · Freeze UraniumBench v1** | 1 | §D.3.1: tier 1 generated (~300), tier 3 from observed failures (~100), tier 2 rubric (~100), the analyst subset stratified with fold ids; blind-list in the store; benchmark hashed and versioned before any tuning | No model calls yet; the frozen hash is the one every later table cites (B24) |
+| **5b · Baselines** | ½ | §8.5 baseline rows: random, copy-the-score, criteria, learned, effort null, single-shot model | The baseline row of the table, with intervals |
+| **5c · Ablation matrix** | 2 | §8.5: every switch at matched compute; per-stage metrics from traces | The full table with intervals, on the Eval page |
+| **5d · Human adjudication and decision** | 1 | §D.3.4: one geologist-day on the top two configurations, MineTRACE protocol, chance-corrected agreement; the written finding | The table decides the shipped configuration; the finding names the number that decided it |
+| **5e · Multimodal arm** | after §B.2 chips | §8.4 with the chip and map tile attached; §D.3.1 MineBench-for-uranium numbers | Backlog until chips and their effort mask exist (B15) |
 
-Phase 0 is first because it is the only one that can change what the rest of the document is *for*.
+Phase 0 is first because it is the only one that can change what the rest of the document is *for*. Phases 4 and
+5 total about nine weeks, up from three to four in v0.1, because a loop with a verifier, two deciders and a
+frozen benchmark is what separates a measured agent from a demo.
 
 ## 13. Risks
 
