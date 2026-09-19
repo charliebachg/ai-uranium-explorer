@@ -128,3 +128,9 @@ def test_a_backend_failure_is_reported_on_the_stream_not_swallowed(client: TestC
         events = [json.loads(line) for line in r.iter_lines() if line]
     assert events[-1]["type"] == "error" and "upstream fell over" in events[-1]["error"]
     assert client.post("/api/chat", json={"cell_id": "0001_0001", "question": "x"}).status_code == 500
+
+
+def test_reads_work_on_a_fresh_store_before_any_conversation_exists(client: TestClient) -> None:
+    """A read-only connection never creates tables; the app applies the schema at startup instead."""
+    assert client.get("/api/cell/0001_0001/conversations").json() == {"cell_id": "0001_0001", "conversations": []}
+    assert client.get("/api/conversation/nope").status_code == 404

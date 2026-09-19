@@ -25,6 +25,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from ..prospect import serve as S
+from ..store import connect
 from ..prospect.chat import Conversation, ask
 from . import persist
 
@@ -89,6 +90,9 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
     registry = Registry(db_path)
     app.state.registry = registry
+    # a read-only connection never applies the schema, so the conversation tables are created here, once,
+    # before the first read can ask for them
+    connect(db_path).close()
 
     def run_turn(conv: Conversation, question: str, on_event: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
         """One gated turn, persisted with the tool calls it made and the values it cited."""
