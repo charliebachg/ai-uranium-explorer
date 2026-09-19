@@ -9,7 +9,7 @@ number here walks back to a stored metric. Newest first.
 and effort wins them (F1). This one asks what a company would: run in year C, where would each model have
 ranked the ground where the deposits found *after* C turned out to be?
 
-**What was run.** `lr prospect hindcast`, MLflow run `f0d9d16d1b37`. Sixteen dated discoveries in
+**What was run.** `lr prospect hindcast`, MLflow run `f0d9d16d1b37`; re-run pinned to store snapshot `f18b5ad059d0` as run `5f44e924ed0a`, every row reproduced exactly. Sixteen dated discoveries in
 `knowledge/discoveries.toml`, each cited to a public document with a confidence; medium and high used. At each
 cutoff the labels keep only deposits dated at or before it (undated and later deposits masked from training,
 occurrences left unlabelled), and every cell first drilled after the cutoff has its hole count set to zero.
@@ -52,7 +52,7 @@ cannot find ground nobody drilled. Both tables belong on the Eval page side by s
 
 ## F3 · The model search: no geology candidate beats the effort null, and the conductor is the feature that matters (2026-09-19)
 
-**What was run.** `lr prospect modelsearch`, 23 arms, every one an MLflow run: six candidates under spatial and
+**What was run.** `lr prospect modelsearch`, 23 arms, every one an MLflow run (re-run 2026-09-19 pinned to store snapshot `49cd5dac1147`; every number below reproduced exactly, the fits are seeded): six candidates under spatial and
 camp folds, six single-group ablations, geology plus effort, and 20 and 50 km blocks; matched background and
 thinned positives for training, out-of-fold scoring on the same 10,183 cells, bootstrap intervals.
 
