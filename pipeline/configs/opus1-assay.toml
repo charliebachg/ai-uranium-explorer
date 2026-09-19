@@ -11,5 +11,5 @@ max_pages_per_file = 12
 reask = false
 validator_mode = "enforce"
 max_budget_usd = 2.50
-timeout_s = 600
+timeout_s = 900
 note = "opus1 with assay and lithology pages first: the grade-bearing pages of a file before its collar tables."
