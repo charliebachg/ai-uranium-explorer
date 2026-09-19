@@ -265,3 +265,45 @@ create or replace view derived.v_feature_matrix as
 create or replace view native.v_layer_summary as
   select layer_key, title, role, record_count, licence, redistributable, retrieved_at, tier
   from native.layer;
+
+-- Assay spreadsheets filed with modern digital submissions: as-published numbers, read by a parser with no
+-- model, so they are tier A. One row per sample interval; the sheet table records what was and was not read.
+create table if not exists native.assay_sheet (
+  file_num     text not null,
+  doc_sha256   text not null,
+  doc_name     text not null,
+  sheet        text not null,
+  status       text not null,          -- ingested | no_header | unreadable | empty
+  header_row   integer,
+  n_rows       integer not null default 0,
+  columns_json text,                   -- the header cells as printed, or the certificate's key-value block
+  format       text,                   -- columns | certificate
+  note         text,
+  loaded_at    text not null,
+  tier         text not null default 'native' check (tier = 'native'),
+  primary key (doc_sha256, sheet)
+);
+create table if not exists native.assay_sheet_row (
+  row_id           text primary key,   -- sha256 prefix of (doc_sha256, sheet, row_no)
+  file_num         text not null,
+  doc_sha256       text not null,
+  doc_name         text not null,
+  sheet            text not null,
+  row_no           integer not null,   -- 0-based row in the sheet, header excluded
+  hole_id          text,
+  sample_id        text,
+  from_m           double,
+  to_m             double,
+  interval_m       double,
+  u3o8_pct         double,
+  u3o8_as_printed  text,
+  u3o8_column      text,
+  u_ppm            double,
+  u_ppm_as_printed text,
+  u_ppm_column     text,
+  below_detection  boolean not null default false,
+  sample_type      text,               -- as printed: Basement, Standard, Blank ...
+  kind             text not null,      -- interval | certificate
+  loaded_at        text not null,
+  tier             text not null default 'native' check (tier = 'native')
+);

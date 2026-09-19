@@ -186,6 +186,17 @@ def run_usage_cmd(
     typer.echo(format_report(summarise_run(run_dir, expected_model=expect_model)))
 
 
+@app.command("assay-sheets")
+def assay_sheets_cmd(
+    files: list[str] = typer.Option(None, "--only", help="file numbers (repeatable); default: every fetched assay sheet"),
+    write: bool = typer.Option(True, "--write/--no-write"),
+) -> None:
+    """Read the assay spreadsheets filed with digital submissions into the native tier. No model calls."""
+    from .assay_sheets import stage_assay_sheets
+
+    stage_assay_sheets(files=list(files or []), log=typer.echo, write=write)
+
+
 @app.command("lock-heldout")
 def lock_heldout_cmd() -> None:
     """Write gold/heldout.lock (file numbers, report PDF sha256s, seed, timestamp). Never overwrites."""
