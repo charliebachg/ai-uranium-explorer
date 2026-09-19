@@ -17,3 +17,6 @@ __pycache__/
 # copied from node_modules by plugins/maplibreVendor.ts
 web/public/vendor/
 web/public/fixtures/pages/
+
+# vector tiles are built by `lr export-tiles`; without them the web falls back to GeoJSON
+web/public/data/tiles/

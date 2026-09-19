@@ -197,6 +197,14 @@ def assay_sheets_cmd(
     stage_assay_sheets(files=list(files or []), log=typer.echo, write=write)
 
 
+@app.command("export-tiles")
+def export_tiles_cmd() -> None:
+    """Build one PMTiles archive per evidence source with tippecanoe, no feature dropped; write tiles/manifest.json."""
+    from .export_tiles import build
+
+    build(log=typer.echo)
+
+
 @app.command("lock-heldout")
 def lock_heldout_cmd() -> None:
     """Write gold/heldout.lock (file numbers, report PDF sha256s, seed, timestamp). Never overwrites."""
