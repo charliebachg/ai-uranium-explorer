@@ -434,6 +434,21 @@ checklist lives in §B's catalogue; this is the rule and the current picture.
 | **Servable** | exportable to the dashboard within its licence and size | 8 evidence layers exported; scores as a layer; imagery features not yet built |
 | **Versioned** | a hashed pull that a value walks back to | pulls cached and hashed; no snapshot versioning yet (§B) |
 
+**What has been read so far, and whether it is enough.** Reading is a pre-processing step done offline on
+the Claude Code headless backend, cached and resumable; it is never done at request time.
+
+| Read tier today | Count | Where it sits |
+|---|---|---|
+| Reports fully read (VLM, every value with page, box, quote) | 4 — Uranerz 1979, Cree Lake 2005, Conwest 1978, Cameco Park Creek 1998 | all `dev` split; 2 in occurrence cells, 2 in unlabelled cells |
+| Pages the router sent to the model | 42 of the 4 reports' 691 pages (**6%**) | collar, assay and lithology tables |
+| Values read | 2,175 field values; 40 collars, 43 assay intervals, 126 lithology intervals | 176 flagged, 11 failed by validators — the `read` tier is unvalidated by design |
+| Text-indexed pages (no model) | 1,846 pages from 8 files (38 documents, 9.1 M characters) | 3 occurrence cells, 5 unlabelled cells — **0 of the 60 deposit cells** |
+
+Verdict: **enough to prove the mechanism, not enough to serve the dashboard's cells.** Every score is
+computed from `native` layers alone (all 24 features), so the deterministic and learned analyses need no
+reading at all. Reading matters only for the evidence the analyst and the dashboard show on the enabled
+cells, and none of those cells is a deposit cell today. The bounded pre-read in §9.3 fixes that.
+
 The four recorded gaps (aeromagnetic grids, discovery dates, EM conductor attributes, alteration measurements)
 are decided in Phase 2, each as *filled*, *substituted* or *stated as absent on screen*. Sentinel-2 and DEM
 features are **not** required by the focused tasks below and move to the backlog with the multimodal arm.
@@ -450,36 +465,41 @@ Measured on this machine, from the run manifests and the store:
 | Analyst, wall time | chat-length calls run 15–30 s on the headless backend | 120 cells × 13 calls is 1,560 calls, **6–13 hours per configuration**, unattended | in, bounded |
 | OpenAI | $0.00 of the $2.00 test ceiling spent | reserved for the chat UI, as agreed | unchanged |
 
-### 9.3 Focused task 1 — Reading, bounded (extractor)
+### 9.3 Focused task 1 — Reading, pre-done offline for the enabled cells (extractor)
 
 The corpus is already positioned where it matters: **184 assessment files sit inside 53 of the 60 deposit
 cells** (5,035 drillholes), 314 inside 189 of the 620 occurrence cells, and 294 within 3 km of a deposit cell.
 The current fetch rule (the 60 files with the most holes) lands 27 in deposit cells and 7 in occurrence cells,
 which is exactly the survivorship bias B13 names.
 
-- **Fetch** up to **200 files**, chosen by the cells in the analyst subset (§9.4) rather than by hole count:
-  every file inside a subset cell, then the nearest files by distance until the cap. The selection rule and
-  the list are versioned.
-- **Text-index** every fetched page with no model calls (already how the 1,846 indexed pages were made).
-- **Hand-key 30 pages** as the first Tier 4 gold: collars, assay intervals and lithology from files in subset
-  cells, chosen blind to the model.
-- **Model-read at most 300 pages**, chosen by page type (drillhole tables first) from the fetched files:
-  about 6 hours and $40-equivalent, resumable, cached. Scored against the 30-page gold and by second-family
-  agreement (§8.2).
+- **Enabled cells first.** The dashboard's analyst-enabled set (§9.4) is chosen before any reading, and the
+  reading is bounded to the files inside those cells. Candidates by attached files: deposit cells 0031_0080
+  (15 files, 275 holes) and 0030_0081 in one camp; 0144_0036, 0162_0050, 0200_0072 and 0191_0056 in another;
+  the four read reports' cells; two coverage-gap and two background cells. About 12 cells, frozen and
+  versioned in Phase 2.
+- **Fetch** every file inside an enabled cell, then the nearest by distance up to **60 files**. Text-index
+  every fetched page with no model calls.
+- **Route, then read.** The router already sends about 6% of pages to the model (42 of 691). At that rate the
+  enabled cells' files are roughly 400–500 routed pages: **about 10 hours unattended over two nights** on the
+  headless backend, cached, resumable on a usage limit. Hard cap **500 pages**.
+- **Hand-key 30 pages** from those files as the first Tier 4 gold, chosen blind to the model; score the read by
+  precision and recall against them and by second-family agreement (§8.2).
 - Everything else the corpus holds is **backlog**, and the readiness scorecard says how much of it there is.
 
-### 9.4 Focused task 2 — Analyst, structured arm on a fixed subset
+### 9.4 Focused task 2 — Analyst, bounded to the enabled cells in the dashboard
 
-- **Subset: 120 cells**, stratified and frozen with fold ids: 40 deposit, 20 occurrence, 20 high learned score
-  far from any label, 20 coverage gap, 20 background. Class balance stated on every table; MineBench's is 1:9.
-- **Four arms**, not twelve: (1) single-shot model over the whole pack, no tools; (2) fixed plan, per-segment
-  execute, mechanical gate only; (3) full loop with the skeptic verifier, cheap executor and strong verifier;
-  (4) arm 3 plus retrieval with the blind-list. Both deciders on every arm. The six baseline rows of §8.5 are
-  free (random, copy the score, criteria, learned, effort null) or cheap (single-shot).
-- **Budget**: about 1,560 calls per arm, four arms, run overnight on the headless backend over two nights;
-  one rerun of the winning arm at n = 5 for self-consistency.
-- **Deliverable**: one table, four arms plus baselines, with the effort null on the same row, intervals by
-  bootstrap over cells.
+- **In the dashboard, the analyst runs only on the enabled cells** (§9.3, about 12). Their chains are
+  computed offline with the §8.4 loop, stored in the `agent` tier with run manifests, and served as-is. Every
+  other cell shows its three scores, the effort null and the evidence rail, and a plain statement that no
+  analyst reading exists for it. A live reading (§6) is available only on enabled cells, within a per-session
+  budget.
+- **The benchmark subset is sized later.** The four-arm design and the baseline rows (§8.5) stand; the number
+  of cells, the class balance and the nights of compute are decided when Phase 5a starts, against the usage
+  actually available then. The earlier sketch (120 cells, four arms, about 1,560 calls per arm) is the
+  starting point for that discussion, not a commitment.
+- **Deterministic and learned analyses are unbounded.** They run over all 30,534 cells from existing `native`
+  data; the cost is machine time only. Deep learning (a CNN over chips, a transformer over the feature table)
+  is **backlog**: no chips yet, and 60 positives is too few to fit one honestly.
 
 ### 9.5 Focused task 3 — Interface, the mechanical tiers
 
@@ -493,7 +513,9 @@ MineTRACE protocol, one day.
 |---|---|---|
 | The other eight switches of the §8.5 matrix | each is another 6–13 hours per arm | the four-arm table shows where the variance is |
 | Multimodal arm and Tier 4 chip agreement | Sentinel-2 and DEM features not built; effort mask (B15) not designed | §B.2 chips exist |
-| Reading beyond 300 pages and 200 files | 73 s and $0.14-equivalent per page | a page-type classifier picks only table pages, or a cheaper reader is measured against the gold |
+| Deep learning models (§C.2.2) | no chips; 60 positives | §B.2 chips exist and the PU re-test says the labels support it |
+| Analyst benchmark subset sizing (§9.4) | depends on usage available at Phase 5a | Phase 5a, discussed then |
+| Reading beyond 500 routed pages and 60 files | 73 s and $0.14-equivalent per page | a page-type classifier picks only table pages, or a cheaper reader is measured against the gold |
 | Analyst on demand for any cell outside the subset | correct design (§6), but every call is unbudgeted until 4a's manifests exist | Phase 4a |
 | Heterogeneous families across roles | needs a third backend | an open model adapter |
 | Embedding retrieval over the corpus | lexical first, by design | a measured recall gap on the text index |
@@ -647,6 +669,8 @@ other modelling:
 - Candidates, each against the same folds and the same null: HistGB (baseline), Random Forest, logistic
   regression with spatial terms, a PU-specific learner (Elkan-Noto / bagging PU), a knowledge-constrained
   model (criteria as a prior). Report all; do not cherry-pick.
+- **Deep learning is backlog** (§9.6): a CNN over Sentinel-2 and DEM chips needs chips that do not exist yet,
+  and a transformer over the feature table needs more than 60 positives to be fitted honestly.
 - **Ablations**: each geological feature group removed in turn; effort features added to the learned model
   (does geology add *anything* on top of effort?).
 - **LLM-derived features arm** (the extractor role, §D.1): text embeddings of the assessment-report passages
@@ -860,12 +884,12 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | **2 · Data ownership** | 1–2 | §B: gap re-verification (magnetics first), the 200-file fetch of §9.3, versioned snapshots | Every on-screen value walks to a hashed source pull; **the §9.1 readiness checklist is green for the focused tasks** |
 | **3 · ML programme** | 2 | §C.2.2–C.2.4: MLflow, registry, candidate models, ablations, sensitivity, CI regression | Eval page links every number to a run |
 | **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
-| **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured on the 300-page bounded read (§9.3) |
+| **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | The enabled cells' files pre-read offline within the 500-page cap (§9.3); 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured |
 | **4c · Interface agent** | 1 | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff | Tier 1 pass rate, refusal and false-refusal rates measured with a denominator; the 30 rating questions drafted |
-| **4d · Analyst agent v1** | 2 | §8.4: stages 0–6 on the structured arm; both deciders; out-of-fold scores and blind-list enforced by tests | Runs end to end on the 120-cell subset (§9.4) within budget; every node gated; B17 and B18 have failing-then-passing tests |
-| **5a · Freeze UraniumBench v1** | 1 | §D.3.1: tier 1 generated (~300), tier 3 from observed failures (~100), tier 2 rubric (~100), the 120-cell analyst subset of §9.4 with fold ids; blind-list in the store; benchmark hashed and versioned before any tuning | No model calls yet; the frozen hash is the one every later table cites (B24) |
+| **4d · Analyst agent v1** | 2 | §8.4: stages 0–6 on the structured arm; both deciders; out-of-fold scores and blind-list enforced by tests | Chains computed and stored for every enabled cell (§9.4); every node gated; B17 and B18 have failing-then-passing tests |
+| **5a · Freeze UraniumBench v1** | 1 | §D.3.1: tier 1 generated (~300), tier 3 from observed failures (~100), tier 2 rubric (~100), the analyst subset sized at this point (§9.4) with fold ids; blind-list in the store; benchmark hashed and versioned before any tuning | No model calls yet; the frozen hash is the one every later table cites (B24) |
 | **5b · Baselines** | ½ | §8.5 baseline rows: random, copy-the-score, criteria, learned, effort null, single-shot model | The baseline row of the table, with intervals |
-| **5c · Four arms** | 2 | §9.4: the four arms and the baseline rows at matched compute, two nights of unattended runs; per-stage metrics from traces; the other eight switches stay in §9.6 | The four-arm table with intervals, on the Eval page |
+| **5c · Four arms** | 2 | §8.5: the four arms and the baseline rows at matched compute on the subset sized in 5a; per-stage metrics from traces; the other eight switches stay in §9.6 | The four-arm table with intervals, on the Eval page |
 | **5d · Human adjudication and decision** | 1 | §D.3.4: one geologist-day on the top two configurations, MineTRACE protocol, chance-corrected agreement; the written finding | The table decides the shipped configuration; the finding names the number that decided it |
 | **5e · Multimodal arm** | after §B.2 chips | §8.4 with the chip and map tile attached; §D.3.1 MineBench-for-uranium numbers | Backlog until chips and their effort mask exist (B15) |
 
