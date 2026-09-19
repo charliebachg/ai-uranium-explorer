@@ -218,6 +218,11 @@ other modelling:
   model (criteria as a prior). Report all; do not cherry-pick.
 - **Ablations**: each geological feature group removed in turn; effort features added to the learned model
   (does geology add *anything* on top of effort?).
+- **LLM-derived features arm** (the extractor role, §D.1): text embeddings of the assessment-report passages
+  and bedrock-unit descriptions attached to each cell, added to the learned model and run with and without
+  under the same spatial folds — QueryPlot's design, where the added layer moved balanced accuracy 72.4 → 78.4
+  on one classifier. Parsa et al. 2025 note that mineralised areas carry longer, richer text; that is effort
+  leaking through the text channel, so this arm is only read beside the effort null.
 - **Sensitivity**: 1 km and 5 km cells; 20 / 30 / 50 km spatial blocks.
 - **No imputation, no synthetic positives, no tuning against the test folds.** These are decisions, recorded.
 
@@ -248,11 +253,27 @@ The leakage (compilations drawn as they stand today) is stated.
 
 ## D. Agent reasoning — a benchmark, not a belief
 
-### D.1 The stance
-The literature reports that *some* multi-agent configurations do not beat a single agent on *some* tasks. That
-is not a finding about ours. Nobody has measured an LLM adjudicating grounded geological evidence behind a
-mechanical gate, because nobody has built one. **The prototype's job is to measure it.** We may find our
-panel wins, loses, or wins only in one configuration — all three are results worth having.
+### D.1 The stance, and where the literature actually is
+Every published use of an LLM in mineral exploration fits one of three **roles**, cross-cut by what the model
+reads. The grid was checked on 2026-09-19 by five independent sweeps (139 searches, English and Chinese; every
+source fetched before it was placed):
+
+| Role of the LLM | Text and tables | Images |
+|---|---|---|
+| **1. Extractor** — makes features or structured records; a separate model judges | Parsa et al. 2025 (BERT embeddings into a transformer; 87% search-space cut). Chen et al. 2026 (LLM-extracted priors; ROC-AUC 0.83). QueryPlot 2026 (the one clean ablation: balanced accuracy 72.4 → 78.4 with the LLM-derived layer). GeoChemAD 2026 (LLM element selection; AUC 0.74 vs 0.64 manual). | DIGMAPPER (GPT-4o legend extraction, F1 0.88 on >100 USGS maps). Gans Combe 2026 — the only uranium-specific LLM paper anywhere: Gemini 2.5 Pro sorting 973 scanned Athabasca and Namibia filings, 92% / 60% by level. |
+| **2. Interface** — gathers data and explains a deterministic model through tools; adds no signal | MineTRACE (92% Good, one fabrication in 150). GISclaw (orchestrates a random forest). China Geological Survey's 智能找矿 (200+ algorithms, no published score). | GeoMap-Agent (tools and databases over geologic maps; 0.811 vs GPT-4o 0.369). ThinkGeo (tool choice 74% right, arguments 37%). Both let the LLM compose the answer, so neither is a pure interface, and none sits over a scoring model. |
+| **3. Analyst** — makes the prospectivity call itself, and the call is scored | **Nothing published.** Two independent 33-search attempts to fill this cell failed. Nearest: GeoDecider 2026, an LLM agent over numeric well logs that emits a lithology label. No paper compares an LLM head-to-head with a random forest on a prospectivity feature table. | MineAgent and STA-CoT on MineBench — the only two. |
+
+Three things follow. **The analyst-over-structured-data cell is empty**, so the experiment in D.3.1 has no
+external comparator and its comparators must be internal. **The general tabular prior is unfavourable** —
+XGBoost 0.94 against TabLLM 0.92 on a standard benchmark, with LLMs competitive only below roughly 256
+labels — which is exactly why the learned score and the effort null sit beside the agent on the same rows.
+And **every number in this section will be the first of its kind for uranium**.
+
+The literature also reports that *some* multi-agent configurations do not beat a single agent on *some*
+tasks. That is not a finding about ours. Nobody has measured an LLM adjudicating grounded geological evidence
+behind a mechanical gate, because nobody has built one. **The prototype's job is to measure it.** We may find
+our panel wins, loses, or wins only in one configuration — all three are results worth having.
 
 ### D.2 Current state
 One configuration (three roles on one backend, custom tool loop, gate at publish). One synthetic gate eval.
@@ -260,24 +281,35 @@ Fourteen memos and a handful of chats. No task-level correctness measurement at 
 
 ### D.3 Requirements
 
-**D.3.1 UraniumBench — our own benchmark (must)**
-The closest existing benchmark is **MineBench** (Yu et al., arXiv 2412.17339): a multimodal LLM classifies
-Western Australian cells as prospective or not from geological and hyperspectral imagery — 73 positive /
-539 negative, ~1:9 — scored by F1 and ROC-AUC. Nothing of the kind exists for uranium. UraniumBench is
-**MineBench for uranium, plus what MineBench lacks**: an exploration-effort null beside every number, a
-faithfulness measure, unknown-vs-absent as a scored dimension, and a class balance that is honest about
-deposits (1:44 with occurrences, ~1:500 on deposits alone).
+**D.3.1 UraniumBench — one benchmark, three roles (must)**
+The agent plays all three roles in this system, and each role is scored the way its literature scores it.
+Role 1 is shared with §C; roles 2 and 3 are this section's.
 
-Four tiers over *our* data:
+*Role 3 — analyst.* Two arms, kept separate because their comparators differ.
+- **Structured arm (first).** The agent reads a cell's evidence record — the 17 features with their
+  observation counts, the criteria memberships, the coverage flags, the located quotes — and answers "does
+  this cell hold a deposit?". Scored by Pos.F1, ROC-AUC and MCC against the label layers over a stratified
+  subset (known deposit / high score far from labels / coverage gap / background). No external comparator
+  exists, so the comparators are internal and on the same rows under the same 30 km spatial folds: the
+  criteria score, the learned score, and **the effort-only null**. An agent that beats the effort null has
+  read geology; one that merely matches it has read drilling history. Class balance is stated beside every
+  number: 1:44 with occurrences, ~1:500 on deposits alone.
+- **Multimodal arm (after §B.2 chips exist).** The same question with the cell's Sentinel-2 chip and
+  geology-map tile attached. This is MineBench for uranium. MineBench (Yu et al., arXiv 2412.17339) is a
+  **copper** benchmark over Western Australia: per 12 × 12 km cell the model sees 2, 4 or 9 ASTER-derived
+  alteration and geology images by difficulty tier, no tables, 73 positive / 539 negative, labels from deposit
+  records. On GPT-4o, Pos.F1 goes 34.9 → 61.2 with MineAgent's scaffolding → 63.1 with STA-CoT; on Gemini 2.0,
+  37.5 → 60.2 → 66.7; STA-CoT loses 25.6 Avg.F1 without its verifier. Those are the numbers a reviewer will
+  hold beside ours, so this arm reports the same metrics and states its class balance next to their 1:9.
+
+*Role 2 — interface.* The chat panel. Not scored on AUC — the LLM is not supposed to add signal here — but
+on faithfulness, abstention and rating, in three tiers over *our* data:
 1. **Deterministic** (~300 items): questions with exact answers computable from the store — "how far is the
    nearest deposit", "which criteria are unknown here", "how much of the grid does this feature cover". Gold is
-   generated by code, so correctness is exact and free. Stratified over cell types (known deposit / high score
-   far from labels / coverage gap / background). Includes unanswerable items, where the gold is abstention.
-1b. **Classification — MineBench for uranium**: the agent answers "is this a deposit cell?" over a stratified
-   subset, scored by Pos.F1 and ROC-AUC exactly as MineBench reports them, so a reviewer can place us —
-   **with the effort-only null model on the same row**, so an agent that has learned to read drillhole counts
-   is found out. Inputs start as the structured evidence record; adding the cell's Sentinel-2 chip and
-   geology-map tile as images is the multimodal arm (see Tier 4).
+   generated by code, so correctness is exact and free. Stratified over cell types. Includes unanswerable
+   items, where the gold is abstention: GeoBenchX is the only geoscience benchmark that publishes a
+   correct-refusal rate (0.17 to 0.90 across eight models on 79 unsolvable tasks) and nothing in mineral
+   exploration does, so this tier yields a refusal rate *and* a false-refusal rate with a denominator.
 2. **Grounded reasoning** (~100 items): questions whose answer is a judgement over evidence — "is this score
    explained by drilling", "what is unknown versus not met", "what single observation would change the
    reading". Gold is a rubric written from the handbook; most required elements are mechanically checkable
@@ -287,12 +319,18 @@ Four tiers over *our* data:
    neighbouring cell (4 of 40 escaped the gate), an observation count with no citable id, a filename cited as
    an id, a negated premise, a folklore criterion phrased as fact, a request for a grade. Gold is the expected
    behaviour. The tier grows only from production failures, never from imagination.
-4. **Reading (backlog)**: the pipeline already reads images — scanned assessment pages through a VLM,
-   Sentinel-2 and DEM chips into features, the bedrock map into the graphitic-host criterion — so the
-   image-reading benchmarks (GeoMap-Bench, where GPT-4o scores 0.128 on map grounding; LithoBench;
-   MSEarthQA) are relevant, not a different modality. This tier scores value extraction from scanned pages
-   against hand-keyed gold, legend and map reading, and chip-to-feature agreement. Backlog because its gold
-   does not exist yet: it needs the hand-keyed pages from §C's gold set and labelled chips.
+
+*Role 1 — extractor (backlog, shared with §C).* The pipeline already reads images — scanned assessment pages
+through a VLM, Sentinel-2 and DEM chips into features, the bedrock map into the graphitic-host criterion — so
+this is in scope, not another modality. **Tier 4, Reading**, scores value extraction from scanned pages against
+hand-keyed gold, legend and map-unit reading, and chip-to-feature agreement. The published bars: GPT-4o legend
+extraction at F1 0.88 (DIGMAPPER, >100 annotated USGS maps); BERT at F1 87% on drillhole results from 50 ASX
+reports with a company-level split (Dimeski & Rahimi 2022); an LLM at 100% on clean well-record PDFs and 70%
+on scanned ones (Ma et al. 2024). Nobody has published precision and recall for grade or tonnage extraction
+from NI 43-101 or assessment files — MinMod, at 680,000 sites, publishes scale and time saved, not accuracy —
+so §C's hand-keyed gold set would produce the first such number. Backlog because that gold does not exist yet.
+The **LLM-derived-features arm** (text embeddings of report and bedrock descriptions as inputs to the learned
+model, with and without, under spatial folds — QueryPlot's design) lives in §C.2 and is scored there.
 
 **D.3.2 Metrics (must)** — reported per tier, per configuration, with intervals
 - Correctness against gold (tier 1 exact; tier 2 rubric).
@@ -327,7 +365,8 @@ copied), reported with chance-corrected agreement. This converts the benchmark f
 - Organic evaluation: the benchmark's adversarial tier *is* the organic gate measurement.
 
 ### D.4 How we will know
-- A results table: 6 configurations × 4 tiers (1, 1b, 2, 3) × 7 metrics, with intervals, on the Eval page.
+- A results table: 6 configurations × (role 3 structured arm + role 2 tiers 1–3) × 7 metrics, with intervals,
+  on the Eval page; the role 3 rows carry the criteria, learned and effort scores as their comparators.
 - A written finding: which configuration the prototype uses and the number that decided it.
 - Gate false-refusal rate stays at zero on tier 1 and tier 2; escape rate on tier 3 reported with its interval.
 
