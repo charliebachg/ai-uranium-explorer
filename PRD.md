@@ -429,7 +429,9 @@ cannot read the grid: the numbers below say why, and what fits instead.
 ### 9.1 Data readiness gate (must, before any agent phase)
 
 No agent phase starts until every dataset the focused tasks depend on is green on all five columns. The
-checklist lives in §B's catalogue; this is the rule and the current picture.
+checklist is a command, `lr prospect gate` (2026-09-19): one row per feature layer or scene, label layer and
+enabled-cell assessment file, five ok/not-yet cells with a note each, exit code red on any failure, and the
+same table on the dashboard's data page. This is the rule and the current picture.
 
 | Column | Meaning | Where we are (2026-09-19) |
 |---|---|---|
@@ -437,7 +439,7 @@ checklist lives in §B's catalogue; this is the rule and the current picture.
 | **Licensed** | redistributable, or read locally and never served | 18 of 20 sources redistributable; report PDFs local only |
 | **Covers** | share of the grid with a value, stated per feature | 9 of 17 geological features cover 40% or less |
 | **Servable** | exportable to the dashboard within its licence and size | 8 evidence layers exported; scores as a layer; imagery features not yet built |
-| **Versioned** | a hashed pull that a value walks back to | pulls cached and hashed; no snapshot versioning yet (§B) |
+| **Versioned** | a hashed pull that a value walks back to | every layer hashed and registered; store snapshots (`lr store snapshot`); each evaluation run names the snapshot it read |
 
 **What has been read so far, and whether it is enough.** Reading is a pre-processing step done offline on
 the Claude Code headless backend, cached and resumable; it is never done at request time.
@@ -737,9 +739,13 @@ grid scored, and each later discovery's rank reported — Patterson Lake South (
 Phase 3 and its table sits beside the spatial-fold table on the Eval page. Decided 2026-09-19.
 
 **C.2.4 MLOps mechanics (must)**
-- Reproducible training: `lr prospect score --snapshot <hash>` rebuilds a run exactly.
+- Reproducible training: `lr prospect headline|modelsearch|hindcast --snapshot <hash>` refuses any store but
+  the one named; every run records the store hash in its MLflow params and in the JSON the Eval page reads
+  (done 2026-09-19). Known wrinkle: metrics are written into the same store file, so a snapshot follows each
+  run; the derived tier should move to its own file.
 - CI runs the fold tests on every change to `prospect/models.py` and fails on a metric regression beyond the
-  interval.
+  interval. Today: the fold and promotion-rule tests run on synthetic frames in pytest; the real-data
+  regression (`lr prospect modelsearch --quick`) needs the seed snapshot a fresh clone lacks (backlog).
 - Data drift check when a source is refreshed: feature distributions compared to the served snapshot.
 - Model cards generated from the tracker, on the Eval page.
 
