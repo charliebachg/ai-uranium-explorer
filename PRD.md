@@ -479,7 +479,13 @@ which is exactly the survivorship bias B13 names.
   versioned in Phase 2.
 - **Fetch** every file inside an enabled cell, then the nearest by distance up to **60 files**. Text-index
   every fetched page with no model calls.
-- **Route, then read.** The router already sends about 6% of pages to the model (42 of 691). At that rate the
+- **Route, then read — one page image per call, never a report.** Every fetched page is text-indexed or
+  OCR'd for free; the router classifies each page by keywords and table shape with no model call; at most 12
+  routed table pages per file are then sent **one page image at a time** with the schema for their class, and
+  every returned quote is located on the page and validated before it is filed. The router already sends
+  about 6% of pages to the model (42 of 691). This is a batch job on the headless backend, not an agent:
+  no tool loop, no conversation. The interface and analyst agents never open a PDF; `retrieve` reads the
+  index and the filed values. At that rate the
   enabled cells' files are roughly 400–500 routed pages: **about 10 hours unattended over two nights** on the
   headless backend, cached, resumable on a usage limit. Hard cap **500 pages**.
 - **Hand-key 30 pages** from those files as the first Tier 4 gold, chosen blind to the model; score the read by
