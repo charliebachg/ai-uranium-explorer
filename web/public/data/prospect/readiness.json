@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-19T18:49:09+00:00",
+ "generated_at": "2026-09-19T18:54:50+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -698,9 +698,9 @@
   ]
  },
  "readiness_gate": {
-  "generated_at": "2026-09-19T18:49:08+00:00",
-  "store_sha256": "5de4653ba5e014a16827fdf6b12ba3deffe742c6fdee37e1fa059666fb67fba8",
-  "snapshot": "5de4653ba5e0",
+  "generated_at": "2026-09-19T18:54:48+00:00",
+  "store_sha256": "e4fb180939338e9cfaecf3a31cacb702ca0894e686534c158618641831fdfdb1",
+  "snapshot": "e4fb18093933",
   "green": true,
   "rows": [
    {
@@ -725,7 +725,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 8f1d6ab6936a; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 8f1d6ab6936a; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -750,7 +750,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 69ed3b7d74ab; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 69ed3b7d74ab; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -775,7 +775,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "32 of 32 scenes carry a STAC id; snapshot 5de4653ba5e0"
+     "note": "32 of 32 scenes carry a STAC id; snapshot e4fb18093933"
     }
    },
    {
@@ -800,7 +800,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 6223223ad096; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 6223223ad096; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -825,7 +825,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload e22cee6b8f85; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload e22cee6b8f85; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -850,7 +850,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 52dc81035521; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 52dc81035521; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -875,7 +875,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload aa1b72226df7; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload aa1b72226df7; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -900,7 +900,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload e31860c48dd7; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload e31860c48dd7; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -925,7 +925,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload ccc36dc53045; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload ccc36dc53045; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -950,7 +950,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "24 of 24 scenes carry a STAC id; snapshot 5de4653ba5e0"
+     "note": "24 of 24 scenes carry a STAC id; snapshot e4fb18093933"
     }
    },
    {
@@ -975,7 +975,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload bcfb59ced93d; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload bcfb59ced93d; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -1000,7 +1000,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 0e86795a9648; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 0e86795a9648; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -1025,7 +1025,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 936518cd5177; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 936518cd5177; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -1050,7 +1050,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 775a50e63c01; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 775a50e63c01; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -1075,7 +1075,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 5a4a08d54302; in the pull log; snapshot 5de4653ba5e0"
+     "note": "payload 5a4a08d54302; in the pull log; snapshot e4fb18093933"
     }
    },
    {
@@ -1084,7 +1084,7 @@
     "kind": "label",
     "present": {
      "ok": true,
-     "note": "43 rows"
+     "note": "633 rows"
     },
     "licensed": {
      "ok": true,
@@ -1100,7 +1100,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "43 record(s) walk back to a read.pdf hash; snapshot 5de4653ba5e0"
+     "note": "633 record(s) walk back to a read.pdf hash; snapshot e4fb18093933"
     }
    },
    {
@@ -1121,7 +1121,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 3 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -1146,7 +1146,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 12 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -1171,7 +1171,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 12 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -1221,7 +1221,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 12 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -1321,7 +1321,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 12 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -1396,7 +1396,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 12 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -1496,7 +1496,7 @@
     },
     "servable": {
      "ok": true,
-     "note": "not served (local only); no page images exported"
+     "note": "not served (local only); 8 page image(s) exported"
     },
     "versioned": {
      "ok": true,
@@ -14140,5 +14140,5 @@
    "note": "n for the learned model over every cutoff and later discovery"
   }
  },
- "build_id": "5da0b3864fef"
+ "build_id": "19faa7b83679"
 }

@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0.0",
   "build": {
-    "id": "f76c42f38b24",
-    "created_at": "2026-09-17T17:26:34+00:00",
+    "id": "5324f71eaedb",
+    "created_at": "2026-09-19T18:54:26+00:00",
     "pipeline_version": "0.1.0",
     "page_images": true,
     "public_safe": false,
@@ -64,7 +64,7 @@
       "id": "m:files_read",
       "kind": "stat",
       "as_printed": null,
-      "value": 4,
+      "value": 11,
       "unit_as_printed": null,
       "fmt": "int",
       "note": "uranium-tagged assessment files read by this pipeline"
@@ -718,13 +718,13 @@
     "bulk/compilation_collars.geojson": {
       "path": "bulk/compilation_collars.geojson",
       "bytes": 6770671,
-      "sha256": "49ec0f7ea9dc325706c1c9deaca72f61bf2726060059805ab540c0bb67413515",
+      "sha256": "35172f11aaa2ab42be72dc6c2fa92abb20364453457dd7717a8793fc67417501",
       "count": 33490
     },
     "bulk/geods_holes.geojson": {
       "path": "bulk/geods_holes.geojson",
       "bytes": 5337863,
-      "sha256": "e8c9c346a7708f9927b087ad5bb47b329884904d4bea05c2c983afdabbe4ecca",
+      "sha256": "66e675746ce2a38445883434b7f2b9c4a832039a90ba99678f30c22ca0e2619c",
       "count": 29762
     },
     "bulk/year_histogram.json": {
@@ -761,20 +761,35 @@
       "bytes": 53488,
       "sha256": "eb1e6ccfa12ce4ed24dd27deb8ab656a326f59262abcd488920042d833542298"
     },
-    "reports/74H09-0039/pages.json": {
-      "path": "reports/74H09-0039/pages.json",
-      "bytes": 1898,
-      "sha256": "0bdf11f5ac8c97aca20e24b7c61c5f5ed2be969fb6652a717fd48f3c6d5535dc"
+    "reports/64L04-0130/pages.json": {
+      "path": "reports/64L04-0130/pages.json",
+      "bytes": 1903,
+      "sha256": "8dea5a4d3c8f0d395937b1285eba63c8c173f3bc4bccd85878c014066382a1da"
     },
-    "reports/74H09-0039/report.json": {
-      "path": "reports/74H09-0039/report.json",
-      "bytes": 452081,
-      "sha256": "160da7c80246b405fbde956c0045e247f4419673f95f0131e9e9cbbe0e7b9fea"
+    "reports/64L04-0130/report.json": {
+      "path": "reports/64L04-0130/report.json",
+      "bytes": 1007521,
+      "sha256": "eddccfaafe6bef9f6def32370592697d7e1c09070a3c096ac7e73cec39c2b82c"
     },
-    "reports/index.json": {
-      "path": "reports/index.json",
-      "bytes": 18142,
-      "sha256": "c6b05148ea24667cc532bf91e8d456d215000e12bec4f4083d71d5afa353a88a"
+    "reports/64L04-0140/pages.json": {
+      "path": "reports/64L04-0140/pages.json",
+      "bytes": 1903,
+      "sha256": "008f89f028d9e5fb55f43c5ae58b169d31684486a093fbba7158948bc72cafe9"
+    },
+    "reports/64L04-0140/report.json": {
+      "path": "reports/64L04-0140/report.json",
+      "bytes": 827642,
+      "sha256": "d218a335199d28273aef9d121a90d096577c20564ce9ea883dfeedf5d1a2691e"
+    },
+    "reports/64L04-0141/pages.json": {
+      "path": "reports/64L04-0141/pages.json",
+      "bytes": 1904,
+      "sha256": "c3c448b0df3053d2831ee2db2121f692ac1e95064fd381c248fac3ae0d5911f4"
+    },
+    "reports/64L04-0141/report.json": {
+      "path": "reports/64L04-0141/report.json",
+      "bytes": 595458,
+      "sha256": "5d8d2ffb44d0f34e64aa1eb2a5548622ed4a15f55203823fc518f04e8eb0f932"
     },
     "reports/74F08-0021/pages.json": {
       "path": "reports/74F08-0021/pages.json",
@@ -796,6 +811,46 @@
       "bytes": 834191,
       "sha256": "52541137fe8cc302f9a43193000f96b6184439e59dc3897b99a992d9d1de4dec"
     },
+    "reports/74G07-0064/pages.json": {
+      "path": "reports/74G07-0064/pages.json",
+      "bytes": 1909,
+      "sha256": "92c61c1ad78147b51df50e9382ef4997534f135df372729dc241cd04bc21fbd3"
+    },
+    "reports/74G07-0064/report.json": {
+      "path": "reports/74G07-0064/report.json",
+      "bytes": 3544460,
+      "sha256": "0827657d6496121b7b5a05dbb1c596e91943a9e39b1ee6f06b9819055ab47b9f"
+    },
+    "reports/74G07-0070/pages.json": {
+      "path": "reports/74G07-0070/pages.json",
+      "bytes": 1276,
+      "sha256": "9c1df9478036cd4d531b7853ec630ad90316bac9f22f80f1f4610a1eed5d011f"
+    },
+    "reports/74G07-0070/report.json": {
+      "path": "reports/74G07-0070/report.json",
+      "bytes": 109976,
+      "sha256": "07dab79ed9d1fcf4a593d6dacf254d24641c5723851014a847da3de2f64c1278"
+    },
+    "reports/74H04-0091/pages.json": {
+      "path": "reports/74H04-0091/pages.json",
+      "bytes": 1909,
+      "sha256": "cf9a820e8f9130035e65cae84faff125bb30d8fcb0cc5886ef6fd263bce5cd61"
+    },
+    "reports/74H04-0091/report.json": {
+      "path": "reports/74H04-0091/report.json",
+      "bytes": 1068882,
+      "sha256": "8ab3a7637aa2ba7841276bea6d824970e41f5d3fdbd247c903fcd8a37d24d950"
+    },
+    "reports/74H09-0039/pages.json": {
+      "path": "reports/74H09-0039/pages.json",
+      "bytes": 1898,
+      "sha256": "0bdf11f5ac8c97aca20e24b7c61c5f5ed2be969fb6652a717fd48f3c6d5535dc"
+    },
+    "reports/74H09-0039/report.json": {
+      "path": "reports/74H09-0039/report.json",
+      "bytes": 452081,
+      "sha256": "160da7c80246b405fbde956c0045e247f4419673f95f0131e9e9cbbe0e7b9fea"
+    },
     "reports/74H16-0072/pages.json": {
       "path": "reports/74H16-0072/pages.json",
       "bytes": 1283,
@@ -805,6 +860,21 @@
       "path": "reports/74H16-0072/report.json",
       "bytes": 188328,
       "sha256": "3022e4c3a98cbc732a014ae686f0ffe30945f8c85d21f98a3d01e125e387cf0c"
+    },
+    "reports/MAW00509/pages.json": {
+      "path": "reports/MAW00509/pages.json",
+      "bytes": 483,
+      "sha256": "b09799fd93f259bcea3a61353afa84ae3875a45ef940062259b10db2d350b39e"
+    },
+    "reports/MAW00509/report.json": {
+      "path": "reports/MAW00509/report.json",
+      "bytes": 140541,
+      "sha256": "74c4fd54683c6a284a55bd4dba4b2738e0ea303106bd459b133f2f46bc909b79"
+    },
+    "reports/index.json": {
+      "path": "reports/index.json",
+      "bytes": 62449,
+      "sha256": "928cdec10d576ea944bf152a10112322eb159c5b4104136093bc50e2a93a7ed9"
     }
   }
 }
