@@ -147,3 +147,42 @@ def test_src_certificate_with_a_blank_first_column_still_reads() -> None:
     meta, rows = read_sheet("MAW02845", "z", "G-2019-1010.xls", "Sheet1", df, "t")
     assert meta["status"] == "ingested" and meta["format"] == "certificate" and len(rows) == 2
     assert rows[0]["sample_id"] == "144586" and rows[0]["u3o8_pct"] == 0.004 and rows[0]["sample_type"] == "basement"
+
+
+def test_multi_analyte_certificate_takes_the_column_under_the_u3o8_analyte() -> None:
+    """NexGen's redo certificate lists U3O8, Au ppb and Au g/tonne side by side: the value is under U3O8."""
+    df = pd.DataFrame([
+        ["Analyte", None, None, "U3O8", "Au", "Au"], ["Unit", None, None, "wt %", "ppb", "g/tonne"],
+        ["Detection", None, None, "0.001", "2", "0.01"],
+        ["Description", "Sample Type", "Preparation Code", None, None, None],
+        ["133437", "Basement RA", "C/S/A", 0.032, 46100, 46.1],
+        ["BL4A", "Standard", None, 0.149, None, None],
+    ], dtype=object)
+    meta, rows = read_sheet("MAW02845", "w", "G-2019-471_redo.xls", "Sheet1", df, "t")
+    assert [r["u3o8_pct"] for r in rows] == [0.032, 0.149]
+    assert meta["note"] is None
+
+
+def test_old_src_form_with_title_rows_is_read() -> None:
+    df = pd.DataFrame([
+        ["SRC Geoanalytical Laboratories", None, None, None, None], ["Samples: 70", None, None, None, None],
+        ["U3O8 TEST REPORT", None, None, None, None], ["wt %", None, None, None, None],
+        ["Group #", "Description", "Date", "Sample Type", None],
+        ["G-2008-1223", "BL4a", "09-16-2008", "Standard", 0.147],
+        ["G-2008-1223", "19294", "09-16-2008", "Basement RA", 0.321],
+        ["G-2008-1223", "19294 R", "09-16-2008", "Repeat", 0.316],
+    ], dtype=object)
+    meta, rows = read_sheet("64L04-0130", "v", "G-08-1223U3O8.xls", "G-08-1223", df, "t")
+    assert meta["status"] == "ingested" and meta["format"] == "certificate" and len(rows) == 3
+    assert rows[1]["sample_id"] == "19294" and rows[1]["u3o8_pct"] == 0.321 and rows[1]["sample_type"] == "basement ra"
+    assert rows[0]["sample_type"] == "standard" and rows[2]["sample_type"] == "repeat"
+    assert rows[1]["u3o8_column"] == "u3o8 (wt %)"
+
+
+def test_an_impossible_weight_percent_is_dropped_and_counted() -> None:
+    df = pd.DataFrame([
+        ["Analyte", "U3O8"], ["Unit", "wt %"], ["Description", "Sample Type"], ["s1", "Basement"],
+    ], dtype=object)
+    df.loc[3, 2] = 46100
+    meta, rows = read_sheet("X", "u", "c.xls", "S", df, "t")
+    assert rows == [] and "above 100 wt%" in meta["note"]

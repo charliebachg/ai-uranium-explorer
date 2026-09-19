@@ -124,26 +124,51 @@ def read_certificate(df: pd.DataFrame, scan: int = HEADER_SCAN_ROWS) -> tuple[di
     Returns (block, rows) with rows as (row_no, sample, sample_type, raw_value), or None if it is not one."""
     block: dict[str, Any] = {}
     header_row = None
+    analyte_cols: dict[int, str] = {}   # column -> analyte, from the key-value block (new form)
+    unit_cols: dict[int, str] = {}
     for i in range(min(scan, len(df))):
-        cells = _nonempty(df.iloc[i].tolist())  # the SRC sheets often leave column A blank
-        first = _norm(cells[0]) if cells else ""
+        row = df.iloc[i].tolist()
+        pos = [(j, c) for j, c in enumerate(row) if c is not None and str(c) != "nan" and str(c).strip()]
+        if not pos:
+            continue
+        first = _norm(pos[0][1])
         if first in ("analyte", "unit", "detection", "suite/digestion", "group", "date", "samples"):
-            block[first] = _norm(cells[1]) if len(cells) > 1 else ""
-        if first in ("description", "sample", "sample id", "sample no", "sample number") and "analyte" in block:
+            block[first] = _norm(pos[1][1]) if len(pos) > 1 else ""
+            if first == "analyte":
+                analyte_cols = {j: _norm(c) for j, c in pos[1:]}
+            if first == "unit":
+                unit_cols = {j: _norm(c) for j, c in pos[1:]}
+        elif "test report" in first and "analyte" not in block:      # old form: 'U3O8 TEST REPORT', unit on the next row
+            block["analyte"] = first.replace("test report", "").strip()
+            nxt = _nonempty(df.iloc[i + 1].tolist()) if i + 1 < len(df) else []
+            if nxt and _norm(nxt[0]) in ("wt %", "wt%", "%", "ppm", "ppb", "g/tonne"):
+                block["unit"] = _norm(nxt[0])
+        if "analyte" in block and any(_norm(c) in ("description", "sample", "sample id", "sample no", "sample number") for _, c in pos):
             header_row = i
+            header_pos = pos
             break
     if header_row is None or "analyte" not in block:
         return None
+    # which column holds the uranium value
+    u_col = next((j for j, a in analyte_cols.items() if _U3O8.search(a) or a in ("u", "uranium")), None)
+    if u_col is not None:
+        block["analyte"] = analyte_cols[u_col]
+        block["unit"] = unit_cols.get(u_col, block.get("unit", ""))
+    else:
+        u_col = max(j for j, _ in header_pos) + 1              # old form: the value column follows the header
+    desc_col = next(j for j, c in header_pos if _norm(c) in ("description", "sample", "sample id", "sample no", "sample number"))
+    type_col = next((j for j, c in header_pos if _norm(c) in ("sample type", "type")), None)
     rows = []
     for r in range(header_row + 1, len(df)):
-        cells = _nonempty(df.iloc[r].tolist())
-        if not cells:
+        row = df.iloc[r].tolist()
+        sample = _norm(row[desc_col]) if desc_col < len(row) else ""
+        if not sample:
             continue
-        sample = _norm(cells[0])
-        kind = _norm(cells[1]) if len(cells) > 1 and not _NUM.match(str(cells[1]).strip()) else ""
-        values = [c for c in cells[1:] if _NUM.match(str(c).strip())]
-        rows.append((r, sample, kind or None, values[-1] if values else None))
+        kind = _norm(row[type_col]) if type_col is not None and type_col < len(row) else ""
+        value = row[u_col] if u_col < len(row) else None
+        rows.append((r, sample, kind or None, value))
     block["header_row"] = header_row
+    block["value_col"] = int(u_col)
     return block, rows
 
 
@@ -219,6 +244,7 @@ def _certificate_rows(meta: dict[str, Any], cert: tuple[dict[str, Any], list], f
     is_u = analyte.strip() in ("u", "uranium") or analyte.startswith("u ")
     column = f"{analyte} ({unit})".strip()
     rows = []
+    out_of_range = 0
     for r, sample, kind, value in raw:
         v, printed, below = parse_number(value)
         if v is None:
@@ -226,6 +252,9 @@ def _certificate_rows(meta: dict[str, Any], cert: tuple[dict[str, Any], list], f
         u3 = v if is_u3o8 else None
         if u3 is not None and _PPM.search(unit) and not _PCT.search(unit):
             u3 = u3 / 10_000.0
+        if u3 is not None and u3 > 100.0:
+            out_of_range += 1
+            continue  # kept in the sheet note, never as a number: 46,100 weight percent is not a reading
         up = v if (is_u and _PPM.search(unit)) else None
         if u3 is None and up is None:
             continue
@@ -239,7 +268,8 @@ def _certificate_rows(meta: dict[str, Any], cert: tuple[dict[str, Any], list], f
         })
     meta.update(status="ingested" if rows else "empty", header_row=int(block["header_row"]), n_rows=len(rows),
                 columns_json=json.dumps({k: v for k, v in block.items() if k != "header_row"}), format="certificate",
-                note=None if rows else f"certificate for analyte {analyte!r} in {unit!r}: no uranium value rows")
+                note=(f"{out_of_range} value(s) above 100 wt% dropped as unreadable" if out_of_range else None) if rows
+                     else f"certificate for analyte {analyte!r} in {unit!r}: no uranium value rows")
     return meta, rows
 
 
