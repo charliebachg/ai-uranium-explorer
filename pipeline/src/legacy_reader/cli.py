@@ -295,6 +295,7 @@ def extract_cmd(
     dry_run: bool = typer.Option(False, "--dry-run", help="print the plan and the estimate, call nothing"),
     unlock_heldout: bool = typer.Option(False, "--unlock-heldout", help="required for --split heldout"),
     replay: bool = typer.Option(False, "--replay", help="strict replay: recorded calls only, never live"),
+    retry_failed: bool = typer.Option(False, "--retry-failed", help="plan pages again that failed every attempt in an earlier run"),
 ) -> None:
     """Extract routed pages with the configured model, one page per call. Exits 75 on a usage limit."""
     from .extract import stage_extract
@@ -308,7 +309,8 @@ def extract_cmd(
     try:
         summary = stage_extract(config_id=config, split=split, files=list(files or []), max_calls=max_calls,
                                 pages_limit=pages, max_pages_per_file=max_pages_per_file, dry_run=dry_run,
-                                unlock_heldout=unlock_heldout, backend=backend, log=typer.echo)
+                                unlock_heldout=unlock_heldout, backend=backend, log=typer.echo,
+                                retry_failed=retry_failed)
     except PermissionError as e:
         typer.echo(f"refused: {e}")
         raise typer.Exit(2) from e

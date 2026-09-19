@@ -338,6 +338,30 @@ def read_results(path: Path | None = None) -> dict[str, dict[str, Any]]:
     return out
 
 
+def failed_path() -> Path:
+    return PATHS.out / "extract" / "failed.jsonl"
+
+
+def read_failed(path: Path | None = None) -> dict[str, dict[str, Any]]:
+    """Pages that exhausted their attempts in an earlier run, by page id: skipped until --retry-failed."""
+    p = path or failed_path()
+    if not p.is_file():
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for line in p.read_text().splitlines():
+        if line.strip():
+            row = json.loads(line)
+            out[row["page_id"]] = row
+    return out
+
+
+def record_failed(row: dict[str, Any], path: Path | None = None) -> None:
+    p = path or failed_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a") as f:
+        f.write(json.dumps(row, separators=(",", ":"), default=str) + "\n")
+
+
 def write_results(rows: dict[str, dict[str, Any]], path: Path | None = None) -> Path:
     p = path or results_path()
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -430,8 +454,12 @@ class _Shared:
 class Scheduler:
     def __init__(self, config: Config, backend: Any, log: Callable[[str], None] = print,
                  max_calls: int = 120, run_id: str | None = None, launch_gap_s: float = LAUNCH_GAP_S,
-                 workers: int = WORKERS, retry_delays_s: tuple[float, ...] = RETRY_DELAYS_S):
+                 workers: int = WORKERS, retry_delays_s: tuple[float, ...] = RETRY_DELAYS_S,
+                 retry_failed: bool = False):
         self.config = config
+        self.retry_failed = retry_failed
+        self.gave_up: dict[str, dict[str, Any]] = {}
+        self.skipped_failed: list[str] = []
         self.backend = backend
         self.log = log
         self.max_calls = max_calls
@@ -638,8 +666,11 @@ class Scheduler:
 
     def _count_unknown(self, page: PlannedPage, kind: str) -> None:
         with self.shared.lock:
-            self.failed.append({"page_id": page.page_id, "file_num": page.file_num,
-                                "page_no": page.page_no, "kind": kind})
+            row = {"page_id": page.page_id, "file_num": page.file_num, "page_no": page.page_no, "kind": kind}
+            self.failed.append(row)
+            # remembered across runs: the page is not planned again until --retry-failed asks for it, so a
+            # page the model cannot finish within its budget costs its attempts once, not once per resume
+            record_failed({**row, "run_id": self.run_id, "at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")})
             self.shared.consecutive_unknown += 1
             if self.shared.consecutive_unknown >= CIRCUIT_BREAK_AFTER and not self.shared.stop.is_set():
                 self.shared.circuit_broken = True
@@ -652,6 +683,11 @@ class Scheduler:
     def run_group(self, pages: list[PlannedPage], prior: dict[str, dict[str, Any]]) -> None:
         carry: list[CarryItem] = []
         for page in pages:
+            if page.page_id in self.gave_up and not self.retry_failed:
+                with self.shared.lock:
+                    self.skipped_failed.append(page.page_id)
+                self.runlog.event("skipped_failed", page_id=page.page_id, run_id_prev=self.gave_up[page.page_id].get("run_id"))
+                continue
             if self.shared.stop.is_set() or self.shared.calls_launched >= self.max_calls:
                 with self.shared.lock:
                     self.pending.append(page.page_id)
@@ -689,6 +725,11 @@ class Scheduler:
     def run(self, plan: list[PlannedPage]) -> dict[str, Any]:
         prior = read_results()
         self.prior = prior
+        self.gave_up = {} if self.retry_failed else read_failed()
+        planned_ids = {p.page_id for p in plan}
+        if set(self.gave_up) & planned_ids:
+            n = len(set(self.gave_up) & planned_ids)
+            self.log(f"  {n} page(s) failed every attempt in an earlier run and are skipped (--retry-failed to try again)")
         groups: dict[str, list[PlannedPage]] = {}
         for page in plan:
             groups.setdefault(page.group_key, []).append(page)
@@ -714,6 +755,7 @@ class Scheduler:
             "finished_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
             "wall_s": round(wall, 1),
             "planned": len(plan), "done": len(self.done), "failed": len(self.failed),
+            "skipped_failed": sorted(self.skipped_failed),
             "pending": sorted(set(self.pending) - set(self.done)),
             "totals": {**self.totals, "cost_usd": round(self.totals["cost_usd"], 4)},
             "usage_limit": {"message": str(limit)[:300], "resets_at_text": limit.resets_at_text} if limit else None,
@@ -746,7 +788,8 @@ class _StopLaunching(Exception):
 def stage_extract(config_id: str = "phase2", split: str = "dev", files: list[str] | None = None,
                   max_calls: int = 120, pages_limit: int | None = None, max_pages_per_file: int | None = None,
                   dry_run: bool = False, unlock_heldout: bool = False, backend: Any = None,
-                  log: Callable[[str], None] = print, launch_gap_s: float = LAUNCH_GAP_S) -> dict[str, Any]:
+                  log: Callable[[str], None] = print, launch_gap_s: float = LAUNCH_GAP_S,
+                  retry_failed: bool = False) -> dict[str, Any]:
     config = load_config(config_id)
     if split == "heldout":
         if not unlock_heldout:
@@ -791,7 +834,7 @@ def stage_extract(config_id: str = "phase2", split: str = "dev", files: list[str
         backend = CachedBackend(ClaudeCliBackend(timeout_s=config.timeout_s,
                                                  max_budget_usd=config.max_budget_usd))
     scheduler = Scheduler(config, backend, log=log, max_calls=max_calls, launch_gap_s=launch_gap_s,
-                          workers=config.workers)
+                          workers=config.workers, retry_failed=retry_failed)
     summary = scheduler.run(plan)
     summary["estimate"] = est
     log(f"\nrun {summary['run_id']}: {summary['done']} pages done, {summary['failed']} failed, "

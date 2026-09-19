@@ -73,6 +73,7 @@ def isolate(tmp_path, monkeypatch):
     monkeypatch.setattr(ex, "read_results", lambda *a, **k: {})
     monkeypatch.setattr(ex, "write_results", lambda rows, path=None: tmp_path / "results.jsonl")
     monkeypatch.setattr(ex, "run_dir", lambda run_id: tmp_path / "runs" / run_id)
+    monkeypatch.setattr(ex, "failed_path", lambda: tmp_path / "failed.jsonl")
     yield
 
 
@@ -172,6 +173,7 @@ def test_a_schema_invalid_answer_is_retried_once(tmp_path):
 def test_a_budget_or_turn_error_is_never_retried(tmp_path):
     for error, expected_calls in ((TransientBackendError("exceeded max budget of $0.60"), 1),
                                   (BackendConfigError("model answered without a tool turn"), 1)):
+        ex.failed_path().unlink(missing_ok=True)   # each error type starts with an empty give-up list
         inner = ScriptedBackend({5: error})
         s = scheduler(CachedBackend(inner, root=tmp_path / "cache"), tmp_path, retry_delays_s=(0.0, 0.0))
         s.run([planned(5, tmp_path)])
@@ -270,3 +272,22 @@ def test_results_are_written_after_every_page_not_only_at_the_end(tmp_path, monk
     assert len(writes) >= 4                                   # three pages plus the final write
     assert "pg:old" in writes[0] and len(writes[0]) == 2       # the prior rows travel with the first page
     assert len(writes[-1]) == 4
+
+
+def test_a_page_that_failed_every_attempt_is_skipped_next_run_unless_asked_for(tmp_path):
+    """The give-up list: a page the model cannot finish costs its attempts once, not once per resume."""
+    inner = ScriptedBackend({5: lambda n: TransientBackendError("cannot finish")})
+    s = scheduler(CachedBackend(inner, root=tmp_path / "cache"), tmp_path, retry_delays_s=(0.0, 0.0))
+    first = s.run([planned(n, tmp_path) for n in (4, 5)])
+    assert first["done"] == 1 and first["failed"] == 1
+    assert [r["page_no"] for r in ex.read_failed().values()] == [5]
+    # the next run plans page 5 again but skips it, and says so
+    inner2 = ScriptedBackend({})
+    s2 = scheduler(CachedBackend(inner2, root=tmp_path / "cache2"), tmp_path)
+    second = s2.run([planned(n, tmp_path) for n in (4, 5)])
+    assert second["skipped_failed"] == [planned(5, tmp_path).page_id] and second["done"] == 1
+    assert inner2.calls == [4]
+    # asked for, it is tried again
+    s3 = scheduler(CachedBackend(ScriptedBackend({}), root=tmp_path / "cache3"), tmp_path, retry_failed=True)
+    third = s3.run([planned(n, tmp_path) for n in (5,)])
+    assert third["done"] == 1 and third["skipped_failed"] == []
