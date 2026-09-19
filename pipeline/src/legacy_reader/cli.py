@@ -544,6 +544,20 @@ def prospect_modelsearch_cmd(
     typer.echo(json.dumps({"cells": out["cells"], "arms": len(out["rows"]), "decision": out["decision"].get("reason")}))
 
 
+@prospect_app.command("hindcast")
+def prospect_hindcast_cmd(
+    cutoff: list[int] = typer.Option([2000, 2010], "--cutoff", help="freeze datable inputs at this year (repeatable)"),
+    min_confidence: str = typer.Option("medium", "--min-confidence", help="high | medium: which dated discoveries count"),
+    write: bool = typer.Option(True, "--write/--no-write"),
+    track: bool = typer.Option(True, "--track/--no-track"),
+) -> None:
+    """Phase 3: the dated hindcast. Labels and drilling frozen at a cutoff, the grid scored, later discoveries ranked."""
+    from .prospect.hindcast import run
+
+    out = run(cutoffs=tuple(cutoff), min_confidence=min_confidence, log=typer.echo, write=write, track=track)
+    typer.echo(json.dumps({"rows": len(out["rows"]), "summary": out["summary"], "unmapped": out["unmapped"]}))
+
+
 @prospect_app.command("memo")
 def prospect_memo_cmd(
     cell: str = typer.Option(None, "--cell", help="cell id; omitted, the highest-scoring cell is used"),
