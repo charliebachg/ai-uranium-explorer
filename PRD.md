@@ -2,7 +2,7 @@
 
 **Status:** draft v0.1 · 2026-09-19 · owner: Charlie
 **Scope:** turn the demo into a working prototype that a geologist could use and an engineer could scale.
-**How to read:** §1–5 set the frame. §A–E are the five workstreams, each with *current state → requirement →
+**How to read:** §1–7 set the frame; §6 is the architecture in two diagrams and §7 the bias and leak register. §A–E are the five workstreams, each with *current state → requirement →
 how we will know → open questions*. §12 is the order we do them in. We go deeper into one section at a time
 after this document is agreed.
 
@@ -69,6 +69,188 @@ every agent answer from a versioned input, and can deploy the whole thing on a f
   Tailwind 4 / MapLibre 6 / zod 4 / zustand; Claude Code headless and an OpenAI adapter with a spend ceiling.
 - **Known defects** (from `research/06`): metric mismatch vs MineTRACE, gate only at publish, homogeneous
   panel, cache key omits the system prompt, thin page-tier retrieval, no gold labels.
+
+---
+
+## 6. How the pieces fit
+
+Three agents, one store, three scores and one control. The **extractor** turns pages, chips and text into
+values that land in the store under their own tier. The **criteria**, **learned** and **effort** scores are
+computed over the same rows under the same spatial folds; effort is the control the other two are read
+against, and the served learned model is the best one that beats it — or none. The **analyst** reads a cell's
+evidence and is scored against the same labels as the models, with retrieval blinded to the files that would
+give the answer away. The **interface** talks to the geologist, calls tools over the store, and can invoke the
+analyst. Every number that crosses a boundary passes the gate. Nothing an agent says is ever a source of
+numbers, and nothing said in a session is ever written back to the served model, the labels or the map.
+
+```mermaid
+flowchart LR
+  subgraph SRC["Public sources"]
+    S1["Layers: conductors, faults,<br/>geochemistry, survey footprints"]
+    S2["Assessment PDFs<br/>(scanned pages)"]
+    S3["Imagery: Sentinel-2,<br/>DEM, bedrock map"]
+    S4["Labels: deposits,<br/>occurrences"]
+  end
+
+  subgraph EXT["Extractor agent (role 1)"]
+    X1["VLM page reading:<br/>value + page + box + quote"]
+    X2["Chips and map units<br/>to features"]
+    X3["Text embeddings:<br/>LLM-derived features"]
+  end
+
+  subgraph STORE["One store, tiered"]
+    direction TB
+    T1["native"]
+    T2["read"]
+    T3["derived"]
+    T5["expert<br/>(recorded geologist input)"]
+    T4["agent<br/>(never a source of numbers)"]
+    HO["Held-out files and eval cells:<br/>never rendered, extracted or retrieved"]
+  end
+
+  subgraph SCORES["Scores on the same rows, same 30 km folds"]
+    C["criteria<br/>(hand table, cited thresholds)"]
+    L["learned<br/>(registry: best that beats the null, or none)"]
+    E["effort null<br/>(the control)"]
+  end
+
+  subgraph ANA["Analyst agent (role 3)"]
+    A1["evidence-only arm"]
+    A2["+ out-of-fold scores arm"]
+    A3["multimodal arm (chips)"]
+  end
+
+  GATE{"Gate at every handoff:<br/>every number resolves to a value id"}
+
+  subgraph UI["Dashboard"]
+    MAP["Map, score cells,<br/>evidence rail"]
+    IFC["Interface agent (role 2)<br/>tools over the store"]
+  end
+
+  GEO(("Geologist"))
+  BENCH["UraniumBench<br/>one tier per role"]
+
+  S1 --> T1
+  S4 --> T1
+  S2 --> X1 --> T2
+  S3 --> X2 --> T3
+  S2 --> X3 --> T3
+  T1 --> SCORES
+  T2 --> SCORES
+  T3 --> SCORES
+  E -. control .- C
+  E -. control .- L
+  T1 --> A1
+  T2 --> A1
+  T3 --> A1
+  SCORES -- "out-of-fold only" --> A2
+  S3 --> A3
+  HO -. "blinds retrieve for scored cells" .- ANA
+  ANA --> GATE --> T4
+  SCORES --> MAP
+  T4 --> MAP
+  GEO <--> IFC
+  IFC --> MAP
+  IFC -- "insight, recorded first" --> T5
+  T5 --> ANA
+  IFC -- "invoke" --> ANA
+  BENCH -. scores .-> EXT
+  BENCH -. scores .-> SCORES
+  BENCH -. scores .-> ANA
+  BENCH -. scores .-> IFC
+```
+
+**A live reading** is what happens when the geologist adds something the store does not hold. The insight
+becomes a value first, so the analyst can cite it; the run is then the ordinary analyst over the evidence
+pack plus the expert-tier values, gated like any other, and reported beside the run without the insight.
+
+```mermaid
+sequenceDiagram
+  actor G as Geologist
+  participant I as Interface agent
+  participant S as Store
+  participant A as Analyst agent
+  participant X as Gate
+
+  G->>I: "the conductor probably continues north-east of hole X"
+  I->>S: record as expert-tier value (author, time, cell, text)
+  S-->>I: value id
+  I->>A: run this cell: evidence pack + out-of-fold scores + expert values
+  A->>S: cell_features, nearby, score, retrieve (blinded to held-out files)
+  S-->>A: values with ids
+  A->>X: memo with claims
+  X-->>I: pass, or reject with the unresolved number
+  I-->>G: session assessment: verdict, inputs listed, diff against the run without the insight
+  Note over S: written to the agent tier only. Never to the served model, the labels or the displayed score
+```
+
+---
+
+## 7. Bias and leak register
+
+Every way this system could look better than it is, written down so each one can be attacked in turn. An
+entry moves to *handled* only when a test in the repository demonstrates the fix. **Status:** open · partly ·
+handled.
+
+**Labels and sampling**
+
+| Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
+|---|---|---|---|---|---|---|
+| B1 | Exploration-effort confound | labels exist where people drilled; features are measured where people looked | any model learns *where people went*, and reports it as geology | the effort-only null on the same rows; capture stratified by effort decile | effort-adjusted metrics; PU negatives sampled at matched effort; report every score beside the null | partly |
+| B2 | Label crossover from naive PU sampling | unlabelled cells treated as negatives | shrinks the positive area, inflates variance, depresses the geology model most | Phase 0 re-test (§C.2.1) against bagging PU and recursive reliable-negatives | reliable-negative selection; spatial negatives away from positives; bagging PU | open |
+| B3 | Spatial autocorrelation leakage | random cross-validation | neighbouring cells in train and test; metrics inflate | gap between random, spatial and camp folds | spatial blocks fixed before the first fit; camp holdout; all three reported | handled |
+| B4 | Label definition bias | deposit vs occurrence; compiler-dependent definitions in SMDI | "positives" mix ore bodies with a single radioactive boulder | metrics reported deposits-only and with occurrences | both label sets kept; base rate stated beside every number | partly |
+| B5 | Camp clustering | deposits sit in a handful of camps | a model memorises camps and looks skilled | leave-one-camp-out fold | camp fold is one of the three standard folds | handled |
+| B6 | Cell size and areal unit | the 2 km grid was chosen, not derived | results that only hold at 2 km | 1 km and 5 km sensitivity (§C.2.2) | report the sensitivity run beside the headline | open |
+| B7 | Class-imbalance metric flattery | ROC-AUC at 1:500 | a model that ranks background well looks excellent | PR-AUC and capture at 10% of area with the base rate | never compare across protocols (MineTRACE's 30/200 is not ours); PR-AUC first | handled |
+
+**Features, coverage and provenance**
+
+| Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
+|---|---|---|---|---|---|---|
+| B8 | Coverage is not random | surveys were flown where interest was; 9 of 17 features cover 40% or less | missingness itself predicts the label | missingness-vs-label correlation; readiness scorecard | missingness indicators counted as *effort* features; area-of-applicability mask; metrics per coverage stratum | partly |
+| B9 | Survey vintage and method drift | EM systems, detection limits and sampling density changed over decades | old ground looks quiet; new ground looks anomalous | feature value vs survey year | survey year and system as effort features; per-survey normalisation | open |
+| B10 | Censored geochemistry | below-detection values reported as half the limit or zero | false thresholds in the criteria; distorted anomalies | detection limit recorded per sample | censoring-aware summaries; detection limit stored beside the value | open |
+| B11 | Folklore in the criteria table | thresholds and weights taken from textbooks written about the same camps that supply the labels | circular skill: the criteria describe the known deposits | criteria score on camp holdout; folklore rows at weight zero | every threshold cited; fitted-weights arm evaluated on held-out camps only | partly |
+| B12 | Text-length bias | mineralised areas have longer, richer reports and map descriptions (Parsa et al. 2025) | LLM-derived features read effort through the text channel | text length vs label; a length-only null | length-normalised embeddings; length itself filed as effort | open |
+| B13 | Corpus survivorship | assessment files are filed by holders who kept ground; the fetched subset was chosen by interest | the corpus over-represents success | fetch selection recorded; compare fetched vs unfetched by NTS sheet | sample files by sheet, not by interest; record the selection rule | open |
+| B14 | Compilations as they stand today | deposit and occurrence compilations include post-discovery work | retrodiction sees the future | the dated hindcast with a cut-off (§C.2.3) | freeze datable inputs at the cut-off; state the leakage that cannot be removed | partly |
+
+**Imagery and text**
+
+| Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
+|---|---|---|---|---|---|---|
+| B15 | Effort visible in imagery | cut lines, camps, drill roads and clearings in Sentinel-2 chips | a vision model learns to spot roads and calls it geology | chip-only model vs the effort null; saliency over cleared pixels | mask clearings and roads; ablation with and without; state as a limit if it cannot be removed | open |
+| B16 | Cloud and season | cloud pixels once counted as valid ground; snow and leaf-on differ by scene | features that encode acquisition date | cloud mask audit; per-scene date recorded | scene date and cloud fraction stored; composite over a fixed window | partly |
+
+**Agent, retrieval and gate**
+
+| Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
+|---|---|---|---|---|---|---|
+| B17 | Retrieval leakage | the assessment file for a deposit cell says mineralisation was intersected | the analyst reads the answer instead of the evidence | analyst with and without retrieval; citations checked against the held-out file list; a "read the label from the report" baseline | blind retrieve to held-out files for the scored cell and its neighbours; date cut for hindcast | open |
+| B18 | Score leakage into the analyst | the learned score for a cell was fitted on that cell's block | the analyst inherits the fit and is scored on the same labels | the model version and fold the analyst saw are logged per run | out-of-fold scores only; the arm reported beside "copy the score" and the evidence-only arm | open |
+| B19 | Expert anchoring | a geologist's insight steers the analyst; the geologist then sees agreement | a confirmation loop dressed as a live reading | diff between runs with and without expert-tier values; adversarial wrong-insight items | insight recorded first, labelled as expert-tier in the memo; never written back; reported with the diff | open |
+| B20 | Homogeneous panel | all roles on one model family | correlated errors; a skeptic that agrees with itself | heterogeneous arm (§D.3.3) | different families per role; mechanical checks over LLM judges | open |
+| B21 | Gate blind spots | right number from the wrong cell; negated evidence; small round numbers in quotable text | fabrication that resolves | adversarial tier 3; organic gate measurement | cell-identity binding; polarity and unit normalisation; gate at every handoff (§D.3.5) | partly |
+| B22 | Stale cache | cache key omits the system prompt and schema | an old answer evaluated as a new configuration | byte-identical recordings after a prompt change | system prompt and schema in the key before any benchmark run | open |
+| B23 | Compute asymmetry between configurations | a panel makes more tool calls than a single agent | more evidence, not better reasoning, wins | calls and cost per answer logged | matched compute budget per configuration (§D.3.3) | partly |
+
+**Evaluation and people**
+
+| Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
+|---|---|---|---|---|---|---|
+| B24 | Benchmark authorship | we write the questions, the rubric and the configurations | a benchmark tuned to what we already do well | benchmark frozen before configurations are tuned; a held-out question split | tier 3 grows only from production failures; the frozen version is the one reported | open |
+| B25 | Single rater who built the system | the geologist-day is one person, and the reasoning tiers are rated by the author | ratings drift toward the design | configuration labels blinded; order randomised; reported as one rater | the geologist-day (§D.3.4) with chance-corrected agreement | open |
+| B26 | Judge shares a family with the judged | LLM-as-judge on rubric items | the judge forgives its own habits | judge and judged from different families; mechanical items first | rubric items that can be checked by code are; the rest rated by a person | open |
+
+**Interface and dashboard**
+
+| Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
+|---|---|---|---|---|---|---|
+| B27 | Score before evidence | the map shows a coloured cell before the geologist sees why | anchoring on the colour | usage: evidence opened before or after the score | evidence-first mode; the effort score one click from every learned score | open |
+| B28 | Colour ramp | low cells invisible or nudged toward attention | the ramp editorialises | the declared colour exception and its test | ramp reviewed with the geologist; the exception stays the only one | partly |
+| B29 | Wording drift | "prediction", "target", "potential" creep into copy and names | the product claims skill it has not shown | the forbidden-phrases test | verdicts top out at "supports a closer look"; live readings are readings, not predictions | handled |
+
 
 ---
 
@@ -447,6 +629,7 @@ Phase 0 is first because it is the only one that can change what the rest of the
 | Geologist-day never happens | benchmark stays internal | tiers 1 and 3 are fully mechanical and stand alone |
 | LLM spend | budget | ceilings per backend already exist; the benchmark is cost-capped per configuration |
 | Framework sprawl in the agent layer | more places to invent a number | §E.4: in-house runtime, revisit only on measured need |
+| A bias in §7 goes unattacked | the number that decides the prototype is an artefact | every §7 entry has an owner section and a detection test; the register is reviewed at each phase gate |
 
 ## 14. Deliberately out of scope for the prototype
 
