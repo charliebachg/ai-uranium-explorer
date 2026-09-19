@@ -488,6 +488,8 @@ which is exactly the survivorship bias B13 names.
   file. Only the **top two drilling files per cell** are model-read: 21 files, of which 4 are done, about 230
   routed pages, under 5 hours. Four enabled cells have no file at all, and "no report exists" is their honest
   state.
+- **Order, decided 2026-09-19.** The pre-read lands in Phase 2, before the first analyst results, so
+  the analyst's first chains on the enabled cells already carry the unknown-versus-absent evidence.
 - **Why not more.** A few reports prove the mechanism (four exist). One or two per cell make each enabled
   cell's verdict honest. Reliable negatives for the learned model need hundreds of cells, which tens of files
   do not reach either, so that is backlog whatever we read now. There is no useful middle.
@@ -703,9 +705,12 @@ other modelling:
 - **Sensitivity**: 1 km and 5 km cells; 20 / 30 / 50 km spatial blocks.
 - **No imputation, no synthetic positives, no tuning against the test folds.** These are decisions, recorded.
 
-**C.2.3 Retrodiction (should)**
+**C.2.3 Retrodiction — the dated hindcast (must)**
 With `discoveries.toml`: freeze datable inputs at a cutoff, score, report where each later discovery ranks.
 The leakage (compilations drawn as they stand today) is stated.
+This is the headline test of *prediction before the claim*: every datable input frozen at a cutoff, the
+grid scored, and each later discovery's rank reported — Patterson Lake South (2012) first. It runs inside
+Phase 3 and its table sits beside the spatial-fold table on the Eval page. Decided 2026-09-19.
 
 **C.2.4 MLOps mechanics (must)**
 - Reproducible training: `lr prospect score --snapshot <hash>` rebuilds a run exactly.
