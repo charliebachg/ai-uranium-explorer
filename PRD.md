@@ -229,11 +229,12 @@ handled.
 | Id | Bias or leak | Where it enters | What it would do | How we detect it | How we would fix it | Status |
 |---|---|---|---|---|---|---|
 | B17 | Retrieval leakage | the assessment file for a deposit cell says mineralisation was intersected | the analyst reads the answer instead of the evidence | analyst with and without retrieval; citations checked against the held-out file list; a "read the label from the report" baseline | blind retrieve to held-out files for the scored cell and its neighbours; date cut for hindcast | open |
-| B18 | Score leakage into the analyst | the learned score for a cell was fitted on that cell's block | the analyst inherits the fit and is scored on the same labels | the model version and fold the analyst saw are logged per run | out-of-fold scores only; the arm reported beside "copy the score" and the evidence-only arm | open |
+| B18 | Score leakage into the analyst | **live today**: `cell_scores` returns learned and effort scores fitted on every cell, as its own note says | the analyst inherits the fit and is scored on the same labels | the model version and fold the analyst saw are logged per run | out-of-fold scores only; the arm reported beside "copy the score" and the evidence-only arm | open |
 | B19 | Expert anchoring | a geologist's insight steers the analyst; the geologist then sees agreement | a confirmation loop dressed as a live reading | diff between runs with and without expert-tier values; adversarial wrong-insight items | insight recorded first, labelled as expert-tier in the memo; never written back; reported with the diff | open |
 | B20 | Homogeneous panel | all roles on one model family | correlated errors; a skeptic that agrees with itself | heterogeneous arm (§D.3.3) | different families per role; mechanical checks over LLM judges | open |
 | B21 | Gate blind spots | right number from the wrong cell; negated evidence; small round numbers in quotable text | fabrication that resolves | adversarial tier 3; organic gate measurement | cell-identity binding; polarity and unit normalisation; gate at every handoff (§D.3.5) | partly |
 | B22 | Stale cache | cache key omits the system prompt and schema | an old answer evaluated as a new configuration | byte-identical recordings after a prompt change | system prompt and schema in the key before any benchmark run | open |
+| B30 | The cell's own label in the evidence pack | `label_context` returns "occurrence at 0.0 km" for a labelled cell | the analyst reads the answer off the pack | any scored run where the pack contains a label at 0 km | mask the evaluated cell's own label in scored runs; keep it in the dashboard | open |
 | B23 | Compute asymmetry between configurations | a panel makes more tool calls than a single agent | more evidence, not better reasoning, wins | calls and cost per answer logged | matched compute budget per configuration (§D.3.3) | partly |
 
 **Evaluation and people**
@@ -387,7 +388,9 @@ land in the `agent` tier with the run manifest. Nothing here is a source of numb
 
 **Leakage controls, enforced by tests, not policy**: the scores in Stage 0 and Stage 5 are out-of-fold for
 the cell's block (B18); `retrieve` refuses files on the blind-list for the cell and its neighbours (B17);
-expert-tier ids are labelled as such in every node that cites them (B19).
+expert-tier ids are labelled as such in every node that cites them (B19); `label_context` masks the
+evaluated cell's own label and any label inside it in scored runs (B30), while the dashboard keeps showing
+it, because the nearest known occurrence is the first thing a skeptic should ask.
 
 ### 8.5 Ablation matrix — the configurations §D compares (must)
 
@@ -485,7 +488,12 @@ which is exactly the survivorship bias B13 names.
   every returned quote is located on the page and validated before it is filed. The router already sends
   about 6% of pages to the model (42 of 691). This is a batch job on the headless backend, not an agent:
   no tool loop, no conversation. The interface and analyst agents never open a PDF; `retrieve` reads the
-  index and the filed values. At that rate the
+  index and the filed values.
+- **Prototype on Claude Code headless, production on an API.** Every call already goes through the
+  `Backend` protocol, so the swap is configuration — except that the OpenAI backend has no image input
+  yet, so the extractor cannot run on it (backlog, §9.6). At API prices the bounded read is cheap: about
+  9,300 output tokens per page measured, roughly $0.02–0.03 per page on gpt-5-mini, so 500 pages is $10–15.
+  Whether the cheaper reader is good enough is what the 30-page gold measures. At that rate the
   enabled cells' files are roughly 400–500 routed pages: **about 10 hours unattended over two nights** on the
   headless backend, cached, resumable on a usage limit. Hard cap **500 pages**.
 - **Hand-key 30 pages** from those files as the first Tier 4 gold, chosen blind to the model; score the read by
@@ -520,6 +528,7 @@ MineTRACE protocol, one day.
 | The other eight switches of the §8.5 matrix | each is another 6–13 hours per arm | the four-arm table shows where the variance is |
 | Multimodal arm and Tier 4 chip agreement | Sentinel-2 and DEM features not built; effort mask (B15) not designed | §B.2 chips exist |
 | Deep learning models (§C.2.2) | no chips; 60 positives | §B.2 chips exist and the PU re-test says the labels support it |
+| Image input on the OpenAI backend, so the extractor can run on an API | prototype reads on Claude Code headless | Phase 4a, before any production reading |
 | Analyst benchmark subset sizing (§9.4) | depends on usage available at Phase 5a | Phase 5a, discussed then |
 | Reading beyond 500 routed pages and 60 files | 73 s and $0.14-equivalent per page | a page-type classifier picks only table pages, or a cheaper reader is measured against the gold |
 | Analyst on demand for any cell outside the subset | correct design (§6), but every call is unbudgeted until 4a's manifests exist | Phase 4a |
