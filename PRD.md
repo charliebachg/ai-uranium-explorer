@@ -476,12 +476,21 @@ The current fetch rule (the 60 files with the most holes) lands 27 in deposit ce
 which is exactly the survivorship bias B13 names.
 
 - **Enabled cells first.** The dashboard's analyst-enabled set (§9.4) is chosen before any reading, and the
-  reading is bounded to the files inside those cells. Candidates by attached files: deposit cells 0031_0080
-  (15 files, 275 holes) and 0030_0081 in one camp; 0144_0036, 0162_0050, 0200_0072 and 0191_0056 in another;
-  the four read reports' cells; two coverage-gap and two background cells. About 12 cells, frozen and
-  versioned in Phase 2.
-- **Fetch** every file inside an enabled cell, then the nearest by distance up to **60 files**. Text-index
-  every fetched page with no model calls.
+  reading is bounded to the files inside those cells. Proposed list of **15**: the five cells the panel and
+  recorded chat already use (Horseshoe 0201_0072 and four unlabelled cells chosen for score disagreement,
+  gap and background); the four cells of the reports already read; and two deposit cells per camp with the
+  fewest files that still carry drilling — Colette 0030_0081 and Dominique-Peter 0031_0088 in the west,
+  0037_0049 and R780E 0033_0047 at Patterson Lake South, Deilmann 0145_0019 and Horseshoe 0200_0072 in the
+  east. Frozen and versioned with its selection rule in Phase 2.
+- **Fetch and index everything in the enabled cells, read almost nothing.** All 47 files inside the 15
+  enabled cells are downloaded and text-indexed with no model calls, so the analyst has the page tier
+  (quotable, numbers not allowed) and the metadata tier ("six files exist here, two were read") for every
+  file. Only the **top two drilling files per cell** are model-read: 21 files, of which 4 are done, about 230
+  routed pages, under 5 hours. Four enabled cells have no file at all, and "no report exists" is their honest
+  state.
+- **Why not more.** A few reports prove the mechanism (four exist). One or two per cell make each enabled
+  cell's verdict honest. Reliable negatives for the learned model need hundreds of cells, which tens of files
+  do not reach either, so that is backlog whatever we read now. There is no useful middle.
 - **Route, then read — one page image per call, never a report.** Every fetched page is text-indexed or
   OCR'd for free; the router classifies each page by keywords and table shape with no model call; at most 12
   routed table pages per file are then sent **one page image at a time** with the schema for their class, and
@@ -492,10 +501,8 @@ which is exactly the survivorship bias B13 names.
 - **Prototype on Claude Code headless, production on an API.** Every call already goes through the
   `Backend` protocol, so the swap is configuration — except that the OpenAI backend has no image input
   yet, so the extractor cannot run on it (backlog, §9.6). At API prices the bounded read is cheap: about
-  9,300 output tokens per page measured, roughly $0.02–0.03 per page on gpt-5-mini, so 500 pages is $10–15.
-  Whether the cheaper reader is good enough is what the 30-page gold measures. At that rate the
-  enabled cells' files are roughly 400–500 routed pages: **about 10 hours unattended over two nights** on the
-  headless backend, cached, resumable on a usage limit. Hard cap **500 pages**.
+  9,300 output tokens per page measured, roughly $0.02–0.03 per page on gpt-5-mini, so 230 pages is under $7.
+  Whether the cheaper reader is good enough is what the 30-page gold measures.
 - **Hand-key 30 pages** from those files as the first Tier 4 gold, chosen blind to the model; score the read by
   precision and recall against them and by second-family agreement (§8.2).
 - Everything else the corpus holds is **backlog**, and the readiness scorecard says how much of it there is.
@@ -530,7 +537,7 @@ MineTRACE protocol, one day.
 | Deep learning models (§C.2.2) | no chips; 60 positives | §B.2 chips exist and the PU re-test says the labels support it |
 | Image input on the OpenAI backend, so the extractor can run on an API | prototype reads on Claude Code headless | Phase 4a, before any production reading |
 | Analyst benchmark subset sizing (§9.4) | depends on usage available at Phase 5a | Phase 5a, discussed then |
-| Reading beyond 500 routed pages and 60 files | 73 s and $0.14-equivalent per page | a page-type classifier picks only table pages, or a cheaper reader is measured against the gold |
+| Reading beyond two drilling files per enabled cell | tens of files cannot reach the hundreds of cells reliable negatives need | a page-type classifier picks only table pages, or a cheaper reader is measured against the gold |
 | Analyst on demand for any cell outside the subset | correct design (§6), but every call is unbudgeted until 4a's manifests exist | Phase 4a |
 | Heterogeneous families across roles | needs a third backend | an open model adapter |
 | Embedding retrieval over the corpus | lexical first, by design | a measured recall gap on the text index |
@@ -899,7 +906,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | **2 · Data ownership** | 1–2 | §B: gap re-verification (magnetics first), the 200-file fetch of §9.3, versioned snapshots | Every on-screen value walks to a hashed source pull; **the §9.1 readiness checklist is green for the focused tasks** |
 | **3 · ML programme** | 2 | §C.2.2–C.2.4: MLflow, registry, candidate models, ablations, sensitivity, CI regression | Eval page links every number to a run |
 | **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
-| **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | The enabled cells' files pre-read offline within the 500-page cap (§9.3); 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured |
+| **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | Top two drilling files per enabled cell pre-read offline, about 230 routed pages (§9.3); the rest fetched and indexed only; 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured |
 | **4c · Interface agent** | 1 | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff | Tier 1 pass rate, refusal and false-refusal rates measured with a denominator; the 30 rating questions drafted |
 | **4d · Analyst agent v1** | 2 | §8.4: stages 0–6 on the structured arm; both deciders; out-of-fold scores and blind-list enforced by tests | Chains computed and stored for every enabled cell (§9.4); every node gated; B17 and B18 have failing-then-passing tests |
 | **5a · Freeze UraniumBench v1** | 1 | §D.3.1: tier 1 generated (~300), tier 3 from observed failures (~100), tier 2 rubric (~100), the analyst subset sized at this point (§9.4) with fold ids; blind-list in the store; benchmark hashed and versioned before any tuning | No model calls yet; the frozen hash is the one every later table cites (B24) |
