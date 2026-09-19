@@ -38,6 +38,18 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr run phase1             # select 12 files, fetch, lock held-out, render, OCR, route
     uv run pytest -q
 
+    # data ownership and the tracked evaluations (Phases 2 and 3 of the PRD)
+    uv run lr store register-layers  # every pulled layer in native.layer with the hash of its payload
+    uv run lr store lineage          # every layer, feature and verified source walks back to a hashed pull; exit 1 on a break
+    uv run lr store snapshot         # a hashed manifest of the store: row counts, layer hashes, feature quantiles
+    uv run lr prospect gate          # the five-column readiness gate (present, licensed, covers, servable, versioned); exit 1 when red
+    uv run lr prospect drift         # feature distributions now against the latest snapshot; exit 1 on drift
+    uv run lr prospect headline --snapshot <hash>     # Phase 0 re-test, pinned to the store it names
+    uv run lr prospect modelsearch --snapshot <hash>  # candidates, ablations, block sizes; every arm an MLflow run
+    uv run lr prospect hindcast --snapshot <hash>     # later discoveries ranked by models frozen at a cutoff
+    uv run lr prospect export        # the data page and the Eval page's blocks, every number a stored value
+    uv run mlflow ui --backend-store-uri sqlite:///data/mlflow.db   # the runs and the registry (installed with --extra mlflow)
+
     # web
     cd web
     npm install

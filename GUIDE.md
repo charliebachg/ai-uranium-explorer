@@ -254,11 +254,21 @@ Measured on the 10,183 cells all three models can score, base rate 5.4%:
 | Learned | **spatial** | 0.133 | 0.762 | 28.9% |
 | **Effort (null)** | **spatial** | **0.347** | 0.852 | **53.1%** |
 
+| Learned | camp | 0.080 | 0.641 | 15.6% |
+| **Effort (null)** | camp | **0.241** | 0.773 | **38.8%** |
+
 The Phase 0 re-test (FINDINGS.md, F1) repeated this with negatives matched to the positives' effort profile and
 one positive per 10 km block: effort 0.178 against learned 0.111 under spatial folds, intervals separate. The
 gap narrows because thinning stops one camp counting many times; it does not close.
-| Learned | camp | 0.080 | 0.641 | 15.6% |
-| **Effort (null)** | camp | **0.241** | 0.773 | **38.8%** |
+
+Two more tests sit on the Eval page, each row naming the MLflow run behind it. The **model search** (F3) put
+five candidates and six ablations through the same folds against the same null: the best geology-only model,
+a random forest, reaches 0.125 against the null's 0.178 with the intervals apart, so the registry holds it as a
+candidate and serves nothing; removing the conductor distance is the one ablation that moves the result. The
+**dated hindcast** (F4) freezes labels and drilling at a cutoff and asks where each later discovery would have
+ranked: the geology model puts the six discoveries after 2000 at a median 12% of basin area, the criteria score
+at 16%, and effort at 51%, because effort cannot rank ground nobody had drilled. That last number is why the
+geology model is still worth building even though it loses the first test.
 
 **Read the spatial row.** Under folds drawn so nearby cells cannot leak between training and test, a model given
 nothing but drilling history scores **0.347** against **0.133** for the model trained on geology. Under
@@ -343,10 +353,13 @@ when you change a prompt.
 ## 7. The other three pages
 
 - **Data** — how much of the grid each feature actually covers, every source with its licence and verification
-  date, and four recorded gaps (including the missing geophysical grids).
-- **Eval** — what the reading run did, what the checks caught, the fold tests from §5.6, and the gate scorecard
-  from §6.4. It states at the top that these are run statistics, not accuracy, because no gold set has been
-  labelled.
+  date, the five-column readiness gate (present, licensed, covers, servable, versioned: one row per layer, label
+  and enabled-cell file, as `lr prospect gate` last scored it), and four recorded gaps (the magnetic grid is
+  now *published, not yet pulled*).
+- **Eval** — what the reading run did, what the checks caught, the fold tests from §5.6, the Phase 0 re-test,
+  the model search with its registry decision and model card, the dated hindcast, and the gate scorecard from
+  §6.4. Every row of the three tracked tables names its MLflow run and the store snapshot it read. It states at
+  the top that these are run statistics, not accuracy, because no gold set has been labelled.
 - **Limits** — what this demo can and cannot claim, carried from the project's research with each line cited.
 
 ---
