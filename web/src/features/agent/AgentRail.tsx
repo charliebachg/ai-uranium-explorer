@@ -1,7 +1,7 @@
 import { Bot, X } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { V } from "@/components/values/V";
-import type { Candidate, CellEvidence } from "@/data/contract";
+import type { Candidate } from "@/data/contract";
 import { hasValue, registryVersion, subscribeRegistry } from "@/data/registry";
 import { ChatPanel } from "@/features/prospect/ChatPanel";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/features/prospect/cellValues";
 import { EvidencePanel } from "@/features/prospect/EvidencePanel";
 import type { ServiceState } from "@/features/prospect/OfflineNotice";
-import { candidates, evidence, health } from "@/features/prospect/service";
+import { serviceState, useCandidates, useEvidence, useServiceHealth } from "@/features/prospect/queries";
 import { cn } from "@/lib/cn";
 import { formatLatLon } from "@/lib/format";
 import { useStore } from "@/state/store";
@@ -35,12 +35,12 @@ export function AgentRail() {
   const select = useStore((s) => s.select);
   const toggleLayer = useStore((s) => s.toggleLayer);
 
-  const [service, setService] = useState<ServiceState>("unknown");
-  const [ranked, setRanked] = useState<Candidate[]>([]);
-  const [record, setRecord] = useState<CellEvidence | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<"evidence" | "chat">("evidence");
+  // server state through TanStack Query: probed, cached, refetched on its own schedule; never retried silently
+  const healthQ = useServiceHealth();
+  const service = serviceState(healthQ);
+  const rankedQ = useCandidates(CANDIDATE_LIMIT, service === "up");
+  const ranked: Candidate[] = rankedQ.data ?? [];
   // the ranked list is the only place the rail knows a cell's position without the map
   const byCell = useMemo(
     () => new Map(ranked.map((c) => [c.cell_id, [c.lon, c.lat] as [number, number]])),
@@ -48,6 +48,10 @@ export function AgentRail() {
   );
 
   const cellId = selected?.dataset === "cell" ? String(selected.props.cid ?? "") : null;
+  const evidenceQ = useEvidence(cellId, service === "up");
+  const record = evidenceQ.data ?? null;
+  const loading = evidenceQ.isFetching && !evidenceQ.data;
+  const error = evidenceQ.error ? String(evidenceQ.error) : null;
 
   const replay = useStore((s) => s.chatReplay);
 
@@ -60,41 +64,6 @@ export function AgentRail() {
   useEffect(() => {
     if (cellId && selected) registerMapCell(cellId, selected.props);
   }, [cellId, selected]);
-
-  useEffect(() => {
-    let live = true;
-    health().then((ok) => {
-      if (!live) return;
-      setService(ok ? "up" : "down");
-      if (ok)
-        candidates(CANDIDATE_LIMIT).then(
-          (c) => live && setRanked(c),
-          () => undefined,
-        );
-    });
-    return () => {
-      live = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (service !== "up" || !cellId) return;
-    let live = true;
-    setLoading(true);
-    setError(null);
-    setRecord(null);
-    evidence(cellId)
-      .then(
-        (r) => live && setRecord(r),
-        (e: unknown) => live && setError(String(e)),
-      )
-      .finally(() => {
-        if (live) setLoading(false);
-      });
-    return () => {
-      live = false;
-    };
-  }, [cellId, service]);
 
   // the report panel owns this side of the screen when a file is open; two rails would fight for it
   if (report) return null;

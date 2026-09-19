@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { Candidate, CellEvidence, ChatResponse } from "@/data/contract";
+import { api, SERVICE_ROOT } from "@/api/client";
+import {
+  Candidate,
+  CellConversations,
+  CellEvidence,
+  ChatResponse,
+  ConversationRecord,
+} from "@/data/contract";
 import { registerValues } from "@/data/registry";
 import { registerCandidateScores, registerCriterionWeights, registerKnownShares } from "./cellValues";
 
@@ -10,18 +17,23 @@ import { registerCandidateScores, registerCriterionWeights, registerKnownShares 
  * its value registry registered before anything is drawn.
  */
 
-export const SERVICE_ROOT = "http://127.0.0.1:8787";
+export { SERVICE_ROOT };
 export const SERVICE_COMMAND = "lr prospect serve";
 
 const HEALTH_TIMEOUT_MS = 2500;
 const READ_TIMEOUT_MS = 15_000;
 
-async function getJson(path: string, timeoutMs: number): Promise<unknown> {
-  const res = await fetch(`${SERVICE_ROOT}${path}`, { signal: AbortSignal.timeout(timeoutMs) });
-  if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
-  return res.json();
+/** openapi-fetch hands back {data, error, response}; a non-2xx is an error here, never an empty answer. */
+function got<T>(path: string, out: { data?: T; error?: unknown; response: Response }): T {
+  if (out.error !== undefined || out.data === undefined) {
+    const detail =
+      out.error && typeof out.error === "object" && "detail" in out.error
+        ? String((out.error as { detail: unknown }).detail)
+        : "";
+    throw new Error(`${path}: HTTP ${out.response.status}${detail ? ` (${detail})` : ""}`);
+  }
+  return out.data;
 }
-
 function parsed<S extends z.ZodTypeAny>(path: string, schema: S, raw: unknown): z.infer<S> {
   const out = schema.safeParse(raw);
   if (!out.success) {
@@ -36,8 +48,8 @@ function parsed<S extends z.ZodTypeAny>(path: string, schema: S, raw: unknown): 
 
 export async function health(): Promise<boolean> {
   try {
-    const raw = (await getJson("/api/health", HEALTH_TIMEOUT_MS)) as { ok?: unknown };
-    return raw?.ok === true;
+    const out = await api.GET("/api/health", { signal: AbortSignal.timeout(HEALTH_TIMEOUT_MS) });
+    return out.data?.ok === true;
   } catch {
     return false;
   }
@@ -45,14 +57,26 @@ export async function health(): Promise<boolean> {
 
 /** The cells the criteria model ranks highest, with the context that says whether the ranking means anything. */
 export async function candidates(limit: number): Promise<Candidate[]> {
-  const raw = await getJson(`/api/cells?limit=${limit}`, READ_TIMEOUT_MS);
+  const raw = got(
+    "/api/cells",
+    await api.GET("/api/cells", {
+      params: { query: { limit } },
+      signal: AbortSignal.timeout(READ_TIMEOUT_MS),
+    }),
+  );
   const cells = parsed("/api/cells", z.object({ cells: z.array(Candidate) }), raw).cells;
   registerCandidateScores(cells);
   return cells;
 }
 
 export async function evidence(cellId: string): Promise<CellEvidence> {
-  const raw = await getJson(`/api/cell/${cellId}`, READ_TIMEOUT_MS);
+  const raw = got(
+    `/api/cell/${cellId}`,
+    await api.GET("/api/cell/{cell_id}", {
+      params: { path: { cell_id: cellId } },
+      signal: AbortSignal.timeout(READ_TIMEOUT_MS),
+    }),
+  );
   const record = parsed(`/api/cell/${cellId}`, CellEvidence, raw);
   for (const part of Object.values(record.parts)) registerValues(part.values, { notify: false });
   // two numbers the tools report as plain fields; registered here so the panel can print them like any other
@@ -131,14 +155,34 @@ export async function ask(body: {
   question: string;
   conversation_id?: string;
 }): Promise<ChatResponse> {
-  const res = await fetch(`${SERVICE_ROOT}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const raw = (await res.json()) as { error?: string };
-  if (!res.ok) throw new Error(raw?.error ? String(raw.error) : `/api/chat: HTTP ${res.status}`);
+  const raw = got("/api/chat", await api.POST("/api/chat", { body }));
   const answer = parsed("/api/chat", ChatResponse, raw);
   registerValues(answer.values);
   return answer;
+}
+
+/** The conversations the service has persisted about one cell, newest first. */
+export async function conversations(cellId: string): Promise<CellConversations> {
+  const raw = got(
+    `/api/cell/${cellId}/conversations`,
+    await api.GET("/api/cell/{cell_id}/conversations", {
+      params: { path: { cell_id: cellId } },
+      signal: AbortSignal.timeout(READ_TIMEOUT_MS),
+    }),
+  );
+  return parsed(`/api/cell/${cellId}/conversations`, CellConversations, raw);
+}
+
+/** One persisted transcript; its cited values are registered so its numbers print like any other. */
+export async function conversation(id: string): Promise<ConversationRecord> {
+  const raw = got(
+    `/api/conversation/${id}`,
+    await api.GET("/api/conversation/{conversation_id}", {
+      params: { path: { conversation_id: id } },
+      signal: AbortSignal.timeout(READ_TIMEOUT_MS),
+    }),
+  );
+  const record = parsed(`/api/conversation/${id}`, ConversationRecord, raw);
+  for (const t of record.turns) registerValues(t.values, { notify: false });
+  return record;
 }

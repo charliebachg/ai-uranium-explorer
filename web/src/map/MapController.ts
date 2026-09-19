@@ -4,10 +4,10 @@ import { HIT_PRIORITY, type LayerGroup, type LayerGroupId, layerGroups, withTile
 import type { DatumGrid, ReportIndex } from "@/data/contract";
 import { loadDatumGrid } from "@/data/loader";
 import { loadReportIndex } from "@/data/reports";
+import { loadTiles, type TilesManifest } from "@/data/tiles";
 import { type FeatureRef, SCORE_KEY, useStore } from "@/state/store";
 import { arrowField, arrowScaleForZoom } from "./layers/datum";
 import { EMPTY_FC, type ReportMapData, reportMapData } from "./layers/reports";
-import { type TilesManifest, loadTiles } from "@/data/tiles";
 import { type MapLibreMap, maplibregl } from "./maplibre";
 import { composeStyle } from "./style/composeStyle";
 

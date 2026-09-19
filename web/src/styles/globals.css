@@ -77,6 +77,7 @@ body,
   font-variant-numeric: tabular-nums slashed-zero;
 }
 
+/* biome-ignore lint/style/noDescendingSpecificity: .glass is a surface, not a state; its order is deliberate */
 .glass {
   background: rgb(15 20 27 / 0.72);
   backdrop-filter: blur(16px) saturate(1.2);

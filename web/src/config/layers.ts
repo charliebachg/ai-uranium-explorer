@@ -854,7 +854,6 @@ export const HIT_PRIORITY: string[] = [
   "fp-fill",
 ];
 
-
 /**
  * The same groups, with every source the tile manifest covers swapped for its PMTiles archive. Each layer on a
  * tiled source gets `source-layer` (the archive names its layer after the source id), and the source leaves the

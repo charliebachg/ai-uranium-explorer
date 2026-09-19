@@ -118,7 +118,7 @@ function Viewer({
   const w = meta?.width_px ?? 1275;
   const h = meta?.height_px ?? 1650;
 
-  const fit = useCallback(() => {
+  const fitPage = useCallback(() => {
     const el = viewport.current;
     if (!el) return;
     const s = Math.min(el.clientWidth / w, el.clientHeight / h) * 0.96;
@@ -144,8 +144,8 @@ function Viewer({
 
   useLayoutEffect(() => {
     if (value?.lineage?.bbox && value.lineage.page === pageNo) zoomTo(value.lineage.bbox);
-    else fit();
-  }, [value, pageNo, zoomTo, fit]);
+    else fitPage();
+  }, [value, pageNo, zoomTo, fitPage]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -154,11 +154,11 @@ function Viewer({
       else if (e.key === "k") stepValue(-1);
       else if (e.key === "]") goPage(1);
       else if (e.key === "[") goPage(-1);
-      else if (e.key === "0") fit();
+      else if (e.key === "0") fitPage();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [stepValue, goPage, fit]);
+  }, [stepValue, goPage, fitPage]);
 
   // wheel zoom around the cursor, drag to pan
   const drag = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
@@ -216,7 +216,7 @@ function Viewer({
           >
             <ZoomIn className="size-4" />
           </IconBtn>
-          <IconBtn label="Fit page (0)" onClick={fit}>
+          <IconBtn label="Fit page (0)" onClick={fitPage}>
             <Maximize2 className="size-4" />
           </IconBtn>
           <a

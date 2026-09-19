@@ -40,7 +40,8 @@ export function loadTiles(): Promise<TilesManifest | null> {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error(`tiles/manifest.json: HTTP ${res.status}`);
         const parsed = TilesManifest.safeParse(await res.json());
-        if (!parsed.success) throw new Error(`tiles/manifest.json does not match the contract: ${parsed.error.message}`);
+        if (!parsed.success)
+          throw new Error(`tiles/manifest.json does not match the contract: ${parsed.error.message}`);
         return parsed.data;
       })
       .catch((err) => {

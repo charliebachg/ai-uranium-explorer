@@ -22,7 +22,9 @@
       "src/**",
       "plugins/**",
       "scripts/**",
-      "tests/**"
+      "tests/**",
+      "!src/api/openapi.json",
+      "!src/api/schema.d.ts"
     ]
   },
   "css": {

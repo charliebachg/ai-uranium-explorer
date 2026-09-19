@@ -1,8 +1,9 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, SendHorizontal, Wrench } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Chip } from "@/components/ui/StatusMark";
 import { V } from "@/components/values/V";
-import type { ChatTurn, RecordedChat } from "@/data/contract";
+import type { ChatTurn, RecordedChat, StoredTurn } from "@/data/contract";
 import { loadRecordedChat } from "@/data/loader";
 import { hasValue } from "@/data/registry";
 import { cn } from "@/lib/cn";
@@ -10,6 +11,7 @@ import { useStore } from "@/state/store";
 import { AnswerText, type CiteHandler } from "./AnswerText";
 import { conversationCostId, registerChatCost, turnCostId } from "./cellValues";
 import { OfflineNotice, type ServiceState } from "./OfflineNotice";
+import { keys, useConversation, useConversations } from "./queries";
 import { askStreaming, type ChatEvent } from "./service";
 
 /**
@@ -27,6 +29,21 @@ const SUGGESTIONS = [
   "How much of this score is explained by where people have already drilled?",
   "Which criteria are unknown here rather than not met?",
 ];
+
+/** A persisted turn, in the shape the panel draws: what the gate published, its claims, and its objections. */
+function fromStored(t: StoredTurn): ChatTurn {
+  return {
+    question: t.question,
+    text: t.text,
+    claims: t.claims,
+    caveats: [],
+    cannot_answer: false,
+    published: t.published,
+    problems: t.problems,
+    tools_used: t.tool_calls.map((c) => c.tool),
+    cost_usd: t.cost_usd ?? undefined,
+  };
+}
 
 type Entry = { turn: ChatTurn; conversationId: string; index: number };
 
@@ -53,16 +70,35 @@ export function ChatPanel({
   const [forCell, setForCell] = useState<string | null>(null);
   const [live, setLive] = useState<ChatEvent[]>([]);
   const foot = useRef<HTMLDivElement | null>(null);
+  // earlier conversations the service persisted about this cell, and the one being resumed
+  const [resumeId, setResumeId] = useState<string | null>(null);
+  const history = useConversations(cellId, state === "up");
+  const stored = useConversation(resumeId);
+  const queryClient = useQueryClient();
 
   // a conversation is about one cell: selecting another starts a new one rather than carrying the old context
   if (cellId !== forCell) {
     setForCell(cellId);
     setEntries([]);
     setConversationId(null);
+    setResumeId(null);
     setError(null);
   }
+  const storedRecord = stored.data;
+  useEffect(() => {
+    if (!storedRecord || storedRecord.conversation_id !== resumeId || storedRecord.cell_id !== cellId) return;
+    setEntries(
+      storedRecord.turns.map((t, index) => ({
+        turn: fromStored(t),
+        conversationId: storedRecord.conversation_id,
+        index,
+      })),
+    );
+    setConversationId(storedRecord.conversation_id);
+  }, [storedRecord, resumeId, cellId]);
 
   const turns = entries.length;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: turns and busy are the triggers, not inputs
   useEffect(() => {
     foot.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [turns, busy]);
@@ -94,6 +130,7 @@ export function ChatPanel({
         registerChatCost(answer.conversation_id, index, answer.turn.cost_usd, answer.cost_usd);
         setConversationId(answer.conversation_id);
         setEntries((prev) => [...prev, { turn: answer.turn, conversationId: answer.conversation_id, index }]);
+        void queryClient.invalidateQueries({ queryKey: keys.conversations(cellId) });
       })
       .catch((e: unknown) => setError(String(e)))
       .finally(() => {
@@ -176,6 +213,31 @@ export function ChatPanel({
                 </button>
               ))}
             </div>
+            {history.data && history.data.conversations.length > 0 ? (
+              <div className="mt-4" data-testid="chat-history">
+                <p className="text-[11px] text-ink-3 uppercase tracking-wider">
+                  Earlier conversations about this cell
+                </p>
+                <ul className="mt-1.5 space-y-1">
+                  {history.data.conversations.map((c) => (
+                    <li key={c.conversation_id}>
+                      <button
+                        type="button"
+                        onClick={() => setResumeId(c.conversation_id)}
+                        className="w-full rounded-md border border-line px-2.5 py-1.5 text-left text-[11.5px] text-ink-2 transition-colors hover:text-ink"
+                        data-testid="chat-history-item"
+                      >
+                        <span data-chrome>{c.created_at.slice(0, 16).replace("T", " ")}</span>
+                        <span className="text-ink-3">
+                          {" "}
+                          · {c.turns === 1 ? "1 turn" : `${c.turns} turns`} · {c.model}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

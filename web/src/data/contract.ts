@@ -726,6 +726,44 @@ export const ChatResponse = z.object({
 });
 export type ChatResponse = z.infer<typeof ChatResponse>;
 
+/** A conversation the service persisted, turn by turn: the benchmark's raw material, and resumable. */
+export const ConversationSummary = z.object({
+  conversation_id: z.string(),
+  model: z.string(),
+  backend: z.string(),
+  created_at: z.string(),
+  turns: z.number().int(),
+  cost_usd: z.number(),
+});
+export type ConversationSummary = z.infer<typeof ConversationSummary>;
+export const CellConversations = z.object({
+  cell_id: z.string(),
+  conversations: z.array(ConversationSummary),
+});
+export type CellConversations = z.infer<typeof CellConversations>;
+export const StoredTurn = z.object({
+  step: z.number().int(),
+  question: z.string(),
+  text: z.string().nullable(),
+  published: z.boolean(),
+  problems: z.array(z.string()),
+  claims: z.array(z.object({ text: z.string(), value_ids: z.array(z.string()) })),
+  tool_calls: z.array(z.object({ tool: z.string() }).passthrough()),
+  values: ValRegistry,
+  cost_usd: z.number().nullable(),
+  duration_s: z.number().nullable(),
+  created_at: z.string(),
+});
+export type StoredTurn = z.infer<typeof StoredTurn>;
+export const ConversationRecord = z.object({
+  conversation_id: z.string(),
+  cell_id: z.string(),
+  model: z.string(),
+  backend: z.string(),
+  created_at: z.string(),
+  turns: z.array(StoredTurn),
+});
+export type ConversationRecord = z.infer<typeof ConversationRecord>;
 export const Candidate = z.object({
   cell_id: z.string(),
   score: z.number(),
