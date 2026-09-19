@@ -4,7 +4,7 @@
 [extract]
 model = "claude-opus-5"
 effort = "medium"
-workers = 2
+workers = 1
 page_classes = ["collar_table", "assay_table", "lith_log"]
 class_priority = ["assay_table", "lith_log", "collar_table", "probe_log", "certificate", "uncertain", "other"]
 max_pages_per_file = 12

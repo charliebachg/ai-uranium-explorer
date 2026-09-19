@@ -48,6 +48,7 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr prospect modelsearch --snapshot <hash>  # candidates, ablations, block sizes; every arm an MLflow run
     uv run lr prospect hindcast --snapshot <hash>     # later discoveries ranked by models frozen at a cutoff
     uv run lr prospect export        # the data page and the Eval page's blocks, every number a stored value
+    zsh scripts/read-enabled.sh      # the Opus-only read of the enabled cells' drilling files, through to the dashboard; resumable, run it in a plain terminal
     uv run mlflow ui --backend-store-uri sqlite:///data/mlflow.db   # the runs and the registry (installed with --extra mlflow)
 
     # web
