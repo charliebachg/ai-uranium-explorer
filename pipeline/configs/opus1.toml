@@ -1,0 +1,15 @@
+# Opus-only timing run over the enabled cells' drilling files, one file at a time, one worker, so that
+# wall time equals model time and every page's usage can be read off calls.jsonl without disentangling
+# parallel launches. The per-call budget is a ceiling the CLI enforces, not an expected spend.
+[extract]
+model = "claude-opus-5"
+effort = "medium"
+workers = 1
+page_classes = ["collar_table", "assay_table", "lith_log"]
+class_priority = ["collar_table", "assay_table", "lith_log", "probe_log", "certificate", "uncertain", "other"]
+max_pages_per_file = 12
+reask = false
+validator_mode = "enforce"
+max_budget_usd = 1.50
+timeout_s = 600
+note = "Opus 5, medium effort, one worker, 12 pages per file: the enabled-cells pre-read, measured."

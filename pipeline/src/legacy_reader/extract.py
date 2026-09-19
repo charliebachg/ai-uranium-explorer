@@ -71,6 +71,7 @@ class Config:
     timeout_s: int
     class_priority: tuple[str, ...]
     note: str = ""
+    workers: int = WORKERS
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -78,7 +79,7 @@ class Config:
             "page_classes": list(self.page_classes), "max_pages_per_file": self.max_pages_per_file,
             "reask": self.reask, "validator_mode": self.validator_mode,
             "max_budget_usd": self.max_budget_usd, "timeout_s": self.timeout_s,
-            "class_priority": list(self.class_priority), "note": self.note,
+            "class_priority": list(self.class_priority), "note": self.note, "workers": self.workers,
         }
 
 
@@ -105,6 +106,7 @@ def load_config(config_id: str) -> Config:
         timeout_s=int(ex.get("timeout_s", 420)),
         class_priority=tuple(ex.get("class_priority", CLASS_PRIORITY)),
         note=ex.get("note", ""),
+        workers=max(1, int(ex.get("workers", WORKERS))),
     )
 
 
@@ -779,7 +781,8 @@ def stage_extract(config_id: str = "phase2", split: str = "dev", files: list[str
         from .backends.claude_cli import ClaudeCliBackend
         backend = CachedBackend(ClaudeCliBackend(timeout_s=config.timeout_s,
                                                  max_budget_usd=config.max_budget_usd))
-    scheduler = Scheduler(config, backend, log=log, max_calls=max_calls, launch_gap_s=launch_gap_s)
+    scheduler = Scheduler(config, backend, log=log, max_calls=max_calls, launch_gap_s=launch_gap_s,
+                          workers=config.workers)
     summary = scheduler.run(plan)
     summary["estimate"] = est
     log(f"\nrun {summary['run_id']}: {summary['done']} pages done, {summary['failed']} failed, "

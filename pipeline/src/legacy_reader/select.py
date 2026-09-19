@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+from datetime import datetime, timezone
 import re
 import statistics
 from collections import Counter, defaultdict
@@ -829,24 +830,110 @@ def stage_final(log: Callable[[str], None] = print) -> dict[str, Any]:
     return sel
 
 
+def enabled_files(sel: dict[str, Any]) -> list[str]:
+    """Files registered by `lr enable-files`: dev files outside the original shortlist, never held out."""
+    return list((sel.get("enabled") or {}).get("files") or [])
+
+
 def selected_files(sel: dict[str, Any], phase1_only: bool = False) -> list[str]:
+    """The files the pipeline may touch. Enabled files ride along as dev files in both views."""
     final = sel.get("final")
     if not final:
         raise RuntimeError("run `lr select final` first")
     if phase1_only:
         locked = sel.get("locked")
-        return list(locked["phase1"]["files"] if locked else final["phase1_provisional"]["files"])
-    return list(final["selected"])
+        base = list(locked["phase1"]["files"] if locked else final["phase1_provisional"]["files"])
+    else:
+        base = list(final["selected"])
+    return base + [n for n in enabled_files(sel) if n not in base]
+
+
+def probe_entry(sel: dict[str, Any], file_num: str) -> dict[str, Any]:
+    """A file's classified listing, from the shortlist probe or from the enabled register."""
+    probed = (sel.get("probe") or {}).get("files") or {}
+    if file_num in probed:
+        return probed[file_num]
+    enabled = (sel.get("enabled") or {}).get("probe") or {}
+    if file_num in enabled:
+        return enabled[file_num]
+    raise KeyError(f"{file_num} has no listing: not shortlisted and not enabled")
 
 
 def fetch_items(sel: dict[str, Any], file_nums: Iterable[str]) -> list[dict[str, Any]]:
     items = []
     for n in file_nums:
-        p = sel["probe"]["files"][n]
+        p = probe_entry(sel, n)
         for kind in ("report_pdfs", "appendix_pdfs", "assay_xls", "certificate_pdfs"):
             for it in p[kind]:
                 items.append({**it, "file_num": n})
     return items
+
+
+ENABLED_VERSION = "enabled/v1"
+ENABLED_MAX_ITEM_MB = 60.0
+
+
+def register_enabled(sel: dict[str, Any], file_num: str, listing: list[dict[str, Any]], reason: str,
+                     heldout: set[str], max_item_mb: float = ENABLED_MAX_ITEM_MB,
+                     now: str | None = None) -> dict[str, Any]:
+    """Add one file to the enabled register from its raw table-23 listing. Pure: no I/O.
+
+    Refuses a held-out file outright. Items over `max_item_mb` are dropped from the fetch list and named in
+    `skipped`, because the provincial store serves at about 30 kB/s and a data DVD is not a report."""
+    if file_num in heldout or file_num in {n for n in (sel.get("locked") or {}).get("heldout") or []}:
+        raise PermissionError(f"{file_num} is held out; it is never enabled")
+    entry = classify_listing(listing)
+    skipped = []
+    for kind in ("report_pdfs", "appendix_pdfs", "assay_xls", "certificate_pdfs"):
+        kept = []
+        for it in entry[kind]:
+            if float(it.get("size_mb") or 0.0) > max_item_mb:
+                skipped.append({"name": it["name"], "size_mb": it["size_mb"], "kind": kind})
+            else:
+                kept.append(it)
+        entry[kind] = kept
+    entry["skipped_over_mb"] = skipped
+    entry["max_item_mb"] = max_item_mb
+    reg = sel.setdefault("enabled", {"version": ENABLED_VERSION, "files": [], "probe": {}, "reasons": {},
+                                     "added_at": {}})
+    if file_num not in reg["files"]:
+        reg["files"].append(file_num)
+    reg["probe"][file_num] = entry
+    reg["reasons"][file_num] = reason
+    reg["added_at"][file_num] = now or datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return entry
+
+
+def stage_enable(file_nums: list[str], reason: str, log: Callable[[str], None] = print,
+                 client: Any = None, max_item_mb: float = ENABLED_MAX_ITEM_MB) -> dict[str, Any]:
+    """`lr enable-files`: probe each file's listing and register it as a dev file for fetch/render/extract."""
+    from .arcgis import ArcGisClient
+    from .filenum import display_file_num, norm_file_num
+
+    sel = read_selection()
+    heldout = read_heldout()
+    own = client is None
+    client = client or ArcGisClient(cache_dir=PATHS.cache / "arcgis")
+    out: dict[str, Any] = {}
+    try:
+        for raw in file_nums:
+            n = norm_file_num(raw)
+            rows = probe_listing(client, display_file_num(n))
+            if not rows:
+                log(f"  {n}: no listing rows (is the number right?)")
+                continue
+            entry = register_enabled(sel, n, rows, reason, heldout, max_item_mb=max_item_mb)
+            total = sum(float(it.get("size_mb") or 0) for k in ("report_pdfs", "appendix_pdfs", "assay_xls",
+                        "certificate_pdfs") for it in entry[k])
+            log(f"  {n}: {entry['n_report_pdfs']} report pdf(s), {len(entry['appendix_pdfs'])} appendix, "
+                f"{len(entry['assay_xls'])} assay, {len(entry['certificate_pdfs'])} certificate; "
+                f"{total:.1f} MiB to fetch; {len(entry['skipped_over_mb'])} item(s) over {max_item_mb:g} MiB skipped")
+            out[n] = entry
+    finally:
+        if own:
+            client.close()
+    write_selection(sel)
+    return out
 
 
 # ---------------------------------------------------------------- post-fetch check and split lock
@@ -953,7 +1040,7 @@ def heldout_pdf_hashes(lock_path: Path | None = None) -> set[str]:
 
 
 __all__ = [
-    "ERAS", "PARAMS", "SCORE_WEIGHTS", "build_shortlist", "choose_phase1", "classify_listing", "company_key",
+    "ERAS", "enabled_files", "register_enabled", "stage_enable", "probe_entry", "PARAMS", "SCORE_WEIGHTS", "build_shortlist", "choose_phase1", "classify_listing", "company_key",
     "datum_signal", "era_for_year", "file_features", "load_index", "lock_split", "post_fetch_check",
     "read_heldout", "run_probe", "selected_files", "solve_final", "split_files", "split_hash", "stage_final",
     "stage_probe", "stage_shortlist",

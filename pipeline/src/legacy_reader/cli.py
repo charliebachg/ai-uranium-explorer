@@ -159,6 +159,19 @@ def export_layers_cmd() -> None:
     build(log=typer.echo)
 
 
+@app.command("enable-files")
+def enable_files_cmd(
+    files: list[str] = typer.Argument(..., help="assessment file numbers to enable (e.g. MAW00509 74K-0018)"),
+    reason: str = typer.Option("enabled cell", "--reason", help="why these files are read (recorded)"),
+    max_item_mb: float = typer.Option(60.0, "--max-item-mb", help="skip listed objects larger than this"),
+) -> None:
+    """Register files outside the original shortlist as dev files: probe their listing, never a held-out one."""
+    from .select import stage_enable
+
+    out = stage_enable(list(files), reason=reason, log=typer.echo, max_item_mb=max_item_mb)
+    typer.echo(f"enabled {len(out)} file(s); next: lr fetch --only <num>, then render, ocr, route, extract --dry-run")
+
+
 @app.command("lock-heldout")
 def lock_heldout_cmd() -> None:
     """Write gold/heldout.lock (file numbers, report PDF sha256s, seed, timestamp). Never overwrites."""

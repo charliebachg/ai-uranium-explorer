@@ -1,0 +1,119 @@
+# The enabled cells: the only cells whose assessment files are pre-read and whose analyst chains are
+# computed and shown in the dashboard (PRD section 9.3 and 9.4). Frozen 2026-09-19.
+#
+# Selection rule, in three parts, each stratum chosen by a rule rather than by hand:
+#   demo      the five cells the panel memos and the recorded chat already used, chosen for score behaviour
+#   read      the cells of the four reports already read in Phase 2 of the reading pipeline
+#   deposit   two deposit cells per camp with the fewest attached files that still carry drilling
+# Reading rule: for each enabled cell, fetch and text-index every assessment file inside it (no model
+# calls); model-read only the two files with the most drillholes.
+
+version = "enabled-cells/v1"
+frozen_at = "2026-09-19"
+read_rule = "top 2 files by drillhole count per cell; the rest fetched and indexed only"
+
+[[cell]]
+id = "0201_0072"
+stratum = "demo"
+label = "deposit"
+name = "Horseshoe"
+camp = 2
+why = "the known-deposit case; 12 memos and the recorded chat"
+
+[[cell]]
+id = "0152_0083"
+stratum = "demo"
+label = "unlabelled"
+why = "criteria 0.90 against learned 0.03: the scores disagree"
+
+[[cell]]
+id = "0015_0065"
+stratum = "demo"
+label = "unlabelled"
+why = "learned 0.23 with effort 0.02: a high score where nobody drilled"
+
+[[cell]]
+id = "0118_0119"
+stratum = "demo"
+label = "unlabelled"
+why = "coverage gap: effort unknown"
+
+[[cell]]
+id = "0000_0053"
+stratum = "demo"
+label = "unlabelled"
+why = "edge of the grid, nothing measured; 6 memos"
+
+[[cell]]
+id = "0106_0032"
+stratum = "read"
+label = "occurrence"
+name = "Cree Lake (drill holes ND0703 to ND0804)"
+why = "74G07-0054 read"
+
+[[cell]]
+id = "0153_0042"
+stratum = "read"
+label = "occurrence"
+name = "drill holes MN-013 to MN-071"
+why = "74H11-0131 indexed"
+
+[[cell]]
+id = "0185_0058"
+stratum = "read"
+label = "unlabelled"
+why = "74H16-0072 (Park Creek) read"
+
+[[cell]]
+id = "0145_0018"
+stratum = "read"
+label = "unlabelled"
+why = "74H04-0094 indexed, 639 pages"
+
+[[cell]]
+id = "0030_0081"
+stratum = "deposit"
+label = "deposit"
+name = "Colette"
+camp = 0
+why = "west camp; 6 files, 47 holes"
+
+[[cell]]
+id = "0031_0088"
+stratum = "deposit"
+label = "deposit"
+name = "Dominique-Peter"
+camp = 0
+why = "west camp; 4 files, 27 holes"
+
+[[cell]]
+id = "0037_0049"
+stratum = "deposit"
+label = "deposit"
+name = "Patterson Lake South (unnamed zone)"
+camp = 1
+why = "southwest camp; 3 files, 72 holes"
+
+[[cell]]
+id = "0033_0047"
+stratum = "deposit"
+label = "deposit"
+name = "R780E"
+camp = 1
+why = "southwest camp; 2 files, 73 holes; the 2012 boulder-train discovery"
+
+[[cell]]
+id = "0145_0019"
+stratum = "deposit"
+label = "deposit"
+name = "Deilmann"
+camp = 2
+why = "east camp; 7 files, 72 holes"
+
+[[cell]]
+id = "0200_0072"
+stratum = "deposit"
+label = "deposit"
+name = "Horseshoe"
+camp = 2
+why = "east camp; 7 files, 649 holes"
