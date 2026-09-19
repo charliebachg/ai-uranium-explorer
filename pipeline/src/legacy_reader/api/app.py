@@ -28,6 +28,7 @@ from ..prospect import serve as S
 from ..store import connect
 from ..prospect.chat import Conversation, ask
 from . import persist
+from .models import CellConversations, Cells, ChatResponse, ConversationRecord, Evidence
 
 CELL_ID = r"^\d{4}_\d{4}$"
 _CELL = re.compile(CELL_ID)
@@ -108,30 +109,30 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
     def health() -> Health:
         return Health(ok=True, model=model, effort=effort, backend=backend_name)
 
-    @app.get("/api/cells")
+    @app.get("/api/cells", response_model=Cells)
     def cells(limit: int = Query(40, ge=1, le=200), model_key: str = Query("criteria", alias="model")) -> dict[str, Any]:
         return {"cells": S.candidates(limit, model_key)}
 
-    @app.get("/api/cell/{cell_id}")
+    @app.get("/api/cell/{cell_id}", response_model=Evidence)
     def cell(cell_id: str) -> dict[str, Any]:
         if not _CELL.match(cell_id):
             raise HTTPException(400, "cell id looks like 0123_0045")
         return S.evidence(cell_id)
 
-    @app.get("/api/cell/{cell_id}/conversations")
+    @app.get("/api/cell/{cell_id}/conversations", response_model=CellConversations)
     def cell_conversations(cell_id: str) -> dict[str, Any]:
         if not _CELL.match(cell_id):
             raise HTTPException(400, "cell id looks like 0123_0045")
         return {"cell_id": cell_id, "conversations": persist.list_conversations(cell_id, db_path)}
 
-    @app.get("/api/conversation/{conversation_id}")
+    @app.get("/api/conversation/{conversation_id}", response_model=ConversationRecord)
     def conversation(conversation_id: str) -> dict[str, Any]:
         stored = persist.load_conversation(conversation_id, db_path)
         if stored is None:
             raise HTTPException(404, "no such conversation")
         return stored
 
-    @app.post("/api/chat")
+    @app.post("/api/chat", response_model=ChatResponse)
     def chat(body: ChatRequest) -> dict[str, Any]:
         conv = registry.get_or_create(body.cell_id, body.conversation_id, model, backend_name)
         try:

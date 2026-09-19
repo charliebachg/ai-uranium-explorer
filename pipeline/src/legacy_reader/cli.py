@@ -205,6 +205,20 @@ def export_tiles_cmd() -> None:
     build(log=typer.echo)
 
 
+@app.command("api-spec")
+def api_spec_cmd(out: str = typer.Option("../web/src/api/openapi.json", "--out", help="where to write the OpenAPI document")) -> None:
+    """Write the service's OpenAPI document, from which the web's client types are generated."""
+    from pathlib import Path
+
+    from .api.app import create_app
+
+    spec = create_app(lambda: None, model="unset").openapi()
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(spec, indent=1, sort_keys=True) + "\n")
+    typer.echo(f"  {path}: {len(spec['paths'])} paths, {len(spec['components']['schemas'])} schemas")
+
+
 @app.command("lock-heldout")
 def lock_heldout_cmd() -> None:
     """Write gold/heldout.lock (file numbers, report PDF sha256s, seed, timestamp). Never overwrites."""

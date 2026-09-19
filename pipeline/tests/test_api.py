@@ -41,8 +41,16 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(T, "call", lambda tool, args: T.ToolResult(
         tool, args, rows=[{"feature": "d_conductor_m", "value": 820.0}],
         values={"c:cell:0001_0001:d_conductor_m": stat("c:cell:0001_0001:d_conductor_m", 820.0, fmt="m1", unit="m")}))
-    monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [{"cell_id": "0001_0001", "score": 0.9}][:limit])
-    monkeypatch.setattr(S, "evidence", lambda cell_id: {"cell_id": cell_id, "parts": [], "values": {}, "memos": []})
+    monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [
+        {"cell_id": "0001_0001", "score": 0.9, "known_share": 0.8, "lon": -105.1, "lat": 57.9, "in_basin": True,
+         "label_tier": "unlabelled", "label_name": "", "km_to_label": 12.3}][:limit])
+    monkeypatch.setattr(S, "evidence", lambda cell_id: {
+        "cell_id": cell_id, "lon": -105.1, "lat": 57.9, "in_basin": True,
+        "parts": {"cell_scores": {"tool": "cell_scores", "args": {"cell_id": cell_id}, "note": "", "rows": [{"model": "criteria", "score": 0.5}],
+                                  "values": {"c:score:x": {"id": "c:score:x", "kind": "stat", "value": 0.5, "fmt": "ratio3"}}}},
+        "values": {"c:score:x": {"id": "c:score:x", "kind": "stat", "value": 0.5, "fmt": "ratio3"}},
+        "memos": [{"memo_id": "m1", "role": "skeptic", "verdict": "insufficient", "published": True, "created_at": "t",
+                   "claims": [{"claim_no": 1, "text": "score 0.5", "value_ids": ["c:score:x"]}]}]})
     backend = FakeBackend()
     app = A.create_app(lambda: backend, model="fake-model", effort="low", backend_name="fake", db_path=tmp_path / "t.duckdb")
     c = TestClient(app)
@@ -57,8 +65,10 @@ def test_health_names_the_model_and_backend(client: TestClient) -> None:
 
 
 def test_cells_and_evidence_keep_the_old_contract(client: TestClient) -> None:
-    assert client.get("/api/cells?limit=5").json() == {"cells": [{"cell_id": "0001_0001", "score": 0.9}]}
-    assert client.get("/api/cell/0001_0001").json()["cell_id"] == "0001_0001"
+    cells = client.get("/api/cells?limit=5").json()["cells"]
+    assert [c["cell_id"] for c in cells] == ["0001_0001"] and cells[0]["km_to_label"] == 12.3
+    ev = client.get("/api/cell/0001_0001").json()
+    assert ev["cell_id"] == "0001_0001" and ev["memos"][0]["claims"][0]["value_ids"] == ["c:score:x"]
     assert client.get("/api/cell/not-a-cell").status_code == 400
     assert client.get("/api/cells?limit=0").status_code == 422
 
@@ -134,3 +144,31 @@ def test_reads_work_on_a_fresh_store_before_any_conversation_exists(client: Test
     """A read-only connection never creates tables; the app applies the schema at startup instead."""
     assert client.get("/api/cell/0001_0001/conversations").json() == {"cell_id": "0001_0001", "conversations": []}
     assert client.get("/api/conversation/nope").status_code == 404
+
+
+def test_the_openapi_document_types_every_response(client: TestClient) -> None:
+    spec = client.app.openapi()
+    schemas = spec["components"]["schemas"]
+    for name in ("Cells", "Candidate", "Evidence", "ToolResultOut", "Val", "ChatResponse", "Turn", "ConversationRecord", "CellConversations"):
+        assert name in schemas, name
+    ok = spec["paths"]["/api/cells"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
+    assert ok == {"$ref": "#/components/schemas/Cells"}, "the cells response is a named schema, not additionalProperties"
+
+
+
+def test_evidence_assembles_memos_and_claims_from_the_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Exercises serve.evidence itself, which the stubbed routes above bypass: it lost its json import once."""
+    from legacy_reader.store import connect
+
+    db = tmp_path / "s.duckdb"
+    con = connect(db)
+    con.execute("insert into derived.cell (cell_id, grid_id, col, row, cx, cy, lon, lat, geom_wkb, in_basin) "
+                "values ('0001_0001', 'g', 1, 1, 0.0, 0.0, -105.1, 57.9, null, true)")
+    con.execute("insert into agent.memo (memo_id, cell_id, role, verdict, model, prompt_version, run_id, created_at, published) "
+                "values ('m1', '0001_0001', 'skeptic', 'insufficient', 'fake', 'v', 'r', 't', true)")
+    con.execute("insert into agent.memo_claim (memo_id, claim_no, text, value_ids) values ('m1', 1, 'score 0.5', '[\"c:score:x\"]')")
+    con.close()
+    monkeypatch.setattr(S, "connect", lambda read_only=False: connect(db, read_only=read_only))
+    monkeypatch.setattr(T, "call", lambda tool, args: T.ToolResult(tool, args, rows=[], values={}))
+    ev = S.evidence("0001_0001")
+    assert ev["lon"] == -105.1 and ev["memos"][0]["claims"] == [{"claim_no": 1, "text": "score 0.5", "value_ids": ["c:score:x"]}]

@@ -12,6 +12,7 @@ that guards a published memo.
 
 from __future__ import annotations
 
+import json
 from typing import Any, Callable
 
 from ..store import connect
