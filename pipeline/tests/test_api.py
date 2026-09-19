@@ -163,7 +163,7 @@ def test_evidence_assembles_memos_and_claims_from_the_store(tmp_path: Path, monk
     db = tmp_path / "s.duckdb"
     con = connect(db)
     con.execute("insert into derived.cell (cell_id, grid_id, col, row, cx, cy, lon, lat, geom_wkb, in_basin) "
-                "values ('0001_0001', 'g', 1, 1, 0.0, 0.0, -105.1, 57.9, null, true)")
+                "values ('0001_0001', 'g', 1, 1, 0.0, 0.0, -105.1, 57.9, '\\x00'::blob, true)")
     con.execute("insert into agent.memo (memo_id, cell_id, role, verdict, model, prompt_version, run_id, created_at, published) "
                 "values ('m1', '0001_0001', 'skeptic', 'insufficient', 'fake', 'v', 'r', 't', true)")
     con.execute("insert into agent.memo_claim (memo_id, claim_no, text, value_ids) values ('m1', 1, 'score 0.5', '[\"c:score:x\"]')")
