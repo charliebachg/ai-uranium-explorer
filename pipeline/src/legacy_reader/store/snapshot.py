@@ -92,6 +92,40 @@ def verify(snapshot_hash: str, path: Path | None = None) -> dict[str, Any]:
     return snap
 
 
+def store_sha(path: Path | None = None) -> str | None:
+    """The sha256 of the store file as it is now; None when there is no store file to hash."""
+    db = path or db_path()
+    return _sha256(db) if db.is_file() else None
+
+
+def latest() -> dict[str, Any] | None:
+    """The most recently taken snapshot manifest, or None when none has been taken."""
+    snaps = list_snapshots()
+    return max(snaps, key=lambda s: s.get("taken_at") or "") if snaps else None
+
+
+def pin(snapshot: str | None = None, path: Path | None = None, log: Callable[[str], None] = print) -> dict[str, Any]:
+    """What an evaluation run names: the store's hash now, and the snapshot that hash is.
+
+    With `snapshot` given, the store on disk must be the store that snapshot describes, or the run does not
+    start: `verify` raises FileNotFoundError when no snapshot matches and RuntimeError when the store differs.
+    Without it the store is hashed and, if a snapshot manifest carries that exact hash, the run cites it; the
+    run is then reproducible but was not pinned, and `pinned` says so. No store file at all hashes to None,
+    which is what a run on an injected frame or an empty checkout records."""
+    if snapshot:
+        snap = verify(snapshot, path=path)
+        sha = snap["store_sha256"]
+        log(f"  store {sha[:12]} (snapshot {sha[:12]}, pinned)")
+        return {"store_sha256": sha, "snapshot": sha[:12], "pinned": True}
+    sha = store_sha(path)
+    if sha is None:
+        log("  store: no store file to hash; the run names no snapshot")
+        return {"store_sha256": None, "snapshot": None, "pinned": False}
+    named = any(s.get("store_sha256") == sha for s in list_snapshots())
+    log(f"  store {sha[:12]} (snapshot {sha[:12]})" if named else f"  store {sha[:12]} (no snapshot names it)")
+    return {"store_sha256": sha, "snapshot": sha[:12] if named else None, "pinned": False}
+
+
 def register_layers(log: Callable[[str], None] = print) -> dict[str, int]:
     """Every pulled layer as a native.layer row with the hash of what was pulled.
 

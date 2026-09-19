@@ -2,7 +2,7 @@ import { AlertTriangle, ArrowUpRight, Check, Layers, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Chip } from "@/components/ui/StatusMark";
 import { V } from "@/components/values/V";
-import type { ProspectFeature, ProspectGap, ProspectSource, Readiness } from "@/data/contract";
+import type { ProspectFeature, ProspectGap, ProspectSource, Readiness, ReadinessGate } from "@/data/contract";
 import { loadReadiness } from "@/data/loader";
 import { resolveValue } from "@/data/registry";
 import { cn } from "@/lib/cn";
@@ -52,6 +52,7 @@ export function ReadinessPage() {
           geoFeaturesId={data.totals.geo_features}
         />
       </Section>
+      <GateSection gate={data.readiness_gate} />
       <SourcesSection sources={data.sources} />
       <GapsSection gaps={data.gaps} totalId={data.totals.gaps} />
     </Shell>
@@ -431,6 +432,80 @@ const GAP_STATUS: Record<ProspectGap["status"], { label: string; tone: "miss" | 
   unverified: { label: "unverified", tone: "flag" },
   published_not_pulled: { label: "published, not yet pulled", tone: "flag" },
 };
+
+// ---------- the readiness gate ----------
+
+const GATE_COLUMNS = ["present", "licensed", "covers", "servable", "versioned"] as const;
+const GATE_KIND_LABEL: Record<ReadinessGate["rows"][number]["kind"], string> = {
+  layer: "layer",
+  scene: "scenes",
+  label: "label",
+  file: "file",
+};
+
+/**
+ * The five columns every dataset must be green on before an agent phase starts. The notes are the gate's
+ * own status strings, so they are shown as chrome; the counts they mention are values in the tables above.
+ */
+function GateSection({ gate }: { gate?: ReadinessGate }) {
+  if (!gate) return null;
+  const failing = gate.rows.filter((r) => GATE_COLUMNS.some((c) => !r[c].ok)).length;
+  return (
+    <Section
+      title="The readiness gate"
+      hint="Present in the store, licensed for how it is used, coverage stated, servable within its licence, and versioned to a hashed pull. No agent phase starts until every row is green."
+    >
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px]" data-testid="gate-verdict">
+        <Chip tone={gate.green ? "pass" : "miss"}>{gate.green ? "gate green" : "gate red"}</Chip>
+        <span className="text-ink-3" data-chrome>
+          {failing} of {gate.rows.length} rows failing · store{" "}
+          <span data-ident>{gate.store_sha256?.slice(0, 12) ?? "none"}</span>
+          {gate.snapshot ? " (a named snapshot)" : " (no snapshot names it)"}
+        </span>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px]" data-testid="gate-table">
+          <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+            <tr>
+              <th className="py-1 text-left font-normal">Dataset</th>
+              <th className="py-1 text-left font-normal">Kind</th>
+              {GATE_COLUMNS.map((c) => (
+                <th key={c} className="py-1 text-left font-normal">
+                  {c}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {gate.rows.map((r) => (
+              <tr
+                key={r.dataset}
+                className="border-line border-t align-top"
+                data-testid="gate-row"
+                data-kind={r.kind}
+              >
+                <td className="py-1.5 pr-2">
+                  <span data-ident>{r.dataset}</span>
+                </td>
+                <td className="py-1.5 pr-2 text-ink-3">{GATE_KIND_LABEL[r.kind]}</td>
+                {GATE_COLUMNS.map((c) => (
+                  <td key={c} className="py-1.5 pr-2" title={r[c].note}>
+                    <span className={cn("block", r[c].ok ? "text-st-ok" : "text-st-miss")}>
+                      {r[c].ok ? "ok" : "not yet"}
+                    </span>
+                    <span className="block max-w-[26ch] truncate text-[10.5px] text-ink-3" data-chrome>
+                      {r[c].note}
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Section>
+  );
+}
 
 function GapsSection({ gaps, totalId }: { gaps: ProspectGap[]; totalId: string }) {
   return (

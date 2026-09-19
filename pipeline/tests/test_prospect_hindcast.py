@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
+import pytest
 
 from legacy_reader.prospect import hindcast as HC
 from legacy_reader.prospect import models as M
+from legacy_reader.prospect import tracking as TR
+from legacy_reader.store import snapshot as SN
 from test_prospect_headline import frame
 
 
@@ -67,3 +72,36 @@ def test_run_ranks_later_discoveries_and_names_the_unmapped(monkeypatch) -> None
     assert out["summary"]["learned.n"] == 2 and "geological layers are compilations" in out["leakage"][0]
     high = HC.run(cutoffs=(2000,), min_confidence="high", log=lambda *a: None, write=False, track=False, fit=fake, df=df, discoveries=disc)
     assert {r["discovery"] for r in high["rows"]} == {"New A"}
+
+
+# ---------------------------------------------------------------- the run names its store
+
+
+def test_run_refuses_a_snapshot_nobody_took_before_fitting_anything() -> None:
+    df, disc = dated_frame()
+
+    def no_fit(*a):
+        raise AssertionError("must not fit")
+
+    with pytest.raises(FileNotFoundError):
+        HC.run(cutoffs=(2000,), log=lambda *a: None, write=False, track=False, fit=no_fit, df=df, discoveries=disc,
+               snapshot="nope")
+
+
+def test_run_names_its_snapshot_in_the_result_the_mlflow_run_and_hindcast_json(monkeypatch: pytest.MonkeyPatch,
+                                                                              prospect_sandbox) -> None:
+    sha = SN.take(log=lambda *a: None, path=prospect_sandbox.make_store())["store_sha256"]
+    df, disc = dated_frame()
+    fake = lambda xt, yt, xs: 1.0 - (xs[:, 0] - xs[:, 0].min()) / (np.ptp(xs[:, 0]) or 1.0)
+    logged: list[tuple] = []
+    monkeypatch.setattr(TR, "log_run", lambda name, params, metrics, tags=None, artifacts=None:
+                        logged.append((name, params, tags)) or "run-h")
+    monkeypatch.setattr(HC, "_write_metrics", lambda rows, summary, run_id: None)
+    out = HC.run(cutoffs=(2000,), log=lambda *a: None, write=True, track=True, fit=fake, df=df, discoveries=disc,
+                 snapshot=sha[:12])
+    assert out["store_sha256"] == sha and out["snapshot"] == sha[:12] and out["mlflow_run_id"] == "run-h"
+    [(name, params, tags)] = logged
+    assert name == "hindcast" and params["store_sha256"] == sha and tags["snapshot"] == sha[:12] and tags["kind"] == "hindcast"
+    written = json.loads((prospect_sandbox.out / "hindcast.json").read_text())
+    assert written["run_id"] == "run-h" and written["store_sha256"] == sha and written["snapshot"] == sha[:12]
+    assert {r["discovery"] for r in written["rows"]} == {"New A", "New B"} and written["summary"] == out["summary"]

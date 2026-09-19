@@ -103,3 +103,29 @@ def test_every_reference_in_the_blocks_resolves(tmp_path: Path) -> None:
     for r in blocks["hindcast"]["rows"] + blocks["hindcast"]["summary"]:
         _ref(e, "row", r["value_id"], known)
     assert list(e) == []
+
+
+def test_the_readiness_gate_block_carries_every_column_with_its_note(tmp_path: Path) -> None:
+    _write(tmp_path, "gate.json", {
+        "generated_at": "t", "store_sha256": "a" * 64, "snapshot": None, "green": False,
+        "rows": [{"dataset": "faults_250k", "title": "Faults", "kind": "layer",
+                  "present": {"ok": True, "note": "17,571 rows"}, "licensed": {"ok": True, "note": "SK; redistributable"},
+                  "covers": {"ok": True, "note": "1 feature(s); max 100%"}, "servable": {"ok": True, "note": "tiles:faults"},
+                  "versioned": {"ok": False, "note": "no snapshot names the store as it is now"}}],
+        "failures": ["faults_250k: versioned: no snapshot names the store as it is now"],
+    })
+    b = X._gate_columns_block(tmp_path)
+    assert b and b["green"] is False and b["rows"][0]["versioned"] == {"ok": False, "note": "no snapshot names the store as it is now"}
+    assert b["failures"] == ["faults_250k: versioned: no snapshot names the store as it is now"]
+    assert X._gate_columns_block(tmp_path / "nowhere") is None
+
+
+def test_a_green_gate_with_a_failing_column_is_refused_by_the_contract() -> None:
+    from legacy_reader.contract_check import check_readiness
+
+    doc = {"schema_version": "1.0.0", "grid": {}, "totals": {}, "caveats": ["x"], "features": [], "sources": [], "gaps": [],
+           "values": {}, "readiness_gate": {"green": True, "rows": [
+               {"dataset": "d", "title": "d", "kind": "layer", "present": {"ok": False, "note": "no store row"},
+                "licensed": {"ok": True, "note": "ok"}, "covers": {"ok": True, "note": "ok"},
+                "servable": {"ok": True, "note": "ok"}, "versioned": {"ok": True, "note": "ok"}}]}}
+    assert any("green with a failing column" in err for err in check_readiness(doc))

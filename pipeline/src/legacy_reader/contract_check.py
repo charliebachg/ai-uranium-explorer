@@ -392,6 +392,21 @@ def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:
             for i, r in enumerate(b.get(extra) or []):
                 _ref(e, f"{where}.{extra}[{i}].value_id", r.get("value_id"), known)
         _ref(e, f"{where}.cells", b.get("cells"), known, nullable=True)
+    rg = doc.get("readiness_gate")
+    if rg is not None:
+        where = f"{path}.readiness_gate"
+        if not isinstance(rg, dict) or not isinstance(rg.get("green"), bool):
+            e.add(where, "the readiness gate must say whether it is green")
+        else:
+            for i, r in enumerate(rg.get("rows") or []):
+                for c in ("present", "licensed", "covers", "servable", "versioned"):
+                    cell = r.get(c)
+                    if not isinstance(cell, dict) or not isinstance(cell.get("ok"), bool) or not cell.get("note"):
+                        e.add(f"{where}.rows[{i}].{c}", "each gate column is ok/not ok with a note saying why")
+            failed = any(not r[c]["ok"] for r in rg.get("rows") or [] for c in ("present", "licensed", "covers", "servable", "versioned")
+                         if isinstance(r.get(c), dict) and isinstance(r[c].get("ok"), bool))
+            if rg["green"] and failed:
+                e.add(where, "the gate says green with a failing column")
     if isinstance(doc.get("metrics"), dict):
         for i, r in enumerate(doc["metrics"].get("rows") or []):
             _ref(e, f"{path}.metrics.rows[{i}].value_id", r.get("value_id"), known)

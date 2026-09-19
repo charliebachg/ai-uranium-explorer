@@ -696,6 +696,31 @@ export const HindcastBlock = z.object({
 });
 export type HindcastBlock = z.infer<typeof HindcastBlock>;
 
+/** One column of the five-column readiness gate: ok or not, and the gate's own note saying why. */
+export const GateCell = z.object({ ok: z.boolean(), note: z.string() });
+
+/** The data readiness gate (`lr prospect gate`): one row per dataset the focused tasks depend on. */
+export const ReadinessGate = z.object({
+  generated_at: z.string(),
+  store_sha256: z.string().nullable(),
+  snapshot: z.string().nullable(),
+  green: z.boolean(),
+  rows: z.array(
+    z.object({
+      dataset: z.string(),
+      title: z.string(),
+      kind: z.enum(["layer", "scene", "label", "file"]),
+      present: GateCell,
+      licensed: GateCell,
+      covers: GateCell,
+      servable: GateCell,
+      versioned: GateCell,
+    }),
+  ),
+  failures: z.array(z.string()),
+});
+export type ReadinessGate = z.infer<typeof ReadinessGate>;
+
 export const Readiness = z.object({
   schema_version: z.literal(SCHEMA_VERSION),
   generated_at: z.string(),
@@ -719,6 +744,8 @@ export const Readiness = z.object({
   }),
   thin_coverage_threshold: z.number(),
   metrics: z.object({ run_id: z.string().nullable(), rows: z.array(MetricRow) }).optional(),
+  /** The five-column readiness gate, as last run; absent until `lr prospect gate` has run. */
+  readiness_gate: ReadinessGate.optional(),
   /** Phase 0: the effort-against-geology re-test with corrections, intervals and the MineTRACE protocol. */
   headline: HeadlineBlock.optional(),
   /** Phase 3: every arm of the model search, each naming its tracker run, and the served-model decision. */

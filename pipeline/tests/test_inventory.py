@@ -69,7 +69,9 @@ def test_the_missing_datasets_are_recorded_with_evidence(inv):
     assert {"aeromagnetic_grids", "discovery_dates"} <= set(gaps)
     for g in inv.gaps:
         assert g.evidence and g.why_it_matters
-    assert "interactive portal" in gaps["aeromagnetic_grids"].evidence.lower()
+    # re-verified 2026-09-19: the national grid is published under an open licence and not yet pulled
+    assert gaps["aeromagnetic_grids"].status == "published_not_pulled"
+    assert "open government licence" in gaps["aeromagnetic_grids"].evidence.lower()
     assert "discoverytype is a method" in gaps["discovery_dates"].evidence.lower()
 
 

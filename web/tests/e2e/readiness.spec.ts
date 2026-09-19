@@ -26,7 +26,11 @@ test("data readiness page reports coverage, not a ranking of ground", async ({ p
   // the gaps section names the geophysics that is not public at all
   await expect(readiness).toContainText("What is missing");
   await expect(readiness).toContainText("Airborne magnetic, radiometric and gravity grids");
-  await expect(readiness).toContainText("Geoscience Data Repository");
+  await expect(readiness).toContainText("Open Government Licence");
+  // the five-column gate is on the page, with a verdict and one row per dataset
+  await expect(readiness.locator('[data-testid="gate-table"]')).toBeVisible();
+  await expect(readiness.locator('[data-testid="gate-verdict"]')).toContainText(/gate (green|red)/);
+  expect(await readiness.locator('[data-testid="gate-row"]').count()).toBeGreaterThan(10);
 
   // sources: labels are flagged as labels, and an unverified source is marked
   await expect(readiness).toContainText("never used as a feature");

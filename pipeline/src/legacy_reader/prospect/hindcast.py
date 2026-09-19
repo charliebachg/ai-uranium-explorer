@@ -15,7 +15,6 @@ hand-built table with a confidence per entry. This is the honest version of the 
 from __future__ import annotations
 
 import datetime as dt
-import json
 import tomllib
 from pathlib import Path
 from typing import Any, Callable
@@ -25,6 +24,7 @@ import pandas as pd
 
 from ..paths import PATHS
 from ..store import append_frame, connect
+from ..store import snapshot as SN
 from . import headline as H
 from . import models as M
 from . import tracking as TR
@@ -89,8 +89,12 @@ def share_at_least(scores: np.ndarray, value: float, in_basin: np.ndarray) -> fl
 def run(cutoffs: tuple[int, ...] = CUTOFFS, min_confidence: str = "medium", grid_id: str | None = None,
         log: Callable[[str], None] = print, write: bool = True, track: bool = True,
         fit: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray] | None = None,
-        df: pd.DataFrame | None = None, discoveries: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+        df: pd.DataFrame | None = None, discoveries: list[dict[str, Any]] | None = None,
+        snapshot: str | None = None) -> dict[str, Any]:
+    """Every later discovery ranked by the models frozen at each cutoff. `snapshot` pins the run to a taken
+    snapshot and refuses any other store."""
     now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    pinned = SN.pin(snapshot, log=log)
     if df is None:
         frames = {fs: M.matrix(fs, grid_id) for fs in ("learned", "effort")}
         common = set(frames["learned"]["cell_id"]) & set(frames["effort"]["cell_id"])
@@ -145,17 +149,22 @@ def run(cutoffs: tuple[int, ...] = CUTOFFS, min_confidence: str = "medium", grid
             log("    " + f"{d['name']} ({d['year']}, {d['confidence']}): " +
                 ", ".join(f"{m} top {v:.1%}" for m, v in best_by.items()))
     summary = _summary(rows)
-    out = {"run_id": now, "rows": rows, "summary": summary, "unmapped": unmapped,
-           "leakage": ["geological layers are compilations as they stand today", "survey footprints carry no year",
-                       "holes drilled after the cutoff in cells first drilled before it stay in the count",
-                       "occurrences carry no date and are treated as unlabelled"]}
+    out: dict[str, Any] = {"run_id": now, "mlflow_run_id": None, "store_sha256": pinned["store_sha256"],
+                           "snapshot": pinned["snapshot"], "rows": rows, "summary": summary, "unmapped": unmapped,
+                           "leakage": ["geological layers are compilations as they stand today", "survey footprints carry no year",
+                                       "holes drilled after the cutoff in cells first drilled before it stay in the count",
+                                       "occurrences carry no date and are treated as unlabelled"]}
     if track and rows:
         out["mlflow_run_id"] = TR.log_run("hindcast", {"cutoffs": list(cutoffs), "min_confidence": min_confidence,
-                                                       "discoveries": len(dated)},
+                                                       "discoveries": len(dated), "store_sha256": pinned["store_sha256"]},
                                           {f"{k}": v for k, v in summary.items() if isinstance(v, (int, float))},
-                                          tags={"phase": "3", "kind": "hindcast"}, artifacts={"rows.json": rows})
+                                          tags={"phase": "3", "kind": "hindcast", "snapshot": pinned["snapshot"]},
+                                          artifacts={"rows.json": rows})
     if write and rows:
-        _write_metrics(rows, summary, out.get("mlflow_run_id") or now)
+        run_id = out["mlflow_run_id"] or now
+        _write_metrics(rows, summary, run_id)
+        TR.write_json("hindcast.json", {"run_id": run_id, "store_sha256": pinned["store_sha256"],
+                                        "snapshot": pinned["snapshot"], "rows": rows, "summary": summary})
     return out
 
 
@@ -194,5 +203,3 @@ def _write_metrics(rows: list[dict[str, Any]], summary: dict[str, Any], run_id: 
         append_frame(con, "derived", "metric", pd.DataFrame(metrics), "derived")
     finally:
         con.close()
-    (PATHS.data / "out" / "prospect").mkdir(parents=True, exist_ok=True)
-    (PATHS.data / "out" / "prospect" / "hindcast.json").write_text(json.dumps({"run_id": run_id, "rows": rows, "summary": summary}, indent=1) + "\n")

@@ -5,12 +5,16 @@ and the bookkeeping, not scikit-learn."""
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 import pytest
 
 from legacy_reader.prospect import headline as H
 from legacy_reader.prospect import models as M
+from legacy_reader.prospect import tracking as TR
+from legacy_reader.store import snapshot as SN
 
 
 def frame(n: int = 1200, seed: int = 0) -> pd.DataFrame:
@@ -155,8 +159,45 @@ def test_run_covers_every_configuration_and_writes_nothing_when_asked(monkeypatc
     wrote = []
     monkeypatch.setattr(H, "_write_metrics", lambda out, now: wrote.append(now))
     cfgs = H.configs(folds=("spatial",))
-    out = H.run(seed=0, boot=20, log=lambda *a: None, write=False, fit=fake_fit, cfgs=cfgs)
+    out = H.run(seed=0, boot=20, log=lambda *a: None, write=False, track=False, fit=fake_fit, cfgs=cfgs)
     assert len(out["rows"]) == len(cfgs) == 16
     assert set(out["minetrace"]) == {"learned", "effort"}
     assert out["verdict"]["text"].startswith("after matched background and thinned positives")
     assert wrote == []
+    assert out["store_sha256"] is None and out["snapshot"] is None and out["mlflow_run_id"] is None, \
+        "no store file in the sandbox: the run says so rather than inventing a hash"
+
+
+# ---------------------------------------------------------------- the run names its store
+
+
+def test_run_refuses_a_snapshot_nobody_took_before_reading_the_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(M, "matrix", lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not read the store")))
+    with pytest.raises(FileNotFoundError):
+        H.run(log=lambda *a: None, write=False, track=False, fit=fake_fit, snapshot="nope")
+
+
+def test_run_names_its_snapshot_in_the_result_the_mlflow_run_and_headline_json(monkeypatch: pytest.MonkeyPatch,
+                                                                              prospect_sandbox) -> None:
+    sha = SN.take(log=lambda *a: None, path=prospect_sandbox.make_store())["store_sha256"]
+    df = frame()
+    monkeypatch.setattr(M, "matrix", lambda fs, grid_id=None: df.copy())
+    monkeypatch.setattr(H, "_write_metrics", lambda out, run_id: None)
+    logged: list[tuple] = []
+    monkeypatch.setattr(TR, "log_run", lambda name, params, metrics, tags=None, artifacts=None:
+                        logged.append((name, params, metrics, tags, artifacts)) or "run-1")
+    out = H.run(seed=0, boot=10, log=lambda *a: None, write=True, fit=fake_fit, cfgs=H.configs(folds=("spatial",)),
+                snapshot=sha[:12])
+    assert out["store_sha256"] == sha and out["snapshot"] == sha[:12] and out["mlflow_run_id"] == "run-1"
+    [(name, params, metrics, tags, artifacts)] = logged
+    assert name == "headline" and params["store_sha256"] == sha and params["seed"] == 0 and params["cells"] == len(df)
+    assert tags["snapshot"] == sha[:12] and tags["kind"] == "headline" and tags["verdict"] == out["verdict"]["text"]
+    assert {"learned.all.pr_auc", "effort.all.pr_auc", "learned.deposits.pr_auc", "effort.deposits.pr_auc",
+            "learned.all.capture_top10", "effort.deposits.capture_top10"} <= set(metrics)
+    assert artifacts["rows.json"] is out["rows"]
+    written = json.loads((prospect_sandbox.out / "headline.json").read_text())
+    assert written["store_sha256"] == sha and written["snapshot"] == sha[:12] and written["mlflow_run_id"] == "run-1"
+    assert written["run_id"] == out["run_id"] and written["seed"] == 0 and written["boot"] == 10 and written["cells"] == len(df)
+    assert [r["config"] for r in written["rows"]] == [r["config"] for r in out["rows"]] and len(written["rows"]) == 16
+    assert isinstance(written["rows"][0]["pr_auc_ci"], list) and len(written["rows"][0]["pr_auc_ci"]) == 2
+    assert set(written["minetrace"]) == {"learned", "effort"} and set(written["verdict"]["by_positives"]) == {"all", "deposits"}

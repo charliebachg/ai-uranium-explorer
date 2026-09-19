@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -9,6 +12,7 @@ from legacy_reader.prospect import headline as H
 from legacy_reader.prospect import modelsearch as MS
 from legacy_reader.prospect import models as M
 from legacy_reader.prospect import tracking as TR
+from legacy_reader.store import snapshot as SN
 from test_prospect_headline import frame
 
 
@@ -84,3 +88,58 @@ def test_the_decision_never_promotes_an_arm_that_carries_effort_features() -> No
     ]
     d = MS.decide(rows, log=lambda *a: None, track=False)
     assert d["best"] == "random_forest" and d["validated"] is False
+
+
+# ---------------------------------------------------------------- the run names its store
+
+
+def test_run_refuses_a_snapshot_nobody_took_before_fitting_anything(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(MS, "evaluate_arm", lambda *a, **k: (_ for _ in ()).throw(AssertionError("must not fit")))
+    with pytest.raises(FileNotFoundError):
+        MS.run(quick=True, boot=10, log=lambda *a: None, write=False, track=False, df=synthetic(), snapshot="nope")
+
+
+def test_run_names_its_snapshot_in_the_result_every_arm_the_decision_and_modelsearch_json(
+        monkeypatch: pytest.MonkeyPatch, prospect_sandbox) -> None:
+    sha = SN.take(log=lambda *a: None, path=prospect_sandbox.make_store())["store_sha256"]
+    logged: list[tuple] = []
+    decided: list[str | None] = []
+    monkeypatch.setattr(TR, "log_run", lambda name, params, metrics, tags=None, artifacts=None:
+                        logged.append((name, params, tags)) or f"run-{len(logged)}")
+    monkeypatch.setattr(TR, "record_decision", lambda run_id, model, validated, reason, store_sha256=None:
+                        decided.append(store_sha256) or {"run_id": run_id, "store_sha256": store_sha256, "stage": "candidate"})
+    monkeypatch.setattr(MS, "_write_metrics", lambda rows, now: None)
+    out = MS.run(quick=True, boot=10, log=lambda *a: None, write=True, track=True, df=synthetic(), snapshot=sha[:12])
+    assert out["store_sha256"] == sha and out["snapshot"] == sha[:12]
+    assert len(logged) == 4 and all(p["store_sha256"] == sha and t["snapshot"] == sha[:12] for _, p, t in logged)
+    assert decided == [sha] and out["decision"]["store_sha256"] == sha
+    written = json.loads((prospect_sandbox.out / "modelsearch.json").read_text())
+    assert written["store_sha256"] == sha and written["snapshot"] == sha[:12] and written["run_id"] == out["run_id"]
+    assert written["quick"] is True and written["seed"] == 0 and written["boot"] == 10 and written["cells"] == 900
+    assert {r["run_id"] for r in written["rows"]} == {"run-1", "run-2", "run-3", "run-4"}
+    assert {"arm", "name", "feature_set", "fold", "pr_auc", "pr_auc_ci", "capture_top10", "features"} <= set(written["rows"][0])
+    assert written["decision"]["store_sha256"] == sha and written["decision"]["best"] == out["decision"]["best"]
+
+
+def test_the_registered_decision_writes_the_store_hash_into_registry_json(monkeypatch: pytest.MonkeyPatch,
+                                                                        prospect_sandbox) -> None:
+    tags: list[tuple] = []
+
+    class Client:
+        def get_registered_model(self, name):
+            raise LookupError(name)
+
+        def create_registered_model(self, name, description=""):
+            return None
+
+        def create_model_version(self, name, source, run_id, description):
+            return SimpleNamespace(version="3")
+
+        def set_model_version_tag(self, name, version, key, value):
+            tags.append((key, value))
+
+    monkeypatch.setattr(TR, "_mlflow", lambda: SimpleNamespace(MlflowClient=Client))
+    d = TR.record_decision("run-9", "histgb", False, "not validated", store_sha256="f" * 64)
+    assert d["store_sha256"] == "f" * 64 and d["version"] == 3 and ("store_sha256", "f" * 64) in tags
+    assert json.loads((prospect_sandbox.out / "registry.json").read_text())["store_sha256"] == "f" * 64
+    assert TR.served_model() is None, "the registry says candidate, so nothing is served"

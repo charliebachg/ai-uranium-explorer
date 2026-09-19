@@ -521,11 +521,13 @@ def prospect_headline_cmd(
     seed: int = typer.Option(0, "--seed"),
     boot: int = typer.Option(200, "--boot", help="bootstrap resamples per interval"),
     write: bool = typer.Option(True, "--write/--no-write", help="store the metrics under headline.*"),
+    track: bool = typer.Option(True, "--track/--no-track", help="log the run to MLflow"),
+    snapshot: str = typer.Option(None, "--snapshot", help="store snapshot hash the run must be on; refuses any other store"),
 ) -> None:
     """Phase 0: re-test effort vs geology with matched background and thinned positives, all folds, intervals."""
     from .prospect.headline import run
 
-    out = run(seed=seed, boot=boot, log=typer.echo, write=write)
+    out = run(seed=seed, boot=boot, log=typer.echo, write=write, track=track, snapshot=snapshot)
     typer.echo(json.dumps({"run_id": out["run_id"], "cells": out["cells"], "verdict": out["verdict"]["text"]}))
 
 
@@ -536,11 +538,12 @@ def prospect_modelsearch_cmd(
     quick: bool = typer.Option(False, "--quick", help="four candidates, spatial folds only: the CI regression"),
     write: bool = typer.Option(True, "--write/--no-write"),
     track: bool = typer.Option(True, "--track/--no-track", help="log every arm to MLflow and apply the promotion rule"),
+    snapshot: str = typer.Option(None, "--snapshot", help="store snapshot hash the run must be on; refuses any other store"),
 ) -> None:
     """Phase 3: candidate models against the same folds and null, ablations, block sizes; tracked; the served-model decision."""
     from .prospect.modelsearch import run
 
-    out = run(seed=seed, boot=boot, quick=quick, log=typer.echo, write=write, track=track)
+    out = run(seed=seed, boot=boot, quick=quick, log=typer.echo, write=write, track=track, snapshot=snapshot)
     typer.echo(json.dumps({"cells": out["cells"], "arms": len(out["rows"]), "decision": out["decision"].get("reason")}))
 
 
@@ -550,11 +553,13 @@ def prospect_hindcast_cmd(
     min_confidence: str = typer.Option("medium", "--min-confidence", help="high | medium: which dated discoveries count"),
     write: bool = typer.Option(True, "--write/--no-write"),
     track: bool = typer.Option(True, "--track/--no-track"),
+    snapshot: str = typer.Option(None, "--snapshot", help="store snapshot hash the run must be on; refuses any other store"),
 ) -> None:
     """Phase 3: the dated hindcast. Labels and drilling frozen at a cutoff, the grid scored, later discoveries ranked."""
     from .prospect.hindcast import run
 
-    out = run(cutoffs=tuple(cutoff), min_confidence=min_confidence, log=typer.echo, write=write, track=track)
+    out = run(cutoffs=tuple(cutoff), min_confidence=min_confidence, log=typer.echo, write=write, track=track,
+              snapshot=snapshot)
     typer.echo(json.dumps({"rows": len(out["rows"]), "summary": out["summary"], "unmapped": out["unmapped"]}))
 
 
@@ -683,6 +688,15 @@ def prospect_readiness_cmd() -> None:
     from .prospect.readiness import report
 
     report(log=typer.echo)
+
+
+@prospect_app.command("gate")
+def prospect_gate_cmd() -> None:
+    """The five-column data readiness gate (PRD 9.1): present, licensed, covers, servable, versioned. Exits 1 when red."""
+    from .prospect.gate import check
+
+    out = check(log=typer.echo)
+    raise typer.Exit(0 if out["green"] else 1)
 
 
 @prospect_app.command("export")

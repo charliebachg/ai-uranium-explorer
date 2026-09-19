@@ -10,14 +10,19 @@ non-overlapping intervals, and it is *served* only if it is validated. Today not
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 from typing import Any
+
+import numpy as np
 
 from ..paths import PATHS
 
 EXPERIMENT = "prospect"
 REGISTERED = "learned-prospectivity"
+#: where the evaluation runs leave the JSON the web export reads; tests point it at a temporary directory
+OUT_DIR = PATHS.data / "out" / "prospect"
 
 
 def tracking_uri() -> str:
@@ -38,22 +43,55 @@ def _mlflow():
     import mlflow
 
     mlflow.set_tracking_uri(tracking_uri())
+    if mlflow.get_experiment_by_name(EXPERIMENT) is None:
+        # artefacts beside the tracking database, not in whatever directory the command ran from
+        mlflow.create_experiment(EXPERIMENT, artifact_location=str(artifact_dir()))
     mlflow.set_experiment(EXPERIMENT)
     return mlflow
 
 
-def log_run(name: str, params: dict[str, Any], metrics: dict[str, float], tags: dict[str, str] | None = None,
+def jsonable(obj: Any) -> Any:
+    """The object as json.dumps takes it: numpy scalars as Python ones, NaN and infinities as null, tuples as lists."""
+    if isinstance(obj, dict):
+        return {str(k): jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, np.ndarray)):
+        return [jsonable(v) for v in obj]
+    if isinstance(obj, (bool, np.bool_)):
+        return bool(obj)
+    if isinstance(obj, (int, np.integer)):
+        return int(obj)
+    if isinstance(obj, (float, np.floating)):
+        f = float(obj)
+        return f if math.isfinite(f) else None
+    if obj is None or isinstance(obj, str):
+        return obj
+    return str(obj)
+
+
+def write_json(name: str, payload: Any) -> Path:
+    """One file under OUT_DIR, the JSON the web export reads. Returns its path."""
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    path = OUT_DIR / name
+    path.write_text(json.dumps(jsonable(payload), indent=1) + "\n")
+    return path
+
+
+def log_run(name: str, params: dict[str, Any], metrics: dict[str, float], tags: dict[str, str | None] | None = None,
             artifacts: dict[str, Any] | None = None) -> str:
-    """One MLflow run: flat params, numeric metrics, JSON artefacts. Returns the run id."""
+    """One MLflow run: flat params, numeric metrics, JSON artefacts. Returns the run id.
+
+    A tag whose value is None is not set, so a run on a store no snapshot names carries no `snapshot` tag
+    rather than the string "None"."""
     mlflow = _mlflow()
     with mlflow.start_run(run_name=name) as run:
         mlflow.log_params({k: (v if isinstance(v, (int, float, str, bool)) else json.dumps(v)) for k, v in params.items()})
         mlflow.log_metrics({k: float(v) for k, v in metrics.items() if v is not None and v == v})
-        if tags:
-            mlflow.set_tags(tags)
+        set_tags = {k: str(v) for k, v in (tags or {}).items() if v is not None}
+        if set_tags:
+            mlflow.set_tags(set_tags)
         for fname, payload in (artifacts or {}).items():
             path = artifact_dir() / f"{run.info.run_id}-{fname}"
-            path.write_text(json.dumps(payload, indent=1, default=str))
+            path.write_text(json.dumps(jsonable(payload), indent=1))
             mlflow.log_artifact(str(path))
             path.unlink(missing_ok=True)
         return run.info.run_id
@@ -66,8 +104,10 @@ def beats_null(candidate: dict[str, Any], null: dict[str, Any]) -> bool:
     return lo_c == lo_c and hi_n == hi_n and lo_c > hi_n
 
 
-def record_decision(run_id: str, model_name: str, validated: bool, reason: str) -> dict[str, Any]:
-    """Register the run's model in the registry with the stage the rule allows, and write the decision down."""
+def record_decision(run_id: str, model_name: str, validated: bool, reason: str,
+                    store_sha256: str | None = None) -> dict[str, Any]:
+    """Register the run's model in the registry with the stage the rule allows, and write the decision down,
+    naming the store it was decided on."""
     mlflow = _mlflow()
     client = mlflow.MlflowClient()
     try:
@@ -80,16 +120,17 @@ def record_decision(run_id: str, model_name: str, validated: bool, reason: str) 
     stage = "validated" if validated else "candidate"
     client.set_model_version_tag(REGISTERED, version.version, "stage", stage)
     client.set_model_version_tag(REGISTERED, version.version, "served", "false")
+    if store_sha256:
+        client.set_model_version_tag(REGISTERED, version.version, "store_sha256", store_sha256)
     decision = {"registered_model": REGISTERED, "version": int(version.version), "run_id": run_id, "model": model_name,
-                "stage": stage, "served": False, "reason": reason}
-    (PATHS.data / "out" / "prospect").mkdir(parents=True, exist_ok=True)
-    (PATHS.data / "out" / "prospect" / "registry.json").write_text(json.dumps(decision, indent=1) + "\n")
+                "stage": stage, "served": False, "reason": reason, "store_sha256": store_sha256}
+    write_json("registry.json", decision)
     return decision
 
 
 def served_model() -> dict[str, Any] | None:
     """What is served, from the written decision: None means the dashboard shows no learned predictor as such."""
-    p = PATHS.data / "out" / "prospect" / "registry.json"
+    p = OUT_DIR / "registry.json"
     if not p.is_file():
         return None
     d = json.loads(p.read_text())

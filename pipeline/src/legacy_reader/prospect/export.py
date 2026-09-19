@@ -313,6 +313,33 @@ def _hindcast_block(vals: list[dict[str, Any]], d: dict[str, Any]) -> dict[str, 
             "rows": rows, "summary": summary}
 
 
+GATE_COLUMNS = ("present", "licensed", "covers", "servable", "versioned")
+
+
+def _gate_columns_block(out_dir: Path | None = None) -> dict[str, Any] | None:
+    """The five-column readiness gate (PRD 9.1) as `lr prospect gate` last wrote it; absent until it has run.
+
+    The notes are the gate's own status strings, not measurements, so they travel as text; the counts they
+    mention are on this page already as values (the sources and features tables)."""
+    p = (out_dir or (PATHS.out / "prospect")) / "gate.json"
+    if not p.is_file():
+        return None
+    try:
+        d = json.loads(p.read_text())
+    except json.JSONDecodeError:
+        return None
+    rows = []
+    for r in d.get("rows") or []:
+        row = {"dataset": str(r["dataset"]), "title": str(r.get("title") or r["dataset"]), "kind": str(r["kind"])}
+        for c in GATE_COLUMNS:
+            cell = r.get(c) or {}
+            row[c] = {"ok": bool(cell.get("ok")), "note": str(cell.get("note") or "")}
+        rows.append(row)
+    return {"generated_at": str(d.get("generated_at") or ""), "store_sha256": d.get("store_sha256"),
+            "snapshot": d.get("snapshot"), "green": bool(d.get("green")), "rows": rows,
+            "failures": [str(f) for f in d.get("failures") or []]}
+
+
 def _phase_blocks(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dict[str, Any]:
     """The Phase 0 re-test, the model search and the dated hindcast, each from the JSON its run wrote.
 
@@ -416,6 +443,7 @@ def build(log: Callable[[str], None] = print) -> dict[str, Any]:
     scores, metrics = _scores_geojson(vals)
     gate = _gate_block(vals)
     phases = _phase_blocks(vals)
+    gate_columns = _gate_columns_block()
 
     doc = {
         "schema_version": SCHEMA_VERSION,
@@ -434,6 +462,7 @@ def build(log: Callable[[str], None] = print) -> dict[str, Any]:
         "features": features,
         "metrics": metrics,
         **({"gate": gate} if gate else {}),
+        **({"readiness_gate": gate_columns} if gate_columns else {}),
         **phases,
         "sources": [
             {

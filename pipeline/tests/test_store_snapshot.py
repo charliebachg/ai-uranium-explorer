@@ -45,6 +45,46 @@ def test_verify_accepts_the_same_store_and_refuses_a_changed_one(store: Path) ->
         SN.verify("0000000000", path=store)
 
 
+def test_store_sha_hashes_the_file_and_is_none_without_one(store: Path, tmp_path: Path) -> None:
+    assert SN.store_sha(store) == SN._sha256(store)
+    assert SN.store_sha(tmp_path / "missing.duckdb") is None
+
+
+def test_latest_is_the_most_recently_taken_manifest_or_none(store: Path) -> None:
+    assert SN.latest() is None
+    for stamp, sha in (("2026-02-01T00:00:00+00:00", "b" * 64), ("2026-01-01T00:00:00+00:00", "a" * 64)):
+        (SN.snapshots_dir() / f"{stamp.replace(':', '')}-{sha[:12]}.json").write_text(
+            json.dumps({"version": SN.SNAPSHOT_VERSION, "taken_at": stamp, "store_sha256": sha}))
+    assert SN.latest()["store_sha256"] == "b" * 64, "the later manifest, whatever the file order"
+    m = SN.take(log=lambda *a: None, path=store)
+    assert SN.latest()["store_sha256"] == m["store_sha256"]
+
+
+def test_pin_holds_a_named_snapshot_and_refuses_a_wrong_or_changed_one(store: Path) -> None:
+    sha = SN.take(log=lambda *a: None, path=store)["store_sha256"]
+    lines: list[str] = []
+    assert SN.pin(sha[:12], path=store, log=lines.append) == {"store_sha256": sha, "snapshot": sha[:12], "pinned": True}
+    assert lines == [f"  store {sha[:12]} (snapshot {sha[:12]}, pinned)"]
+    with pytest.raises(FileNotFoundError):
+        SN.pin("nope", path=store, log=lambda *a: None)
+    con = connect(store)
+    con.execute("create or replace table meta as select 'store/v2' as store_version, '0.2.0' as pipeline_version, 't' as built_at")
+    con.close()
+    with pytest.raises(RuntimeError, match="not snapshot"):
+        SN.pin(sha[:12], path=store, log=lambda *a: None)
+
+
+def test_pin_without_a_hash_names_the_matching_snapshot_or_says_none_does(store: Path, tmp_path: Path) -> None:
+    sha = SN._sha256(store)
+    lines: list[str] = []
+    assert SN.pin(None, path=store, log=lines.append) == {"store_sha256": sha, "snapshot": None, "pinned": False}
+    assert lines[-1] == f"  store {sha[:12]} (no snapshot names it)"
+    SN.take(log=lambda *a: None, path=store)
+    assert SN.pin(None, path=store, log=lines.append) == {"store_sha256": sha, "snapshot": sha[:12], "pinned": False}
+    assert lines[-1] == f"  store {sha[:12]} (snapshot {sha[:12]})"
+    assert SN.pin(None, path=tmp_path / "missing.duckdb", log=lambda *a: None) == {"store_sha256": None, "snapshot": None, "pinned": False}
+
+
 def test_lineage_on_the_real_store_names_every_break_or_none() -> None:
     """Runs against the analytics store as it is; the assertion is that the check itself is sound."""
     problems = SN.lineage(log=lambda *a: None)

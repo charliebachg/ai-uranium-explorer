@@ -36,7 +36,9 @@ import numpy as np
 import pandas as pd
 
 from ..store import append_frame, connect
+from ..store import snapshot as SN
 from . import models as M
+from . import tracking as TR
 
 TOOL = "prospect/headline"
 THIN_BLOCK_M = 10_000.0
@@ -266,9 +268,12 @@ def configs(feature_sets: tuple[str, ...] = ("learned", "effort"), positives: tu
 
 def run(grid_id: str | None = None, seed: int = 0, boot: int = BOOT, log: Callable[[str], None] = print,
         write: bool = True, fit: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray] | None = None,
-        cfgs: list[Config] | None = None) -> dict[str, Any]:
-    """Every configuration on the common complete cases, the MineTRACE protocol, and the verdict."""
+        cfgs: list[Config] | None = None, track: bool = True, snapshot: str | None = None) -> dict[str, Any]:
+    """Every configuration on the common complete cases, the MineTRACE protocol, and the verdict.
+
+    The run names the store it ran on: `snapshot` pins it to a taken snapshot and refuses any other store."""
     now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    pinned = SN.pin(snapshot, log=log)
     frames = {fs: M.matrix(fs, grid_id) for fs in ("learned", "effort")}
     common = set(frames["learned"]["cell_id"]) & set(frames["effort"]["cell_id"])
     extra = [c for c in M.EFFORT_FEATURES if c not in frames["learned"].columns]
@@ -292,10 +297,29 @@ def run(grid_id: str | None = None, seed: int = 0, boot: int = BOOT, log: Callab
             f"(min {mt[fs]['roc_auc_min']:.3f}, max {mt[fs]['roc_auc_max']:.3f})")
     verdict = _verdict(rows)
     log("  verdict: " + verdict["text"])
-    out = {"run_id": now, "seed": seed, "rows": rows, "minetrace": mt, "verdict": verdict,
-           "cells": int(len(both))}
+    out: dict[str, Any] = {"run_id": now, "mlflow_run_id": None, "store_sha256": pinned["store_sha256"],
+                           "snapshot": pinned["snapshot"], "seed": seed, "boot": boot, "cells": int(len(both)),
+                           "verdict": verdict, "rows": rows, "minetrace": mt}
+    if track:
+        out["mlflow_run_id"] = TR.log_run(
+            "headline",
+            params={"seed": seed, "boot": boot, "cells": out["cells"], "store_sha256": pinned["store_sha256"]},
+            metrics=_tracked_metrics(rows),
+            tags={"phase": "0", "kind": "headline", "snapshot": pinned["snapshot"], "verdict": verdict["text"]},
+            artifacts={"rows.json": rows})
     if write:
-        _write_metrics(out, now)
+        _write_metrics(out, out["mlflow_run_id"] or now)
+        TR.write_json("headline.json", out)
+    return out
+
+
+def _tracked_metrics(rows: list[dict[str, Any]]) -> dict[str, float]:
+    """The numbers the verdict rests on: spatial folds under both corrections, each feature set on each positive set."""
+    out: dict[str, float] = {}
+    for r in rows:
+        if r["matched"] and r["thinned"] and r["fold"] == "spatial" and "pr_auc" in r:
+            for key in ("pr_auc", "roc_auc", "capture_top5", "capture_top10", "capture_top15"):
+                out[f"{r['feature_set']}.{r['positives']}.{key}"] = r[key]
     return out
 
 
@@ -317,12 +341,14 @@ def _verdict(rows: list[dict[str, Any]]) -> dict[str, Any]:
     return {"by_positives": findings, "text": f"after matched background and thinned positives, under spatial folds — {text}"}
 
 
-def _write_metrics(out: dict[str, Any], now: str) -> None:
+def _write_metrics(out: dict[str, Any], run_id: str) -> None:
+    """The store's metric rows, citing the MLflow run when there is one and the timestamp otherwise."""
+    now = out["run_id"]
     metrics = []
     for r in out["rows"]:
         for key in ("pr_auc", "roc_auc", "capture_top5", "capture_top10", "capture_top15", "base_rate"):
             if key in r and np.isfinite(r[key]):
-                metrics.append({"metric_key": f"headline.{r['config']}.{key}", "run_id": now, "value": float(r[key]),
+                metrics.append({"metric_key": f"headline.{r['config']}.{key}", "run_id": run_id, "value": float(r[key]),
                                 "fmt": "ratio3", "computed_at": now,
                                 "note": f"{key}; positives={r['positives']}, matched={r['matched']}, thinned={r['thinned']}, "
                                         f"fold={r['fold']}; {r['n_pos']} positives in {r['scored']} scored cells"
@@ -330,7 +356,7 @@ def _write_metrics(out: dict[str, Any], now: str) -> None:
     for fs, mt in out["minetrace"].items():
         for key in ("roc_auc_mean", "roc_auc_sd"):
             if np.isfinite(mt[key]):
-                metrics.append({"metric_key": f"headline.minetrace.{fs}.{key}", "run_id": now, "value": float(mt[key]),
+                metrics.append({"metric_key": f"headline.minetrace.{fs}.{key}", "run_id": run_id, "value": float(mt[key]),
                                 "fmt": "ratio3", "computed_at": now, "note": mt["protocol"]})
     con = connect()
     try:

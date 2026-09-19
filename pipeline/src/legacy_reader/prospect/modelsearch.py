@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 from ..store import append_frame, connect
+from ..store import snapshot as SN
 from . import headline as H
 from . import models as M
 from . import tracking as TR
@@ -204,8 +205,10 @@ def arms(quick: bool = False) -> list[Arm]:
 
 def run(grid_id: str | None = None, seed: int = 0, boot: int = H.BOOT, quick: bool = False,
         log: Callable[[str], None] = print, write: bool = True, track: bool = True,
-        df: pd.DataFrame | None = None) -> dict[str, Any]:
+        df: pd.DataFrame | None = None, snapshot: str | None = None) -> dict[str, Any]:
+    """Every arm, tracked, and the decision. `snapshot` pins the run to a taken snapshot and refuses any other store."""
     now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    pinned = SN.pin(snapshot, log=log)
     if df is None:
         frames = {fs: M.matrix(fs, grid_id) for fs in ("learned", "effort")}
         common = set(frames["learned"]["cell_id"]) & set(frames["effort"]["cell_id"])
@@ -227,21 +230,27 @@ def run(grid_id: str | None = None, seed: int = 0, boot: int = H.BOOT, quick: bo
                 run_ids[arm.key] = TR.log_run(
                     arm.key,
                     params={"model": arm.name, "feature_set": arm.feature_set, "fold": arm.fold, "positives": arm.positives,
-                            "matched": arm.matched, "thinned": arm.thinned, "seed": seed, "features": r["features"]},
+                            "matched": arm.matched, "thinned": arm.thinned, "seed": seed, "features": r["features"],
+                            "store_sha256": pinned["store_sha256"]},
                     metrics={k: r[k] for k in ("pr_auc", "roc_auc", "capture_top5", "capture_top10", "capture_top15", "base_rate")},
-                    tags={"phase": "3", "kind": "modelsearch"}, artifacts={"row.json": r})
+                    tags={"phase": "3", "kind": "modelsearch", "snapshot": pinned["snapshot"]}, artifacts={"row.json": r})
                 r["run_id"] = run_ids[arm.key]
         else:
             log(f"    {arm.key:<34} {r.get('note')}")
-    decision = decide(rows, log=log, track=track)
-    out = {"run_id": now, "rows": rows, "decision": decision, "cells": int(len(df))}
+    decision = decide(rows, log=log, track=track, store_sha256=pinned["store_sha256"])
+    out: dict[str, Any] = {"run_id": now, "store_sha256": pinned["store_sha256"], "snapshot": pinned["snapshot"],
+                           "seed": seed, "boot": boot, "quick": quick, "cells": int(len(df)), "rows": rows,
+                           "decision": decision}
     if write:
         _write_metrics(rows, now)
+        TR.write_json("modelsearch.json", out)
     return out
 
 
-def decide(rows: list[dict[str, Any]], log: Callable[[str], None] = print, track: bool = True) -> dict[str, Any]:
-    """The promotion rule over the spatial-fold rows: the best candidate is validated only if it beats the null."""
+def decide(rows: list[dict[str, Any]], log: Callable[[str], None] = print, track: bool = True,
+           store_sha256: str | None = None) -> dict[str, Any]:
+    """The promotion rule over the spatial-fold rows: the best candidate is validated only if it beats the null.
+    The registered decision names the store it was made on."""
     null = next((r for r in rows if r["name"] == "effort" and r["fold"] == "spatial" and "pr_auc" in r), None)
     # a candidate is a geology-only model: an arm that carries the effort features (learned+effort) is a
     # different question, "does geology add anything on top of effort", and is reported, not promoted
@@ -257,7 +266,7 @@ def decide(rows: list[dict[str, Any]], log: Callable[[str], None] = print, track
     log("  decision: " + reason)
     decision = {"best": best["name"], "validated": validated, "served": False, "reason": reason}
     if track and best.get("run_id"):
-        decision |= TR.record_decision(best["run_id"], best["name"], validated, reason)
+        decision |= TR.record_decision(best["run_id"], best["name"], validated, reason, store_sha256=store_sha256)
     return decision
 
 

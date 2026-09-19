@@ -1,13 +1,43 @@
-"""Shared fixtures: the three probe PDFs, rendered once per session, OCR'd on demand."""
+"""Shared fixtures: the three probe PDFs, rendered once per session, OCR'd on demand; and a sandbox that keeps
+every test away from the real store's hash, snapshots and prospect output directory."""
 
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from legacy_reader.ids import sha256_file
 from legacy_reader.paths import PATHS
+
+
+@pytest.fixture(autouse=True)
+def prospect_sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
+    """No test hashes the real store, reads the real snapshots or writes the real data/out/prospect.
+
+    The snapshot module's store path and snapshot directory, and the tracking module's output directory, point
+    into the test's temporary directory; `make_store()` creates an empty store at that path for a test that
+    wants a snapshot to name."""
+    from legacy_reader.prospect import tracking as TR
+    from legacy_reader.store import connect, write_meta
+    from legacy_reader.store import snapshot as SN
+
+    root = tmp_path / "sandbox"
+    db, snaps, out = root / "lr.duckdb", root / "snapshots", root / "out"
+    snaps.mkdir(parents=True)
+    monkeypatch.setattr(SN, "db_path", lambda: db)
+    monkeypatch.setattr(SN, "snapshots_dir", lambda: snaps)
+    monkeypatch.setattr(SN, "_git_commit", lambda: "deadbeef")
+    monkeypatch.setattr(TR, "OUT_DIR", out)
+
+    def make_store() -> Path:
+        con = connect(db)
+        write_meta(con, "test")
+        con.close()
+        return db
+
+    return SimpleNamespace(db=db, snapshots=snaps, out=out, make_store=make_store)
 
 PROBE_DIR = PATHS.data / "probe"
 PROBES = {
