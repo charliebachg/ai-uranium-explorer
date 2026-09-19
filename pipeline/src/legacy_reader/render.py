@@ -191,10 +191,17 @@ def phase1_documents() -> list[dict[str, Any]]:
     sel = read_selection()
     if not sel.get("locked"):
         raise HeldOutError("the split is not locked; run `lr lock-heldout` first")
+    from .select import enabled_files
+
     docs = documents_by_file(PATHS.raw)
+    enabled = set(enabled_files(sel))
     out = []
     for n in selected_files(sel, phase1_only=True):
         if n not in docs:
+            if n in enabled:
+                # an enabled file that is still downloading is skipped this pass, not an error: the next
+                # `lr render` picks it up once its documents are on disk
+                continue
             raise FileNotFoundError(f"{n} has no fetched documents; run `lr fetch`")
         out.extend(docs[n])
     return out

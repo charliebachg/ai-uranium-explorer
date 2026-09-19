@@ -84,3 +84,18 @@ def test_the_config_reads_workers_and_defaults_to_two(tmp_path: Path, monkeypatc
 def test_the_opus_config_on_disk_is_opus_only_with_one_worker() -> None:
     cfg = extract.load_config("opus1")
     assert cfg.model == "claude-opus-5" and cfg.workers == 1
+
+
+def test_render_skips_an_enabled_file_that_is_not_fetched_yet(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The original selection must be complete on disk; an enabled file may still be downloading."""
+    from legacy_reader import fetch, render
+
+    sel = selection()
+    register_enabled(sel, "MAW00509", listing(), "why", heldout=set(), now="t")
+    # phase1_documents imports these inside the function, so the source modules are patched
+    monkeypatch.setattr(select, "read_selection", lambda path=None: sel)
+    monkeypatch.setattr(fetch, "documents_by_file", lambda raw, kinds=None: {"A1": [{"path": "A1/a.pdf", "kind": "report_pdf"}]})
+    assert [d["path"] for d in render.phase1_documents()] == ["A1/a.pdf"]
+    monkeypatch.setattr(fetch, "documents_by_file", lambda raw, kinds=None: {})
+    with pytest.raises(FileNotFoundError):
+        render.phase1_documents()
