@@ -217,7 +217,7 @@ handled.
 | B11 | Folklore in the criteria table | thresholds and weights taken from textbooks written about the same camps that supply the labels | circular skill: the criteria describe the known deposits | criteria score on camp holdout; folklore rows at weight zero | every threshold cited; fitted-weights arm evaluated on held-out camps only | partly |
 | B12 | Text-length bias | mineralised areas have longer, richer reports and map descriptions (Parsa et al. 2025) | LLM-derived features read effort through the text channel | text length vs label; a length-only null | length-normalised embeddings; length itself filed as effort | open |
 | B13 | Corpus survivorship | assessment files are filed by holders who kept ground; the fetched subset was chosen by interest | the corpus over-represents success | fetch selection recorded; compare fetched vs unfetched by NTS sheet | sample files by sheet, not by interest; record the selection rule | open |
-| B14 | Compilations as they stand today | deposit and occurrence compilations include post-discovery work | retrodiction sees the future | the dated hindcast with a cut-off (§C.2.3) | freeze datable inputs at the cut-off; state the leakage that cannot be removed | partly |
+| B14 | Compilations as they stand today | deposit and occurrence compilations include post-discovery work | retrodiction sees the future | the dated hindcast with a cut-off (§C.2.3), run 2026-09-19 (F4) | labels and drilling frozen at the cut-off; the geological compilations cannot be, and every row says so | partly |
 
 **Imagery and text**
 
@@ -709,7 +709,7 @@ other modelling:
   measurements.
 - **Confidence intervals** on every headline number, by bootstrap over folds.
 
-**C.2.2 Model search, tracked (must)**
+**C.2.2 Model search, tracked (must) — run 2026-09-19, FINDINGS.md F3: 23 arms in MLflow, nothing validated**
 - **MLflow** for every run: parameters, fold assignments, metrics with intervals, the feature snapshot hash,
   the code commit. Nothing is reported that is not in the tracker.
 - **Model registry** with stages (candidate → validated → served). The served model is the one the API reads;
@@ -729,7 +729,7 @@ other modelling:
 - **Sensitivity**: 1 km and 5 km cells; 20 / 30 / 50 km spatial blocks.
 - **No imputation, no synthetic positives, no tuning against the test folds.** These are decisions, recorded.
 
-**C.2.3 Retrodiction — the dated hindcast (must)**
+**C.2.3 Retrodiction — the dated hindcast (must) — run 2026-09-19, FINDINGS.md F4: learned median 12% of area, effort 51%**
 With `discoveries.toml`: freeze datable inputs at a cutoff, score, report where each later discovery ranks.
 The leakage (compilations drawn as they stand today) is stated.
 This is the headline test of *prediction before the claim*: every datable input frozen at a cutoff, the
@@ -932,8 +932,8 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 |---|---|---|---|
 | **0 · Settle the headline** | done | §C.2.1: 48 configurations, three folds, intervals, area-budget capture, MineTRACE protocol | **Confirmed in writing, FINDINGS.md F1** |
 | **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. **Open**: evidence reads through PostGIS, jobs, auth, tracing, the seed snapshot, §B catalogue + lineage | e2e green against the API (met); one-command start (met when the store exists); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
-| **2 · Data ownership** | 1–2 | §B: gap re-verification (magnetics first); freeze the 15 enabled cells with their selection rule (§9.3); fetch and text-index their 47 files; pre-read the top two drilling files per cell with the existing pipeline (17 files, about 230 routed pages, unattended — **can start now, in parallel with Phase 0**); versioned snapshots | Every on-screen value walks to a hashed source pull; **the §9.1 readiness checklist is green for the focused tasks** |
-| **3 · ML programme** | 2 | §C.2.2–C.2.4: MLflow, registry, candidate models, ablations, sensitivity, CI regression | Eval page links every number to a run |
+| **2 · Data ownership** | mostly done | §B: gap re-verification (magnetics first); freeze the 15 enabled cells with their selection rule (§9.3); fetch and text-index their 47 files; pre-read the top two drilling files per cell with the existing pipeline (17 files, about 230 routed pages, unattended — **can start now, in parallel with Phase 0**); versioned snapshots | Every on-screen value walks to a hashed source pull; **the §9.1 readiness checklist is green for the focused tasks** |
+| **3 · ML programme** | mostly done | §C.2.2–C.2.4: MLflow tracking and registry with the promotion rule (nothing served), six candidates, six ablations, block sizes, the dated hindcast. **Open**: 1 km and 5 km cells, drift check, model cards and run ids on the Eval page, the LLM-derived features arm | Eval page links every number to a run (open) |
 | **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
 | **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | The Phase 2 pre-read re-run through the new loop with second-family agreement; 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured against them |
 | **4c · Interface agent** | 1 | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff | Tier 1 pass rate, refusal and false-refusal rates measured with a denominator; the 30 rating questions drafted |
