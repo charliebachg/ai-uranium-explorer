@@ -136,6 +136,7 @@ def fetch_cmd(
     all_selected: bool = typer.Option(False, "--all-selected", help="all 12 selected files (the default)"),
     only: list[str] = typer.Option(None, "--only", help="file numbers to fetch (repeatable)"),
     check: bool = typer.Option(True, help="run the post-fetch scanned and datum check afterwards"),
+    workers: int = typer.Option(1, "--workers", help="parallel connections; the store caps each at ~20 kB/s"),
 ) -> None:
     """Download report, appendix, assay and certificate files for the selected files (resumable, paced)."""
     from .fetch import stage_fetch
@@ -143,7 +144,7 @@ def fetch_cmd(
 
     if phase1 and all_selected:
         raise typer.BadParameter("--phase1 and --all-selected are mutually exclusive")
-    res = stage_fetch(phase1=phase1, only=list(only or []), log=typer.echo)
+    res = stage_fetch(phase1=phase1, only=list(only or []), log=typer.echo, workers=workers)
     mb = sum(r["bytes"] for r in res) / 1e6
     typer.echo(f"{len(res)} objects, {mb:.1f} MB on disk "
                f"({sum(1 for r in res if r['status'] == 'downloaded')} downloaded this run)")

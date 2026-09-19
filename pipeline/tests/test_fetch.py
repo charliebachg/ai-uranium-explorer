@@ -8,7 +8,7 @@ import json
 import httpx
 import pytest
 
-from legacy_reader.fetch import FetchError, Fetcher, FetchItem, documents_by_file, plan_paths
+from legacy_reader.fetch import FetchError, Fetcher, FetchItem, documents_by_file, fetch_parallel, plan_paths
 
 BODY = bytes(range(256)) * 400  # 102,400 bytes
 MD5 = hashlib.md5(BODY).hexdigest()
@@ -162,3 +162,46 @@ def test_documents_by_file_reads_the_manifest(tmp_path):
     }))
     docs = documents_by_file(raw)
     assert list(docs) == ["F1"] and [d["path"] for d in docs["F1"]] == ["F1/a.pdf"]
+
+
+# ---------------------------------------------------------------- parallel connections
+
+
+def many_items(n: int) -> list[FetchItem]:
+    return [FetchItem(file_num="MAW00509", kind="appendix_pdf", name=f"PLS12-{i:03d}.pdf", folder="x/Appendix",
+                      url=f"https://store.example/nts/PLS12-{i:03d}.pdf", size_mb=len(BODY) / 1024 / 1024)
+            for i in range(n)]
+
+
+def test_parallel_fetch_downloads_everything_once_and_keeps_one_manifest(tmp_path):
+    log: list[dict] = []
+    raw = tmp_path / "raw"
+    make = lambda: Fetcher(raw_dir=raw, client=httpx.Client(transport=transport(log)), pace_s=0.0,
+                           sleep=lambda s: None, log=lambda *a: None)
+    res = fetch_parallel(many_items(7), raw, workers=3, log=lambda *a: None, make_fetcher=make)
+    assert sorted(r["status"] for r in res) == ["downloaded"] * 7
+    assert len({r["path"] for r in res}) == 7
+    manifest = json.loads((raw / "manifest.json").read_text())
+    assert len(manifest) == 7 and all(v["sha256"] == SHA for v in manifest.values())
+    assert len((raw / "SHA256SUMS").read_text().splitlines()) == 7
+    assert len({e["url"] for e in log}) == 7, "each object requested exactly once across the workers"
+
+
+def test_a_second_parallel_run_skips_what_the_first_fetched(tmp_path):
+    log: list[dict] = []
+    raw = tmp_path / "raw"
+    make = lambda: Fetcher(raw_dir=raw, client=httpx.Client(transport=transport(log)), pace_s=0.0,
+                           sleep=lambda s: None, log=lambda *a: None)
+    fetch_parallel(many_items(5), raw, workers=2, log=lambda *a: None, make_fetcher=make)
+    n_requests = len(log)
+    res = fetch_parallel(many_items(5), raw, workers=2, log=lambda *a: None, make_fetcher=make)
+    assert [r["status"] for r in res] == ["skipped"] * 5
+    assert len(log) == n_requests, "nothing is re-downloaded"
+
+
+def test_one_worker_is_the_plain_fetcher(tmp_path):
+    log: list[dict] = []
+    res = fetch_parallel([item()], tmp_path / "raw", workers=1, log=lambda *a: None,
+                         make_fetcher=lambda: fetcher(tmp_path, log))
+    assert [r["status"] for r in res] == ["downloaded"]
+    assert len(log) == 1, "one request, no threads, no network"

@@ -19,7 +19,9 @@ import datetime as dt
 import hashlib
 import json
 import re
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
@@ -214,6 +216,64 @@ class Fetcher:
         return results
 
 
+def fetch_parallel(items: list[FetchItem], raw_dir: Path, workers: int, log: Callable[[str], None] = print,
+                   make_fetcher: Callable[[], Fetcher] | None = None,
+                   max_total_bytes: int = MAX_TOTAL_BYTES) -> list[dict[str, Any]]:
+    """`Fetcher.fetch_all` over several connections at once.
+
+    Measured 2026-09-19: the provincial object store caps each connection at roughly 17-25 kB/s and three
+    parallel range requests each got their own share, so N connections are close to N times faster. Each
+    worker is its own `Fetcher` with its own client and its own pace; items are dealt round-robin so no two
+    workers touch one destination; the manifest is merged and written under a lock after every download,
+    which keeps the resume-on-restart behaviour of the single-stream fetcher."""
+    workers = max(1, int(workers))
+    if workers == 1:
+        single = make_fetcher() if make_fetcher else Fetcher(raw_dir=raw_dir, log=log)
+        try:
+            return single.fetch_all(items, max_total_bytes=max_total_bytes)
+        finally:
+            single.close()
+    base = Fetcher(raw_dir=raw_dir, log=log)
+    try:
+        planned = sum(it.size_mb for it in items) * 1024 * 1024
+        if planned > max_total_bytes:
+            raise FetchError(f"planned download {planned / 1e9:.2f} GB exceeds the {max_total_bytes / 1e9:.2f} GB limit")
+        manifest = base.read_manifest()
+        paths = plan_paths(items, raw_dir)
+        lock = threading.Lock()
+        results: list[dict[str, Any] | None] = [None] * len(items)
+
+        def run(idx: list[int], fetcher: Fetcher) -> None:
+            local = dict(manifest)
+            try:
+                for i in idx:
+                    it = items[i]
+                    res = fetcher.fetch_item(it, paths[i], local)
+                    rel = str(paths[i].relative_to(raw_dir))
+                    res["path"] = rel
+                    with lock:
+                        manifest[rel] = local[rel]
+                        results[i] = res
+                        log(f"  {res['status']:<10} {it.file_num:<12} {it.kind:<15} {res['bytes'] / 1e6:8.2f} MB  {it.name[:70]}")
+                        if res["status"] == "downloaded":
+                            base.write_manifest(manifest)
+            finally:
+                fetcher.close()
+
+        fetchers = [make_fetcher() if make_fetcher else Fetcher(raw_dir=raw_dir, log=log) for _ in range(workers)]
+        try:
+            with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="lr-fetch") as pool:
+                futures = [pool.submit(run, list(range(w, len(items), workers)), fetchers[w]) for w in range(workers)]
+                for f in futures:
+                    f.result()
+        finally:
+            with lock:
+                base.write_manifest(manifest)
+        return [r for r in results if r is not None]
+    finally:
+        base.close()
+
+
 def documents_by_file(raw_dir: Path, kinds: tuple[str, ...] = ("report_pdf", "appendix_pdf")) -> dict[str, list[dict[str, Any]]]:
     """Fetched document PDFs per file number, from the manifest (path relative to raw_dir)."""
     mpath = raw_dir / "manifest.json"
@@ -227,7 +287,7 @@ def documents_by_file(raw_dir: Path, kinds: tuple[str, ...] = ("report_pdf", "ap
 
 
 def stage_fetch(phase1: bool = False, only: list[str] | None = None,
-                log: Callable[[str], None] = print) -> list[dict[str, Any]]:
+                log: Callable[[str], None] = print, workers: int = 1) -> list[dict[str, Any]]:
     """Fetch in priority order: the Phase 1 dev files, then the held-out files (the lock needs their
     hashes), then the rest. The provincial object store serves at about 30 kB/s, so an interrupted run
     should already have everything the next stages need; `.part` files resume."""
@@ -249,9 +309,5 @@ def stage_fetch(phase1: bool = False, only: list[str] | None = None,
     nums = sorted(nums, key=lambda n: (order.get(n, len(order)), n))
     items = [FetchItem.from_dict(d) for d in fetch_items(sel, nums)]
     total = sum(i.size_mb for i in items)
-    log(f"fetching {len(items)} objects for {len(nums)} files, about {total:.1f} MiB")
-    f = Fetcher(raw_dir=PATHS.raw, log=log)
-    try:
-        return f.fetch_all(items)
-    finally:
-        f.close()
+    log(f"fetching {len(items)} objects for {len(nums)} files, about {total:.1f} MiB, {workers} connection(s)")
+    return fetch_parallel(items, PATHS.raw, workers=workers, log=log)
