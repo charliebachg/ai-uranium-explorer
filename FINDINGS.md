@@ -3,6 +3,50 @@
 Measured results that changed what the project claims. Each entry names the run that produced it, so every
 number here walks back to a stored metric. Newest first.
 
+## F5 · The reading pass over the enabled cells: text-indexed in full, the gate green, the Opus read at 80 of 212 pages (2026-09-20)
+
+**What was done, with no model calls.** Every object the 18 enabled files carry was fetched (858 MB of
+reports, appendices, assay spreadsheets and certificates; the one download the store had cut off was resumed
+and finished). Their 8,853 rendered pages went through Apple Vision on this machine in 2.1 hours with no
+failures. The corpus text index was rebuilt with the OCR pass as a second source: 966 documents and 13,945
+pages of text across 35 files, 3,718 of those pages from the OCR where the text layer was missing or the
+second reader had rejected it (a page whose scanner OCR reads "L2L.-7" now carries the Vision reading, and
+says so in its `source` column). The assay spreadsheets filed with the digital submissions were read into the
+native tier. The router then planned **212 pages over the 18 files**, 12 per file wherever twelve candidate
+pages exist and fewer where a file is thin (74G07-0070: 8), with assay tables first.
+
+**The five-column gate is green.** At snapshot `5de4653ba5e0` every feature layer and scene, both label
+layers, the read-tier records and all 18 enabled files are green on present, licensed, covers, servable and
+versioned. Before the OCR pass, 15 of the file rows were red on *covers* and every store row was red on
+*versioned*; the OCR pass and one snapshot cleared them. This is the Phase 2 exit condition in §12, met.
+
+**The Opus read, so far.** 80 of the 212 pages have been read, every call resolved to `claude-opus-5`:
+
+| File | Pages read of planned | Notes |
+|---|---|---|
+| 64L04-0130, 64L04-0140, 64L04-0141, 74G07-0064, 74H04-0091 | 12 of 12 each | assay tables |
+| 74H04-0094 | 11 of 12 | one transient failure, retried next run |
+| 74G07-0070 | 8 of 8 | collar tables and probe logs |
+| 74H04-0097 | 1 of 12 | |
+| MAW00509 | 3 of 12 | the timing run of 2026-09-19 |
+| the other 9 files | 0 | not started |
+
+Usage from `calls.jsonl`: $31.68 at list price, a mean of $0.40 and 115 s per page; a 30 to 40 row assay
+table costs up to $1.35 and 7 minutes, a contents page $0.08 and 15 s. The 2026-09-19 estimate of $0.27 a
+page was low because the assay-first priority puts the densest pages first. Four calls failed transiently
+("claude reported an error") and are re-planned on the next run. Remaining: 132 pages, about $53 and four
+hours on one worker.
+
+**Why it stopped.** Claude Code's low-memory watchdog killed the reading chain three times on this 9 GB
+machine (2.5 GB of swap in use by the browser and other sessions), twice before the first live call of a
+resumed run. Every page already read is cached, so the run resumes losing at most the call in flight; it has
+to run outside the watchdog (the user's own terminal) or after memory is freed. Nothing in the pipeline is
+at fault, and nothing was read on any model but Opus.
+
+**What it changes.** The reading bound in PRD §9.3 was "fetch and index everything in the enabled cells,
+model-read the top two drilling files per cell". The first half is done at zero model cost and is what the
+retrieval tool and the file rows of the gate needed. The second half is 38% done and finishes unattended.
+
 ## F4 · The dated hindcast: with drilling frozen, geology ranks later discoveries and effort cannot (2026-09-19)
 
 **Claim under test.** The other tests ask whether a model separates known deposits from the rest of the grid,

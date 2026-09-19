@@ -447,14 +447,15 @@ the Claude Code headless backend, cached and resumable; it is never done at requ
 | Read tier today | Count | Where it sits |
 |---|---|---|
 | Reports fully read (VLM, every value with page, box, quote) | 4 — Uranerz 1979, Cree Lake 2005, Conwest 1978, Cameco Park Creek 1998 | all `dev` split; 2 in occurrence cells, 2 in unlabelled cells |
-| Pages the router sent to the model | 42 of the 4 reports' 691 pages (**6%**) | collar, assay and lithology tables |
+| Pages the router sent to the model | 42 of the 4 reports' 691 pages (**6%**); plus 80 of the 212 planned over the 18 enabled files on Opus (2026-09-20, FINDINGS F5, run unfinished) | collar, assay and lithology tables |
 | Values read | 2,175 field values; 40 collars, 43 assay intervals, 126 lithology intervals | 176 flagged, 11 failed by validators — the `read` tier is unvalidated by design |
-| Text-indexed pages (no model) | 1,846 pages from 8 files (38 documents, 9.1 M characters) | 3 occurrence cells, 5 unlabelled cells — **0 of the 60 deposit cells** |
+| Text-indexed pages (no model) | 13,945 pages from 966 documents in 35 files, 3,718 of them from the Apple Vision OCR pass (2026-09-20) | every enabled cell, deposit cells included |
 
-Verdict: **enough to prove the mechanism, not enough to serve the dashboard's cells.** Every score is
-computed from `native` layers alone (all 24 features), so the deterministic and learned analyses need no
-reading at all. Reading matters only for the evidence the analyst and the dashboard show on the enabled
-cells, and none of those cells is a deposit cell today. The bounded pre-read in §9.3 fixes that.
+Verdict (2026-09-20): **the enabled cells are text-indexed in full and the gate is green; the model-read tier
+is 38% through its 212 pages.** Every score is computed from `native` layers alone (all 24 features), so the
+deterministic and learned analyses need no reading at all. Reading matters only for the evidence the analyst
+and the dashboard show on the enabled cells; eight of the 18 enabled files are fully read on Opus, the rest
+resume from cache (FINDINGS F5).
 
 The four recorded gaps (aeromagnetic grids, discovery dates, EM conductor attributes, alteration measurements)
 are decided in Phase 2, each as *filled*, *substituted* or *stated as absent on screen*. Sentinel-2 and DEM
@@ -938,7 +939,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 |---|---|---|---|
 | **0 · Settle the headline** | done | §C.2.1: 48 configurations, three folds, intervals, area-budget capture, MineTRACE protocol | **Confirmed in writing, FINDINGS.md F1** |
 | **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. **Open**: evidence reads through PostGIS, jobs, auth, tracing, the seed snapshot, §B catalogue + lineage | e2e green against the API (met); one-command start (met when the store exists); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
-| **2 · Data ownership** | mostly done | §B: gap re-verification (magnetics: published, not yet pulled); the 15 enabled cells frozen with their selection rule (§9.3); their 18 enabled files fetched in full (858 MB raw); lineage clean, every layer hashed; snapshots with feature quantiles; the five-column gate as a command and on the data page. **In progress 2026-09-19**: the OCR pass over the enabled files' 8,853 rendered pages, then the Opus-only read of the top-two drilling files per cell (18 files, 12 routed pages each) and the OCR-backed text index | Every on-screen value walks to a hashed source pull (**met**: lineage clean, snapshot named by every run); **the §9.1 readiness checklist is green for the focused tasks** (open until the OCR pass and the read finish: the store rows are green, the file rows wait on text) |
+| **2 · Data ownership** | mostly done | §B: gap re-verification (magnetics: published, not yet pulled); the 15 enabled cells frozen with their selection rule (§9.3); their 18 enabled files fetched in full (858 MB raw); lineage clean, every layer hashed; snapshots with feature quantiles; the five-column gate as a command and on the data page. OCR pass over the enabled files' 8,853 pages done (2026-09-20), the OCR-backed text index rebuilt, assay sheets read. **Unfinished**: the Opus-only read of the top-two drilling files per cell, 80 of 212 pages, resumes from cache outside the memory watchdog (F5) | Every on-screen value walks to a hashed source pull (**met**: lineage clean, snapshot named by every run); **the §9.1 readiness checklist is green for the focused tasks (met 2026-09-20, `lr prospect gate` green at snapshot 5de4653ba5e0)** |
 | **3 · ML programme** | done for the prototype | §C.2.2–C.2.4: MLflow tracking and registry with the promotion rule (nothing served), six candidates, six ablations, block sizes, the dated hindcast; every run pinned to a store snapshot (`--snapshot`), the drift check (`lr prospect drift`), the model card and every run id on the Eval page; re-run 2026-09-19 pinned, numbers reproduced exactly (seeded). **Backlog**: 1 km and 5 km cells, the LLM-derived features arm, the real-data CI regression (needs the seed snapshot) | Eval page links every number to a run: **met** (three tables, each row naming its MLflow run and store snapshot) |
 | **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
 | **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | The Phase 2 pre-read re-run through the new loop with second-family agreement; 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured against them |
