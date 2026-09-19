@@ -60,6 +60,7 @@ def take(log: Callable[[str], None] = print, path: Path | None = None) -> dict[s
         counts = {f"{s}.{t}": con.execute(f"select count(*) from {s}.{t}").fetchone()[0] for s, t in tables}
         layers = con.execute("select layer_key, payload_sha256, retrieved_at, record_count from native.layer order by 1").fetchall()
         meta = con.execute("select store_version, pipeline_version, built_at from main.meta").fetchone()
+        features = feature_summary(con)
     finally:
         con.close()
     manifest = {
@@ -68,11 +69,103 @@ def take(log: Callable[[str], None] = print, path: Path | None = None) -> dict[s
         "pipeline_version": meta[1] if meta else None, "built_at": meta[2] if meta else None, "git_commit": _git_commit(),
         "tables": counts,
         "layers": {k: {"payload_sha256": p, "retrieved_at": r, "record_count": n} for k, p, r, n in layers},
+        "features": features,
     }
     out = snapshots_dir() / f"{manifest['taken_at'].replace(':', '')}-{sha[:12]}.json"
     out.write_text(json.dumps(manifest, indent=1) + "\n")
     log(f"  snapshot {sha[:12]}: {sum(counts.values()):,} rows in {len(counts)} tables, {len(layers)} layers -> {out.name}")
     return manifest
+
+
+QUANTILES = (0.05, 0.25, 0.5, 0.75, 0.95)
+
+
+def feature_summary(con: Any) -> dict[str, dict[str, Any]]:
+    """Per feature: how many cells carry a value, how many an observation, and five quantiles of the values.
+
+    This is what a later drift check compares against: a source refreshed under the same key should move the
+    distribution little, and a large move is a question for a person before any model is refit."""
+    try:
+        rows = con.execute(
+            "select feature_key, count(*) filter (where value is not null) as n, "
+            "count(*) filter (where n_obs > 0) as with_obs, "
+            + ", ".join(f"quantile_cont(value, {q}) as q{int(q * 100)}" for q in QUANTILES)
+            + " from derived.cell_feature group by 1 order by 1").fetchall()
+    except Exception:  # noqa: BLE001 - no feature table in this store
+        return {}
+    out = {}
+    for key, n, with_obs, *qs in rows:
+        out[key] = {"n": int(n), "with_obs": int(with_obs),
+                    "q": [None if v is None else round(float(v), 6) for v in qs]}
+    return out
+
+
+def drift(snapshot_hash: str | None = None, path: Path | None = None,
+          log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Feature distributions now against the ones a snapshot recorded (PRD C.2.4: the drift check).
+
+    For every feature both sides know, the shift of each quantile is measured in units of the snapshot's
+    interquartile range; a feature drifts when its median moves more than a quarter of that range, when a
+    quarter of its cells appear or disappear, or when it exists on one side only. Constant features (an IQR of
+    zero) drift on any change. Nothing here refits anything: the verdict is a list for a person."""
+    snaps = list_snapshots()
+    if snapshot_hash:
+        matches = [s for s in snaps if s["store_sha256"].startswith(snapshot_hash)]
+        if not matches:
+            raise FileNotFoundError(f"no snapshot starting with {snapshot_hash!r}")
+        snap = matches[-1]
+    else:
+        snap = latest()
+        if snap is None:
+            raise FileNotFoundError("no snapshot to compare against; run `lr store snapshot` first")
+    before = snap.get("features") or {}
+    con = connect(path or db_path(), read_only=True)
+    try:
+        now = feature_summary(con)
+    finally:
+        con.close()
+    rows = compare_features(before, now)
+    for r in rows:
+        if r["drifted"]:
+            log(f"  {r['feature_key']:<24} {r['why']}")
+    drifted = [r for r in rows if r["drifted"]]
+    log(f"  drift against snapshot {snap['store_sha256'][:12]} ({snap['taken_at']}): "
+        f"{len(drifted)} of {len(rows)} feature(s) drifted"
+        + ("" if before else "; that snapshot recorded no feature summary, so every feature is new to it"))
+    return {"snapshot": snap["store_sha256"][:12], "taken_at": snap["taken_at"], "rows": rows,
+            "drifted": [r["feature_key"] for r in drifted]}
+
+
+def compare_features(before: dict[str, dict[str, Any]], now: dict[str, dict[str, Any]],
+                     median_shift: float = 0.25, count_shift: float = 0.25) -> list[dict[str, Any]]:
+    """Pure: one row per feature on either side, with the shift measured and the drift decision made."""
+    rows = []
+    for key in sorted(set(before) | set(now)):
+        b, n = before.get(key), now.get(key)
+        if b is None or n is None:
+            rows.append({"feature_key": key, "drifted": True, "why": "only in the snapshot" if n is None else "new since the snapshot",
+                         "median_shift_iqr": None, "count_change": None})
+            continue
+        bq, nq = b.get("q") or [], n.get("q") or []
+        count_change = (n["n"] - b["n"]) / b["n"] if b.get("n") else (1.0 if n.get("n") else 0.0)
+        shift = None
+        why = []
+        if len(bq) >= 5 and len(nq) >= 5 and bq[2] is not None and nq[2] is not None:
+            iqr = (bq[3] or 0.0) - (bq[1] or 0.0)
+            delta = (nq[2] or 0.0) - (bq[2] or 0.0)
+            if iqr > 0:
+                shift = delta / iqr
+                if abs(shift) > median_shift:
+                    why.append(f"median moved {shift:+.2f} IQR")
+            elif delta != 0:
+                shift = float("inf") if delta > 0 else float("-inf")
+                why.append("a constant feature changed value")
+        if abs(count_change) > count_shift:
+            why.append(f"cells with a value changed {count_change:+.0%}")
+        rows.append({"feature_key": key, "drifted": bool(why), "why": "; ".join(why) or "stable",
+                     "median_shift_iqr": None if shift is None or shift != shift or abs(shift) == float("inf") else round(shift, 3),
+                     "count_change": round(count_change, 4)})
+    return rows
 
 
 def list_snapshots() -> list[dict[str, Any]]:

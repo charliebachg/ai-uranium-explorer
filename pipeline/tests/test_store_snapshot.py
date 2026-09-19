@@ -91,3 +91,33 @@ def test_lineage_on_the_real_store_names_every_break_or_none() -> None:
     assert isinstance(problems, list)
     for p in problems:
         assert ":" in p, p
+
+
+def test_a_snapshot_records_feature_quantiles_and_drift_compares_them(store: Path) -> None:
+    con = connect(store)
+    ins = ("insert into derived.cell_feature (cell_id, feature_key, value, n_obs, nearest_m, from_tier, op, tool, computed_at) values ")
+    con.execute(ins + "('a', 'd_fault_m', 100, 1, 100, 'native', 'distance', 'lr', 't'), ('b', 'd_fault_m', 200, 1, 200, 'native', 'distance', 'lr', 't'), "
+                "('c', 'd_fault_m', 300, 1, 300, 'native', 'distance', 'lr', 't'), ('a', 'flat', 1, 1, null, 'native', 'count', 'lr', 't')")
+    con.close()
+    m = SN.take(log=lambda *a: None, path=store)
+    assert m["features"]["d_fault_m"]["n"] == 3 and m["features"]["d_fault_m"]["q"][2] == 200.0
+    # nothing changed: nothing drifts
+    out = SN.drift(m["store_sha256"][:12], path=store, log=lambda *a: None)
+    assert out["drifted"] == []
+    # the median moves by more than a quarter of the interquartile range, and a feature appears
+    con = connect(store)
+    con.execute("update derived.cell_feature set value = value + 80 where feature_key = 'd_fault_m'")
+    con.execute(ins + "('a', 'new_one', 5, 1, null, 'native', 'count', 'lr', 't')")
+    con.close()
+    out = SN.drift(m["store_sha256"][:12], path=store, log=lambda *a: None)
+    assert set(out["drifted"]) == {"d_fault_m", "new_one"}
+    row = next(r for r in out["rows"] if r["feature_key"] == "d_fault_m")
+    assert row["median_shift_iqr"] == 0.8 and "median moved" in row["why"]
+
+
+def test_compare_features_is_pure_and_names_each_reason() -> None:
+    before = {"x": {"n": 100, "with_obs": 100, "q": [0, 1, 2, 3, 4]}, "gone": {"n": 1, "with_obs": 1, "q": [1, 1, 1, 1, 1]}}
+    now = {"x": {"n": 60, "with_obs": 60, "q": [0, 1, 2, 3, 4]}}
+    rows = {r["feature_key"]: r for r in SN.compare_features(before, now)}
+    assert rows["x"]["drifted"] and rows["x"]["why"] == "cells with a value changed -40%"
+    assert rows["gone"]["why"] == "only in the snapshot"

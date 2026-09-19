@@ -690,6 +690,17 @@ def prospect_readiness_cmd() -> None:
     report(log=typer.echo)
 
 
+@prospect_app.command("drift")
+def prospect_drift_cmd(
+    snapshot: str = typer.Option(None, "--snapshot", help="snapshot hash to compare against; default the latest"),
+) -> None:
+    """Feature distributions now against a snapshot's: which features moved since it was taken. Exits 1 on drift."""
+    from .store.snapshot import drift
+
+    out = drift(snapshot, log=typer.echo)
+    raise typer.Exit(1 if out["drifted"] else 0)
+
+
 @prospect_app.command("gate")
 def prospect_gate_cmd() -> None:
     """The five-column data readiness gate (PRD 9.1): present, licensed, covers, servable, versioned. Exits 1 when red."""
