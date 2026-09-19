@@ -65,8 +65,12 @@ def test_search_rows_keep_each_arm_s_own_run_id_and_the_decision(tmp_path: Path)
     by_arm = {(r["arm"], r["metric"]): r for r in b["rows"]}
     assert by_arm[("random_forest.all.spatial", "pr_auc")]["run_id"] == "d1f910f4"
     assert by_arm[("effort.all.spatial", "pr_auc")]["run_id"] == "3264dc93"
+    card = b["decision"].pop("card")
     assert b["decision"] == {"model": "random_forest", "stage": "candidate", "served": False,
                              "reason": "not validated; nothing is served", "run_id": "d1f910f4", "version": 4}
+    # the model card comes from the registered run's own row
+    assert card["name"] == "random_forest" and card["fold"] == "spatial" and card["matched"] and card["thinned"]
+    assert card["features"] == [] and card["n_pos"] is None
     assert registry(*vals)["c:s:effort.all.spatial.pr_auc.hi"]["value"] == 0.199
 
 

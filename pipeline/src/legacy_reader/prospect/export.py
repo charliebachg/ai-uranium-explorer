@@ -268,7 +268,20 @@ def _search_block(vals: list[dict[str, Any]], d: dict[str, Any]) -> dict[str, An
     if isinstance(dec, dict) and dec.get("reason"):
         decision = {"model": dec.get("model") or dec.get("name"), "stage": dec.get("stage"),
                     "served": bool(dec.get("served", False)), "reason": str(dec["reason"]),
-                    "run_id": dec.get("run_id"), "version": dec.get("version")}
+                    "run_id": dec.get("run_id"), "version": dec.get("version"), "card": None}
+        # the model card, from the tracker's own row for the registered run: what it was fitted on and how
+        arm = next((r for r in d.get("rows") or [] if dec.get("run_id") and r.get("run_id") == dec.get("run_id")), None)
+        if arm is not None:
+            card: dict[str, Any] = {"name": arm["name"], "feature_set": arm["feature_set"], "fold": arm["fold"],
+                                    "positives": str(arm.get("positives", "all")), "matched": bool(arm.get("matched", True)),
+                                    "thinned": bool(arm.get("thinned", True)), "features": [str(f) for f in arm.get("features") or []],
+                                    "n_pos": None, "scored": None}
+            for k in ("n_pos", "scored"):
+                v = _num(arm.get(k))
+                if v is not None:
+                    vals.append(stat(f"c:s:card.{k}", int(v), note=f"{k} for the registered model's run"))
+                    card[k] = f"c:s:card.{k}"
+            decision["card"] = card
     cells = _num(d.get("cells"))
     if cells is not None:
         vals.append(stat("c:s:cells", int(cells), note="common complete cases the model search scored"))

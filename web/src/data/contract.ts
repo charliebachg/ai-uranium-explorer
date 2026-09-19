@@ -684,6 +684,21 @@ export const SearchBlock = z.object({
       reason: z.string(),
       run_id: z.string().nullable(),
       version: z.number().int().nullable(),
+      /** The model card from the tracker's row for the registered run. */
+      card: z
+        .object({
+          name: z.string(),
+          feature_set: z.string(),
+          fold: z.string(),
+          positives: z.string(),
+          matched: z.boolean(),
+          thinned: z.boolean(),
+          features: z.array(z.string()),
+          n_pos: StatRef.nullable(),
+          scored: StatRef.nullable(),
+        })
+        .nullable()
+        .optional(),
     })
     .nullable(),
 });

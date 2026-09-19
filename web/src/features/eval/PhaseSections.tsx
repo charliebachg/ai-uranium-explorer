@@ -263,7 +263,37 @@ function Decision({ block }: { block: SearchBlock }) {
           {d.stage === "validated" ? ": validated." : ": not validated, so nothing is served."}
         </>
       ) : null}
+      {d.card ? <ModelCard card={d.card} /> : null}
     </p>
+  );
+}
+
+/** What the registered model was fitted on, from the tracker: the card a reader would ask for before trusting it. */
+function ModelCard({ card }: { card: NonNullable<NonNullable<SearchBlock["decision"]>["card"]> }) {
+  return (
+    <span className="mt-1 block text-[11px] text-ink-3" data-testid="model-card">
+      Model card: <span data-ident>{card.name}</span> on the <span data-ident>{card.feature_set}</span>{" "}
+      feature set, held out by <span data-chrome>{FOLD_LABEL[card.fold] ?? card.fold}</span>
+      {card.matched ? ", matched background" : ""}
+      {card.thinned ? ", thinned positives" : ""}
+      {card.scored && card.n_pos ? (
+        <>
+          ; <V id={card.scored} /> cells scored with <V id={card.n_pos} /> positives
+        </>
+      ) : null}
+      {card.features.length ? (
+        <>
+          ; features:{" "}
+          {card.features.map((f, i) => (
+            <span key={f}>
+              {i ? ", " : ""}
+              <span data-ident>{f}</span>
+            </span>
+          ))}
+        </>
+      ) : null}
+      .
+    </span>
   );
 }
 
