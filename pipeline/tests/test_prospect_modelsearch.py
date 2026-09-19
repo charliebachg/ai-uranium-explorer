@@ -73,3 +73,14 @@ def test_quick_run_decides_without_tracking_or_writing(monkeypatch: pytest.Monke
     assert len(out["rows"]) == 4 and {r["name"] for r in out["rows"]} == {"histgb", "effort", "random_forest", "bagging_pu"}
     assert out["decision"]["best"] in {"histgb", "random_forest", "bagging_pu"}
     assert out["decision"]["served"] is False and "against the effort null" in out["decision"]["reason"]
+
+
+def test_the_decision_never_promotes_an_arm_that_carries_effort_features() -> None:
+    rows = [
+        {"name": "effort", "fold": "spatial", "pr_auc": 0.18, "pr_auc_ci": (0.16, 0.20), "features": list(M.EFFORT_FEATURES)},
+        {"name": "learned+effort", "fold": "spatial", "pr_auc": 0.30, "pr_auc_ci": (0.28, 0.32),
+         "features": [*M.LEARNED_FEATURES, *M.EFFORT_FEATURES]},
+        {"name": "random_forest", "fold": "spatial", "pr_auc": 0.12, "pr_auc_ci": (0.11, 0.14), "features": list(M.LEARNED_FEATURES)},
+    ]
+    d = MS.decide(rows, log=lambda *a: None, track=False)
+    assert d["best"] == "random_forest" and d["validated"] is False

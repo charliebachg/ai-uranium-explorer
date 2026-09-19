@@ -687,6 +687,35 @@ def store_rebuild_cmd() -> None:
     rebuild(log=typer.echo)
 
 
+@store_app.command("snapshot")
+def store_snapshot_cmd(list_only: bool = typer.Option(False, "--list", help="list snapshots instead of taking one")) -> None:
+    """Write a hashed manifest of the store (row counts, layer pull hashes, versions) that a run can cite."""
+    from .store.snapshot import list_snapshots, take
+
+    if list_only:
+        for s in list_snapshots():
+            typer.echo(f"  {s['store_sha256'][:12]}  {s['taken_at']}  {sum(s['tables'].values()):,} rows  commit {(s.get('git_commit') or '')[:8]}")
+        return
+    take(log=typer.echo)
+
+
+@store_app.command("register-layers")
+def store_register_layers_cmd() -> None:
+    """Register every pulled layer in native.layer with the hash of its payload; fill hashes that are missing."""
+    from .store.snapshot import register_layers
+
+    register_layers(log=typer.echo)
+
+
+@store_app.command("lineage")
+def store_lineage_cmd() -> None:
+    """Check that every layer, feature and verified source walks back to a hashed pull. Exits 1 on a break."""
+    from .store.snapshot import lineage
+
+    problems = lineage(log=typer.echo)
+    raise typer.Exit(1 if problems else 0)
+
+
 @store_app.command("migrate")
 def store_migrate_cmd(dsn: str = typer.Option(None, "--dsn", help="default: LR_PG_DSN or the compose default")) -> None:
     """Apply the Alembic migrations to the serving database (Postgres + PostGIS)."""

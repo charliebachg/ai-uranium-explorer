@@ -243,8 +243,10 @@ def run(grid_id: str | None = None, seed: int = 0, boot: int = H.BOOT, quick: bo
 def decide(rows: list[dict[str, Any]], log: Callable[[str], None] = print, track: bool = True) -> dict[str, Any]:
     """The promotion rule over the spatial-fold rows: the best candidate is validated only if it beats the null."""
     null = next((r for r in rows if r["name"] == "effort" and r["fold"] == "spatial" and "pr_auc" in r), None)
+    # a candidate is a geology-only model: an arm that carries the effort features (learned+effort) is a
+    # different question, "does geology add anything on top of effort", and is reported, not promoted
     cands = [r for r in rows if r["fold"] == "spatial" and r["name"] != "effort" and not r["name"].startswith("ablation")
-             and "pr_auc" in r]
+             and not set(M.EFFORT_FEATURES) & set(r.get("features", [])) and "pr_auc" in r]
     if not null or not cands:
         return {"served": False, "reason": "no spatial-fold rows to decide on"}
     best = max(cands, key=lambda r: r["pr_auc"])

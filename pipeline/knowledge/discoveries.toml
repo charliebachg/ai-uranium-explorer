@@ -1,0 +1,140 @@
+# Dated discoveries for the hindcast (PRD C.2.3): the only honest "prediction before the claim" test short of
+# drilling. Each entry is a deposit or occurrence in the label layers, the year the discovery was made public,
+# the public document it is cited to, and a confidence: `high` means the year is stated in the cited document
+# or is a matter of record across several public sources; `medium` means the year is well known but was not
+# checked against the document named here in this session. The hindcast reports both sets separately.
+#
+# What "discovery year" means here: the year the first mineralised intersection at the named body was made,
+# as public sources state it. A deposit named for a zone first drilled years after the camp opened carries the
+# zone's year, not the camp's. Cells are the label cells that carry the name in derived.cell_label.
+
+version = "discoveries/v1"
+frozen_at = "2026-09-19"
+
+[[discovery]]
+name = "Rabbit Lake"
+label_name = "Rabbit Lake"
+year = 1968
+camp = "Rabbit Lake / Collins Bay"
+source = "Cameco, Rabbit Lake Operation, NI 43-101 Technical Report (2012); Saskatchewan Geological Survey uranium deposit summaries"
+confidence = "high"
+
+[[discovery]]
+name = "Cluff Lake D zone"
+label_name = "D"
+year = 1969
+camp = "Cluff Lake"
+source = "Amok / Cogema; Saskatchewan Geological Survey Open File on Cluff Lake deposits; Jefferson et al. 2007 (GSC Bulletin 588)"
+confidence = "high"
+
+[[discovery]]
+name = "Key Lake, Gaertner"
+label_name = "Gaertner"
+year = 1975
+camp = "Key Lake"
+source = "Cameco, Key Lake Operation technical reporting; Jefferson et al. 2007 (GSC Bulletin 588)"
+confidence = "high"
+
+[[discovery]]
+name = "Key Lake, Deilmann"
+label_name = "Deilmann"
+year = 1976
+camp = "Key Lake"
+source = "Cameco, Key Lake Operation technical reporting; Jefferson et al. 2007 (GSC Bulletin 588)"
+confidence = "high"
+
+[[discovery]]
+name = "Horseshoe"
+label_name = "Horseshoe"
+year = 1977
+camp = "Hidden Bay"
+source = "UEX Corporation, Hidden Bay Project, Horseshoe and Raven deposits, NI 43-101 Technical Report (2011): history section"
+confidence = "medium"
+
+[[discovery]]
+name = "West Bear"
+label_name = "West Bear"
+year = 1977
+camp = "Hidden Bay"
+source = "UEX Corporation, Hidden Bay Project technical reporting: history section"
+confidence = "medium"
+
+[[discovery]]
+name = "McClean Lake, JEB"
+label_name = "Jeb"
+year = 1980
+camp = "McClean Lake"
+source = "Orano Canada / AREVA, McClean Lake technical reporting; Saskatchewan Geological Survey deposit summaries"
+confidence = "medium"
+
+[[discovery]]
+name = "McClean Lake, Sue C"
+label_name = "Sue C"
+year = 1988
+camp = "McClean Lake"
+source = "AREVA / Orano, McClean Lake technical reporting: Sue zones discovered 1988 to 1989"
+confidence = "medium"
+
+[[discovery]]
+name = "McClean Lake, Sue B"
+label_name = "Sue B"
+year = 1989
+camp = "McClean Lake"
+source = "AREVA / Orano, McClean Lake technical reporting: Sue zones discovered 1988 to 1989"
+confidence = "medium"
+
+[[discovery]]
+name = "Shea Creek, Colette"
+label_name = "Colette"
+year = 1995
+camp = "Shea Creek"
+source = "UEX Corporation, Shea Creek Property, NI 43-101 Technical Report (2010): Colette discovered by Cogema in the mid 1990s"
+confidence = "medium"
+
+[[discovery]]
+name = "Shea Creek, Kianna"
+label_name = "Kianna"
+year = 2004
+camp = "Shea Creek"
+source = "UEX Corporation, Shea Creek Property, NI 43-101 Technical Report (2010, updated 2013): Kianna discovered 2004"
+confidence = "high"
+
+[[discovery]]
+name = "Centennial"
+label_name = "Drill Holes VR-3 to VR-10 or C Conductor Zone or Wide Lake Uranium Zone or Centennial Uranium Deposit"
+year = 2004
+camp = "Virgin River"
+source = "Cameco / Formation Metals, Virgin River project releases (2004); Saskatchewan Mineral Deposit Index entry"
+confidence = "medium"
+
+[[discovery]]
+name = "Patterson Lake South, Triple R (R780E)"
+label_name = "R780E"
+year = 2013
+camp = "Patterson Lake South"
+source = "Fission Uranium, Patterson Lake South Property, NI 43-101 Technical Report (2015): R00E discovered November 2012, R780E zone 2013"
+confidence = "high"
+
+[[discovery]]
+name = "Patterson Lake South, R1620E"
+label_name = "R1620E"
+year = 2014
+camp = "Patterson Lake South"
+source = "Fission Uranium, Patterson Lake South Property, NI 43-101 Technical Report (2015)"
+confidence = "medium"
+
+[[discovery]]
+name = "Spitfire"
+label_name = "Spitfire Zone"
+year = 2015
+camp = "Hook Lake"
+source = "Purepoint Uranium, Hook Lake Project releases (2015); Saskatchewan Mineral Deposit Index entry"
+confidence = "medium"
+
+[[discovery]]
+name = "Hurricane"
+label_name = "Hurricane Deposit"
+year = 2018
+camp = "Larocque East"
+source = "IsoEnergy, Larocque East Project, Hurricane Deposit, NI 43-101 Technical Report (2022): discovered July 2018"
+confidence = "high"
