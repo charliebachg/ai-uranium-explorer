@@ -19,6 +19,7 @@ import datetime as dt
 import hashlib
 import json
 import re
+import queue
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -243,10 +244,20 @@ def fetch_parallel(items: list[FetchItem], raw_dir: Path, workers: int, log: Cal
         lock = threading.Lock()
         results: list[dict[str, Any] | None] = [None] * len(items)
 
-        def run(idx: list[int], fetcher: Fetcher) -> None:
+        # a shared queue rather than a round-robin split: with a fixed split, a worker that draws a 100 MB
+        # volume keeps every small object behind it waiting while the other workers sit idle
+        todo: queue.Queue[int] = queue.Queue()
+        for i in range(len(items)):
+            todo.put(i)
+
+        def run(fetcher: Fetcher) -> None:
             local = dict(manifest)
             try:
-                for i in idx:
+                while True:
+                    try:
+                        i = todo.get_nowait()
+                    except queue.Empty:
+                        return
                     it = items[i]
                     res = fetcher.fetch_item(it, paths[i], local)
                     rel = str(paths[i].relative_to(raw_dir))
@@ -263,7 +274,7 @@ def fetch_parallel(items: list[FetchItem], raw_dir: Path, workers: int, log: Cal
         fetchers = [make_fetcher() if make_fetcher else Fetcher(raw_dir=raw_dir, log=log) for _ in range(workers)]
         try:
             with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="lr-fetch") as pool:
-                futures = [pool.submit(run, list(range(w, len(items), workers)), fetchers[w]) for w in range(workers)]
+                futures = [pool.submit(run, fetchers[w]) for w in range(workers)]
                 for f in futures:
                     f.result()
         finally:
