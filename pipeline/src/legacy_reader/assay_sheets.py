@@ -158,15 +158,29 @@ def read_certificate(df: pd.DataFrame, scan: int = HEADER_SCAN_ROWS) -> tuple[di
         u_col = max(j for j, _ in header_pos) + 1              # old form: the value column follows the header
     desc_col = next(j for j, c in header_pos if _norm(c) in ("description", "sample", "sample id", "sample no", "sample number"))
     type_col = next((j for j, c in header_pos if _norm(c) in ("sample type", "type")), None)
-    rows = []
-    for r in range(header_row + 1, len(df)):
-        row = df.iloc[r].tolist()
-        sample = _norm(row[desc_col]) if desc_col < len(row) else ""
-        if not sample:
-            continue
-        kind = _norm(row[type_col]) if type_col is not None and type_col < len(row) else ""
-        value = row[u_col] if u_col < len(row) else None
-        rows.append((r, sample, kind or None, value))
+    after_header = max(j for j, _ in header_pos) + 1
+
+    def collect(col: int | None) -> list[tuple[int, str, str | None, Any]]:
+        out = []
+        for r in range(header_row + 1, len(df)):
+            row = df.iloc[r].tolist()
+            sample = _norm(row[desc_col]) if desc_col < len(row) else ""
+            if not sample:
+                continue
+            kind = _norm(row[type_col]) if type_col is not None and type_col < len(row) else ""
+            if col is not None:
+                value = row[col] if col < len(row) else None
+            else:  # first numeric cell to the right of the header span
+                value = next((c for c in row[after_header:] if c is not None and str(c) != "nan" and _NUM.match(str(c).strip())), None)
+            out.append((r, sample, kind or None, value))
+        return out
+
+    rows = collect(u_col)
+    numeric = sum(1 for _, _, _, v in rows if v is not None and str(v) != "nan" and _NUM.match(str(v).strip()))
+    if rows and numeric < 0.5 * len(rows):
+        # the analyte label does not sit over its value column in this sheet: take the first number past the header
+        rows = collect(None)
+        u_col = -1
     block["header_row"] = header_row
     block["value_col"] = int(u_col)
     return block, rows
@@ -266,10 +280,14 @@ def _certificate_rows(meta: dict[str, Any], cert: tuple[dict[str, Any], list], f
             "u_ppm": up, "u_ppm_as_printed": printed if up is not None else None, "u_ppm_column": column if up is not None else None,
             "below_detection": below, "sample_type": kind, "kind": "certificate", "loaded_at": now,
         })
+    notes = []
+    if out_of_range:
+        notes.append(f"{out_of_range} value(s) above 100 wt% dropped as unreadable")
+    if not rows:
+        notes.append(f"certificate for analyte {analyte!r} in {unit!r}: no uranium value rows")
     meta.update(status="ingested" if rows else "empty", header_row=int(block["header_row"]), n_rows=len(rows),
                 columns_json=json.dumps({k: v for k, v in block.items() if k != "header_row"}), format="certificate",
-                note=(f"{out_of_range} value(s) above 100 wt% dropped as unreadable" if out_of_range else None) if rows
-                     else f"certificate for analyte {analyte!r} in {unit!r}: no uranium value rows")
+                note="; ".join(notes) or None)
     return meta, rows
 
 

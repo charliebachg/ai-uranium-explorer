@@ -116,10 +116,10 @@ def test_src_certificate_form_is_read_with_analyte_unit_and_qc_rows_flagged() ->
     df = pd.DataFrame([
         ["SRC Geoanalytical Laboratories", None, None, None],
         ["Company", "NexGen Energy", None, None], ["Group", "G-2019-1009", None, None], ["Samples", "3", None, None],
-        ["Analyte", "U3O8", None, None], ["Unit", "wt %", None, None], ["Detection", "0.001", None, None],
+        ["Analyte", None, None, "U3O8"], ["Unit", None, None, "wt %"], ["Detection", None, None, "0.001"],
         [None, None, None, None],
         ["Description", "Sample Type", "Preparation Code", None],
-        ["BL4A ", "Standard", 0.148, None],
+        ["BL4A ", "Standard", None, 0.148],
         ["144586 ", "Basement", "C/S/A", 0.004],
         ["144587 ", "Basement", "C/S/A", "<0.001"],
     ], dtype=object)
@@ -139,7 +139,7 @@ def test_src_certificate_with_a_blank_first_column_still_reads() -> None:
     """The real SRC sheets leave column A empty; every cell sits one column to the right."""
     df = pd.DataFrame([
         [None, "SRC Geoanalytical Laboratories", None, None, None],
-        [None, "Analyte", "U3O8", None, None], [None, "Unit", "wt %", None, None],
+        [None, "Analyte", None, None, "U3O8"], [None, "Unit", None, None, "wt %"],
         [None, "Description", "Sample Type", "Preparation Code", None],
         [None, "144586 ", "Basement", "C/S/A", 0.004],
         [None, "144587 ", "Basement", "C/S/A", "<0.001"],
