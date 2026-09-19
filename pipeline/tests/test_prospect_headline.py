@@ -80,6 +80,10 @@ def test_thinned_positives_keeps_one_per_block_and_every_negative() -> None:
     kept = df[keep & (y == 1)]
     blocks = list(zip(np.floor(kept["cx"] / 10_000), np.floor(kept["cy"] / 10_000), strict=True))
     assert len(blocks) == len(set(blocks)), "at most one positive per 10 km block"
+    all_blocks = {(bx, by) for bx, by in zip(np.floor(df["cx"] / 10_000), np.floor(df["cy"] / 10_000), strict=True)
+                  if True}
+    occupied = {(bx, by) for bx, by, yy in zip(np.floor(df["cx"] / 10_000), np.floor(df["cy"] / 10_000), y, strict=True) if yy}
+    assert len(kept) == len(occupied), "exactly one positive survives per block that had any"
     assert 0 < len(kept) < (y == 1).sum()
 
 
@@ -132,7 +136,9 @@ def test_a_configuration_reports_metrics_intervals_and_its_key() -> None:
     cfg = H.Config("learned", "all", matched=True, thinned=True, fold="spatial")
     r = H.evaluate_config(df, cfg, seed=0, boot=30, fit=fake_fit)
     assert r["config"] == "learned.all.matched+thinned.spatial"
-    assert r["cells"] < len(df) and r["n_pos"] > 0 and r["n_deposits"] > 0
+    assert r["cells"] == len(df), "every configuration is scored on the whole common set"
+    assert r["train_cells"] < len(df) and r["train_pos"] < H.labels(df, "all").sum(), "the corrections shrink training only"
+    assert r["n_pos"] == H.labels(df, "all").sum() and r["n_deposits"] > 0, "all positives are still evaluated"
     assert 0 < r["pr_auc"] <= 1 and r["pr_auc_ci"][0] <= r["pr_auc"] <= r["pr_auc_ci"][1]
     assert set(("capture_top5", "capture_top10", "capture_top15")) <= set(r)
 

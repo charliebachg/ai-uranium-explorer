@@ -29,7 +29,6 @@ from __future__ import annotations
 
 import datetime as dt
 import itertools
-import json
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -93,9 +92,10 @@ def thinned_positives(df: pd.DataFrame, y: np.ndarray, block_m: float = THIN_BLO
         bx = np.floor(df["lon"].to_numpy() / 0.17)
         by = np.floor(df["lat"].to_numpy() / 0.09)
     keep = ~y.astype(bool)
-    key = pd.Series(list(zip(bx, by, strict=True)))
-    for _, idx in key[y == 1].groupby(key[y == 1]).indices.items():
-        keep[rng.choice(np.asarray(idx))] = True
+    pos = np.flatnonzero(y == 1)
+    blocks = pd.Series([(bx[i], by[i]) for i in pos])
+    for _, positions in blocks.groupby(blocks).indices.items():
+        keep[pos[rng.choice(np.asarray(positions))]] = True
     return keep
 
 
@@ -197,24 +197,16 @@ def evaluate_config(df: pd.DataFrame, cfg: Config, seed: int = 0, boot: int = BO
                     fit: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray] | None = None) -> dict[str, Any]:
     """Out-of-fold metrics for one configuration, with intervals. Deposit capture is always on deposits."""
     y = labels(df, cfg.positives)
-    keep = np.ones(len(df), dtype=bool)
-    if cfg.thinned:
-        keep &= thinned_positives(df, y, seed=seed)
-    if cfg.matched:
-        idx = np.flatnonzero(keep)
-        inner = matched_background(df.iloc[idx].reset_index(drop=True), y[idx], seed=seed)
-        keep = np.zeros(len(df), dtype=bool)
-        keep[idx[inner]] = True
-    sub = df[keep].reset_index(drop=True)
-    y_sub = y[keep]
-    fold = M.folds(sub, cfg.fold, seed=seed)
-    p = _oof(sub, cfg.feature_set, y_sub, fold, fit)
+    train_ok = training_mask(df, y, matched=cfg.matched, thinned=cfg.thinned, seed=seed)
+    fold = M.folds(df, cfg.fold, seed=seed)
+    p = _oof(df, cfg.feature_set, y, fold, fit, train_ok=train_ok)
     ok = np.isfinite(p)
-    y_ok, p_ok = y_sub[ok], p[ok]
-    y_dep = (sub["label_tier"] == "deposit").to_numpy().astype(int)[ok]
+    y_ok, p_ok = y[ok], p[ok]
+    y_dep = (df["label_tier"] == "deposit").to_numpy().astype(int)[ok]
     row: dict[str, Any] = {"config": cfg.key, "feature_set": cfg.feature_set, "positives": cfg.positives,
                            "matched": cfg.matched, "thinned": cfg.thinned, "fold": cfg.fold,
-                           "cells": int(len(sub)), "scored": int(ok.sum()), "n_pos": int(y_ok.sum()),
+                           "cells": int(len(df)), "train_cells": int(train_ok.sum()),
+                           "train_pos": int(y[train_ok].sum()), "scored": int(ok.sum()), "n_pos": int(y_ok.sum()),
                            "n_deposits": int(y_dep.sum()), "base_rate": float(y_ok.mean()) if len(y_ok) else float("nan")}
     if y_ok.sum() == 0 or y_ok.sum() == len(y_ok):
         row["note"] = "no usable split"
@@ -229,16 +221,34 @@ def evaluate_config(df: pd.DataFrame, cfg: Config, seed: int = 0, boot: int = BO
     return row
 
 
+def training_mask(df: pd.DataFrame, y: np.ndarray, matched: bool, thinned: bool, seed: int = 0) -> np.ndarray:
+    """Which cells a model may be fitted on. The corrections shrink the training set and nothing else:
+    every configuration is still scored on every common cell, so the metrics stay comparable."""
+    keep = np.ones(len(df), dtype=bool)
+    if thinned:
+        keep &= thinned_positives(df, y, seed=seed)
+    if matched:
+        idx = np.flatnonzero(keep)
+        inner = matched_background(df.iloc[idx].reset_index(drop=True), y[idx], seed=seed)
+        keep = np.zeros(len(df), dtype=bool)
+        keep[idx[inner]] = True
+    return keep
+
+
 def _oof(df: pd.DataFrame, feature_set: str, y: np.ndarray, fold: M.Fold,
-         fit: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray] | None) -> np.ndarray:
+         fit: Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray] | None,
+         train_ok: np.ndarray | None = None) -> np.ndarray:
+    """Out-of-fold scores for every cell: a fold's model is fitted on the other folds' *training-eligible*
+    cells and scores all of the fold's cells, eligible or not."""
     keys = list(M.FEATURE_SETS[feature_set])
     x = df[keys].to_numpy(dtype=float)
+    eligible = np.ones(len(df), dtype=bool) if train_ok is None else train_ok
     out = np.full(len(df), np.nan)
     for g in np.unique(fold.groups):
         if g < 0:
             continue
         test = fold.groups == g
-        train = ~test
+        train = ~test & eligible
         if y[train].sum() == 0 or y[test].sum() == 0:
             continue
         out[test] = (fit or _fit_predict)(x[train], y[train], x[test])
