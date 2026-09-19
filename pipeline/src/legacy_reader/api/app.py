@@ -29,6 +29,7 @@ from ..prospect import serve as S
 from ..store import connect
 from ..prospect.chat import Conversation, ask
 from . import persist
+from .reads import Candidates, EvidenceCache
 from .models import CellConversations, Cells, ChatResponse, ConversationRecord, Evidence
 
 CELL_ID = r"^\d{4}_\d{4}$"
@@ -47,6 +48,8 @@ class Health(BaseModel):
     model: str
     effort: str
     backend: str
+    reads: str = "duckdb"                      # postgis | duckdb: where the candidate list came from last
+    evidence_cache: dict[str, int] = Field(default_factory=dict)
 
 
 class Registry:
@@ -87,7 +90,7 @@ def _done_payload(conv: Conversation, cell_id: str, turn: dict[str, Any]) -> dic
 
 
 def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "medium", backend_name: str = "openai",
-               db_path: Path | None = None, web_dist: Path | None = None) -> FastAPI:
+               db_path: Path | None = None, web_dist: Path | None = None, warm: bool = False) -> FastAPI:
     app = FastAPI(title="AI Uranium Explorer service", version="0.2.0")
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
     registry = Registry(db_path)
@@ -95,6 +98,15 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
     # a read-only connection never applies the schema, so the conversation tables are created here, once,
     # before the first read can ask for them
     connect(db_path).close()
+    evidence_cache = EvidenceCache()
+    candidates = Candidates()
+    app.state.evidence_cache, app.state.candidates = evidence_cache, candidates
+    if warm:
+        # the cells the rail lists first are the ones a reader clicks first
+        try:
+            evidence_cache.warm([c["cell_id"] for c in candidates.get(40, "criteria")], log=print)
+        except Exception:  # noqa: BLE001 - no store yet is a state the health route reports, not a crash
+            pass
 
     def run_turn(conv: Conversation, question: str, on_event: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
         """One gated turn, persisted with the tool calls it made and the values it cited."""
@@ -108,17 +120,18 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
 
     @app.get("/api/health", response_model=Health)
     def health() -> Health:
-        return Health(ok=True, model=model, effort=effort, backend=backend_name)
+        return Health(ok=True, model=model, effort=effort, backend=backend_name, reads=candidates.source,
+                      evidence_cache={"hits": evidence_cache.hits, "misses": evidence_cache.misses})
 
     @app.get("/api/cells", response_model=Cells)
     def cells(limit: int = Query(40, ge=1, le=200), model_key: str = Query("criteria", alias="model")) -> dict[str, Any]:
-        return {"cells": S.candidates(limit, model_key)}
+        return {"cells": candidates.get(limit, model_key)}
 
     @app.get("/api/cell/{cell_id}", response_model=Evidence)
     def cell(cell_id: str) -> dict[str, Any]:
         if not _CELL.match(cell_id):
             raise HTTPException(400, "cell id looks like 0123_0045")
-        return S.evidence(cell_id)
+        return evidence_cache.get(cell_id)
 
     @app.get("/api/cell/{cell_id}/conversations", response_model=CellConversations)
     def cell_conversations(cell_id: str) -> dict[str, Any]:

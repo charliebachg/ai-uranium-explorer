@@ -61,7 +61,9 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
 
 def test_health_names_the_model_and_backend(client: TestClient) -> None:
     r = client.get("/api/health")
-    assert r.status_code == 200 and r.json() == {"ok": True, "model": "fake-model", "effort": "low", "backend": "fake"}
+    body = r.json()
+    assert r.status_code == 200 and body["ok"] is True and body["model"] == "fake-model" and body["backend"] == "fake"
+    assert body["reads"] in ("duckdb", "postgis") and set(body["evidence_cache"]) == {"hits", "misses"}
 
 
 def test_cells_and_evidence_keep_the_old_contract(client: TestClient) -> None:
@@ -187,3 +189,78 @@ def test_the_built_site_is_served_from_the_same_process_behind_the_api(tmp_path:
     assert c.get("/eval").text.startswith("<!doctype html>"), "the app's own routes fall back to index.html"
     assert c.get("/assets/app.js").text == "console.log(1)"
     assert c.get("/../etc/passwd").status_code in (200, 404) and "root:" not in c.get("/../etc/passwd").text
+
+
+# ---------------------------------------------------------------- serving reads
+
+
+def test_the_evidence_cache_serves_a_record_once_per_store_version() -> None:
+    from legacy_reader.api.reads import EvidenceCache
+
+    calls = []
+    stamp = {"v": 1.0}
+    cache = EvidenceCache(compute=lambda cid: calls.append(cid) or {"cell_id": cid}, stamp=lambda: stamp["v"])
+    assert cache.get("a")["cell_id"] == "a" and cache.get("a")["cell_id"] == "a"
+    assert calls == ["a"] and cache.hits == 1 and cache.misses == 1
+    stamp["v"] = 2.0  # the store was written: every cached record is stale at once
+    cache.get("a")
+    assert calls == ["a", "a"]
+
+
+def test_candidates_fall_back_to_duckdb_when_postgis_fails_and_retry_later(monkeypatch: pytest.MonkeyPatch) -> None:
+    from legacy_reader.api import reads
+
+    def pg_down(limit, model, dsn):
+        raise ConnectionError("refused")
+
+    c = reads.Candidates(dsn="postgresql://x", duck=lambda limit, model: [{"cell_id": "duck"}], pg=pg_down)
+    assert c.get(5, "criteria") == [{"cell_id": "duck"}] and c.source == "duckdb"
+    c.pg = lambda limit, model, dsn: [{"cell_id": "pg"}]
+    assert c.get(5, "criteria") == [{"cell_id": "duck"}], "a failed serving database is not retried on every request"
+    monkeypatch.setattr(reads.time, "monotonic", lambda: c.failed_at + reads.PG_RETRY_S + 1)
+    assert c.get(5, "criteria") == [{"cell_id": "pg"}] and c.source == "postgis"
+    assert reads.Candidates(dsn="", duck=lambda limit, model: [], pg=pg_down).get(1, "criteria") == []
+
+
+def test_ten_readers_of_one_cold_cell_cost_one_computation() -> None:
+    import threading
+
+    from legacy_reader.api.reads import EvidenceCache
+
+    calls = []
+    started = threading.Event()
+
+    def slow(cid):
+        calls.append(cid)
+        started.wait(0.2)
+        return {"cell_id": cid}
+
+    cache = EvidenceCache(compute=slow, stamp=lambda: 1.0)
+    threads = [threading.Thread(target=cache.get, args=("z",)) for _ in range(10)]
+    for th in threads:
+        th.start()
+    for th in threads:
+        th.join()
+    assert calls == ["z"] and cache.misses == 1 and cache.hits == 9
+
+
+def test_in_one_mode_a_read_only_request_gets_a_writable_connection_and_the_schema_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from legacy_reader import store
+
+    db = tmp_path / "one.duckdb"
+    monkeypatch.setenv("LR_STORE_RW", "1")
+    applied = []
+    real = store.apply_schema
+    monkeypatch.setattr(store, "apply_schema", lambda con: applied.append(1) or real(con))
+    a = store.connect(db, read_only=True)
+    a.execute("create table t (x integer)")   # would raise on a read-only handle
+    a.close()
+    b = store.connect(db, read_only=True)
+    b.execute("insert into t values (1)")
+    b.close()
+    assert len(applied) == 1, "the schema is applied once per path per process in one mode"
+    monkeypatch.delenv("LR_STORE_RW")
+    c = store.connect(db, read_only=True)
+    with pytest.raises(Exception):
+        c.execute("insert into t values (2)")
+    c.close()

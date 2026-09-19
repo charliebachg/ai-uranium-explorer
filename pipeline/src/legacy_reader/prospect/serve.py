@@ -124,15 +124,19 @@ def serve(port: int = DEFAULT_PORT, model: str = "", effort: str = "medium",
           web_dist: str | None = None) -> None:
     """Run the FastAPI service on localhost. The routes and the NDJSON events are unchanged from the stdlib
     server this replaced; conversations are now persisted turn by turn in the agent tier."""
+    import os
+
     import uvicorn
 
     from ..api.app import create_app
+
+    os.environ["LR_STORE_RW"] = "1"   # one connection mode for the whole process; see store.one_mode
 
     chosen, model = make_backend(backend, model)
     from pathlib import Path
 
     dist = Path(web_dist) if web_dist else None
-    app = create_app(lambda: chosen, model, effort, backend_name=backend, web_dist=dist)
+    app = create_app(lambda: chosen, model, effort, backend_name=backend, web_dist=dist, warm=True)
     log(f"  listening on http://{host}:{port}  ({backend}, model {model}, effort {effort})"
         + (f", serving the built site from {dist}" if dist else ""))
     log("    GET  /api/cells             candidates, highest criteria score first")

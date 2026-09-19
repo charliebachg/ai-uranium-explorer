@@ -11,6 +11,7 @@ Everything goes in through `insert_frame`, which refuses a frame whose tier does
 from __future__ import annotations
 
 import datetime as dt
+import os
 from pathlib import Path
 from typing import Any
 
@@ -39,12 +40,31 @@ def db_path() -> Path:
     return PATHS.data / "lr.duckdb"
 
 
+#: paths whose schema this process has already applied; a serving process opens hundreds of connections and
+#: need not re-run twenty CREATE IF NOT EXISTS statements on each one
+_SCHEMA_APPLIED: set[str] = set()
+
+
+def one_mode() -> bool:
+    """True inside the serving process: every connection is read-write there.
+
+    DuckDB refuses to open the same file read-only and read-write at once from one process, and the API does
+    both by nature — tool reads for one request while another persists a conversation turn. So `lr prospect
+    serve` sets LR_STORE_RW=1, and `connect(read_only=True)` then hands back a read-write connection. Batch
+    commands keep their read-only connections; a read-only handle in a pipeline stage still means what it says."""
+    return os.environ.get("LR_STORE_RW", "") == "1"
+
+
 def connect(path: Path | None = None, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     p = path or db_path()
     p.parent.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect(str(p), read_only=read_only)
-    if not read_only:
-        apply_schema(con)
+    ro = read_only and not one_mode()
+    con = duckdb.connect(str(p), read_only=ro)
+    if not ro:
+        key = str(p.resolve())
+        if not one_mode() or key not in _SCHEMA_APPLIED:
+            apply_schema(con)
+            _SCHEMA_APPLIED.add(key)
     return con
 
 
