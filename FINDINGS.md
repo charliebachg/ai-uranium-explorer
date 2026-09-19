@@ -25,8 +25,8 @@ versioned. Before the OCR pass, 15 of the file rows were red on *covers* and eve
 | File | Pages read of planned | Notes |
 |---|---|---|
 | 64L04-0130, 64L04-0140, 64L04-0141, 74G07-0064, 74H04-0091 | 12 of 12 each | assay tables |
-| 74H04-0094 | 11 of 12 | one transient failure, retried next run |
 | 74G07-0070 | 8 of 8 | collar tables and probe logs |
+| 74H04-0094 | 11 of 12 | one transient failure; lands with the resumed run |
 | 74H04-0097 | 1 of 12 | |
 | MAW00509 | 3 of 12 | the timing run of 2026-09-19 |
 | the other 9 files | 0 | not started |
@@ -37,11 +37,23 @@ page was low because the assay-first priority puts the densest pages first. Four
 ("claude reported an error") and are re-planned on the next run. Remaining: 132 pages, about $53 and four
 hours on one worker.
 
-**Why it stopped.** Claude Code's low-memory watchdog killed the reading chain three times on this 9 GB
-machine (2.5 GB of swap in use by the browser and other sessions), twice before the first live call of a
-resumed run. Every page already read is cached, so the run resumes losing at most the call in flight; it has
-to run outside the watchdog (the user's own terminal) or after memory is freed. Nothing in the pipeline is
-at fault, and nothing was read on any model but Opus.
+**Why it stopped, and the bug it exposed.** Claude Code's low-memory watchdog killed the reading chain three
+times on this 9 GB machine (2.5 GB of swap in use by the browser and other sessions), twice before the first
+live call of a resumed run. The kills then showed a pipeline fault: the extractor wrote its results file only
+at the end of a run, so the 80 paid pages sat in the call cache and never reached assembly; each resume
+replayed them for free and was killed before writing. The scheduler now flushes the results file after every
+page (commit `09b0ec8`), a replay of the six fully read files landed 68 pages in one second at no cost, and
+those six files went through assembly, validation, placement, cross-check and the store rebuild. Nothing was
+read on any model but Opus. The remaining 132 pages resume from cache outside the watchdog.
+
+**What is in the store now.** Eleven reports read: the four of Phase 2 plus 64L04-0130, 64L04-0140,
+64L04-0141, 74G07-0064, 74G07-0070 and 74H04-0091, with MAW00509's three timing pages. 113 pages, 119 tables,
+1,229 records, 12,783 field values with 1,875 validator outcomes, 203 placed collars and 278 matches against
+provincial records (median offsets 3 to 4 cm where coordinates were printed; 1.26 m for 74G07-0070, whose
+collars were transformed from NAD27). The validators did their job on the new files: 74G07-0064 alone drew
+1,140 findings, 346 of them V01 (a depth unit read as metres where the page says feet) and 532 V16 (the OCR
+second reader disagreeing on digits), which is exactly the class of page the review queue in PRD §8.2
+exists for. Six new reports are on the dashboard with their page images.
 
 **What it changes.** The reading bound in PRD §9.3 was "fetch and index everything in the enabled cells,
 model-read the top two drilling files per cell". The first half is done at zero model cost and is what the

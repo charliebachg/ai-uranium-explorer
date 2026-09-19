@@ -446,9 +446,9 @@ the Claude Code headless backend, cached and resumable; it is never done at requ
 
 | Read tier today | Count | Where it sits |
 |---|---|---|
-| Reports fully read (VLM, every value with page, box, quote) | 4 — Uranerz 1979, Cree Lake 2005, Conwest 1978, Cameco Park Creek 1998 | all `dev` split; 2 in occurrence cells, 2 in unlabelled cells |
+| Reports fully read (VLM, every value with page, box, quote) | 10 — the four of Phase 2 (Uranerz 1979, Cree Lake 2005, Conwest 1978, Cameco Park Creek 1998) plus six enabled-cell drilling files read on Opus (2026-09-20, F5): 64L04-0130, 64L04-0140, 64L04-0141, 74G07-0064, 74G07-0070, 74H04-0091 | all `dev` split; the six new ones sit in enabled deposit and occurrence cells |
 | Pages the router sent to the model | 42 of the 4 reports' 691 pages (**6%**); plus 80 of the 212 planned over the 18 enabled files on Opus (2026-09-20, FINDINGS F5, run unfinished) | collar, assay and lithology tables |
-| Values read | 2,175 field values; 40 collars, 43 assay intervals, 126 lithology intervals | 176 flagged, 11 failed by validators — the `read` tier is unvalidated by design |
+| Values read | 12,783 field values in 1,229 records over 113 pages; 203 placed collars, 278 provincial matches (2026-09-20) | 1,875 validator outcomes — the `read` tier is unvalidated by design; 74G07-0064 alone carries 1,140 findings |
 | Text-indexed pages (no model) | 13,945 pages from 966 documents in 35 files, 3,718 of them from the Apple Vision OCR pass (2026-09-20) | every enabled cell, deposit cells included |
 
 Verdict (2026-09-20): **the enabled cells are text-indexed in full and the gate is green; the model-read tier
