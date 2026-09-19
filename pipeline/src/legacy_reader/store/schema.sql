@@ -307,3 +307,30 @@ create table if not exists native.assay_sheet_row (
   loaded_at        text not null,
   tier             text not null default 'native' check (tier = 'native')
 );
+
+-- A conversation with the interface agent, persisted turn by turn. The transcript is benchmark data (PRD D):
+-- every tool call, every value id cited and the gate's verdict are kept, so an answer can be re-scored later.
+create table if not exists agent.conversation (
+  conversation_id text primary key,
+  cell_id         text not null,
+  model           text not null,
+  backend         text not null,
+  created_at      text not null,
+  tier            text not null default 'agent' check (tier = 'agent')
+);
+create table if not exists agent.conversation_turn (
+  turn_id          text primary key,   -- conversation_id:step
+  conversation_id  text not null,
+  step             integer not null,
+  question         text not null,
+  answer_text      text,               -- null when the gate refused it
+  published        boolean not null,
+  problems_json    text not null,      -- what the gate objected to, [] when it passed
+  claims_json      text not null,      -- the claims with their value ids
+  tool_calls_json  text not null,      -- tools called during this turn, with arguments
+  values_json      text not null,      -- the cited values, so the turn is self-contained
+  cost_usd         double,
+  duration_s       double,
+  created_at       text not null,
+  tier             text not null default 'agent' check (tier = 'agent')
+);

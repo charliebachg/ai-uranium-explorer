@@ -12,23 +12,13 @@ that guards a published memo.
 
 from __future__ import annotations
 
-import json
-import re
-import threading
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Callable
-from urllib.parse import parse_qs, urlparse
 
 from ..store import connect
 from . import tools as T
-from .chat import Conversation, ask
 
 DEFAULT_PORT = 8787
-#: conversations live in memory for the life of the process; a demo does not need them to survive a restart
-CONVERSATIONS: dict[str, Conversation] = {}
-LOCK = threading.Lock()
 
-CELL_ID = re.compile(r"^\d{4}_\d{4}$")
 
 
 def candidates(limit: int = 40, model: str = "criteria") -> list[dict[str, Any]]:
@@ -108,124 +98,6 @@ def evidence(cell_id: str) -> dict[str, Any]:
     }
 
 
-def make_handler(backend_factory: Callable[[], Any], model: str, effort: str) -> type:
-    class Handler(BaseHTTPRequestHandler):
-        protocol_version = "HTTP/1.1"
-
-        def log_message(self, fmt: str, *args: Any) -> None:  # quieter than the default
-            pass
-
-        def _send(self, status: int, payload: Any) -> None:
-            body = json.dumps(payload).encode()
-            self.send_response(status)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            # the Vite dev server runs on another port; this service is localhost-only either way
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Access-Control-Allow-Headers", "Content-Type")
-            self.end_headers()
-            self.wfile.write(body)
-
-        def do_OPTIONS(self) -> None:  # noqa: N802
-            self._send(204, {})
-
-        def _stream(self, conv: Conversation, question: str, cell_id: str) -> None:
-            """Newline-delimited JSON, one line per step, flushed as it happens.
-
-            The connection is closed at the end rather than length-delimited, because the length is not known
-            until the answer is. The client reads to EOF.
-            """
-            self.send_response(200)
-            self.send_header("Content-Type", "application/x-ndjson")
-            self.send_header("Cache-Control", "no-store")
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.send_header("Connection", "close")
-            self.end_headers()
-            self.close_connection = True
-
-            def emit(event: dict[str, Any]) -> None:
-                try:
-                    self.wfile.write((json.dumps(event) + "\n").encode())
-                    self.wfile.flush()
-                except (BrokenPipeError, ConnectionResetError):
-                    pass  # the reader navigated away; the run finishes and is simply not delivered
-
-            try:
-                turn = ask(conv, question, backend_factory(), model=model, effort=effort, on_event=emit)
-            except Exception as err:
-                return emit({"type": "error", "error": f"{type(err).__name__}: {err}"})
-            emit({
-                "type": "done",
-                "conversation_id": conv.conversation_id,
-                "cell_id": cell_id,
-                "turn": turn,
-                "values": {k: conv.values[k] for k in
-                           {v for c in (turn.get("claims") or []) for v in c.get("value_ids", [])}
-                           if k in conv.values},
-                "cost_usd": round(conv.cost_usd, 4),
-            })
-
-        def do_GET(self) -> None:  # noqa: N802
-            url = urlparse(self.path)
-            query = parse_qs(url.query)
-            try:
-                if url.path == "/api/health":
-                    return self._send(200, {"ok": True, "model": model, "effort": effort})
-                if url.path == "/api/cells":
-                    limit = int((query.get("limit") or ["40"])[0])
-                    return self._send(200, {"cells": candidates(min(limit, 200))})
-                if url.path.startswith("/api/cell/"):
-                    cell_id = url.path.rsplit("/", 1)[-1]
-                    if not CELL_ID.match(cell_id):
-                        return self._send(400, {"error": "cell id looks like 0123_0045"})
-                    return self._send(200, evidence(cell_id))
-                return self._send(404, {"error": "no such endpoint"})
-            except Exception as err:  # a demo service says what broke rather than dying silently
-                return self._send(500, {"error": f"{type(err).__name__}: {err}"})
-
-        def do_POST(self) -> None:  # noqa: N802
-            url = urlparse(self.path)
-            length = int(self.headers.get("Content-Length") or 0)
-            try:
-                body = json.loads(self.rfile.read(length) or b"{}")
-            except json.JSONDecodeError:
-                return self._send(400, {"error": "body must be JSON"})
-            if url.path not in ("/api/chat", "/api/chat/stream"):
-                return self._send(404, {"error": "no such endpoint"})
-
-            cell_id = str(body.get("cell_id") or "")
-            question = str(body.get("question") or "").strip()
-            if not CELL_ID.match(cell_id):
-                return self._send(400, {"error": "cell id looks like 0123_0045"})
-            if not question:
-                return self._send(400, {"error": "ask something"})
-
-            key = str(body.get("conversation_id") or "") or None
-            with LOCK:
-                conv = CONVERSATIONS.get(key) if key else None
-                if conv is None or conv.cell_id != cell_id:
-                    conv = Conversation(cell_id=cell_id)
-                    CONVERSATIONS[conv.conversation_id] = conv
-            if url.path == "/api/chat/stream":
-                return self._stream(conv, question, cell_id)
-
-            try:
-                turn = ask(conv, question, backend_factory(), model=model, effort=effort)
-            except Exception as err:
-                return self._send(500, {"error": f"{type(err).__name__}: {err}"})
-            return self._send(200, {
-                "conversation_id": conv.conversation_id,
-                "cell_id": cell_id,
-                "turn": turn,
-                "values": {k: conv.values[k] for k in
-                           {v for c in (turn.get("claims") or []) for v in c.get("value_ids", [])}
-                           if k in conv.values},
-                "cost_usd": round(conv.cost_usd, 4),
-            })
-
-    return Handler
-
-
 def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
     """Pick the backend the chat runs on, and the model name that goes with it.
 
@@ -248,17 +120,18 @@ def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
 
 def serve(port: int = DEFAULT_PORT, model: str = "", effort: str = "medium",
           backend: str = "openai", log: Callable[[str], None] = print) -> None:
+    """Run the FastAPI service on localhost. The routes and the NDJSON events are unchanged from the stdlib
+    server this replaced; conversations are now persisted turn by turn in the agent tier."""
+    import uvicorn
+
+    from ..api.app import create_app
+
     chosen, model = make_backend(backend, model)
-    handler = make_handler(lambda: chosen, model, effort)
-    server = ThreadingHTTPServer(("127.0.0.1", port), handler)
+    app = create_app(lambda: chosen, model, effort, backend_name=backend)
     log(f"  listening on http://127.0.0.1:{port}  ({backend}, model {model}, effort {effort})")
     log("    GET  /api/cells             candidates, highest criteria score first")
     log("    GET  /api/cell/<cell_id>    the evidence record and any stored memos")
-    log("    POST /api/chat              {cell_id, question, conversation_id?}")
+    log("    POST /api/chat              {cell_id, question, conversation_id?}; /api/chat/stream for NDJSON")
+    log("    GET  /api/conversation/<id> a persisted transcript; /docs for the OpenAPI page")
     log("  local only, and the public-safe build does not offer the chat at all")
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        log("  stopped")
-    finally:
-        server.server_close()
+    uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
