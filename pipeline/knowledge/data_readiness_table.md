@@ -17,6 +17,7 @@ here is what the pipeline actually produced, not a plan.
 | Radioactive boulders | 6,591 | ArcGIS REST query | SK open | feature | dispersal |
 | Magnetic domains (interpreted) *(unverified)* | - | ArcGIS REST query | SK open | feature | pathway |
 | Minerals and Quaternary Drillhole Compilation | 33,490 | ArcGIS REST query | SK open | feature | cover |
+| Canadian Aeromagnetic Data Base: 200 m residual total magnetic field grid (national compilation) | - | file on disk | none stated | feature | pathway |
 | Assessment survey footprints (airborne, ground, underground) | 1,831 | ArcGIS REST query | SK open | feature | effort |
 | Athabasca Supergroup outline (1:1,000,000 bedrock geology) | 197 | ArcGIS REST query | SK open | context | study_area |
 | GeoDS subsurface drilling layer | 29,762 | ArcGIS REST query | none stated | feature | effort |
@@ -53,12 +54,12 @@ null, never zero, and *thin* marks a feature too sparse to carry a basin-wide mo
 | `sed_u_max_ppm_sgs` | lake_sediment_sgs | highest U_PPM among points within 5 km | ppm | 12% *thin* | detection |
 | `boulder_max_cps` | radioactive_boulders | highest CPS among points within 5 km | cps | 9% *thin* | dispersal |
 | `water_u_max_ppm` | lake_water_sgs | highest U_PPM among points within 5 km | ppm | 3% *thin* | detection |
-| `airborne_surveys_n` | survey_footprints_airborne | how many footprints cover the cell | - | 89% | effort |
-| `ground_surveys_n` | survey_footprints_ground | how many footprints cover the cell | - | 89% | effort |
-| `sed_samples_n` | lake_sediment_gsc | number of U among points within 5 km | - | 38% *thin* | effort |
+| `airborne_surveys_n` | survey_footprints_airborne | how many footprints cover the cell | - | 100% | effort |
+| `boulder_samples_n` | radioactive_boulders | number of CPS among points within 5 km | - | 100% | effort |
+| `ground_surveys_n` | survey_footprints_ground | how many footprints cover the cell | - | 100% | effort |
+| `holes_n` | compilation | number of OBJECTID among points within 2 km | - | 100% | effort |
+| `sed_samples_n` | lake_sediment_gsc | number of U among points within 5 km | - | 100% | effort |
 | `holes_first_year` | compilation | earliest year from DATE_DRILLED within 5 km | year | 35% *thin* | effort |
-| `holes_n` | compilation | number of OBJECTID among points within 2 km | - | 16% *thin* | effort |
-| `boulder_samples_n` | radioactive_boulders | number of CPS among points within 5 km | - | 9% *thin* | effort |
 
 ## 3. Imagery actually read
 
@@ -71,7 +72,7 @@ null, never zero, and *thin* marks a feature too sparse to carry a basin-wide mo
 
 | gap | status | why it matters |
 |---|---|---|
-| Airborne magnetic, radiometric and gravity grids | not addressable | Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin. |
+| Airborne magnetic, radiometric and gravity grids | published not pulled | Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin. |
 | Discovery dates for deposits and occurrences | not published | Without them there is no honest train-before, test-after split, which is the strongest test available short of drilling. |
 | Conductance or strength on the EM conductor layer | unverified | The folklore that stronger conductors make better targets could only be tested with a conductance value. |
 | Clay alteration and geochemical footprints at depth | not public | Alteration is the largest expression of the system: the Cigar Lake halo reaches about 100 m below and 300 m above the unconformity. |
