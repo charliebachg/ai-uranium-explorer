@@ -442,6 +442,7 @@ class Scheduler:
         self.retry_delays_s = retry_delays_s
         self.shared = _Shared()
         self.results: dict[str, dict[str, Any]] = {}
+        self.prior: dict[str, dict[str, Any]] = {}
         self.done: set[str] = set()
         self.failed: list[dict[str, Any]] = []
         self.pending: list[str] = []
@@ -616,6 +617,7 @@ class Scheduler:
             "usage": resp.usage, "cost_usd": resp.cost_usd, "attempt": attempt,
             "result": result,
         }
+        self.flush()
         self.runlog.call(status="cached" if resp.from_cache else "ok", page_id=page.page_id,
                          file_num=page.file_num, page_no=page.page_no, cache_key=resp.cache_key,
                          attempt=attempt, model_resolved=resp.model_resolved, num_turns=resp.num_turns,
@@ -677,8 +679,16 @@ class Scheduler:
                 continue
             carry = carry_from_result(result, page.page_no)
 
+    def flush(self) -> None:
+        """Write the results file now, prior rows and this run's merged. Called after every page, so a run
+        killed part-way (a usage limit, a memory watchdog, a power cut) keeps every page it paid for; the
+        next run replays nothing that is already on disk."""
+        with self.shared.lock:
+            write_results({**self.prior, **self.results})
+
     def run(self, plan: list[PlannedPage]) -> dict[str, Any]:
         prior = read_results()
+        self.prior = prior
         groups: dict[str, list[PlannedPage]] = {}
         for page in plan:
             groups.setdefault(page.group_key, []).append(page)
@@ -694,8 +704,7 @@ class Scheduler:
                 f.result()
         wall = time.monotonic() - t0
 
-        merged = {**prior, **self.results}
-        write_results(merged)
+        self.flush()
         limit = self.shared.usage_limit
         summary = {
             "run_id": self.run_id, "version": EXTRACT_VERSION, "pipeline_version": __version__,

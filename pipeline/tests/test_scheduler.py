@@ -258,3 +258,15 @@ def test_the_estimate_comes_from_recorded_usage(tmp_path):
     assert est["samples"] >= 1
     assert est["total_cost_usd"] > 0
     assert est["total_tokens"]["output"] > 0
+
+
+def test_results_are_written_after_every_page_not_only_at_the_end(tmp_path, monkeypatch):
+    """A run killed part-way keeps every page it paid for: the results file is rewritten after each page."""
+    writes: list[dict] = []
+    monkeypatch.setattr(ex, "write_results", lambda rows, path=None: writes.append(dict(rows)) or (tmp_path / "r.jsonl"))
+    monkeypatch.setattr(ex, "read_results", lambda *a, **k: {"pg:old": {"page_id": "pg:old", "result": {}}})
+    s = scheduler(CachedBackend(ScriptedBackend({}), root=tmp_path / "cache"), tmp_path, workers=1)
+    s.run([planned(n, tmp_path) for n in (4, 5, 6)])
+    assert len(writes) >= 4                                   # three pages plus the final write
+    assert "pg:old" in writes[0] and len(writes[0]) == 2       # the prior rows travel with the first page
+    assert len(writes[-1]) == 4
