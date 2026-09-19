@@ -72,6 +72,7 @@ def connect(path: Path | None = None, read_only: bool = False) -> duckdb.DuckDBP
 MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     # DuckDB cannot add a constrained column to a live table, so migrations stay plain
     ("derived", "feature_spec", "is_count boolean"),
+    ("read", "corpus_page", "source text"),
 )
 
 

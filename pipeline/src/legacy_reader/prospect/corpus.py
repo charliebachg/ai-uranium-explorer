@@ -31,6 +31,7 @@ from typing import Any, Callable, Iterable
 import pandas as pd
 
 from ..arcgis import ArcGisClient
+from ..ocr import read_words
 from ..paths import PATHS
 from ..select import classify_listing, probe_listing
 from ..store import append_frame, connect
@@ -142,6 +143,60 @@ def page_texts(pdf: Path) -> list[tuple[int, str]]:
     return pages
 
 
+def ocr_page_texts(pdf_sha256: str, root: Path | None = None) -> list[tuple[int, str]]:
+    """Page text from the OCR pass (Apple Vision lines, top to bottom, left to right) for a document whose text
+    layer is missing or not to be trusted. Only pages the OCR actually covered come back, and only when they
+    hold enough characters to be a page of text rather than a drawing with a title."""
+    lines: dict[int, list[dict[str, Any]]] = {}
+    for w in read_words(pdf_sha256, root=root):
+        if w.get("engine") != "vision" or not w.get("text"):
+            continue
+        lines.setdefault(int(w["page_no"]), []).append(w)
+    out = []
+    for page, ws in sorted(lines.items()):
+        ws.sort(key=lambda w: (round(float(w.get("y0") or 0.0), 3), float(w.get("x0") or 0.0)))
+        text = "\n".join(str(w["text"]).strip() for w in ws).strip()
+        if len(re.sub(r"\s", "", text)) >= MIN_PAGE_CHARS:
+            out.append((page, text))
+    return out
+
+
+def merge_page_texts(text_layer: list[tuple[int, str]], ocr: list[tuple[int, str]],
+                     untrusted: set[int] | None = None) -> list[tuple[int, str, str]]:
+    """One text per page, each saying where it came from: the text layer where it exists and is trusted,
+    the OCR pass for every other page it covers. A page's text layer is untrusted when the second reader
+    disagreed with it (`text_layer_trusted` false in the page table)."""
+    untrusted = untrusted or set()
+    by_ocr = dict(ocr)
+    rows: list[tuple[int, str, str]] = []
+    seen: set[int] = set()
+    for page, text in text_layer:
+        if page in untrusted and page in by_ocr:
+            rows.append((page, by_ocr[page], "ocr"))
+        else:
+            rows.append((page, text, "text_layer"))
+        seen.add(page)
+    rows += [(page, text, "ocr") for page, text in ocr if page not in seen]
+    return sorted(rows)
+
+
+def untrusted_pages() -> dict[str, set[int]]:
+    """Pages whose text layer the OCR comparison rejected, by document hash; empty when no page table exists."""
+    try:
+        from ..render import read_pages
+    except ImportError:  # pragma: no cover
+        return {}
+    out: dict[str, set[int]] = {}
+    try:
+        rows = read_pages()
+    except Exception:  # noqa: BLE001 - no pages table yet
+        return {}
+    for r in rows:
+        if r.get("text_layer_trusted") is False:
+            out.setdefault(str(r["pdf_sha256"]), set()).add(int(r["page_no"]))
+    return out
+
+
 def fetch_documents(
     file_nums: Iterable[str], client: Any = None, max_file_mb: float = MAX_FILE_MB,
     log: Callable[[str], None] = print,
@@ -246,17 +301,20 @@ def build(
     rows: list[dict[str, Any]] = []
     now = _now()
     no_text = 0
+    from_ocr = 0
+    distrust = untrusted_pages()
     for fn, items in docs.items():
         for doc in items:
-            pages = page_texts(doc["path"])
+            sha = _sha256(doc["path"])
+            pages = merge_page_texts(page_texts(doc["path"]), ocr_page_texts(sha), distrust.get(sha))
             if not pages:
                 no_text += 1
                 continue
-            sha = _sha256(doc["path"])
-            for page, text in pages:
+            for page, text, source in pages:
+                from_ocr += source == "ocr"
                 rows.append({
                     "file_num": fn, "doc_name": doc["name"], "doc_sha256": sha, "page": page,
-                    "chars": len(text), "text": text, "extracted_at": now,
+                    "chars": len(text), "text": text, "extracted_at": now, "source": source,
                 })
 
     if rows:
@@ -277,6 +335,7 @@ def build(
 
     log(f"  corpus: {len(files)} files indexed by metadata; "
         f"{totals[0]} files, {totals[1]} documents, {totals[2]} pages of text")
-    log(f"  {no_text} document(s) had no usable text layer (scans awaiting OCR)")
+    log(f"  {from_ocr:,} page(s) of text came from the OCR pass; {no_text} document(s) have neither a text layer "
+        f"nor OCR yet")
     return {"files_indexed": len(files), "files_with_text": totals[0], "documents": totals[1],
             "pages": totals[2], "documents_without_text": no_text}

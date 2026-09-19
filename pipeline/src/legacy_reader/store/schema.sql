@@ -98,6 +98,7 @@ create table if not exists read.corpus_page (
   chars        integer not null,
   text         text not null,
   extracted_at text not null,
+  source       text,               -- text_layer | ocr: which reader the page text came from
   tier         text not null default 'read' check (tier = 'read'),
   primary key (doc_sha256, page)
 );
