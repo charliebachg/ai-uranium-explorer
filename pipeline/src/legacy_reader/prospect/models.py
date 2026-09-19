@@ -80,7 +80,7 @@ def matrix(feature_set: str, grid_id: str | None = None) -> pd.DataFrame:
             f"where feature_key in ({placeholders})", list(keys)
         ).df().pivot_table(index="cell_id", columns="feature_key", values="value", dropna=False)
         labels = con.execute(
-            "select l.cell_id, l.label_tier, l.camp_id, l.block_id, c.lon, c.lat "
+            "select l.cell_id, l.label_tier, l.camp_id, l.block_id, c.lon, c.lat, c.cx, c.cy "
             "from derived.cell_label l join derived.cell c using (cell_id) where c.grid_id = ?", [grid_id]
         ).df()
     finally:

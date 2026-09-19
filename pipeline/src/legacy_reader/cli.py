@@ -483,6 +483,19 @@ def prospect_score_cmd(
         raise typer.BadParameter("model must be criteria, learned, effort or all")
 
 
+@prospect_app.command("headline")
+def prospect_headline_cmd(
+    seed: int = typer.Option(0, "--seed"),
+    boot: int = typer.Option(200, "--boot", help="bootstrap resamples per interval"),
+    write: bool = typer.Option(True, "--write/--no-write", help="store the metrics under headline.*"),
+) -> None:
+    """Phase 0: re-test effort vs geology with matched background and thinned positives, all folds, intervals."""
+    from .prospect.headline import run
+
+    out = run(seed=seed, boot=boot, log=typer.echo, write=write)
+    typer.echo(json.dumps({"run_id": out["run_id"], "cells": out["cells"], "verdict": out["verdict"]["text"]}))
+
+
 @prospect_app.command("memo")
 def prospect_memo_cmd(
     cell: str = typer.Option(None, "--cell", help="cell id; omitted, the highest-scoring cell is used"),
