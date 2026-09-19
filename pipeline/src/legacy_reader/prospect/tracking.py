@@ -1,0 +1,96 @@
+"""Experiment tracking: every fitted model and every reported number lands in MLflow, with a run id that the
+store's metric rows and the Eval page carry. Nothing is reported that is not in the tracker.
+
+The tracking store is a local SQLite file under data/, which also supports the model registry, so "the served
+model" is a registry stage and not a file someone remembers to copy. The promotion rule is applied here and
+nowhere else: a candidate is *validated* only if it beats the exploration-effort null under spatial folds with
+non-overlapping intervals, and it is *served* only if it is validated. Today nothing is.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+from ..paths import PATHS
+
+EXPERIMENT = "prospect"
+REGISTERED = "learned-prospectivity"
+
+
+def tracking_uri() -> str:
+    env = os.environ.get("LR_MLFLOW_URI", "").strip()
+    if env:
+        return env
+    return f"sqlite:///{PATHS.data / 'mlflow.db'}"
+
+
+def artifact_dir() -> Path:
+    p = PATHS.data / "mlruns"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def _mlflow():
+    os.environ.setdefault("MLFLOW_DISABLE_AGENT_HINT", "1")
+    import mlflow
+
+    mlflow.set_tracking_uri(tracking_uri())
+    mlflow.set_experiment(EXPERIMENT)
+    return mlflow
+
+
+def log_run(name: str, params: dict[str, Any], metrics: dict[str, float], tags: dict[str, str] | None = None,
+            artifacts: dict[str, Any] | None = None) -> str:
+    """One MLflow run: flat params, numeric metrics, JSON artefacts. Returns the run id."""
+    mlflow = _mlflow()
+    with mlflow.start_run(run_name=name) as run:
+        mlflow.log_params({k: (v if isinstance(v, (int, float, str, bool)) else json.dumps(v)) for k, v in params.items()})
+        mlflow.log_metrics({k: float(v) for k, v in metrics.items() if v is not None and v == v})
+        if tags:
+            mlflow.set_tags(tags)
+        for fname, payload in (artifacts or {}).items():
+            path = artifact_dir() / f"{run.info.run_id}-{fname}"
+            path.write_text(json.dumps(payload, indent=1, default=str))
+            mlflow.log_artifact(str(path))
+            path.unlink(missing_ok=True)
+        return run.info.run_id
+
+
+def beats_null(candidate: dict[str, Any], null: dict[str, Any]) -> bool:
+    """The promotion rule: the candidate's PR-AUC interval lies wholly above the effort null's, spatial folds."""
+    lo_c, _ = candidate.get("pr_auc_ci", (float("nan"), float("nan")))
+    _, hi_n = null.get("pr_auc_ci", (float("nan"), float("nan")))
+    return lo_c == lo_c and hi_n == hi_n and lo_c > hi_n
+
+
+def record_decision(run_id: str, model_name: str, validated: bool, reason: str) -> dict[str, Any]:
+    """Register the run's model in the registry with the stage the rule allows, and write the decision down."""
+    mlflow = _mlflow()
+    client = mlflow.MlflowClient()
+    try:
+        client.get_registered_model(REGISTERED)
+    except Exception:  # noqa: BLE001 - first time
+        client.create_registered_model(REGISTERED, description="The learned prospectivity model, if any is served. "
+                                       "Promotion requires beating the exploration-effort null under spatial folds.")
+    version = client.create_model_version(REGISTERED, source=f"runs:/{run_id}/model", run_id=run_id,
+                                          description=f"{model_name}: {reason}")
+    stage = "validated" if validated else "candidate"
+    client.set_model_version_tag(REGISTERED, version.version, "stage", stage)
+    client.set_model_version_tag(REGISTERED, version.version, "served", "false")
+    decision = {"registered_model": REGISTERED, "version": int(version.version), "run_id": run_id, "model": model_name,
+                "stage": stage, "served": False, "reason": reason}
+    (PATHS.data / "out" / "prospect").mkdir(parents=True, exist_ok=True)
+    (PATHS.data / "out" / "prospect" / "registry.json").write_text(json.dumps(decision, indent=1) + "\n")
+    return decision
+
+
+def served_model() -> dict[str, Any] | None:
+    """What is served, from the written decision: None means the dashboard shows no learned predictor as such."""
+    p = PATHS.data / "out" / "prospect" / "registry.json"
+    if not p.is_file():
+        return None
+    d = json.loads(p.read_text())
+    return d if d.get("served") else None

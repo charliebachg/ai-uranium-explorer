@@ -529,6 +529,21 @@ def prospect_headline_cmd(
     typer.echo(json.dumps({"run_id": out["run_id"], "cells": out["cells"], "verdict": out["verdict"]["text"]}))
 
 
+@prospect_app.command("modelsearch")
+def prospect_modelsearch_cmd(
+    seed: int = typer.Option(0, "--seed"),
+    boot: int = typer.Option(200, "--boot"),
+    quick: bool = typer.Option(False, "--quick", help="four candidates, spatial folds only: the CI regression"),
+    write: bool = typer.Option(True, "--write/--no-write"),
+    track: bool = typer.Option(True, "--track/--no-track", help="log every arm to MLflow and apply the promotion rule"),
+) -> None:
+    """Phase 3: candidate models against the same folds and null, ablations, block sizes; tracked; the served-model decision."""
+    from .prospect.modelsearch import run
+
+    out = run(seed=seed, boot=boot, quick=quick, log=typer.echo, write=write, track=track)
+    typer.echo(json.dumps({"cells": out["cells"], "arms": len(out["rows"]), "decision": out["decision"].get("reason")}))
+
+
 @prospect_app.command("memo")
 def prospect_memo_cmd(
     cell: str = typer.Option(None, "--cell", help="cell id; omitted, the highest-scoring cell is used"),
