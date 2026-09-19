@@ -59,8 +59,8 @@ every agent answer from a versioned input, and can deploy the whole thing on a f
   30,534 labels (60 deposit, 620 occurrence, 29,854 unlabelled) · 64,131 scores · 305,340 criterion
   memberships · 116 metrics · 27 memos with 188 claims.
 - **Corpus:** 1,534 in-area assessment files at metadata level, 1,846 pages read, 22 of 60 target PDFs fetched.
-- **Sources:** 20 registered, 18 redistributable, 4 recorded gaps (aeromagnetic grids, discovery dates, EM
-  conductor attributes, alteration measurements).
+- **Sources:** 21 registered, 19 redistributable, 4 recorded gaps (aeromagnetic grids, now *published, not
+  pulled* after F2; discovery dates; EM conductor attributes; alteration measurements).
 - **Headline measurement, Phase 0 done (FINDINGS.md F1):** under spatial folds the effort-only model reaches
   PR-AUC 0.346 against 0.133 for the geology model, and after matched background and thinned positives it is
   still ahead, 0.178 against 0.111, intervals separate, on both label sets. **Confirmed, not an artefact.**
@@ -953,7 +953,7 @@ frozen benchmark is what separates a measured agent from a demo.
 | Risk | Consequence | Mitigation |
 |---|---|---|
 | The headline does not survive corrected sampling | the central story changes | Phase 0 finds out first; a retraction on public data is itself a credible result |
-| Aeromagnetic grid does exist and we said it did not | credibility | re-verify in Phase 2 before any external claim |
+| Aeromagnetic grid does exist and we said it did not | credibility | **Re-verified 2026-09-19 (FINDINGS.md F2): it does, under an open licence; the inventory now says published-not-pulled** |
 | Postgres migration stalls the demo | nothing to show mid-project | static-export path stays alive until parity; feature-flag the API |
 | Geologist-day never happens | benchmark stays internal | tiers 1 and 3 are fully mechanical and stand alone |
 | LLM spend | budget | ceilings per backend already exist; the benchmark is cost-capped per configuration |

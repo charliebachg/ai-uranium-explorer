@@ -3,6 +3,27 @@
 Measured results that changed what the project claims. Each entry names the run that produced it, so every
 number here walks back to a stored metric. Newest first.
 
+## F2 · The magnetics gap was overstated: a national 200 m grid is published under an open licence (2026-09-19)
+
+**Claim under test.** The data inventory recorded the airborne magnetic grids as *not addressable*: the federal
+repository served them only through an interactive portal, with no file URL, no WMS and no WCS (checked
+2026-09-18). The PRD asked for this to be re-verified before any external claim.
+
+**What was checked.** The Open Government Portal record for "Canada - Aeromagnetic survey data compilation"
+(dataset 752fe3fc-d871-5ae1-9bd9-2b6f65880a8d, Natural Resources Canada, modified 2020-10-05) and where its
+resource links resolve.
+
+**Result.** The Canadian Aeromagnetic Data Base compilation is published under the **Open Government Licence -
+Canada** with named resources: 200 m and 1 km residual total field grids (ZIP), both first vertical derivatives,
+a CAGDB WMS, and the Open File 7799 anomaly map. The resource links on the old host redirect to the new portal
+at geophysical-data.canada.ca, so the file is reachable in principle and not yet pulled by us. Radiometrics and
+gravity: no value grid found; unchanged.
+
+**What changes.** The gap's status is now *published, not pulled*; a source entry `cagdb_mag_200m` is
+registered as verified and unpulled; the risk "the grid exists and we said it did not" in PRD section 13 is
+closed by this entry. The pull is Phase 2 work. A caveat stands: the national compilation is coarser than the
+company surveys in the assessment files, and a residual field is not an interpretation.
+
 ## F1 · Phase 0: effort beats geology, and the sampling confound does not explain it (2026-09-19)
 
 **Claim under test.** Under spatial folds, a model given nothing but exploration effort (drillhole counts,

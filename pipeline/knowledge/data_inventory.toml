@@ -36,6 +36,12 @@ url = "https://www.usgs.gov/information-policies-and-instructions/copyrights-and
 terms = "public domain, no restriction"
 redistributable = true
 
+[licence.ogl_canada]
+name = "Open Government Licence - Canada"
+url = "https://open.canada.ca/en/open-government-licence-canada"
+terms = "Worldwide, royalty-free, perpetual, non-exclusive licence to copy, modify, publish, translate, adapt, distribute or otherwise use the information in any medium, with attribution to the information provider."
+redistributable = true
+
 [licence.not_stated]
 name = "no licence stated"
 url = ""
@@ -250,6 +256,24 @@ notes = "Two jobs: the depth fields interpolate an unconformity-depth surface, a
 caveats = ["Depth fields are populated only where a hole reached the contact, so the interpolation carries its own coverage count."]
 
 [[source]]
+key = "cagdb_mag_200m"
+title = "Canadian Aeromagnetic Data Base: 200 m residual total magnetic field grid (national compilation)"
+tier = "native"
+role = "feature"
+bears_on = "pathway"
+access = "file"
+url = "https://open.canada.ca/data/en/dataset/752fe3fc-d871-5ae1-9bd9-2b6f65880a8d"
+where = ""
+geometry = "raster"
+record_count = 0
+licence = "ogl_canada"
+verified = true
+verified_at = "2026-09-19"
+fields_verified = false
+notes = "Published, open-licensed, not yet pulled: the resource link redirects to geophysical-data.canada.ca and the portal's download route is still to be driven. Magnetic lows over graphitic basement are the classic Athabasca pathway proxy; when pulled this replaces the interpreted magnetic-domains stand-in. Last data 2018, grid updated 2020."
+caveats = ["A national compilation of surveys flown at 800 m line spacing before 2000: coarser than the company surveys in the assessment files, and it is a residual field, not an interpretation."]
+
+[[source]]
 key = "assessment_surveys"
 title = "Assessment survey footprints (airborne, ground, underground)"
 tier = "native"
@@ -452,9 +476,9 @@ caveats = [
 key = "aeromagnetic_grids"
 title = "Airborne magnetic, radiometric and gravity grids"
 why_it_matters = "Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin."
-status = "not_addressable"
-evidence = "The federal Geoscience Data Repository serves the Northern Saskatchewan 100 m magnetic and radiometric compilation through an interactive portal (HTTP 302, no direct file URL, no WMS or WCS). The provincial Geophysics service publishes survey footprint polygons only, not values. Checked 2026-09-18."
-workaround = "Mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy; nothing stands in for radiometrics or gravity."
+status = "published_not_pulled"
+evidence = """Re-verified 2026-09-19 (PRD section B, Phase 2): the earlier 'not addressable' was wrong on magnetics. Natural Resources Canada publishes the Canadian Aeromagnetic Data Base compilation on the Open Government Portal under the Open Government Licence - Canada (dataset 752fe3fc-d871-5ae1-9bd9-2b6f65880a8d, modified 2020-10-05) with resources 'Canada - 200m - MAG - Residual Total Field' (ZIP), 'Canada - 1km - MAG - Residual Total Field', both first vertical derivatives, and a CAGDB WMS (images, not values). The file links (gdr.agg.nrcan.gc.ca dapid=140) redirect to the new portal at geophysical-data.canada.ca, whose download path has not yet been driven; the Northern Saskatchewan 100 m compilation lives behind the same portal. Radiometrics and gravity: unchanged, no value grid found. The provincial Geophysics service still publishes survey footprints only."""
+workaround = "Until the 200 m grid is pulled: mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy; nothing stands in for radiometrics or gravity. The pull is a Phase 2 task, not a research question."
 
 [[gap]]
 key = "discovery_dates"

@@ -22,7 +22,7 @@ BEARS_ON = frozenset({"pathway", "trap", "detection", "dispersal", "cover", "eff
 TIERS = frozenset({"native", "read", "derived"})
 ROLES = frozenset({"feature", "label", "context"})
 ACCESS = frozenset({"arcgis_rest", "stac", "file", "internal"})
-GAP_STATUS = frozenset({"not_addressable", "not_published", "not_public", "unverified"})
+GAP_STATUS = frozenset({"not_addressable", "not_published", "not_public", "unverified", "published_not_pulled"})
 
 #: the mineral dispositions service is never loaded by this project (an editorial rule, tested for)
 BANNED_URL = "Mining/MapServer"
