@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-19T15:36:02+00:00",
+ "generated_at": "2026-09-19T18:49:09+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -698,10 +698,10 @@
   ]
  },
  "readiness_gate": {
-  "generated_at": "2026-09-19T15:36:01+00:00",
-  "store_sha256": "bf3dc899d90bf29343d770a13e02ca8f4e1d106b488e647053c9e03f278ff9b0",
-  "snapshot": "bf3dc899d90b",
-  "green": false,
+  "generated_at": "2026-09-19T18:49:08+00:00",
+  "store_sha256": "5de4653ba5e014a16827fdf6b12ba3deffe742c6fdee37e1fa059666fb67fba8",
+  "snapshot": "5de4653ba5e0",
+  "green": true,
   "rows": [
    {
     "dataset": "bedrock_250k",
@@ -725,7 +725,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 8f1d6ab6936a; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 8f1d6ab6936a; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -750,7 +750,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 69ed3b7d74ab; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 69ed3b7d74ab; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -775,7 +775,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "32 of 32 scenes carry a STAC id; snapshot bf3dc899d90b"
+     "note": "32 of 32 scenes carry a STAC id; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -800,7 +800,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 6223223ad096; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 6223223ad096; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -825,7 +825,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload e22cee6b8f85; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload e22cee6b8f85; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -850,7 +850,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 52dc81035521; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 52dc81035521; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -875,7 +875,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload aa1b72226df7; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload aa1b72226df7; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -900,7 +900,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload e31860c48dd7; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload e31860c48dd7; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -925,7 +925,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload ccc36dc53045; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload ccc36dc53045; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -950,7 +950,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "24 of 24 scenes carry a STAC id; snapshot bf3dc899d90b"
+     "note": "24 of 24 scenes carry a STAC id; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -975,7 +975,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload bcfb59ced93d; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload bcfb59ced93d; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -1000,7 +1000,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 0e86795a9648; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 0e86795a9648; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -1025,7 +1025,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 936518cd5177; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 936518cd5177; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -1050,7 +1050,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 775a50e63c01; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 775a50e63c01; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -1075,7 +1075,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 5a4a08d54302; in the pull log; snapshot bf3dc899d90b"
+     "note": "payload 5a4a08d54302; in the pull log; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -1100,7 +1100,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "43 record(s) walk back to a read.pdf hash; snapshot bf3dc899d90b"
+     "note": "43 record(s) walk back to a read.pdf hash; snapshot 5de4653ba5e0"
     }
    },
    {
@@ -1191,8 +1191,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 113 rendered pages have text"
+     "ok": true,
+     "note": "136 of 136 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1241,8 +1241,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 128 rendered pages have text"
+     "ok": true,
+     "note": "128 of 128 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1266,8 +1266,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 77 rendered pages have text"
+     "ok": true,
+     "note": "77 of 77 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1291,8 +1291,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 397 rendered pages have text"
+     "ok": true,
+     "note": "397 of 397 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1316,8 +1316,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 644 rendered pages have text"
+     "ok": true,
+     "note": "644 of 644 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1341,8 +1341,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 399 rendered pages have text"
+     "ok": true,
+     "note": "399 of 399 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1366,8 +1366,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 56 rendered pages have text"
+     "ok": true,
+     "note": "56 of 56 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1416,8 +1416,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 44 rendered pages have text"
+     "ok": true,
+     "note": "44 of 44 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1441,8 +1441,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 721 rendered pages have text"
+     "ok": true,
+     "note": "721 of 721 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1467,7 +1467,7 @@
     },
     "covers": {
      "ok": true,
-     "note": "639 of 839 rendered pages have text (76%)"
+     "note": "839 of 839 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1492,7 +1492,7 @@
     },
     "covers": {
      "ok": true,
-     "note": "38 of 67 rendered pages have text (57%)"
+     "note": "67 of 67 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1516,8 +1516,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 57 rendered pages have text"
+     "ok": true,
+     "note": "57 of 57 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1541,8 +1541,8 @@
      "note": "local only, never served (report PDFs carry no named licence)"
     },
     "covers": {
-     "ok": false,
-     "note": "0 of 655 rendered pages have text"
+     "ok": true,
+     "note": "655 of 655 rendered pages have text (100%)"
     },
     "servable": {
      "ok": true,
@@ -1554,19 +1554,7 @@
     }
    }
   ],
-  "failures": [
-   "MAW00131: covers: 0 of 113 rendered pages have text",
-   "MAW01968: covers: 0 of 128 rendered pages have text",
-   "MAW02845: covers: 0 of 77 rendered pages have text",
-   "74H04-0110: covers: 0 of 397 rendered pages have text",
-   "74H04-0091: covers: 0 of 644 rendered pages have text",
-   "74H04-0097: covers: 0 of 399 rendered pages have text",
-   "MAW00624: covers: 0 of 56 rendered pages have text",
-   "MAW00645: covers: 0 of 44 rendered pages have text",
-   "MAW00193: covers: 0 of 721 rendered pages have text",
-   "74H16-0034: covers: 0 of 57 rendered pages have text",
-   "74K-0018: covers: 0 of 655 rendered pages have text"
-  ]
+  "failures": []
  },
  "headline": {
   "run_id": "2026-09-19T15:21:48+00:00",
@@ -14152,5 +14140,5 @@
    "note": "n for the learned model over every cutoff and later discovery"
   }
  },
- "build_id": "6f76eaf5a989"
+ "build_id": "5da0b3864fef"
 }
