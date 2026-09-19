@@ -7,7 +7,8 @@ test("guided tour walks every step and leaves the app on the limits page", async
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
-    if (m.type() === "error") errors.push(m.text());
+    // the chat service on :8787 is optional by design; the browser logs its refused connection as an error
+    if (m.type() === "error" && !m.location().url.includes(":8787/")) errors.push(m.text());
   });
 
   await page.goto("/?motion=0");

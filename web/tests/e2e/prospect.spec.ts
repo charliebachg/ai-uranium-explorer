@@ -174,10 +174,16 @@ test("the walkthrough replays a real conversation, withheld answer included", as
 test("the evidence layers are grouped like MineTRACE, deferred, and honest about what is missing", async ({
   page,
 }) => {
+  // either transport counts: the GeoJSON fallback, or tile bytes past the archive header
   const fetched: string[] = [];
   page.on("request", (r) => {
-    if (/\/data\/context\/(em_conductors|faults|graphitic_host)\.geojson/.test(r.url()))
-      fetched.push(r.url());
+    const url = r.url();
+    if (/\/data\/context\/(em_conductors|faults|graphitic_host)\.geojson/.test(url)) fetched.push(url);
+    if (/\/data\/tiles\/(conductors|faults|host)\.pmtiles/.test(url)) {
+      const range = r.headers().range ?? "";
+      const start = Number(/bytes=(\d+)-/.exec(range)?.[1] ?? 0);
+      if (start >= 16384) fetched.push(`${url} ${range}`);
+    }
   });
   await page.goto("/?intro=0");
   await expect(page.getByTestId("agent-rail")).toBeVisible({ timeout: 30_000 });

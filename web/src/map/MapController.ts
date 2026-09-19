@@ -1,12 +1,13 @@
 import type { GeoJSONSource, MapGeoJSONFeature, MapMouseEvent } from "maplibre-gl";
 import { BASEMAPS, type BasemapId } from "@/config/basemaps";
-import { HIT_PRIORITY, type LayerGroup, type LayerGroupId, layerGroups } from "@/config/layers";
+import { HIT_PRIORITY, type LayerGroup, type LayerGroupId, layerGroups, withTiles } from "@/config/layers";
 import type { DatumGrid, ReportIndex } from "@/data/contract";
 import { loadDatumGrid } from "@/data/loader";
 import { loadReportIndex } from "@/data/reports";
 import { type FeatureRef, SCORE_KEY, useStore } from "@/state/store";
 import { arrowField, arrowScaleForZoom } from "./layers/datum";
 import { EMPTY_FC, type ReportMapData, reportMapData } from "./layers/reports";
+import { type TilesManifest, loadTiles } from "@/data/tiles";
 import { type MapLibreMap, maplibregl } from "./maplibre";
 import { composeStyle } from "./style/composeStyle";
 
@@ -38,10 +39,12 @@ function panelPadding() {
 export class MapController {
   readonly map: MapLibreMap;
   private groups: LayerGroup[] = layerGroups();
+  /** The tile manifest once it has loaded; null means GeoJSON sources (the fallback). */
+  private tiles: TilesManifest | null = null;
   /** The report data the groups were last built from, so a theme change can rebuild them without losing it. */
   private reportData: ReportMapData = { footprints: EMPTY_FC, holes: EMPTY_FC, mask: EMPTY_FC };
-  private hovered: { source: string; id: number } | null = null;
-  private selectedRefs: { source: string; id: number }[] = [];
+  private hovered: { source: string; sourceLayer?: string; id: number } | null = null;
+  private selectedRefs: { source: string; sourceLayer?: string; id: number }[] = [];
   private pendingMove: MapMouseEvent | null = null;
   private raf = 0;
   private unsubs: Array<() => void> = [];
@@ -105,6 +108,13 @@ export class MapController {
       btn?.closest(".maplibregl-ctrl-attrib")?.classList.toggle("lr-user-open");
     });
 
+    // tiles, when the archives exist: the groups are rebuilt on tile sources and the style re-applied once
+    void loadTiles().then((tiles) => {
+      if (!tiles) return;
+      this.tiles = tiles;
+      this.groups = withTiles(layerGroups(this.reportData, useStore.getState().theme), tiles);
+      void this.applyStyle(useStore.getState().basemap);
+    });
     this.unsubs.push(
       useStore.subscribe(
         (st) => st.basemap,
@@ -131,7 +141,7 @@ export class MapController {
       useStore.subscribe(
         (st) => st.theme,
         (theme) => {
-          this.groups = layerGroups(this.reportData, theme);
+          this.groups = withTiles(layerGroups(this.reportData, theme), this.tiles);
           void this.applyStyle(useStore.getState().basemap);
         },
       ),
@@ -327,7 +337,7 @@ export class MapController {
   private refreshReportData(): void {
     const data = reportMapData(this.reportIndex, useStore.getState().report);
     this.reportData = data;
-    this.groups = layerGroups(data, useStore.getState().theme);
+    this.groups = withTiles(layerGroups(data, useStore.getState().theme), this.tiles);
     this.footprintIds.clear();
     this.holeIds.clear();
     for (const f of data.footprints.features) this.footprintIds.set(String(f.properties?.file), Number(f.id));
@@ -417,7 +427,10 @@ export class MapController {
   }
 
   private setHover(f: MapGeoJSONFeature | null, point?: [number, number]): void {
-    const next = f && typeof f.id === "number" ? { source: f.source, id: f.id } : null;
+    const next =
+      f && typeof f.id === "number"
+        ? { source: f.source, ...(f.sourceLayer ? { sourceLayer: f.sourceLayer } : {}), id: f.id }
+        : null;
     const same = next && this.hovered && next.source === this.hovered.source && next.id === this.hovered.id;
     if (!same) {
       if (this.hovered && this.map.getSource(this.hovered.source)) {
@@ -454,8 +467,10 @@ export class MapController {
     const st = useStore.getState();
     const add = (source: string, id: number | undefined) => {
       if (id === undefined || !this.map.getSource(source)) return;
-      this.map.setFeatureState({ source, id }, { selected: true });
-      this.selectedRefs.push({ source, id });
+      const layer = this.tiles?.tiles[source]?.layer;
+      const ref = layer ? { source, sourceLayer: layer, id } : { source, id };
+      this.map.setFeatureState(ref, { selected: true });
+      this.selectedRefs.push(ref);
     };
     if (st.selected) add(st.selected.dataset, st.selected.id);
     if (st.report) add("rep-footprints", this.footprintIds.get(st.report));

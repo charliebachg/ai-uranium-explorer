@@ -54,8 +54,10 @@ def web_data_dir() -> Path:
 
 def tippecanoe_args(ex: TileExport, geojson: Path, out: Path) -> list[str]:
     """Every feature kept at every zoom; ids generated so feature state (hover, selected) works on tiles."""
+    # -r1: tippecanoe's default drops points at a rate of 2.5 per zoom below the base zoom, which would leave
+    # a handful of the 30,534 score cells at province scale; a drop rate of 1 keeps every point at every zoom
     return ["tippecanoe", "-q", "-o", str(out), "--force", f"-Z{ex.minzoom}", f"-z{ex.maxzoom}",
-            "-pf", "-pk", "--generate-ids", "-l", ex.source_id, str(geojson)]
+            "-pf", "-pk", "-r1", "--generate-ids", "-l", ex.source_id, str(geojson)]
 
 
 def _sha256(path: Path) -> str:

@@ -1,5 +1,6 @@
 import type { LayerSpecification, SourceSpecification } from "maplibre-gl";
 import { dataUrl } from "@/data/loader";
+import { type TilesManifest, tileSource } from "@/data/tiles";
 import {
   EMPTY_FC,
   REPORT_CONTEXT_LAYERS,
@@ -852,3 +853,31 @@ export const HIT_PRIORITY: string[] = [
   "deposits-fill",
   "fp-fill",
 ];
+
+
+/**
+ * The same groups, with every source the tile manifest covers swapped for its PMTiles archive. Each layer on a
+ * tiled source gets `source-layer` (the archive names its layer after the source id), and the source leaves the
+ * lazy list because a tile source is fetched by view already. Groups the manifest does not cover are returned
+ * as they are, so a partial manifest degrades to GeoJSON for the rest rather than to nothing.
+ */
+export function withTiles(
+  groups: LayerGroup[],
+  tiles: TilesManifest | null,
+  origin: string = typeof window === "undefined" ? "" : window.location.origin,
+): LayerGroup[] {
+  if (!tiles) return groups;
+  return groups.map((g) => {
+    const entries = Object.entries(tiles.tiles).filter(([id]) => id in g.sources);
+    if (!entries.length) return g;
+    const tiled = new Map(entries);
+    const sources: Record<string, SourceSpecification> = { ...g.sources };
+    for (const [id, entry] of tiled) sources[id] = tileSource(entry, origin);
+    const layers = g.layers.map((l) => {
+      const entry = "source" in l && typeof l.source === "string" ? tiled.get(l.source) : undefined;
+      return entry ? ({ ...l, "source-layer": entry.layer } as LayerSpecification) : l;
+    });
+    const lazy = Object.fromEntries(Object.entries(g.lazy ?? {}).filter(([id]) => !tiled.has(id)));
+    return { ...g, sources, layers, lazy: Object.keys(lazy).length ? lazy : undefined };
+  });
+}

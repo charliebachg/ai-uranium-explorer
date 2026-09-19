@@ -20,7 +20,7 @@ def fc(n: int = 3) -> dict:
 def test_arguments_keep_every_feature_and_name_the_layer_after_the_source() -> None:
     ex = X.TileExport("conductors", "context/em_conductors.geojson")
     args = X.tippecanoe_args(ex, Path("in.geojson"), Path("out.pmtiles"))
-    assert "-pf" in args and "-pk" in args and "--generate-ids" in args
+    assert "-pf" in args and "-pk" in args and "-r1" in args and "--generate-ids" in args, "no feature and no point is dropped at any zoom"
     assert args[args.index("-l") + 1] == "conductors" and "-Z4" in args and "-z12" in args
     assert not any(a.startswith("--drop") for a in args), "nothing is dropped to fit a tile"
 
