@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-18T09:33:31+00:00",
+ "generated_at": "2026-09-19T15:09:10+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -697,6 +697,459 @@
    }
   ]
  },
+ "hindcast": {
+  "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+  "store_sha256": null,
+  "snapshot": null,
+  "rows": [
+   {
+    "cutoff": 2000,
+    "model": "learned",
+    "discovery": "shea_creek_kianna",
+    "title": "Shea Creek, Kianna",
+    "year": 2004,
+    "confidence": "high",
+    "cells": [
+     "0031_0080"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.learned.shea_creek_kianna"
+   },
+   {
+    "cutoff": 2000,
+    "model": "effort",
+    "discovery": "shea_creek_kianna",
+    "title": "Shea Creek, Kianna",
+    "year": 2004,
+    "confidence": "high",
+    "cells": [
+     "0031_0080"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.effort.shea_creek_kianna"
+   },
+   {
+    "cutoff": 2000,
+    "model": "criteria",
+    "discovery": "shea_creek_kianna",
+    "title": "Shea Creek, Kianna",
+    "year": 2004,
+    "confidence": "high",
+    "cells": [
+     "0031_0080"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.criteria.shea_creek_kianna"
+   },
+   {
+    "cutoff": 2000,
+    "model": "learned",
+    "discovery": "centennial",
+    "title": "Centennial",
+    "year": 2004,
+    "confidence": "medium",
+    "cells": [
+     "0088_0044"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.learned.centennial"
+   },
+   {
+    "cutoff": 2000,
+    "model": "effort",
+    "discovery": "centennial",
+    "title": "Centennial",
+    "year": 2004,
+    "confidence": "medium",
+    "cells": [
+     "0088_0044"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.effort.centennial"
+   },
+   {
+    "cutoff": 2000,
+    "model": "criteria",
+    "discovery": "centennial",
+    "title": "Centennial",
+    "year": 2004,
+    "confidence": "medium",
+    "cells": [
+     "0088_0044"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.criteria.centennial"
+   },
+   {
+    "cutoff": 2000,
+    "model": "learned",
+    "discovery": "patterson_lake_south_triple_r_r780e",
+    "title": "Patterson Lake South, Triple R (R780E)",
+    "year": 2013,
+    "confidence": "high",
+    "cells": [
+     "0033_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.learned.patterson_lake_south_triple_r_r780e"
+   },
+   {
+    "cutoff": 2000,
+    "model": "effort",
+    "discovery": "patterson_lake_south_triple_r_r780e",
+    "title": "Patterson Lake South, Triple R (R780E)",
+    "year": 2013,
+    "confidence": "high",
+    "cells": [
+     "0033_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.effort.patterson_lake_south_triple_r_r780e"
+   },
+   {
+    "cutoff": 2000,
+    "model": "criteria",
+    "discovery": "patterson_lake_south_triple_r_r780e",
+    "title": "Patterson Lake South, Triple R (R780E)",
+    "year": 2013,
+    "confidence": "high",
+    "cells": [
+     "0033_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.criteria.patterson_lake_south_triple_r_r780e"
+   },
+   {
+    "cutoff": 2000,
+    "model": "learned",
+    "discovery": "patterson_lake_south_r1620e",
+    "title": "Patterson Lake South, R1620E",
+    "year": 2014,
+    "confidence": "medium",
+    "cells": [
+     "0034_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.learned.patterson_lake_south_r1620e"
+   },
+   {
+    "cutoff": 2000,
+    "model": "effort",
+    "discovery": "patterson_lake_south_r1620e",
+    "title": "Patterson Lake South, R1620E",
+    "year": 2014,
+    "confidence": "medium",
+    "cells": [
+     "0034_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.effort.patterson_lake_south_r1620e"
+   },
+   {
+    "cutoff": 2000,
+    "model": "criteria",
+    "discovery": "patterson_lake_south_r1620e",
+    "title": "Patterson Lake South, R1620E",
+    "year": 2014,
+    "confidence": "medium",
+    "cells": [
+     "0034_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.criteria.patterson_lake_south_r1620e"
+   },
+   {
+    "cutoff": 2000,
+    "model": "learned",
+    "discovery": "spitfire",
+    "title": "Spitfire",
+    "year": 2015,
+    "confidence": "medium",
+    "cells": [
+     "0039_0050"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.learned.spitfire"
+   },
+   {
+    "cutoff": 2000,
+    "model": "effort",
+    "discovery": "spitfire",
+    "title": "Spitfire",
+    "year": 2015,
+    "confidence": "medium",
+    "cells": [
+     "0039_0050"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.effort.spitfire"
+   },
+   {
+    "cutoff": 2000,
+    "model": "criteria",
+    "discovery": "spitfire",
+    "title": "Spitfire",
+    "year": 2015,
+    "confidence": "medium",
+    "cells": [
+     "0039_0050"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.criteria.spitfire"
+   },
+   {
+    "cutoff": 2000,
+    "model": "learned",
+    "discovery": "hurricane",
+    "title": "Hurricane",
+    "year": 2018,
+    "confidence": "high",
+    "cells": [
+     "0186_0097"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.learned.hurricane"
+   },
+   {
+    "cutoff": 2000,
+    "model": "effort",
+    "discovery": "hurricane",
+    "title": "Hurricane",
+    "year": 2018,
+    "confidence": "high",
+    "cells": [
+     "0186_0097"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.effort.hurricane"
+   },
+   {
+    "cutoff": 2000,
+    "model": "criteria",
+    "discovery": "hurricane",
+    "title": "Hurricane",
+    "year": 2018,
+    "confidence": "high",
+    "cells": [
+     "0186_0097"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2000.criteria.hurricane"
+   },
+   {
+    "cutoff": 2010,
+    "model": "learned",
+    "discovery": "patterson_lake_south_triple_r_r780e",
+    "title": "Patterson Lake South, Triple R (R780E)",
+    "year": 2013,
+    "confidence": "high",
+    "cells": [
+     "0033_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.learned.patterson_lake_south_triple_r_r780e"
+   },
+   {
+    "cutoff": 2010,
+    "model": "effort",
+    "discovery": "patterson_lake_south_triple_r_r780e",
+    "title": "Patterson Lake South, Triple R (R780E)",
+    "year": 2013,
+    "confidence": "high",
+    "cells": [
+     "0033_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.effort.patterson_lake_south_triple_r_r780e"
+   },
+   {
+    "cutoff": 2010,
+    "model": "criteria",
+    "discovery": "patterson_lake_south_triple_r_r780e",
+    "title": "Patterson Lake South, Triple R (R780E)",
+    "year": 2013,
+    "confidence": "high",
+    "cells": [
+     "0033_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.criteria.patterson_lake_south_triple_r_r780e"
+   },
+   {
+    "cutoff": 2010,
+    "model": "learned",
+    "discovery": "patterson_lake_south_r1620e",
+    "title": "Patterson Lake South, R1620E",
+    "year": 2014,
+    "confidence": "medium",
+    "cells": [
+     "0034_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.learned.patterson_lake_south_r1620e"
+   },
+   {
+    "cutoff": 2010,
+    "model": "effort",
+    "discovery": "patterson_lake_south_r1620e",
+    "title": "Patterson Lake South, R1620E",
+    "year": 2014,
+    "confidence": "medium",
+    "cells": [
+     "0034_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.effort.patterson_lake_south_r1620e"
+   },
+   {
+    "cutoff": 2010,
+    "model": "criteria",
+    "discovery": "patterson_lake_south_r1620e",
+    "title": "Patterson Lake South, R1620E",
+    "year": 2014,
+    "confidence": "medium",
+    "cells": [
+     "0034_0047"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.criteria.patterson_lake_south_r1620e"
+   },
+   {
+    "cutoff": 2010,
+    "model": "learned",
+    "discovery": "spitfire",
+    "title": "Spitfire",
+    "year": 2015,
+    "confidence": "medium",
+    "cells": [
+     "0039_0050"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.learned.spitfire"
+   },
+   {
+    "cutoff": 2010,
+    "model": "effort",
+    "discovery": "spitfire",
+    "title": "Spitfire",
+    "year": 2015,
+    "confidence": "medium",
+    "cells": [
+     "0039_0050"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.effort.spitfire"
+   },
+   {
+    "cutoff": 2010,
+    "model": "criteria",
+    "discovery": "spitfire",
+    "title": "Spitfire",
+    "year": 2015,
+    "confidence": "medium",
+    "cells": [
+     "0039_0050"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.criteria.spitfire"
+   },
+   {
+    "cutoff": 2010,
+    "model": "learned",
+    "discovery": "hurricane",
+    "title": "Hurricane",
+    "year": 2018,
+    "confidence": "high",
+    "cells": [
+     "0186_0097"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.learned.hurricane"
+   },
+   {
+    "cutoff": 2010,
+    "model": "effort",
+    "discovery": "hurricane",
+    "title": "Hurricane",
+    "year": 2018,
+    "confidence": "high",
+    "cells": [
+     "0186_0097"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.effort.hurricane"
+   },
+   {
+    "cutoff": 2010,
+    "model": "criteria",
+    "discovery": "hurricane",
+    "title": "Hurricane",
+    "year": 2018,
+    "confidence": "high",
+    "cells": [
+     "0186_0097"
+    ],
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:2010.criteria.hurricane"
+   }
+  ],
+  "summary": [
+   {
+    "model": "criteria",
+    "key": "median_area_share",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.criteria.median_area_share"
+   },
+   {
+    "model": "criteria",
+    "key": "n_in_top10",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.criteria.n_in_top10"
+   },
+   {
+    "model": "criteria",
+    "key": "n",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.criteria.n"
+   },
+   {
+    "model": "effort",
+    "key": "median_area_share",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.effort.median_area_share"
+   },
+   {
+    "model": "effort",
+    "key": "n_in_top10",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.effort.n_in_top10"
+   },
+   {
+    "model": "effort",
+    "key": "n",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.effort.n"
+   },
+   {
+    "model": "learned",
+    "key": "median_area_share",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.learned.median_area_share"
+   },
+   {
+    "model": "learned",
+    "key": "n_in_top10",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.learned.n_in_top10"
+   },
+   {
+    "model": "learned",
+    "key": "n",
+    "run_id": "f0d9d16d1b374e0e9ee996794791a8a6",
+    "value_id": "c:hc:summary.learned.n"
+   }
+  ]
+ },
  "sources": [
   {
    "key": "em_conductors",
@@ -894,6 +1347,25 @@
    "notes": "Two jobs: the depth fields interpolate an unconformity-depth surface, and DATE_DRILLED gives the effort model its dated drilling history. Holds no assay or lithology values.",
    "caveats": [
     "Depth fields are populated only where a hole reached the contact, so the interpolation carries its own coverage count."
+   ]
+  },
+  {
+   "key": "cagdb_mag_200m",
+   "title": "Canadian Aeromagnetic Data Base: 200 m residual total magnetic field grid (national compilation)",
+   "role": "feature",
+   "bears_on": "pathway",
+   "tier": "native",
+   "access": "file",
+   "url": "https://open.canada.ca/data/en/dataset/752fe3fc-d871-5ae1-9bd9-2b6f65880a8d",
+   "licence": "Open Government Licence - Canada",
+   "licence_url": "https://open.canada.ca/en/open-government-licence-canada",
+   "redistributable": true,
+   "verified": true,
+   "verified_at": "2026-09-19",
+   "record_count": 0,
+   "notes": "Published, open-licensed, not yet pulled: the resource link redirects to geophysical-data.canada.ca and the portal's download route is still to be driven. Magnetic lows over graphitic basement are the classic Athabasca pathway proxy; when pulled this replaces the interpreted magnetic-domains stand-in. Last data 2018, grid updated 2020.",
+   "caveats": [
+    "A national compilation of surveys flown at 800 m line spacing before 2000: coarser than the company surveys in the assessment files, and it is a residual field, not an interpretation."
    ]
   },
   {
@@ -1095,10 +1567,10 @@
   {
    "key": "aeromagnetic_grids",
    "title": "Airborne magnetic, radiometric and gravity grids",
-   "status": "not_addressable",
+   "status": "published_not_pulled",
    "why_it_matters": "Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin.",
-   "evidence": "The federal Geoscience Data Repository serves the Northern Saskatchewan 100 m magnetic and radiometric compilation through an interactive portal (HTTP 302, no direct file URL, no WMS or WCS). The provincial Geophysics service publishes survey footprint polygons only, not values. Checked 2026-09-18.",
-   "workaround": "Mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy; nothing stands in for radiometrics or gravity."
+   "evidence": "Re-verified 2026-09-19 (PRD section B, Phase 2): the earlier 'not addressable' was wrong on magnetics. Natural Resources Canada publishes the Canadian Aeromagnetic Data Base compilation on the Open Government Portal under the Open Government Licence - Canada (dataset 752fe3fc-d871-5ae1-9bd9-2b6f65880a8d, modified 2020-10-05) with resources 'Canada - 200m - MAG - Residual Total Field' (ZIP), 'Canada - 1km - MAG - Residual Total Field', both first vertical derivatives, and a CAGDB WMS (images, not values). The file links (gdr.agg.nrcan.gc.ca dapid=140) redirect to the new portal at geophysical-data.canada.ca, whose download path has not yet been driven; the Northern Saskatchewan 100 m compilation lives behind the same portal. Radiometrics and gravity: unchanged, no value grid found. The provincial Geophysics service still publishes survey footprints only.",
+   "workaround": "Until the 200 m grid is pulled: mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy; nothing stands in for radiometrics or gravity. The pull is a Phase 2 task, not a research question."
   },
   {
    "key": "discovery_dates",
@@ -1178,7 +1650,7 @@
    "id": "c:src:total",
    "kind": "stat",
    "as_printed": null,
-   "value": 20,
+   "value": 21,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "data sources in the register"
@@ -1187,7 +1659,7 @@
    "id": "c:src:verified_features",
    "kind": "stat",
    "as_printed": null,
-   "value": 13,
+   "value": 14,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "feature sources confirmed by a live call"
@@ -1196,7 +1668,7 @@
    "id": "c:src:redistributable",
    "kind": "stat",
    "as_printed": null,
-   "value": 18,
+   "value": 19,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "sources whose licence allows redistribution"
@@ -2541,7 +3013,358 @@
    "unit_as_printed": null,
    "fmt": "int",
    "note": "uncited claims that got through"
+  },
+  "c:hc:2000.learned.shea_creek_kianna": {
+   "id": "c:hc:2000.learned.shea_creek_kianna",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0006,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Shea Creek, Kianna cell (2004) by the learned model frozen at 2000"
+  },
+  "c:hc:2000.effort.shea_creek_kianna": {
+   "id": "c:hc:2000.effort.shea_creek_kianna",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0077,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Shea Creek, Kianna cell (2004) by the effort model frozen at 2000"
+  },
+  "c:hc:2000.criteria.shea_creek_kianna": {
+   "id": "c:hc:2000.criteria.shea_creek_kianna",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.051,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Shea Creek, Kianna cell (2004) by the criteria model frozen at 2000"
+  },
+  "c:hc:2000.learned.centennial": {
+   "id": "c:hc:2000.learned.centennial",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1885,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Centennial cell (2004) by the learned model frozen at 2000"
+  },
+  "c:hc:2000.effort.centennial": {
+   "id": "c:hc:2000.effort.centennial",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9931,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Centennial cell (2004) by the effort model frozen at 2000"
+  },
+  "c:hc:2000.criteria.centennial": {
+   "id": "c:hc:2000.criteria.centennial",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2642,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Centennial cell (2004) by the criteria model frozen at 2000"
+  },
+  "c:hc:2000.learned.patterson_lake_south_triple_r_r780e": {
+   "id": "c:hc:2000.learned.patterson_lake_south_triple_r_r780e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0243,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, Triple R (R780E) cell (2013) by the learned model frozen at 2000"
+  },
+  "c:hc:2000.effort.patterson_lake_south_triple_r_r780e": {
+   "id": "c:hc:2000.effort.patterson_lake_south_triple_r_r780e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0098,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, Triple R (R780E) cell (2013) by the effort model frozen at 2000"
+  },
+  "c:hc:2000.criteria.patterson_lake_south_triple_r_r780e": {
+   "id": "c:hc:2000.criteria.patterson_lake_south_triple_r_r780e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5142,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, Triple R (R780E) cell (2013) by the criteria model frozen at 2000"
+  },
+  "c:hc:2000.learned.patterson_lake_south_r1620e": {
+   "id": "c:hc:2000.learned.patterson_lake_south_r1620e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1302,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, R1620E cell (2014) by the learned model frozen at 2000"
+  },
+  "c:hc:2000.effort.patterson_lake_south_r1620e": {
+   "id": "c:hc:2000.effort.patterson_lake_south_r1620e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0167,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, R1620E cell (2014) by the effort model frozen at 2000"
+  },
+  "c:hc:2000.criteria.patterson_lake_south_r1620e": {
+   "id": "c:hc:2000.criteria.patterson_lake_south_r1620e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8562,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, R1620E cell (2014) by the criteria model frozen at 2000"
+  },
+  "c:hc:2000.learned.spitfire": {
+   "id": "c:hc:2000.learned.spitfire",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1908,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Spitfire cell (2015) by the learned model frozen at 2000"
+  },
+  "c:hc:2000.effort.spitfire": {
+   "id": "c:hc:2000.effort.spitfire",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Spitfire cell (2015) by the effort model frozen at 2000"
+  },
+  "c:hc:2000.criteria.spitfire": {
+   "id": "c:hc:2000.criteria.spitfire",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0305,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Spitfire cell (2015) by the criteria model frozen at 2000"
+  },
+  "c:hc:2000.learned.hurricane": {
+   "id": "c:hc:2000.learned.hurricane",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0879,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Hurricane cell (2018) by the learned model frozen at 2000"
+  },
+  "c:hc:2000.effort.hurricane": {
+   "id": "c:hc:2000.effort.hurricane",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Hurricane cell (2018) by the effort model frozen at 2000"
+  },
+  "c:hc:2000.criteria.hurricane": {
+   "id": "c:hc:2000.criteria.hurricane",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0305,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Hurricane cell (2018) by the criteria model frozen at 2000"
+  },
+  "c:hc:2010.learned.patterson_lake_south_triple_r_r780e": {
+   "id": "c:hc:2010.learned.patterson_lake_south_triple_r_r780e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0983,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, Triple R (R780E) cell (2013) by the learned model frozen at 2010"
+  },
+  "c:hc:2010.effort.patterson_lake_south_triple_r_r780e": {
+   "id": "c:hc:2010.effort.patterson_lake_south_triple_r_r780e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0224,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, Triple R (R780E) cell (2013) by the effort model frozen at 2010"
+  },
+  "c:hc:2010.criteria.patterson_lake_south_triple_r_r780e": {
+   "id": "c:hc:2010.criteria.patterson_lake_south_triple_r_r780e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5142,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, Triple R (R780E) cell (2013) by the criteria model frozen at 2010"
+  },
+  "c:hc:2010.learned.patterson_lake_south_r1620e": {
+   "id": "c:hc:2010.learned.patterson_lake_south_r1620e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.48,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, R1620E cell (2014) by the learned model frozen at 2010"
+  },
+  "c:hc:2010.effort.patterson_lake_south_r1620e": {
+   "id": "c:hc:2010.effort.patterson_lake_south_r1620e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9938,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, R1620E cell (2014) by the effort model frozen at 2010"
+  },
+  "c:hc:2010.criteria.patterson_lake_south_r1620e": {
+   "id": "c:hc:2010.criteria.patterson_lake_south_r1620e",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8562,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Patterson Lake South, R1620E cell (2014) by the criteria model frozen at 2010"
+  },
+  "c:hc:2010.learned.spitfire": {
+   "id": "c:hc:2010.learned.spitfire",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1065,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Spitfire cell (2015) by the learned model frozen at 2010"
+  },
+  "c:hc:2010.effort.spitfire": {
+   "id": "c:hc:2010.effort.spitfire",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9974,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Spitfire cell (2015) by the effort model frozen at 2010"
+  },
+  "c:hc:2010.criteria.spitfire": {
+   "id": "c:hc:2010.criteria.spitfire",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0305,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Spitfire cell (2015) by the criteria model frozen at 2010"
+  },
+  "c:hc:2010.learned.hurricane": {
+   "id": "c:hc:2010.learned.hurricane",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1304,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Hurricane cell (2018) by the learned model frozen at 2010"
+  },
+  "c:hc:2010.effort.hurricane": {
+   "id": "c:hc:2010.effort.hurricane",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0266,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Hurricane cell (2018) by the effort model frozen at 2010"
+  },
+  "c:hc:2010.criteria.hurricane": {
+   "id": "c:hc:2010.criteria.hurricane",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0305,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "share of basin area scoring at least the Hurricane cell (2018) by the criteria model frozen at 2010"
+  },
+  "c:hc:summary.criteria.median_area_share": {
+   "id": "c:hc:summary.criteria.median_area_share",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1576,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "median_area_share for the criteria model over every cutoff and later discovery"
+  },
+  "c:hc:summary.criteria.n_in_top10": {
+   "id": "c:hc:summary.criteria.n_in_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n_in_top10 for the criteria model over every cutoff and later discovery"
+  },
+  "c:hc:summary.criteria.n": {
+   "id": "c:hc:summary.criteria.n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 10,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n for the criteria model over every cutoff and later discovery"
+  },
+  "c:hc:summary.effort.median_area_share": {
+   "id": "c:hc:summary.effort.median_area_share",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5098,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "median_area_share for the effort model over every cutoff and later discovery"
+  },
+  "c:hc:summary.effort.n_in_top10": {
+   "id": "c:hc:summary.effort.n_in_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 5,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n_in_top10 for the effort model over every cutoff and later discovery"
+  },
+  "c:hc:summary.effort.n": {
+   "id": "c:hc:summary.effort.n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 10,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n for the effort model over every cutoff and later discovery"
+  },
+  "c:hc:summary.learned.median_area_share": {
+   "id": "c:hc:summary.learned.median_area_share",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1184,
+   "unit_as_printed": null,
+   "fmt": "pct1",
+   "note": "median_area_share for the learned model over every cutoff and later discovery"
+  },
+  "c:hc:summary.learned.n_in_top10": {
+   "id": "c:hc:summary.learned.n_in_top10",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 4,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n_in_top10 for the learned model over every cutoff and later discovery"
+  },
+  "c:hc:summary.learned.n": {
+   "id": "c:hc:summary.learned.n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 10,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n for the learned model over every cutoff and later discovery"
   }
  },
- "build_id": "13309707de4b"
+ "build_id": "8e084ef2e477"
 }

@@ -20,3 +20,6 @@ web/public/fixtures/pages/
 
 # vector tiles are built by `lr export-tiles`; without them the web falls back to GeoJSON
 web/public/data/tiles/
+
+# MLflow artefacts land beside the tracking database (`lr prospect modelsearch`); never committed
+pipeline/mlruns/

@@ -100,6 +100,24 @@ def insert_frame(con: duckdb.DuckDBPyConnection, schema: str, table: str, df: An
         df = df.copy()
         df["tier"] = tier
     con.execute(f"create schema if not exists {schema}")
+    declared = con.execute(
+        "select column_name, data_type from information_schema.columns where table_schema = ? and table_name = ? "
+        "order by ordinal_position", [schema, table]).fetchall()
+    if declared:
+        # the table is declared in schema.sql: keep its types, defaults and constraints and replace the rows.
+        # `create or replace ... as select` would retype every column from the frame (a column of nulls
+        # becomes INT32) and drop the tier CHECK, which is how native.layer once lost its hash column.
+        names = [c for c, _ in declared]
+        extra = [c for c in df.columns if c not in names]
+        if extra:
+            raise TierError(f"{schema}.{table}: frame carries column(s) {extra} the schema does not declare")
+        cols = [c for c in df.columns if c != "tier"]
+        con.execute(f"delete from {schema}.{table}")
+        con.register("lr_insert_frame", df)
+        con.execute(f"insert into {schema}.{table} ({', '.join(cols)}, tier) "
+                    f"select {', '.join(cols)}, '{tier}' from lr_insert_frame")
+        con.unregister("lr_insert_frame")
+        return len(df)
     con.register("lr_insert_frame", df)
     con.execute(f"create or replace table {schema}.{table} as select * from lr_insert_frame")
     con.unregister("lr_insert_frame")

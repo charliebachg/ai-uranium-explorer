@@ -325,7 +325,7 @@ def check_manifest(doc: Any, path: str = "manifest.json") -> Errors:
 
 PROSPECT_ROLES = {"feature", "label", "context"}
 PROSPECT_TIERS = {"native", "read", "derived"}
-GAP_STATUS = {"not_addressable", "not_published", "not_public", "unverified"}
+GAP_STATUS = {"not_addressable", "not_published", "not_public", "unverified", "published_not_pulled"}
 
 
 def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:
@@ -373,6 +373,29 @@ def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:
             e.add(where, "no licence named")
         if not src.get("verified_at"):
             e.add(where, "no verification date")
+    # the phase blocks: every row's number resolves, and every row names the tracker run it came from
+    for block in ("headline", "search", "hindcast"):
+        b = doc.get(block)
+        if b is None:
+            continue
+        where = f"{path}.{block}"
+        if not isinstance(b, dict) or not b.get("run_id"):
+            e.add(where, "a phase block must name its run")
+            continue
+        for i, r in enumerate(b.get("rows") or []):
+            _ref(e, f"{where}.rows[{i}].value_id", r.get("value_id"), known)
+            if not r.get("run_id"):
+                e.add(f"{where}.rows[{i}]", "no run id: a metric without a tracked run is not reportable")
+            for j, bound in enumerate(r.get("ci") or []):
+                _ref(e, f"{where}.rows[{i}].ci[{j}]", bound, known)
+        for extra in ("minetrace", "summary"):
+            for i, r in enumerate(b.get(extra) or []):
+                _ref(e, f"{where}.{extra}[{i}].value_id", r.get("value_id"), known)
+        _ref(e, f"{where}.cells", b.get("cells"), known, nullable=True)
+    if isinstance(doc.get("metrics"), dict):
+        for i, r in enumerate(doc["metrics"].get("rows") or []):
+            _ref(e, f"{path}.metrics.rows[{i}].value_id", r.get("value_id"), known)
+
     for i, g in enumerate(doc.get("gaps") or []):
         where = f"{path}.gaps[{i}]"
         if g.get("status") not in GAP_STATUS:

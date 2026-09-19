@@ -6,6 +6,7 @@ import { V } from "@/components/values/V";
 import type { Readiness, RunSummary } from "@/data/contract";
 import { loadReadiness, loadRunSummary } from "@/data/loader";
 import { resolveValue } from "@/data/registry";
+import { HeadlineSection, HindcastSection, SearchSection } from "@/features/eval/PhaseSections";
 import { MetricsStrip } from "@/features/prospect/MetricsStrip";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/state/store";
@@ -155,6 +156,9 @@ export function EvalPage() {
       </Section>
 
       <ScoresSection readiness={readiness} />
+      <HeadlineSection block={readiness?.headline} />
+      <SearchSection block={readiness?.search} />
+      <HindcastSection block={readiness?.hindcast} />
       <GateSection readiness={readiness} />
     </Shell>
   );
@@ -341,7 +345,15 @@ function CheckRow({ check }: { check: RunSummary["checks"][number] }) {
   );
 }
 
-function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
+export function Section({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="glass rounded-2xl p-4">
       <h2 className="text-[13px] text-ink">{title}</h2>

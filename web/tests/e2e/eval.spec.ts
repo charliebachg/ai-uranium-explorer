@@ -8,6 +8,9 @@ test("eval page reports run statistics and refuses to call them accuracy", async
   await expect(evalPage).toContainText("No gold labels yet: these are run statistics, not accuracy");
   await expect(evalPage).toContainText("V01");
   await expect(evalPage).toContainText("What would turn these into accuracy");
+  // the tracked evaluations: every row of the hindcast names its run, and the table is on the page
+  await expect(evalPage.locator('[data-testid="hindcast-table"]')).toBeVisible();
+  expect(await evalPage.locator('[data-testid="hindcast-row"]').count()).toBeGreaterThan(5);
   await page.waitForTimeout(800);
   await page.screenshot({ path: "test-results/eval-page.png", fullPage: true });
 

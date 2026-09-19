@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from pathlib import Path
 from typing import Any, Callable
 
@@ -136,9 +137,14 @@ def _scores_geojson(vals: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[st
             group by 1, 2, 3, 4 order by 1
             """
         ).fetchall()
-        run = con.execute("select max(run_id) from derived.metric").fetchone()[0]
+        # the run id of the scores run: MLflow ids (hex) and timestamps share this table, so "the latest run"
+        # is the latest among the three-score rows, not the lexically largest id of any run
+        run = con.execute(
+            "select max(run_id) from derived.metric where split_part(metric_key, '.', 1) in ('criteria', 'learned', 'effort')"
+        ).fetchone()[0]
         metrics = con.execute(
-            "select metric_key, value, note from derived.metric where run_id = ? order by metric_key", [run]
+            "select metric_key, value, note from derived.metric where run_id = ? "
+            "and split_part(metric_key, '.', 1) in ('criteria', 'learned', 'effort') order by metric_key", [run]
         ).fetchall()
     finally:
         con.close()
@@ -167,6 +173,164 @@ def _scores_geojson(vals: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[st
         table.append({"model": model, "fold": fold, "metric": metric, "value_id": vid})
     return {"type": "FeatureCollection", "features": features}, {"run_id": run, "rows": table}
 
+
+
+def _num(x: Any) -> float | None:
+    """A finite number or None: the run JSONs carry NaN as null and numpy floats as floats."""
+    try:
+        v = float(x)
+    except (TypeError, ValueError):
+        return None
+    return v if v == v and v not in (float("inf"), float("-inf")) else None
+
+
+def _interval(vals: list[dict[str, Any]], vid: str, ci: Any, note: str) -> list[str] | None:
+    """The two bounds of a bootstrap interval as values of their own, so the page can print them."""
+    if not isinstance(ci, (list, tuple)) or len(ci) != 2:
+        return None
+    lo, hi = _num(ci[0]), _num(ci[1])
+    if lo is None or hi is None:
+        return None
+    vals.append(stat(f"{vid}.lo", round(lo, 4), fmt="ratio3", note=f"lower bound of the 95% interval; {note}"))
+    vals.append(stat(f"{vid}.hi", round(hi, 4), fmt="ratio3", note=f"upper bound of the 95% interval; {note}"))
+    return [f"{vid}.lo", f"{vid}.hi"]
+
+
+#: the metrics the Eval page prints per configuration or arm; the rest stay in the tracker
+PHASE_METRICS = ("pr_auc", "roc_auc", "capture_top10", "base_rate")
+
+
+def _headline_block(vals: list[dict[str, Any]], d: dict[str, Any]) -> dict[str, Any]:
+    """Phase 0: every configuration of the effort-against-geology re-test, with intervals and the verdict."""
+    run_id = d.get("mlflow_run_id") or d["run_id"]
+    rows = []
+    for r in d.get("rows") or []:
+        if _num(r.get("pr_auc")) is None:
+            continue
+        key = r["config"]
+        note = f"{r['feature_set']} features, positives={r['positives']}, matched={r['matched']}, thinned={r['thinned']}, {r['fold']} folds"
+        for metric in PHASE_METRICS:
+            v = _num(r.get(metric))
+            if v is None:
+                continue
+            vid = f"c:h:{key}.{metric}"
+            vals.append(stat(vid, round(v, 4), fmt="ratio3", note=f"{metric}; {note}"))
+            entry: dict[str, Any] = {"config": key, "feature_set": r["feature_set"], "positives": r["positives"],
+                                     "matched": bool(r["matched"]), "thinned": bool(r["thinned"]), "fold": r["fold"],
+                                     "metric": metric, "run_id": run_id, "value_id": vid}
+            ci = _interval(vals, vid, r.get(f"{metric}_ci"), f"{metric}; {note}")
+            if ci:
+                entry["ci"] = ci
+            rows.append(entry)
+    minetrace = []
+    for fs, mt in (d.get("minetrace") or {}).items():
+        for metric in ("roc_auc_mean", "roc_auc_sd"):
+            v = _num(mt.get(metric))
+            if v is None:
+                continue
+            vid = f"c:h:minetrace.{fs}.{metric}"
+            vals.append(stat(vid, round(v, 4), fmt="ratio3", note=str(mt.get("protocol") or "MineTRACE protocol")))
+            minetrace.append({"feature_set": fs, "metric": metric, "run_id": run_id, "value_id": vid})
+    cells = _num(d.get("cells"))
+    if cells is not None:
+        vals.append(stat("c:h:cells", int(cells), note="common complete cases the re-test scored"))
+    verdict = d.get("verdict") or {}
+    return {"run_id": d["run_id"], "mlflow_run_id": d.get("mlflow_run_id"), "store_sha256": d.get("store_sha256"),
+            "snapshot": d.get("snapshot"), "cells": "c:h:cells" if cells is not None else None,
+            "verdict": verdict.get("text") if isinstance(verdict, dict) else (str(verdict) if verdict else None),
+            "rows": rows, "minetrace": minetrace}
+
+
+def _search_block(vals: list[dict[str, Any]], d: dict[str, Any]) -> dict[str, Any]:
+    """Phase 3: every arm of the model search with its own tracker run id, and the served-model decision."""
+    rows = []
+    for r in d.get("rows") or []:
+        if _num(r.get("pr_auc")) is None:
+            continue
+        key = r["arm"]
+        run_id = r.get("run_id") or d["run_id"]
+        note = f"{r['name']} on {r['feature_set']} under {r['fold']} folds, positives={r.get('positives', 'all')}"
+        for metric in PHASE_METRICS:
+            v = _num(r.get(metric))
+            if v is None:
+                continue
+            vid = f"c:s:{key}.{metric}"
+            vals.append(stat(vid, round(v, 4), fmt="ratio3", note=f"{metric}; {note}"))
+            entry: dict[str, Any] = {"arm": key, "name": r["name"], "feature_set": r["feature_set"], "fold": r["fold"],
+                                     "positives": str(r.get("positives", "all")), "metric": metric, "run_id": run_id,
+                                     "value_id": vid}
+            ci = _interval(vals, vid, r.get(f"{metric}_ci"), f"{metric}; {note}")
+            if ci:
+                entry["ci"] = ci
+            rows.append(entry)
+    dec = d.get("decision") or None
+    decision = None
+    if isinstance(dec, dict) and dec.get("reason"):
+        decision = {"model": dec.get("model") or dec.get("name"), "stage": dec.get("stage"),
+                    "served": bool(dec.get("served", False)), "reason": str(dec["reason"]),
+                    "run_id": dec.get("run_id"), "version": dec.get("version")}
+    cells = _num(d.get("cells"))
+    if cells is not None:
+        vals.append(stat("c:s:cells", int(cells), note="common complete cases the model search scored"))
+    return {"run_id": d["run_id"], "store_sha256": d.get("store_sha256"), "snapshot": d.get("snapshot"),
+            "quick": bool(d.get("quick", False)), "cells": "c:s:cells" if cells is not None else None,
+            "rows": rows, "decision": decision}
+
+
+def _slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(name).lower()).strip("_")
+
+
+def _hindcast_block(vals: list[dict[str, Any]], d: dict[str, Any]) -> dict[str, Any]:
+    """Phase 3: where each later discovery ranked under each model frozen at a cutoff, as a share of area."""
+    run_id = d["run_id"]
+    rows = []
+    for r in d.get("rows") or []:
+        v = _num(r.get("area_share"))
+        if v is None:
+            continue
+        slug = _slug(r["discovery"])
+        vid = f"c:hc:{r['cutoff']}.{r['model']}.{slug}"
+        vals.append(stat(vid, round(v, 4), fmt="pct1",
+                         note=f"share of basin area scoring at least the {r['discovery']} cell ({r.get('year')}) "
+                              f"by the {r['model']} model frozen at {r['cutoff']}"))
+        rows.append({"cutoff": int(r["cutoff"]), "model": r["model"], "discovery": slug, "title": str(r["discovery"]),
+                     "year": int(r["year"]) if _num(r.get("year")) is not None else None,
+                     "confidence": r.get("confidence"), "cells": list(r.get("cells") or []), "run_id": run_id,
+                     "value_id": vid})
+    summary = []
+    for key, value in (d.get("summary") or {}).items():
+        v = _num(value)
+        if v is None or "." not in key:
+            continue
+        model, stat_key = key.split(".", 1)
+        vid = f"c:hc:summary.{model}.{stat_key}"
+        fmt = "pct1" if "share" in stat_key else "int"
+        vals.append(stat(vid, round(v, 4) if fmt == "pct1" else int(v), fmt=fmt,
+                         note=f"{stat_key} for the {model} model over every cutoff and later discovery"))
+        summary.append({"model": model, "key": stat_key, "run_id": run_id, "value_id": vid})
+    return {"run_id": run_id, "store_sha256": d.get("store_sha256"), "snapshot": d.get("snapshot"),
+            "rows": rows, "summary": summary}
+
+
+def _phase_blocks(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dict[str, Any]:
+    """The Phase 0 re-test, the model search and the dated hindcast, each from the JSON its run wrote.
+
+    Every number becomes a value with an id, and every row carries the tracker run id it came from, so the
+    Eval page can name the run behind each figure. A block is absent, not empty, when its run has not happened."""
+    out_dir = out_dir or (PATHS.out / "prospect")
+    blocks: dict[str, Any] = {}
+    for name, builder in (("headline", _headline_block), ("search", _search_block), ("hindcast", _hindcast_block)):
+        p = out_dir / ("modelsearch.json" if name == "search" else f"{name}.json")
+        if not p.is_file():
+            continue
+        try:
+            d = json.loads(p.read_text())
+        except json.JSONDecodeError:
+            continue
+        if isinstance(d, dict) and d.get("run_id"):
+            blocks[name] = builder(vals, d)
+    return blocks
 
 
 def _gate_block(vals: list[dict[str, Any]]) -> dict[str, Any] | None:
@@ -251,6 +415,7 @@ def build(log: Callable[[str], None] = print) -> dict[str, Any]:
     coverage = _coverage_geojson(vals)
     scores, metrics = _scores_geojson(vals)
     gate = _gate_block(vals)
+    phases = _phase_blocks(vals)
 
     doc = {
         "schema_version": SCHEMA_VERSION,
@@ -269,6 +434,7 @@ def build(log: Callable[[str], None] = print) -> dict[str, Any]:
         "features": features,
         "metrics": metrics,
         **({"gate": gate} if gate else {}),
+        **phases,
         "sources": [
             {
                 "key": s.key, "title": s.title, "role": s.role, "bears_on": s.bears_on, "tier": s.tier,

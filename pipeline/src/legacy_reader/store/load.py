@@ -19,6 +19,7 @@ carries a `tiers` column saying so.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from typing import Any, Callable
 
@@ -49,14 +50,29 @@ PLACEMENT: dict[str, tuple[str, str]] = {
 }
 
 
+def _payload_sha(rel_path: str | None) -> str | None:
+    """The hash of a pulled payload on disk, which is what a snapshot and the lineage check compare against."""
+    if not rel_path:
+        return None
+    path = PATHS.pipeline / rel_path
+    if not path.is_file():
+        return None
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        while block := fh.read(1 << 20):
+            h.update(block)
+    return h.hexdigest()
+
+
 def _native_layers() -> pd.DataFrame:
-    """The pull log, as the native layer registry. Empty until `lr index pull` has run."""
+    """The pull log, as the native layer registry, each layer with the hash of its payload. Empty until
+    `lr index pull` has run."""
     rows = []
     for key, r in load_pull_log().items():
         rows.append({
             "layer_key": key, "title": r.get("title") or key, "service_url": r.get("url") or "",
             "layer_id": None, "where_clause": r.get("where"), "out_sr": 4326,
-            "record_count": int(r.get("count") or 0), "payload_sha256": None,
+            "record_count": int(r.get("count") or 0), "payload_sha256": _payload_sha(r.get("path")),
             "licence": r.get("licence") or "not stated", "licence_url": r.get("licence_url"),
             "redistributable": bool(r.get("redistributable")), "retrieved_at": r.get("retrieved_at") or "",
             "bears_on": None, "role": "label" if "deposit" in key else "context", "notes": r.get("path"),

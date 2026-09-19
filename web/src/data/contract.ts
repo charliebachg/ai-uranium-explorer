@@ -594,7 +594,7 @@ export type ProspectSource = z.infer<typeof ProspectSource>;
 export const ProspectGap = z.object({
   key: z.string(),
   title: z.string(),
-  status: z.enum(["not_addressable", "not_published", "not_public", "unverified"]),
+  status: z.enum(["not_addressable", "not_published", "not_public", "unverified", "published_not_pulled"]),
   why_it_matters: z.string(),
   evidence: z.string(),
   workaround: z.string(),
@@ -608,6 +608,93 @@ export const MetricRow = z.object({
   value_id: StatRef,
 });
 export type MetricRow = z.infer<typeof MetricRow>;
+
+/** One metric of one configuration of the Phase 0 re-test (`lr prospect headline`), with its tracker run. */
+export const HeadlineRow = z.object({
+  config: z.string(),
+  feature_set: z.enum(["learned", "effort"]),
+  positives: z.enum(["all", "deposits"]),
+  matched: z.boolean(),
+  thinned: z.boolean(),
+  fold: z.enum(["random", "spatial", "camp"]),
+  metric: z.string(),
+  run_id: z.string(),
+  value_id: StatRef,
+  /** The two bounds of the bootstrap interval, as values of their own. */
+  ci: z.tuple([StatRef, StatRef]).optional(),
+});
+export type HeadlineRow = z.infer<typeof HeadlineRow>;
+
+/** One metric of one arm of the model search (`lr prospect modelsearch`); `run_id` is that arm's MLflow run. */
+export const SearchRow = z.object({
+  arm: z.string(),
+  name: z.string(),
+  feature_set: z.string(),
+  fold: z.string(),
+  positives: z.string(),
+  metric: z.string(),
+  run_id: z.string(),
+  value_id: StatRef,
+  ci: z.tuple([StatRef, StatRef]).optional(),
+});
+export type SearchRow = z.infer<typeof SearchRow>;
+
+/** Where one later discovery ranked under one model frozen at a cutoff, as a share of basin area. */
+export const HindcastRow = z.object({
+  cutoff: z.number().int(),
+  model: z.enum(["criteria", "learned", "effort"]),
+  discovery: z.string(),
+  title: z.string(),
+  year: z.number().int().nullable(),
+  confidence: z.string().nullable(),
+  cells: z.array(z.string()),
+  run_id: z.string(),
+  value_id: StatRef,
+});
+export type HindcastRow = z.infer<typeof HindcastRow>;
+
+const RunNaming = {
+  run_id: z.string(),
+  store_sha256: z.string().nullable().optional(),
+  snapshot: z.string().nullable().optional(),
+};
+
+export const HeadlineBlock = z.object({
+  ...RunNaming,
+  mlflow_run_id: z.string().nullable().optional(),
+  cells: StatRef.nullable(),
+  verdict: z.string().nullable(),
+  rows: z.array(HeadlineRow),
+  minetrace: z.array(
+    z.object({ feature_set: z.string(), metric: z.string(), run_id: z.string(), value_id: StatRef }),
+  ),
+});
+export type HeadlineBlock = z.infer<typeof HeadlineBlock>;
+
+export const SearchBlock = z.object({
+  ...RunNaming,
+  quick: z.boolean(),
+  cells: StatRef.nullable(),
+  rows: z.array(SearchRow),
+  decision: z
+    .object({
+      model: z.string().nullable(),
+      stage: z.string().nullable(),
+      served: z.boolean(),
+      reason: z.string(),
+      run_id: z.string().nullable(),
+      version: z.number().int().nullable(),
+    })
+    .nullable(),
+});
+export type SearchBlock = z.infer<typeof SearchBlock>;
+
+export const HindcastBlock = z.object({
+  ...RunNaming,
+  rows: z.array(HindcastRow),
+  summary: z.array(z.object({ model: z.string(), key: z.string(), run_id: z.string(), value_id: StatRef })),
+});
+export type HindcastBlock = z.infer<typeof HindcastBlock>;
 
 export const Readiness = z.object({
   schema_version: z.literal(SCHEMA_VERSION),
@@ -632,6 +719,12 @@ export const Readiness = z.object({
   }),
   thin_coverage_threshold: z.number(),
   metrics: z.object({ run_id: z.string().nullable(), rows: z.array(MetricRow) }).optional(),
+  /** Phase 0: the effort-against-geology re-test with corrections, intervals and the MineTRACE protocol. */
+  headline: HeadlineBlock.optional(),
+  /** Phase 3: every arm of the model search, each naming its tracker run, and the served-model decision. */
+  search: SearchBlock.optional(),
+  /** Phase 3: the dated hindcast, later discoveries ranked by models frozen at a cutoff. */
+  hindcast: HindcastBlock.optional(),
   /** What the fabrication gate scored on the adversarial suite: `lr prospect gate-eval`. */
   gate: z
     .object({

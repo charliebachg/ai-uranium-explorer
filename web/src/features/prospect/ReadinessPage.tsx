@@ -429,6 +429,7 @@ const GAP_STATUS: Record<ProspectGap["status"], { label: string; tone: "miss" | 
   not_published: { label: "not published", tone: "miss" },
   not_public: { label: "not public", tone: "miss" },
   unverified: { label: "unverified", tone: "flag" },
+  published_not_pulled: { label: "published, not yet pulled", tone: "flag" },
 };
 
 function GapsSection({ gaps, totalId }: { gaps: ProspectGap[]; totalId: string }) {

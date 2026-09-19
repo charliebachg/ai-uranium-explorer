@@ -1,6 +1,14 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { DatumGrid, Manifest, PagesIndex, Report, ReportIndex, YearHistogram } from "../src/data/contract";
+import {
+  DatumGrid,
+  Manifest,
+  PagesIndex,
+  Readiness,
+  Report,
+  ReportIndex,
+  YearHistogram,
+} from "../src/data/contract";
 
 /**
  * Export gate: every file under web/public/data must match the contract, and no exported report may contain a
@@ -33,6 +41,7 @@ function check(path: string, schema: { safeParse: (x: unknown) => { success: boo
 check("manifest.json", Manifest);
 check("context/datum_grid.json", DatumGrid);
 check("bulk/year_histogram.json", YearHistogram);
+check("prospect/readiness.json", Readiness);
 const index = check("reports/index.json", ReportIndex) as { reports?: { file_num: string }[] } | null;
 
 for (const r of index?.reports ?? []) {
