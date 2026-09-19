@@ -67,15 +67,24 @@ def _payload_sha(rel_path: str | None) -> str | None:
 def _native_layers() -> pd.DataFrame:
     """The pull log, as the native layer registry, each layer with the hash of its payload. Empty until
     `lr index pull` has run."""
+    from ..prospect.inventory import load as load_inventory
+
+    try:
+        inv = {s.key: s for s in load_inventory().sources}
+    except Exception:  # noqa: BLE001 - an inventory that does not validate must not block a rebuild
+        inv = {}
     rows = []
     for key, r in load_pull_log().items():
+        src = inv.get(key)
         rows.append({
-            "layer_key": key, "title": r.get("title") or key, "service_url": r.get("url") or "",
+            "layer_key": key, "title": r.get("title") or (src.title if src else key), "service_url": r.get("url") or "",
             "layer_id": None, "where_clause": r.get("where"), "out_sr": 4326,
             "record_count": int(r.get("count") or 0), "payload_sha256": _payload_sha(r.get("path")),
-            "licence": r.get("licence") or "not stated", "licence_url": r.get("licence_url"),
+            "licence": r.get("licence") or (src.licence.name if src else "not stated"), "licence_url": r.get("licence_url"),
             "redistributable": bool(r.get("redistributable")), "retrieved_at": r.get("retrieved_at") or "",
-            "bears_on": None, "role": "label" if "deposit" in key else "context", "notes": r.get("path"),
+            # what the layer bears on and its role come from the inventory, the register the features cite
+            "bears_on": src.bears_on if src else None,
+            "role": src.role if src else ("label" if "deposit" in key else "context"), "notes": r.get("path"),
         })
     return pd.DataFrame(rows)
 

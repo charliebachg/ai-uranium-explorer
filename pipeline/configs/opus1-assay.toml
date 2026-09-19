@@ -1,10 +1,10 @@
-# Opus-only timing run over the enabled cells' drilling files, one file at a time, one worker, so that
-# wall time equals model time and every page's usage can be read off calls.jsonl without disentangling
-# parallel launches. The per-call budget is a ceiling the CLI enforces, not an expected spend.
+# Opus-only reading of the enabled cells' drilling files. The timing run used one worker so wall time
+# equalled model time; the full read uses two, and every page's usage is still read off calls.jsonl per
+# call. The per-call budget is a ceiling the CLI enforces, not an expected spend.
 [extract]
 model = "claude-opus-5"
 effort = "medium"
-workers = 1
+workers = 2
 page_classes = ["collar_table", "assay_table", "lith_log"]
 class_priority = ["assay_table", "lith_log", "collar_table", "probe_log", "certificate", "uncertain", "other"]
 max_pages_per_file = 12
