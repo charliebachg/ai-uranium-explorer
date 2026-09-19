@@ -50,7 +50,16 @@ data only. It proposes no drill targets and makes no geological judgement.
     cd pipeline
     uv run lr openai models          # free: what the key can reach, before spending anything
     uv run lr openai budget          # cumulative spend and what is left of the ceiling
-    uv run lr prospect serve         # localhost:8787, the evidence record and the live chat
+    uv run lr prospect serve         # localhost:8787, the evidence record and the live chat; /docs for the OpenAPI page
+
+    # the serving stack (Postgres + PostGIS, MinIO, Redis) and the containerised app
+    docker compose up -d db          # needs Docker; the PostGIS image is multi-arch
+    cd pipeline
+    uv run lr store migrate          # Alembic: the tiered schema in Postgres, plus the cell geometry
+    uv run lr store sync-pg          # copy every tiered table from DuckDB, set geometries, audit the tiers
+    uv run lr export-tiles           # PMTiles per evidence layer (needs tippecanoe); the map falls back to GeoJSON without them
+    uv run lr api-spec               # write the OpenAPI document the web's typed client is generated from
+    cd .. && docker compose up -d --build app   # the site and the API in one container on :8787, store mounted from pipeline/data
 
 `http://localhost:5173/?fixture=1` shows the evidence panel on a development fixture (values hand-keyed from
 real public pages; the app shows a FIXTURE badge whenever it is used).

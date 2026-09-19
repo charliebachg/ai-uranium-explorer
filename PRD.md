@@ -553,9 +553,21 @@ MineTRACE protocol, one day.
 
 ## A. Web application — a real frontend and backend
 
-### A.1 Current state
-Static exports served by Vite; a `ThreadingHTTPServer` on `127.0.0.1:8787` for evidence and chat; in-memory
-conversations; 16 MB of evidence layers as lazy GeoJSON; no auth, no persistence, no deploy story.
+### A.1 Current state — Phase 1 mostly done (2026-09-19)
+- **API**: FastAPI with typed response models and an OpenAPI page; the same routes and NDJSON events as the
+  stdlib server it replaced; conversations persisted turn by turn in the agent tier with tool calls, value ids
+  and the gate's verdict; a stored conversation resumes after a restart.
+- **Serving database**: Postgres 16 + PostGIS from `docker compose`, the tiered schema as an Alembic migration
+  translated from the same `schema.sql`, every table synced from DuckDB (1,215,304 rows, 24 s), the tier audit
+  running on both, a real geometry on every cell. **Not yet**: the API still reads DuckDB; the PostGIS reads
+  are the next step.
+- **Vector tiles**: one PMTiles archive per evidence source and for the score cells, no feature dropped at any
+  zoom, hashed both ends; the map uses them when the manifest exists and falls back to GeoJSON otherwise.
+- **Frontend**: TanStack Query for server state, a client typed from the OpenAPI document, zod still validating
+  every response; conversation history in the panel.
+- **Deploy**: one image serving the site and the API; `docker compose up -d --build app` beside the database.
+  MinIO and Redis are provisioned and **unused** (no object storage writes, no job queue yet).
+- **Not started**: auth and roles; OpenTelemetry traces; background jobs; the seed snapshot a fresh clone needs.
 
 ### A.2 Requirements
 
@@ -593,10 +605,15 @@ conversations; 16 MB of evidence layers as lazy GeoJSON; no auth, no persistence
 - Vector tile styling by zoom (cells → hexbins at province scale).
 - Offline-safe static fallback (today's behaviour) for the map and scores when the API is down.
 
-### A.3 How we will know
-- p95 API latency under 300 ms for evidence reads at 10 concurrent users on a laptop.
-- A fresh clone reaches a running app in one command, with a seeded database, in under 15 minutes.
-- Every e2e test that passes today passes against the API-backed app.
+### A.3 How we will know — measured 2026-09-19
+- p95 API latency under 300 ms for evidence reads at 10 concurrent users on a laptop. **Measured: p50 98 ms,
+  p95 483 ms, 54 req/s** through the container, reading DuckDB with four tool calls per record. Not met; the
+  PostGIS reads and a per-cell evidence cache are the two levers.
+- A fresh clone reaches a running app in one command, with a seeded database, in under 15 minutes. **Partly**:
+  the image builds in about 2 minutes and the stack starts in one command, but the analytics store is a
+  gitignored DuckDB file the clone does not have. A published seed snapshot is the missing piece.
+- Every e2e test that passes today passes against the API-backed app. **Met**: 24 e2e and 59 unit tests green
+  with retries off, typecheck and lint clean; the API's own suite is 12 tests, the pipeline's 540.
 
 ### A.4 Open questions
 - Postgres-only, or Postgres for serving + DuckDB for analytics (recommended — the split is honest about
@@ -909,7 +926,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | Phase | Weeks | What ships | Gate to next phase |
 |---|---|---|---|
 | **0 · Settle the headline** | done | §C.2.1: 48 configurations, three folds, intervals, area-budget capture, MineTRACE protocol | **Confirmed in writing, FINDINGS.md F1** |
-| **1 · Platform** | 2–3 | §A: FastAPI + Postgres/PostGIS, vector tiles, jobs, persisted conversations, one-command deploy; §B catalogue + lineage | All current e2e pass against the API; fresh clone runs in one command |
+| **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. **Open**: PostGIS-backed reads, jobs, auth, tracing, the seed snapshot, §B catalogue + lineage | e2e green against the API (met); one-command start (met when the store exists); p95 483 ms against the 300 ms target (not met) |
 | **2 · Data ownership** | 1–2 | §B: gap re-verification (magnetics first); freeze the 15 enabled cells with their selection rule (§9.3); fetch and text-index their 47 files; pre-read the top two drilling files per cell with the existing pipeline (17 files, about 230 routed pages, unattended — **can start now, in parallel with Phase 0**); versioned snapshots | Every on-screen value walks to a hashed source pull; **the §9.1 readiness checklist is green for the focused tasks** |
 | **3 · ML programme** | 2 | §C.2.2–C.2.4: MLflow, registry, candidate models, ablations, sensitivity, CI regression | Eval page links every number to a run |
 | **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
