@@ -172,6 +172,19 @@ def enable_files_cmd(
     typer.echo(f"enabled {len(out)} file(s); next: lr fetch --only <num>, then render, ocr, route, extract --dry-run")
 
 
+@app.command("run-usage")
+def run_usage_cmd(
+    run_id: str = typer.Argument(None, help="run directory name under data/runs (default: the latest)"),
+    expect_model: str = typer.Option(None, "--expect-model", help="flag calls that resolved to another model"),
+) -> None:
+    """Per-page duration, tokens and cost of one extraction run, from its own records."""
+    from .paths import PATHS
+    from .usage import format_report, latest_run_dir, summarise_run
+
+    run_dir = (PATHS.runs / run_id) if run_id else latest_run_dir()
+    typer.echo(format_report(summarise_run(run_dir, expected_model=expect_model)))
+
+
 @app.command("lock-heldout")
 def lock_heldout_cmd() -> None:
     """Write gold/heldout.lock (file numbers, report PDF sha256s, seed, timestamp). Never overwrites."""
