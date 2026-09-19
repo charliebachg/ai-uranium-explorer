@@ -180,6 +180,20 @@ def merge_page_texts(text_layer: list[tuple[int, str]], ocr: list[tuple[int, str
     return sorted(rows)
 
 
+def dedupe_pages(rows: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int]:
+    """One row per (document hash, page): the same PDF filed under two file numbers or two names is one document,
+    and the page table's key says so. The first filing keeps the row; the count of dropped rows is returned."""
+    seen: set[tuple[str, int]] = set()
+    out = []
+    for r in rows:
+        key = (r["doc_sha256"], int(r["page"]))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out, len(rows) - len(out)
+
+
 def untrusted_pages() -> dict[str, set[int]]:
     """Pages whose text layer the OCR comparison rejected, by document hash; empty when no page table exists."""
     try:
@@ -317,6 +331,10 @@ def build(
                     "chars": len(text), "text": text, "extracted_at": now, "source": source,
                 })
 
+    rows, duplicates = dedupe_pages(rows)
+    if duplicates:
+        log(f"  {duplicates} page(s) belong to a document filed more than once (same hash under another file or "
+            f"name); each page is indexed once, under the first filing")
     if rows:
         con = connect()
         try:

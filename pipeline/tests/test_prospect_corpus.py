@@ -35,3 +35,11 @@ def test_merge_prefers_the_text_layer_unless_it_is_distrusted() -> None:
                       (3, "a scanned page only the OCR pass covered", "ocr")]
     # trusted everywhere: the text layer wins on the pages it has, OCR fills the rest
     assert [s for _, _, s in C.merge_page_texts(layer, ocr)] == ["text_layer", "text_layer", "ocr"]
+
+
+def test_a_document_filed_twice_is_indexed_once() -> None:
+    rows = [{"file_num": "A", "doc_name": "r.pdf", "doc_sha256": "s", "page": 1, "text": "x"},
+            {"file_num": "B", "doc_name": "copy of r.pdf", "doc_sha256": "s", "page": 1, "text": "x"},
+            {"file_num": "A", "doc_name": "r.pdf", "doc_sha256": "s", "page": 2, "text": "y"}]
+    kept, dropped = C.dedupe_pages(rows)
+    assert dropped == 1 and [(r["file_num"], r["page"]) for r in kept] == [("A", 1), ("A", 2)]
