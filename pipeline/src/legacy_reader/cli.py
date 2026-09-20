@@ -39,8 +39,11 @@ app.add_typer(prospect_app, name="prospect")
 openai_app = typer.Typer(no_args_is_help=True, help="The chat agent's OpenAI backend, and what it has spent.")
 app.add_typer(openai_app, name="openai")
 from .mcp.cli import mcp_app  # noqa: E402  (the MCP server: PRD §E.3)
+from .interface.cli import interface_app  # noqa: E402  (the interface agent: PRD §8.3)
 
 app.add_typer(mcp_app, name="mcp")
+app.add_typer(interface_app, name="interface")
+
 
 
 @openai_app.command("models")
@@ -625,9 +628,10 @@ def prospect_memo_cmd(
 @prospect_app.command("serve")
 def prospect_serve_cmd(
     port: int = typer.Option(8787, "--port"),
-    model: str = typer.Option("", "--model", help="default: OPENAI_MODEL for openai, sonnet for claude"),
+    model: str = typer.Option("", "--model", help="default: OPENAI_MODEL for openai, sonnet for claude, "
+                                                   "LR_INTERFACE_MODEL for auto"),
     effort: str = typer.Option("medium", "--effort"),
-    backend: str = typer.Option("openai", "--backend", help="openai | claude"),
+    backend: str = typer.Option("openai", "--backend", help="openai | claude | auto (vendor/model ids to OpenRouter)"),
     host: str = typer.Option("127.0.0.1", "--host", help="0.0.0.0 inside a container"),
     web_dist: str = typer.Option(None, "--web-dist", help="serve the built site (web/dist) from this process"),
 ) -> None:

@@ -1,8 +1,11 @@
-"""The conversation: same tools, same evidence record, same gate as a published memo."""
+"""The conversation: same tools, same evidence record, same gate as a published memo.
+
+Since Phase 4c `prospect.chat` is a shim over the interface agent: every turn is routed first. The fake here
+routes everything as `other`, so what these tests exercise is the plain tool loop the unrouted kind falls
+back to, and the gate on its answer; the router's own kinds are covered in `test_interface_agent.py`."""
 
 from __future__ import annotations
 
-import json
 
 import pytest
 
@@ -16,19 +19,30 @@ def val(vid: str, value, fmt: str = "m1", unit: str | None = None) -> dict:
 
 
 class FakeBackend:
+    """The router's call routes as `other`; the loop's calls take the scripted steps in order, and a step is
+    re-served once the script runs out (the gate's one retry asks again)."""
+
     def __init__(self, steps):
         self.steps = list(steps)
         self.requests = []
+        self.last = None
 
     def call(self, req):
         self.requests.append(req)
-        step = self.steps.pop(0)
+        if req.task == "interface_route":
+            step = {"kind": "other"}
+        else:
+            step = self.steps.pop(0) if self.steps else self.last
+            self.last = step
 
         class R:
             structured = step
             cost_usd = 0.02
 
         return R()
+
+    def loop_requests(self):
+        return [r for r in self.requests if r.task == "prospect_chat"]
 
 
 @pytest.fixture
@@ -110,7 +124,7 @@ def test_the_transcript_carries_earlier_turns_into_the_prompt(stub_tools):
     ])
     C.ask(conv, "is there a host?", backend)
     C.ask(conv, "and what about the trap?", backend)
-    second_prompt = backend.requests[-1].user_prompt
+    second_prompt = backend.loop_requests()[-1].user_prompt
     assert "is there a host?" in second_prompt
     assert "The host is mapped here." in second_prompt
 
@@ -134,6 +148,16 @@ def test_the_system_prompt_states_the_rules_that_matter():
 
 def test_the_agent_is_told_it_may_refuse():
     assert "cannot be answered" in C.SYSTEM
+    assert "abstain" in C.SYSTEM and "not_measured" in C.SYSTEM, "and how: the abstain action with its reasons"
+
+
+def test_the_loop_may_abstain_and_the_refusal_is_recorded(stub_tools):
+    conv = C.Conversation(cell_id="0001_0001")
+    backend = FakeBackend([{"action": "abstain", "abstain": {"reason": "not_measured", "detail": "no depth here"}}])
+    turn = C.ask(conv, "how deep is basement?", backend)
+    assert turn["published"] is True and turn["cannot_answer"] is True
+    assert turn["abstention"]["reason"] == "not_measured" and turn["abstention"]["detail"] == "no depth here"
+    assert conv.abstentions and conv.abstentions[0]["abstain_id"].startswith("a:")
 
 
 def test_two_questions_do_not_share_a_cache_key(stub_tools):
@@ -149,5 +173,7 @@ def test_two_questions_do_not_share_a_cache_key(stub_tools):
     ])
     C.ask(conv, "how close is the conductor?", backend)
     C.ask(conv, "has anyone drilled here?", backend)
-    keys = [r.cache_key("claude_cli") for r in backend.requests]
+    keys = [r.cache_key("claude_cli") for r in backend.loop_requests()]
     assert keys[0] != keys[1]
+    routes = [r.cache_key("claude_cli") for r in backend.requests if r.task == "interface_route"]
+    assert routes[0] != routes[1], "and the router's two calls do not share one either"

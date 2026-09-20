@@ -210,8 +210,10 @@ def evidence(cell_id: str) -> dict[str, Any]:
 def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
     """Pick the backend the chat runs on, and the model name that goes with it.
 
-    Only the chat moved to OpenAI. Reading pages, the memo panel and the evals stay on Claude Code, and the
-    two caches never mix because the cache key carries the backend family.
+    `openai` and `claude` are the chat's original two. `auto` is the interface agent's (PRD §8.3): a
+    `vendor/model` id goes to OpenRouter and a bare `claude-*` id to the CLI, and the model defaults to the
+    cheap interface model (`LR_INTERFACE_MODEL`, else `z-ai/glm-5.3-flash`). The caches never mix because
+    the cache key carries the backend family.
     """
     from ..backends.cache import CachedBackend
 
@@ -220,8 +222,18 @@ def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
 
         return CachedBackend(ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)), model or "claude-sonnet-5"
 
+    if kind == "auto":
+        from ..backends.claude_cli import ClaudeCliBackend
+        from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
+        from ..backends.router import RoutedBackend
+        from ..interface import default_model
+
+        routed = RoutedBackend([(is_openrouter_model, OpenRouterBackend(timeout_s=180))],
+                               default=ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20))
+        return CachedBackend(routed), model or default_model()
+
     if kind != "openai":
-        raise ValueError(f"unknown backend {kind!r}: use openai or claude")
+        raise ValueError(f"unknown backend {kind!r}: use openai, claude or auto")
     from ..backends.openai_api import OpenAIBackend, model_name
 
     return CachedBackend(OpenAIBackend()), model or model_name()
