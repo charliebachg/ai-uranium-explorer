@@ -17,7 +17,7 @@ from typing import Any
 
 from ..paths import PATHS
 
-AGENTS = ("v0",)
+AGENTS = ("v0", "v1")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 
 
@@ -45,6 +45,37 @@ class Switches:
 
 
 @dataclass(frozen=True)
+class LoopSpec:
+    """The staged loop's switches (PRD §8.4 and §8.5), one table per v1 arm. Every field is stated in the file,
+    as the pack switches are, so the arms table can say in what exactly two v1 rows differ. The enums are
+    checked where they are used, by `analyst.loop.LoopConfig`, so this module stays free of the loop."""
+
+    executor_model: str
+    verifier_model: str
+    adjudicator_model: str
+    planner_model: str
+    planner: str            # template | model
+    verifier: str           # none | skeptic
+    rounds: int             # K, the refinement rounds
+    triage: bool
+    executor_context: str   # independent | cumulative
+    decider: str            # both | weighted | adjudicator
+    segment_workers: int
+    retrieval: bool
+
+    def config(self, effort: str, prompt_version: str) -> Any:
+        """The loop's own configuration object; imported here so an arm file can be parsed without the loop."""
+        from .loop import LoopConfig
+
+        return LoopConfig(executor_model=self.executor_model, verifier_model=self.verifier_model,
+                          adjudicator_model=self.adjudicator_model, planner_model=self.planner_model,
+                          effort=effort, planner=self.planner, verifier=self.verifier, rounds=self.rounds,
+                          triage=self.triage, executor_context=self.executor_context, decider=self.decider,
+                          segment_workers=self.segment_workers, retrieval=self.retrieval,
+                          prompt_version=prompt_version)
+
+
+@dataclass(frozen=True)
 class ArmConfig:
     name: str
     agent: str
@@ -57,6 +88,7 @@ class ArmConfig:
     timeout_s: int
     workers: int
     notes: str
+    loop: LoopSpec | None = None   # required for agent v1, refused for v0
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -66,8 +98,9 @@ def arms_dir() -> Path:
     return PATHS.pipeline / "configs" / "arms"
 
 
-def _table(raw: dict[str, Any], key: str, cls: type) -> Any:
-    """A sub-table with exactly the dataclass's keys: an arm that forgets a switch is not an arm."""
+def _table(raw: dict[str, Any], key: str, cls: type, booleans: bool = True) -> Any:
+    """A sub-table with exactly the dataclass's keys: an arm that forgets a switch is not an arm. The two
+    switch tables hold booleans only; the loop table is typed by its dataclass."""
     sub = raw.get(key)
     if not isinstance(sub, dict):
         raise ValueError(f"[arm.{key}] table is missing")
@@ -75,9 +108,16 @@ def _table(raw: dict[str, Any], key: str, cls: type) -> Any:
     missing, extra = want - set(sub), set(sub) - want
     if missing or extra:
         raise ValueError(f"[arm.{key}]: missing {sorted(missing)}, unknown {sorted(extra)}")
+    if booleans:
+        for k, v in sub.items():
+            if not isinstance(v, bool):
+                raise ValueError(f"[arm.{key}].{k} must be true or false, not {v!r}")
+        return cls(**sub)
+    types = {f.name: f.type for f in fields(cls)}
     for k, v in sub.items():
-        if not isinstance(v, bool):
-            raise ValueError(f"[arm.{key}].{k} must be true or false, not {v!r}")
+        want_t = {"str": str, "int": int, "bool": bool}[str(types[k])]
+        if not isinstance(v, want_t) or (want_t is int and isinstance(v, bool)):
+            raise ValueError(f"[arm.{key}].{k} must be {want_t.__name__}, not {v!r}")
     return cls(**sub)
 
 
@@ -86,13 +126,18 @@ def parse_arm(raw: dict[str, Any]) -> ArmConfig:
     arm = raw.get("arm")
     if not isinstance(arm, dict):
         raise ValueError("an arm file has one [arm] table")
-    scalar = {f.name for f in fields(ArmConfig)} - {"inputs", "switches"}
+    scalar = {f.name for f in fields(ArmConfig)} - {"inputs", "switches", "loop"}
     missing = scalar - set(arm)
-    extra = set(arm) - scalar - {"inputs", "switches"}
+    extra = set(arm) - scalar - {"inputs", "switches", "loop"}
     if missing or extra:
         raise ValueError(f"[arm]: missing {sorted(missing)}, unknown {sorted(extra)}")
     if arm["agent"] not in AGENTS:
         raise ValueError(f"agent {arm['agent']!r} is not one of {AGENTS}")
+    loop = None
+    if arm["agent"] == "v1":
+        loop = _table(arm, "loop", LoopSpec, booleans=False)
+    elif "loop" in arm:
+        raise ValueError(f"agent {arm['agent']!r} has no loop; the [arm.loop] table belongs to v1 arms")
     if arm["effort"] not in EFFORTS:
         raise ValueError(f"effort {arm['effort']!r} is not one of {EFFORTS}")
     if not str(arm["notes"]).strip():
@@ -101,7 +146,7 @@ def parse_arm(raw: dict[str, Any]) -> ArmConfig:
         name=str(arm["name"]), agent=str(arm["agent"]), model=str(arm["model"]), effort=str(arm["effort"]),
         inputs=_table(arm, "inputs", Inputs), switches=_table(arm, "switches", Switches),
         prompt_version=str(arm["prompt_version"]), max_budget_usd_per_call=float(arm["max_budget_usd_per_call"]),
-        timeout_s=int(arm["timeout_s"]), workers=int(arm["workers"]), notes=str(arm["notes"]),
+        timeout_s=int(arm["timeout_s"]), workers=int(arm["workers"]), notes=str(arm["notes"]), loop=loop,
     )
 
 

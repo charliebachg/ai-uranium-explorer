@@ -602,7 +602,9 @@ class Chain:
         """The current chain rendered for the verifier and the adjudicator: one line per node with its id,
         criterion, status, strength, the ids it cites, what it depends on and its text. Every number on a
         line sits beside the ids that back it; there is nothing else numeric to quote."""
-        lines = [f"chain {self.chain_id} for cell {self.cell} ({self.purpose})",
+        # the chain id carries the run id, and a run id in the prompt would make the verifier's and the
+        # adjudicator's calls miss the cache on every replay; the verifier needs the cell, not the run
+        lines = [f"chain for cell {self.cell} ({self.purpose})",
                  "node | segment | status | strength | ids | depends_on | text"]
         lines += [n.line() for n in self.current_nodes()]
         return "\n".join(lines)

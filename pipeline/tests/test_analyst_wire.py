@@ -258,7 +258,7 @@ def test_current_nodes_picks_the_latest_stored_node_per_segment_across_rounds() 
 
 def test_chain_text_renders_numbers_only_beside_ids() -> None:
     text = chain().chain_text()
-    assert text.startswith("chain ch-0001 for cell b01 (benchmark)")
+    assert text.startswith("chain for cell b01 (benchmark)")
     lines = text.splitlines()
     assert "n01 | s01 criterion conductor_proximity | met | strength 4 | ids: " + COND in lines[2]
     assert "depends_on: n01, n02" in lines[4]

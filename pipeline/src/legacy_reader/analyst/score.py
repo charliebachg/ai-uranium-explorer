@@ -217,6 +217,46 @@ def score_run(run_dir: Path, key: dict[str, dict[str, Any]], boot: int = BOOT, s
         np.array([r["abstain"] for r in labelled], dtype=bool),
         boot=boot, seed=seed, strata=[r["stratum"] for r in labelled],
     )
+    out |= stage_metrics(rows)
+    return out
+
+
+def stage_metrics(rows: dict[str, dict[str, Any]]) -> dict[str, float]:
+    """The per-stage metrics PRD §8.4 asks of the staged loop, from the counts each v1 row carries under
+    `stages`: the node gate's rejection rate over every executor attempt, the share of nodes recorded unknown
+    after three attempts, the share of chains a round validated, rounds and re-executions per chain, how often
+    the verifier's recorded label and the weighted decider agreed with the final verdict, the shallow-path
+    share, and refusals per leakage rule. Flat floats under a `stage_` prefix so the MLflow flattener keeps
+    them. Empty for a run without chains, so a v0 score is unchanged."""
+    st = [r["stages"] for r in rows.values() if isinstance(r.get("stages"), dict)]
+    if not st:
+        return {}
+
+    def total(key: str) -> float:
+        return float(sum(float(s.get(key) or 0) for s in st))
+
+    def rate(values: list[Any]) -> float:
+        known = [float(v) for v in values if v is not None]
+        return float(np.mean(known)) if known else NAN
+
+    attempts, nodes = total("attempts_total"), total("n_nodes")
+    out: dict[str, float] = {
+        "stage_n_chains": float(len(st)),
+        "stage_gate_rejection_rate": total("n_gate_rejections") / attempts if attempts else NAN,
+        "stage_attempts_per_node": attempts / nodes if nodes else NAN,
+        "stage_unknown_recorded_rate": total("n_recorded_unknown") / nodes if nodes else NAN,
+        "stage_valid_rate": rate([bool(s.get("valid")) for s in st]),
+        "stage_rounds_mean": rate([s.get("rounds") for s in st]),
+        "stage_reexecuted_mean": rate([s.get("n_reexecuted") for s in st]),
+        "stage_verifier_agreement_rate": rate([s.get("verifier_agreement") for s in st]),
+        "stage_decider_agreement_rate": rate([s.get("decider_agreement") for s in st]),
+        "stage_shallow_rate": rate([bool(s.get("shallow")) for s in st]),
+    }
+    rules: dict[str, float] = {}
+    for s in st:
+        for rule, n in (s.get("n_refusals_by_rule") or {}).items():
+            rules[rule] = rules.get(rule, 0.0) + float(n or 0)
+    out |= {f"stage_refusals_{rule}": n for rule, n in sorted(rules.items())}
     return out
 
 

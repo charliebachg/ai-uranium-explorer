@@ -33,10 +33,15 @@ from ..backends.base import BackendError, UsageLimitReached
 from ..backends.cache import CachedBackend
 from ..ids import sha256_json
 from ..prospect import tracking as TR
+from ..prospect.criteria import load as load_criteria
 from . import frozen as F
+from . import loop as LOOP
+from . import prompts as PR
 from . import score as SC
 from . import v0 as V0
+from . import wire as W
 from .arms import ArmConfig, load_arm
+from .session import Session
 
 from ..runtime.manifest import Manifest
 from ..runtime.runs import run_dir
@@ -84,6 +89,47 @@ def _flat(score: dict[str, Any]) -> dict[str, float]:
     return {k: float(v) for k, v in score.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
 
 
+#: how a v1 run opens the session for one cell; a test hands in a factory over a fake tool world
+SessionFactory = Callable[[Any, dict[str, Any], ArmConfig, Path, dict[str, Any]], Any]
+
+
+def open_session(bench: Any, cell: dict[str, Any], arm: ArmConfig, stage: Path, shared: dict[str, Any]) -> Any:
+    """A benchmark session for one cell: the real cell id from the benchmark's cells file, the bench id the
+    model sees, the frozen blind list, the cell's fold for the out-of-fold scores, and the arm's switches.
+    `shared` carries what a run computes once for every cell (the forbidden-name set)."""
+    bench_id = str(cell["bench_id"])
+    return Session.open(str(cell["cell_id"]), "benchmark", fold=cell.get("fold"), switches=arm.switches,
+                        bench_id=bench_id, blind=[str(f) for f in bench.blind(bench_id)], stage=stage,
+                        forbidden=shared.get("forbidden"))
+
+
+def _forbidden_names() -> set[str] | None:
+    """The name set a benchmark session scrubs with, read from the store once per run rather than once per
+    cell. None when there is no store to read (a test world), and the session then reads it lazily."""
+    from ..bench import pack as P
+    from ..store import connect
+
+    try:
+        con = connect(read_only=True)
+    except Exception:  # noqa: BLE001 - no store: the session decides
+        return None
+    try:
+        return P.forbidden_strings(con) | P.hole_names(con)
+    finally:
+        con.close()
+
+
+def _store_sha() -> str | None:
+    """The store's content hash, so a v1 run (which reads the live tools, not the frozen packs) names the
+    store it ran against; None when the snapshot module cannot say."""
+    try:
+        from ..store.snapshot import store_sha
+
+        return store_sha()
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _claim(base: str) -> tuple[str, Path]:
     """The run id and its directory, created atomically; a taken directory means a sibling run started in
     the same second, and this run takes the next suffix. Goes through this module's `run_dir` so a test can
@@ -118,7 +164,7 @@ def regate_run(version: str, run_id: str, log: Callable[[str], None] = print, bo
     out_rows = []
     for bench_id, row in rows.items():
         answer = row.get("answer")
-        if isinstance(answer, dict):
+        if isinstance(answer, dict) and not row.get("chain"):  # a v1 chain is re-gated by re-running its loop
             arm = load_arm(str(row["arm"]))
             shown = V0.apply_switches(bench.pack(bench_id), arm.switches)
             passages = bench.passages(bench_id) if arm.inputs.passages else None
@@ -146,16 +192,45 @@ def regate_run(version: str, run_id: str, log: Callable[[str], None] = print, bo
     return summary
 
 
+def _run_staged(backend: Any, bench: F.Bench, cell: dict[str, Any], arm: ArmConfig, cfg: Any, criteria: Any,
+                rd: Path, run_id: str, shared: dict[str, Any], session_factory: SessionFactory = open_session,
+                ) -> dict[str, Any]:
+    """One cell through the staged loop: a session opened for it, the loop run, the row keyed by the bench
+    id whatever the session called the cell, and the session's own manifest fields kept on the row so the
+    run's manifest can say which scores and how many refusals every cell saw."""
+    bench_id = str(cell["bench_id"])
+    stage = rd / "stages" / bench_id
+    session = session_factory(bench, cell, arm, stage, shared)
+    try:
+        row = LOOP.run_cell_v1(backend, session, bench.card(bench_id, drillholes=arm.switches.drillholes),
+                               arm.inputs, arm.switches, cfg, criteria, chain_id=f"{run_id}:{bench_id}",
+                               run_id=run_id, stage=stage, manifest_sha256=bench.manifest_sha256, arm=arm.name)
+        row["bench_id"] = bench_id
+        row["session"] = session.manifest_fields()
+    finally:
+        session.close()
+    return row
+
+
 def run_arm(
     version: str, arm: ArmConfig | str, backend_factory: Factory, budget_usd: float | None,
     log: Callable[[str], None] = print, cells: list[str] | None = None, workers: int | None = None,
     track: bool = True, resume: str | None = None, seed: int = 0, boot: int = SC.BOOT,
-    cache_root: Path | None = None,
+    cache_root: Path | None = None, session_factory: SessionFactory = open_session,
 ) -> dict[str, Any]:
     """One arm over the benchmark's open cells (or the named open cells). Returns the run summary, which is
-    also written to `<run_dir>/summary.json` and `data/out/bench/<version>/arms/<arm>.json`."""
+    also written to `<run_dir>/summary.json` and `data/out/bench/<version>/arms/<arm>.json`.
+
+    A v0 arm answers from the frozen pack and card in one call; a v1 arm runs the staged loop over a session
+    that serves the live tools under the benchmark's blind list, fold and switches (`session_factory`), so
+    the manifest also names the store the tools read from."""
     arm = load_arm(arm) if isinstance(arm, str) else arm
     bench = F.load_bench(version)
+    staged = arm.agent == "v1"
+    if staged and arm.loop is None:
+        raise ValueError(f"arm {arm.name} is a v1 arm without an [arm.loop] table")
+    cfg = arm.loop.config(arm.effort, arm.prompt_version) if staged else None
+    criteria = load_criteria() if staged else None
     if not F.hashed_files(bench):
         log("  the benchmark manifest lists no file hashes; nothing verified")
     drift = F.verify(bench)
@@ -167,19 +242,32 @@ def run_arm(
     planned = bench.require_open(list(cells)) if cells else bench.open_cells()
     started = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
 
-    manifest = Manifest.start(kind=KIND, config=arm.as_dict(), models={"analyst": arm.model}, seed=seed,
-                              budget_usd=budget_usd,
+    config = arm.as_dict()
+    if staged:
+        config["store_sha"] = _store_sha()
+    manifest = Manifest.start(kind=KIND, config=config, models=cfg.models() if staged else {"analyst": arm.model},
+                              seed=seed, budget_usd=budget_usd,
                               bench={"bench_id": version, "manifest_sha256": bench.manifest_sha256})
     # the directory is claimed before anything is written: two arms launched in the same second used to be
     # given one run id and interleaved their rows; the second now gets a -2 suffix on its id and directory
     manifest.run_id, rd = _claim(str(manifest.run_id))
-    system = V0.default_system_prompt()
-    _note(manifest, "prompt_hashes", {arm.prompt_version: sha256_json(system)})
-    _note(manifest, "schema_hashes", {V0.SCHEMA_VERSION: sha256_json(V0.ANSWER_SCHEMA)})
-    if arm.switches.oof_scores:
-        _extend(manifest, "scores_seen", [{"model_version": m, "fold_kind": SC.FOLD_KIND} for m in SC.BASELINE_MODELS])
+    if staged:
+        _note(manifest, "prompt_hashes", PR.prompt_hashes())
+        _note(manifest, "schema_hashes", {
+            f"node/{W.SCHEMA_VERSION}": sha256_json(W.NODE_SCHEMA),
+            f"verifier/{W.SCHEMA_VERSION}": sha256_json(W.VERIFIER_SCHEMA),
+            f"adjudicator/{W.SCHEMA_VERSION}": sha256_json(W.ADJUDICATOR_SCHEMA),
+            f"plan/{W.SCHEMA_VERSION}": sha256_json(W.PLAN_SCHEMA),
+        })
+    else:
+        system = V0.default_system_prompt()
+        _note(manifest, "prompt_hashes", {arm.prompt_version: sha256_json(system)})
+        _note(manifest, "schema_hashes", {V0.SCHEMA_VERSION: sha256_json(V0.ANSWER_SCHEMA)})
+        if arm.switches.oof_scores:
+            _extend(manifest, "scores_seen", [{"model_version": m, "fold_kind": SC.FOLD_KIND} for m in SC.BASELINE_MODELS])
     run_id = str(manifest.run_id)
     manifest.write(rd)
+    shared: dict[str, Any] = {"forbidden": _forbidden_names()} if staged else {}
 
     carried: dict[str, dict[str, Any]] = {}
     if resume:
@@ -203,8 +291,12 @@ def run_arm(
         bench_id = str(cell["bench_id"])
         try:
             with span("cell", kind="tool", bench_id=bench_id, stratum=cell.get("stratum"), arm=arm.name):
-                row = V0.run_cell(backend, bench.pack(bench_id), bench.card(bench_id, drillholes=arm.switches.drillholes),
-                                  bench.passages(bench_id), arm)
+                card = bench.card(bench_id, drillholes=arm.switches.drillholes)
+                if staged:
+                    row = _run_staged(backend, bench, cell, arm, cfg, criteria, rd, run_id, shared,
+                                      session_factory=session_factory)
+                else:
+                    row = V0.run_cell(backend, bench.pack(bench_id), card, bench.passages(bench_id), arm)
         except (BudgetExhausted, UsageLimitReached) as signal:
             stop.set()
             with lock:
@@ -228,9 +320,12 @@ def run_arm(
                     _append(rd, row)
                     done.append(row)
                     a = row["answer"]
+                    st = row.get("stages") or {}
+                    stage_note = (f"  rounds {st.get('rounds')} {'valid' if st.get('valid') else 'never valid'}"
+                                  f"  gate {st.get('n_gate_rejections')}/{st.get('attempts_total')}" if st else "")
                     log(f"    {row['bench_id']}  {a.get('verdict', '?'):<22} p={a.get('probability', float('nan')):.2f}  "
-                        f"${row['cost_usd']:.3f}  {'cache' if row['from_cache'] else 'live'}"
-                        f"{'' if row['published'] else '  REJECTED: ' + row['problems'][0]}")
+                        f"${row['cost_usd']:.3f}  {'cache' if row['from_cache'] else 'live'}{stage_note}"
+                        f"{'' if row['published'] else '  REJECTED: ' + (row['problems'] or ['?'])[0]}")
                 elif status == "failed":
                     row = {"bench_id": cell["bench_id"], "answer": None,
                            "problems": [f"{type(payload).__name__}: {payload}"], "published": False,
@@ -243,6 +338,12 @@ def run_arm(
                     pending.append(str(cell["bench_id"]))
 
     spent = float(budget.spent_usd)  # what left the cache: the budget is charged for live calls only
+    if staged:
+        seen: dict[str, dict[str, Any]] = {}
+        for row in done:
+            for entry in (row.get("session") or {}).get("scores_seen") or []:
+                seen.setdefault(json.dumps(entry, sort_keys=True), entry)
+        _extend(manifest, "scores_seen", list(seen.values()))
     manifest.finish(spent_usd=spent)
     manifest.write(rd)
     stopped = state["stopped_by"]

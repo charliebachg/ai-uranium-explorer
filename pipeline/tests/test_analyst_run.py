@@ -216,3 +216,116 @@ def test_regate_rejudges_stored_answers_with_the_current_gate(tmp_path, monkeypa
     assert all(not r["published"] and r["problems"] == ["refused by the new rule"] for r in after.values() if r.get("answer"))
     assert (rd / "cells.pre-regate.jsonl").is_file() and summary["regate_changed"] == len([r for r in before.values() if r.get("answer")])
     assert _json.loads((rd / "score.json").read_text())["n_rejected"] == summary["regate_changed"]
+
+
+# ---------------------------------------------------------------- the staged agent through the same harness
+
+import pandas as pd
+from dataclasses import replace
+
+from legacy_reader.analyst import frozen as F
+from legacy_reader.analyst.session import Session
+from fake_loop_world import CELL as LOOP_CELL, LoopBackend, LoopWorld, loop_registry
+
+
+def v1_arm(**loop_over):
+    """The v1 arm with effort features on, because the fake world's cross-check node cites a sample count."""
+    arm = A.load_arm("v1")
+    arm = replace(arm, switches=replace(arm.switches, effort_features=True), workers=1)
+    if loop_over:
+        arm = replace(arm, loop=replace(arm.loop, **loop_over))
+    return arm
+
+
+def scored_factory(world: LoopWorld):
+    """A scored session over the fake tool world for every cell: real ids kept, the blind list frozen, the
+    out-of-fold scores given, so the harness is tested without a store."""
+    def factory(bench, cell, arm, stage, shared):
+        oof = pd.DataFrame({"cell_id": [LOOP_CELL] * 3, "model": ["learned", "effort", "criteria"],
+                            "fold_kind": "spatial", "fold": [cell["fold"]] * 3, "score": [0.7, 0.8, 0.65]})
+        return Session.open(LOOP_CELL, "scored", fold=cell["fold"], switches=arm.switches, blind=["74H09-0039"],
+                            stage=stage, tools=loop_registry(world), oof=oof, forbidden=set())
+    return factory
+
+
+def run_v1(bench, backend, rt, **over):
+    kw = dict(budget_usd=80.0, log=lambda *_: None, workers=1, track=True, cache_root=rt.cache, boot=20,
+              session_factory=scored_factory(LoopWorld()))
+    kw.update(over)
+    arm = kw.pop("arm", None) or v1_arm()
+    return RUN.run_arm(bench.version, arm, lambda _arm: backend, **kw)
+
+
+def test_a_v1_arm_runs_the_loop_over_the_open_cells_and_scores_with_stage_metrics(world) -> None:
+    rt, bench = world
+    backend = LoopBackend()
+    s = run_v1(bench, backend, rt)
+    assert s["done"] == 5 and s["failed"] == 0 and s["pending"] == []
+    got = rows(rt, s["run_id"])
+    assert set(got) == set(OPEN)
+    row = got["b01"]
+    assert row["bench_id"] == "b01" and row["cell_id"] == "0001_0001" and row["arm"] == "v1"
+    assert row["published"] is True and row["answer"]["verdict"] == "supports_closer_look"
+    assert row["stages"]["n_nodes"] == 10 and row["stages"]["valid"] is True and row["stages"]["n_gate_rejections"] == 0
+    assert row["session"]["purpose"] == "scored" and row["session"]["fold"] == 0
+    assert row["chain"]["published"] is True and len(row["chain"]["nodes"]) == 10
+    # the run named itself: three models, the four prompt hashes, the four schemas, the store it read from
+    m = FakeManifest.started[-1]
+    assert m.models == {"executor": "claude-sonnet-5", "verifier": "claude-opus-5", "adjudicator": "claude-opus-5"}
+    assert set(m.prompt_hashes) == {"executor_system", "verifier_system", "adjudicator_system", "planner_system"}
+    assert {k.split("/")[0] for k in m.schema_hashes} == {"node", "verifier", "adjudicator", "plan"}
+    assert "store_sha" in m.config
+    # scored, with the per-stage metrics beside the label metrics
+    sc = s["score"]
+    assert sc["n"] == 4 and sc["stage_n_chains"] == 5 and sc["stage_gate_rejection_rate"] == 0.0
+    assert sc["stage_valid_rate"] == 1.0 and sc["stage_rounds_mean"] == 1.0 and sc["stage_unknown_recorded_rate"] == 0.0
+    assert "stage_gate_rejection_rate" in rt.logged[0]["metrics"], "MLflow sees the stage metrics too"
+    assert (rt.runs / s["run_id"] / "stages" / "chains" / f"{LOOP_CELL}.json").is_file()
+    assert (rt.runs / s["run_id"] / "stages" / "b01" / "tool_01_cell_features.json").is_file()
+
+
+def test_a_v1_run_replays_from_the_cache_with_no_spend(world) -> None:
+    """A chain replays from its manifest: the same arm, cells and prompts hit the cache for every call."""
+    rt, bench = world
+    first = run_v1(bench, LoopBackend(), rt, cells=["b01", "b03"])
+    assert first["spent_usd"] > 0
+    again = LoopBackend()
+    second = run_v1(bench, again, rt, cells=["b01", "b03"])
+    assert again.calls == [] and second["spent_usd"] == 0.0
+    assert all(r["from_cache"] for r in rows(rt, second["run_id"]).values())
+    assert rows(rt, second["run_id"])["b01"]["answer"] == rows(rt, first["run_id"])["b01"]["answer"]
+
+
+def test_a_v1_run_stops_on_the_budget_and_resumes(world) -> None:
+    rt, bench = world
+    # the first cell takes ten executor calls; the twelfth executor call is in the second cell
+    stopping = LoopBackend(raise_on_executor_call=12, error=BudgetExhausted("the next call would cross the ceiling"))
+    s = run_v1(bench, stopping, rt)
+    assert s["budget_exhausted"] is True and s["done"] == 1 and len(s["pending"]) == 4
+    assert s["score"]["stage_n_chains"] == 1
+    second = run_v1(bench, LoopBackend(), rt, resume=s["run_id"], cache_root=rt.cache.parent / "other-cache")
+    assert second["carried"] == 1 and second["done"] == 4 and set(rows(rt, second["run_id"])) == set(OPEN)
+
+
+def test_a_gate_rejection_in_a_v1_run_is_counted_and_the_chain_withheld(world) -> None:
+    from fake_loop_world import bad_node
+
+    rt, bench = world
+    backend = LoopBackend(executor={"s01": [bad_node(), bad_node(), bad_node()]})
+    s = run_v1(bench, backend, rt, cells=["b01"])
+    row = rows(rt, s["run_id"])["b01"]
+    assert row["stages"]["n_recorded_unknown"] == 1 and row["stages"]["n_gate_rejections"] == 3
+    assert row["chain"]["published"] is False
+    assert s["score"]["stage_gate_rejection_rate"] == pytest.approx(3 / 12)
+
+
+def test_the_default_factory_opens_a_benchmark_session_from_the_cells_file(world, tmp_path) -> None:
+    rt, bench = world
+    b = F.load_bench(bench.version)
+    arm = v1_arm()
+    sess = RUN.open_session(b, b.cell("b01"), arm, tmp_path / "st", {"forbidden": set()})
+    try:
+        assert sess.purpose == "benchmark" and sess.bench_id == "b01" and sess.cell_id == "0001_0001"
+        assert sess.fold == 0 and sess.blind_list == ["74H09-0039"] and sess.switches == arm.switches
+    finally:
+        sess.close()
