@@ -539,7 +539,7 @@ MineTRACE protocol, one day.
 
 | Item | Why not now | Unblocks when |
 |---|---|---|
-| Observability stack beyond MLflow Tracing (OTLP to Tempo or Jaeger, Prometheus metrics, alerts on budget and gate rejections) | one client, one machine; MLflow Tracing already holds every span | the MCP server has a second client, or a run is unattended overnight |
+| **Langfuse** as the LLM observability layer (traces and sessions per cell, scores attached to traces such as gate rejections and benchmark labels, prompt versions, datasets), fed over OTLP from the same OpenTelemetry instrumentation; then Tempo or Jaeger and Prometheus for the platform side | its self-hosted stack (Postgres, ClickHouse, Redis, object store) is too heavy for the 9 GB development machine, and its datasets and scores duplicate what the benchmark harness and MLflow hold today | Langfuse Cloud or a machine that can host it; the MCP server has a second client, or a run is unattended overnight |
 | The other eight switches of the §8.5 matrix | each is another 6–13 hours per arm | the four-arm table shows where the variance is |
 | Multimodal arm and Tier 4 chip agreement | Sentinel-2 and DEM features not built; effort mask (B15) not designed | §B.2 chips exist |
 | Deep learning models (§C.2.2) | no chips; 60 positives | §B.2 chips exist and the PU re-test says the labels support it |
@@ -603,7 +603,7 @@ MineTRACE protocol, one day.
   the manifest) stay as the ground truth for cost. **Backlog**: an OTLP exporter to Grafana Tempo or Jaeger
   for traces and Prometheus for metrics once the server has more than one client; alerting on budget and
   gate-rejection rates; log shipping. No vendor SDK in the code path: the instrumentation is OpenTelemetry,
-  so the backend is a configuration.
+  so the backend is a configuration, and Langfuse (backlog, §9.6) plugs in over OTLP without touching the code.
 - **One-command deploy:** `docker compose up` locally; a container image + migrations for anywhere else.
   Migrations via Alembic; the schema is code.
 
