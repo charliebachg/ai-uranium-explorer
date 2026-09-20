@@ -10,7 +10,7 @@ import pytest
 from legacy_reader.analyst import arms as A
 
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
-V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter"]
+V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter", "v1-anthropic-or"]
 ALL = V0 + V1
 
 
@@ -111,6 +111,7 @@ def test_the_v1_headline_is_a_cheap_executor_under_an_opus_verifier_with_v0s_swi
     ("v1-cumulative", {"loop.executor_context"}),
     ("v1-cheap", {"loop.executor_model"}),
     ("v1-openrouter", {"model", "max_budget_usd_per_call", "loop.executor_model", "loop.verifier_model", "loop.adjudicator_model", "loop.planner_model"}),
+    ("v1-anthropic-or", {"model", "loop.executor_model", "loop.verifier_model", "loop.adjudicator_model", "loop.planner_model"}),
 ])
 def test_each_v1_ablation_differs_from_the_v1_headline_in_exactly_the_stated_way(name: str, changed: set[str]) -> None:
     assert set(_diff(A.load_arm("v1"), A.load_arm(name))) == changed

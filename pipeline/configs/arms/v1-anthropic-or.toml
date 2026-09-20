@@ -1,0 +1,38 @@
+# Analyst v1 arm: the staged loop (PRD §8.4). Every switch is stated; an arm differs from v1 in the one way
+# its notes line names.
+[arm]
+name = "v1-anthropic-or"
+agent = "v1"
+model = "anthropic/claude-opus-5"
+effort = "medium"
+prompt_version = "analyst/v1/v1"
+max_budget_usd_per_call = 1.50
+timeout_s = 600
+workers = 2
+notes = "v1 with the same two models through OpenRouter's Anthropic listing instead of the Claude CLI: pay per token, no subscription limit, thirty cells in parallel."
+
+[arm.inputs]
+card = true
+pack = false
+passages = false
+
+[arm.switches]
+drillholes = false
+label_context = false
+oof_scores = false
+effort_features = false
+criteria = true
+
+[arm.loop]
+executor_model = "anthropic/claude-sonnet-5"
+verifier_model = "anthropic/claude-opus-5"
+adjudicator_model = "anthropic/claude-opus-5"
+planner_model = "anthropic/claude-opus-5"
+planner = "template"
+verifier = "skeptic"
+rounds = 3
+triage = false
+executor_context = "independent"
+decider = "both"
+segment_workers = 4
+retrieval = false
