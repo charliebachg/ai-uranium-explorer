@@ -62,7 +62,13 @@ class Bench:
     def pack(self, bench_id: str) -> dict[str, Any]:
         return json.loads((self.dir / "packs" / f"{bench_id}.json").read_text())
 
-    def card(self, bench_id: str) -> Path | None:
+    def card(self, bench_id: str, drillholes: bool = False) -> Path | None:
+        """The plain card, or the drillholes variant when the arm asks for holes and the build carries one
+        (or the plain cards already draw them)."""
+        if drillholes:
+            variant = self.dir / "cards_drillholes" / f"{bench_id}.png"
+            if variant.is_file():
+                return variant
         p = self.dir / "cards" / f"{bench_id}.png"
         return p if p.is_file() else None
 
@@ -90,6 +96,7 @@ class Bench:
         out: dict[str, bool | None] = {k: (bool(pack[k]) if k in pack else None)
                                        for k in ("label_context", "oof_scores", "effort_features")}
         out["drillholes"] = bool(card["drillholes"]) if "drillholes" in card else None
+        out["drillholes_variant"] = bool(card.get("drillholes_variant", False))
         return out
 
 
@@ -99,12 +106,15 @@ def compatibility(bench: Bench, switches: Any) -> list[str]:
     card and cannot be taken off an image."""
     built = bench.built_switches()
     problems = []
-    for name in ("label_context", "oof_scores", "effort_features", "drillholes"):
+    for name in ("label_context", "oof_scores", "effort_features"):
         want, have = bool(getattr(switches, name)), built.get(name)
         if want and have is False:
             problems.append(f"the arm asks for {name}, which benchmark {bench.version} was built without")
-        if name == "drillholes" and not want and have is True:
-            problems.append(f"benchmark {bench.version} draws drillholes on its cards; an arm cannot switch them off")
+    want_holes, drawn, variant = bool(switches.drillholes), built.get("drillholes"), built.get("drillholes_variant")
+    if want_holes and drawn is False and not variant:
+        problems.append(f"the arm asks for drillholes on the card, which benchmark {bench.version} was built without")
+    if not want_holes and drawn is True:
+        problems.append(f"benchmark {bench.version} draws drillholes on its cards; an arm cannot switch them off")
     return problems
 
 

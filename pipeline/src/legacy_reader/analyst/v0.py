@@ -215,6 +215,7 @@ def user_prompt(bench_id: str, card: bool, pack: bool, passages: bool) -> str:
 _DRILLHOLE_TOOLS = ("drillhole", "drillholes", "holes", "drilling", "collars", "collar")
 _LABEL_TOOLS = ("label_context", "labels", "nearest_label", "nearest_labels")
 _SCORE_TOOLS = ("cell_scores", "scores", "oof_scores", "cell_score_oof", "oof")
+_CRITERIA_TOOLS = ("criteria_breakdown", "criteria")
 _ROW_KEYS = ("feature", "feature_key", "key", "name")
 
 
@@ -272,6 +273,8 @@ def _value_hidden(vid: str, sw: Switches) -> bool:
         return True
     if not sw.drillholes and kind in ("hole", "holes", "drillhole", "drill", "collar"):
         return True
+    if not sw.criteria and kind in ("crit", "criteria", "criterion"):
+        return True
     return False
 
 
@@ -288,7 +291,8 @@ def apply_switches(pack: dict[str, Any], sw: Switches) -> dict[str, Any]:
     for tool in list(rows):
         if (not sw.drillholes and _tool_is(tool, _DRILLHOLE_TOOLS)) \
                 or (not sw.label_context and _tool_is(tool, _LABEL_TOOLS)) \
-                or (not sw.oof_scores and _tool_is(tool, _SCORE_TOOLS)):
+                or (not sw.oof_scores and _tool_is(tool, _SCORE_TOOLS)) \
+                or (not sw.criteria and _tool_is(tool, _CRITERIA_TOOLS)):
             for r in rows.pop(tool):
                 if isinstance(r, dict):
                     dropped_ids |= _cited_ids(r)

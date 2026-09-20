@@ -57,6 +57,9 @@ class CardSpec:
     size_px: int
     layers: tuple[str, ...]
     drillholes: bool = False
+    #: also render every card a second time with drillholes drawn, under cards_drillholes/, so an arm can
+    #: switch effort on without a second benchmark; an image cannot be un-drawn, so both are built
+    drillholes_variant: bool = False
 
 
 @dataclass(frozen=True)
@@ -154,7 +157,7 @@ def parse_spec(raw: dict[str, Any], version: str | None = None) -> BenchSpec:
 def _card(card: CardSpec) -> CardSpec:
     layers = tuple(str(k) for k in card.layers)
     return CardSpec(window_km=float(card.window_km), size_px=int(card.size_px), layers=layers,
-                    drillholes=bool(card.drillholes))
+                    drillholes=bool(card.drillholes), drillholes_variant=bool(getattr(card, "drillholes_variant", False)))
 
 
 def _validate(spec: BenchSpec, version: str | None) -> None:

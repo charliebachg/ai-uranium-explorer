@@ -45,7 +45,7 @@ from .sample import assign_bench_ids, sample_cells, shortfalls
 from .spec import STRATA, load_spec
 
 MANIFEST_VERSION = "bench-manifest/v1"
-SUBDIRS = ("packs", "cards", "blind", "passages")
+SUBDIRS = ("packs", "cards", "cards_drillholes", "blind", "passages")
 #: keys an answer key has and a pack must not
 KEY_FIELDS = ("label", "stratum", "split", "heldout")
 
@@ -71,6 +71,13 @@ def _fresh(path: Path, previous: dict[str, str], rel: str) -> bool:
     return path.is_file() and previous.get(rel) == sha256_file(path)
 
 
+def _pack_switches(path: Path) -> dict[str, bool] | None:
+    try:
+        return dict(json.loads(path.read_text()).get("switches") or {})
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
 def _write_if_changed(path: Path, data: bytes) -> bool:
     if path.is_file() and path.read_bytes() == data:
         return False
@@ -94,8 +101,14 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
     manifest_path = out / "manifest.json"
     previous: dict[str, str] = {}
     if manifest_path.is_file():
-        previous = json.loads(manifest_path.read_text()).get("files", {})
-        log(f"  resuming: {len(previous)} file(s) in the previous manifest")
+        last = json.loads(manifest_path.read_text())
+        same_spec = json.loads(json.dumps(last.get("spec"))) == json.loads(json.dumps(spec.as_dict(), default=list))
+        if same_spec and last.get("seed") == spec.seed:
+            previous = last.get("files", {})
+            log(f"  resuming: {len(previous)} file(s) in the previous manifest")
+        else:
+            # a changed spec is a different benchmark: nothing from the last build is fresh, whatever its hash
+            log("  spec changed since the last build: rebuilding every file")
 
     own = con is None
     con = con or connect(read_only=True)
@@ -124,11 +137,13 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
         geoms = {cid: wkb.loads(bytes(g)) for cid, g in con.execute(
             f"select cell_id, geom_wkb from derived.cell where cell_id in ({placeholders})", ids).fetchall()}
 
-        written = {"packs": 0, "cards": 0, "blind": 0, "passages": 0}
+        written = {"packs": 0, "cards": 0, "cards_drillholes": 0, "blind": 0, "passages": 0}
         for row in cells.itertuples(index=False):
             bid, cid = str(row.bench_id), str(row.cell_id)
             pack_path = out / "packs" / f"{bid}.json"
-            if not _fresh(pack_path, previous, f"packs/{bid}.json"):
+            # a pack is fresh only if its hash matches the last manifest and it was built with the spec's
+            # switches: the switches are written into the pack, so a stale pack under a new spec is caught
+            if not (_fresh(pack_path, previous, f"packs/{bid}.json") and _pack_switches(pack_path) == spec.pack.switches()):
                 pack = build_pack(cid, bid, spec, con=con, forbidden=forbidden, oof=oof, shared={"coverage": coverage})
                 pack_path.write_text(_dump(pack))
                 written["packs"] += 1
@@ -137,6 +152,12 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
                 img = render_card(cid, spec, layers, geoms[cid], drillholes=spec.card.drillholes)
                 card_path.write_bytes(png_bytes(img))
                 written["cards"] += 1
+            if spec.card.drillholes_variant:
+                holes_path = out / "cards_drillholes" / f"{bid}.png"
+                if not _fresh(holes_path, previous, f"cards_drillholes/{bid}.png"):
+                    img = render_card(cid, spec, layers, geoms[cid], drillholes=True)
+                    holes_path.write_bytes(png_bytes(img))
+                    written["cards_drillholes"] += 1
             blind_path = out / "blind" / f"{bid}.json"
             files = blind_list(cid, spec.blind.radius_km, con)
             if _write_if_changed(blind_path, _dump({"bench_id": bid, "radius_km": spec.blind.radius_km,

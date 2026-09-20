@@ -122,7 +122,7 @@ def test_a_plain_rows_pack_is_filtered_the_same_way() -> None:
 
 
 def test_switches_on_leave_the_pack_alone() -> None:
-    everything = A.Switches(drillholes=True, label_context=True, oof_scores=True, effort_features=True)
+    everything = A.Switches(drillholes=True, label_context=True, oof_scores=True, effort_features=True, criteria=True)
     assert V0.apply_switches(PACK, everything) == PACK
 
 
@@ -197,3 +197,15 @@ def test_run_cell_returns_the_row_and_cleans_its_stage(card: Path) -> None:
     rejected = V0.run_cell(AnalystBackend(script={"b01": bad_answer("b01")}), PACK, card, [], A.load_arm("v0"))
     assert rejected["published"] is False and any("2.4" in p for p in rejected["problems"])
     assert rejected["answer"]["verdict"] == "supports_closer_look", "the answer is kept beside its problems"
+
+
+def test_the_criteria_switch_removes_the_criteria_table_and_its_ids() -> None:
+    pack = {"bench_id": "b-0001", "tools": {
+        "cell_features": {"rows": [{"feature": "d_fault_m", "value": 40.0, "value_id": "b:b-0001:cell:d_fault_m"}]},
+        "criteria_breakdown": {"rows": [{"criterion": "fault_proximity", "membership": 1.0, "membership_id": "b:b-0001:crit:fault_proximity"}]}},
+        "values": {"b:b-0001:cell:d_fault_m": {"id": "b:b-0001:cell:d_fault_m", "value": 40.0},
+                   "b:b-0001:crit:fault_proximity": {"id": "b:b-0001:crit:fault_proximity", "value": 1.0}}}
+    shown = V0.apply_switches(pack, A.load_arm("v0-features").switches)
+    assert "criteria_breakdown" not in shown["tools"] and set(shown["values"]) == {"b:b-0001:cell:d_fault_m"}
+    kept = V0.apply_switches(pack, A.load_arm("v0").switches)
+    assert "criteria_breakdown" in kept["tools"] and "b:b-0001:crit:fault_proximity" in kept["values"]

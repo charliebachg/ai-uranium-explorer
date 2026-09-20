@@ -29,11 +29,12 @@ layers = [
   "radioactive_boulders", "survey_footprints_ground", "survey_footprints_airborne",
 ]
 drillholes = false
+drillholes_variant = true
 
 [pack]
-label_context = false
-oof_scores = false
-effort_features = false
+label_context = true
+oof_scores = true
+effort_features = true
 
 [blind]
 radius_km = 10

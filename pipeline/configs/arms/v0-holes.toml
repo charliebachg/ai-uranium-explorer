@@ -20,3 +20,4 @@ drillholes = true
 label_context = false
 oof_scores = false
 effort_features = true
+criteria = true

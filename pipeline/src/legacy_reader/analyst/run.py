@@ -140,7 +140,8 @@ def run_arm(
         bench_id = str(cell["bench_id"])
         try:
             with span("cell", kind="tool", bench_id=bench_id, stratum=cell.get("stratum"), arm=arm.name):
-                row = V0.run_cell(backend, bench.pack(bench_id), bench.card(bench_id), bench.passages(bench_id), arm)
+                row = V0.run_cell(backend, bench.pack(bench_id), bench.card(bench_id, drillholes=arm.switches.drillholes),
+                                  bench.passages(bench_id), arm)
         except (BudgetExhausted, UsageLimitReached) as signal:
             stop.set()
             with lock:

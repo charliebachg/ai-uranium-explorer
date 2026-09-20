@@ -16,8 +16,10 @@ def test_v1_loads_with_the_agreed_numbers() -> None:
     assert spec.strata.thin_block_m == 10_000 and spec.strata.min_holes == 5
     assert spec.fold_km == 30 and spec.n_folds == 5 and spec.held_out_share == 0.20
     assert spec.card.window_km == 20 and spec.card.size_px == 1000 and spec.card.drillholes is False
+    assert spec.card.drillholes_variant is True   # a second card set with holes, so an arm can switch effort on
     assert set(spec.card.layers) == set(S.CARD_LAYERS)
-    assert spec.pack.switches() == {"label_context": False, "oof_scores": False, "effort_features": False}
+    # the packs carry every part; an arm removes what it does not use, and never adds
+    assert spec.pack.switches() == {"label_context": True, "oof_scores": True, "effort_features": True}
     assert spec.blind.radius_km == 10 and spec.retrieval.k == 6 and spec.retrieval.radius_km == 40
     assert spec.as_dict()["strata"]["negative"] == 80
 

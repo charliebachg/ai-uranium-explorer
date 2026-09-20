@@ -9,7 +9,7 @@ import pytest
 
 from legacy_reader.analyst import arms as A
 
-ALL = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval"]
+ALL = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features"]
 
 
 def test_every_arm_file_loads_and_says_which_question_it_answers() -> None:
@@ -26,7 +26,7 @@ def test_the_headline_is_opus_on_card_and_pack_with_every_switch_off() -> None:
     v0 = A.load_arm("v0")
     assert v0.model == "claude-opus-5"
     assert asdict(v0.inputs) == {"card": True, "pack": True, "passages": False}
-    assert v0.switches.on() == ()
+    assert v0.switches.on() == ("criteria",)   # the criteria table is the one part shown by default
 
 
 def _diff(a: A.ArmConfig, b: A.ArmConfig) -> dict[str, tuple]:
@@ -52,6 +52,7 @@ def _diff(a: A.ArmConfig, b: A.ArmConfig) -> dict[str, tuple]:
     ("v0-labels", {"switches.label_context"}),
     ("v0-scores", {"switches.oof_scores"}),
     ("v0-retrieval", {"inputs.passages"}),
+    ("v0-features", {"switches.criteria"}),
 ])
 def test_each_ablation_differs_from_the_headline_in_exactly_the_stated_way(name: str, changed: set[str]) -> None:
     assert set(_diff(A.load_arm("v0"), A.load_arm(name))) == changed

@@ -117,7 +117,7 @@ def test_a_second_build_is_a_no_op_and_the_bytes_are_stable(world) -> None:
     m2 = B.build("t1", log=lines.append, root=root, fit=fake_fit)
     assert m1["files"] == m2["files"] and m1["key_sha256"] == m2["key_sha256"]
     assert any("resuming" in line for line in lines)
-    assert any("wrote: packs 0, cards 0, blind 0, passages 0" in line for line in lines)
+    assert any("wrote: packs 0, cards 0" in line and "blind 0, passages 0" in line for line in lines)
     # a card removed by hand is redrawn to the same bytes
     (root / "t1" / "cards" / "b-0001.png").unlink()
     m3 = B.build("t1", log=lambda *a: None, root=root, fit=fake_fit)
@@ -170,3 +170,18 @@ def test_leaks_is_pure_and_precise() -> None:
     assert B.leaks({"a": "at -104.2825 west"}, set(), None, True) == ["coordinate pattern '-104.2825' at /a"]
     assert B.leaks({"stratum": "deposit"}, set(), None, True) == ["answer-key field 'stratum' at /"]
     assert B.leaks({"stratum": "deposit"}, set(), None, False) == [], "a passage file may say what it likes about strata"
+
+
+def test_a_changed_spec_rebuilds_every_file(world, monkeypatch) -> None:
+    import legacy_reader.bench.build as BB
+
+    root = world["root"]
+    BB.build("t1", log=lambda *a: None, root=root, fit=fake_fit)
+    spec = BB.load_spec("t1")
+    from dataclasses import replace
+    changed = replace(spec, pack=replace(spec.pack, label_context=not spec.pack.label_context))
+    monkeypatch.setattr(BB, "load_spec", lambda version: changed)
+    lines: list[str] = []
+    BB.build("t1", log=lines.append, root=root, fit=fake_fit)
+    assert any("spec changed" in line for line in lines)
+    assert not any("resuming" in line for line in lines)

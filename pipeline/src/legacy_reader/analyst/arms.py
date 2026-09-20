@@ -38,6 +38,7 @@ class Switches:
     label_context: bool     # distance to the nearest known deposit or occurrence
     oof_scores: bool        # the out-of-fold fitted scores (learned, effort, criteria)
     effort_features: bool   # the exploration-effort features (hole and sample counts)
+    criteria: bool          # the criteria table with its fuzzy memberships; off, the model reasons from features
 
     def on(self) -> tuple[str, ...]:
         return tuple(f.name for f in fields(self) if getattr(self, f.name))
