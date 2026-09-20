@@ -13,12 +13,21 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from functools import lru_cache
 from typing import Any, Callable
 
+from pyproj import Transformer
+from shapely.geometry import Point, shape
+from shapely.geometry.base import BaseGeometry
+
+from .. import index as IX
+from ..bench.card import DRILLHOLE_LAYER, GRID_EPSG, VALUE_FIELD, reproject_feature, within_window
+from ..bench.spec import LABEL_LAYERS
 from ..runtime.tracing import set_attrs, span
 from ..store import connect
 from ..values import stat
 from .criteria import load as load_criteria
+from .inventory import load as load_inventory
 from .retrieve import retrieve as retrieve_passages
 
 TOOL_VERSION = "prospect/tools/v1"
@@ -195,28 +204,37 @@ def criteria_breakdown(cell_id: str) -> ToolResult:
     return out
 
 
-def label_context(cell_id: str, radius_km: float = 25.0) -> ToolResult:
-    """How close the nearest known deposit or occurrence is: the first thing a skeptic should ask."""
+def label_context(cell_id: str, radius_km: float = 25.0, mask_cell: str | None = None) -> ToolResult:
+    """How close the nearest known deposit or occurrence is: the first thing a skeptic should ask.
+
+    `mask_cell` leaves that cell's own label row out before the ranking (leakage rule B30, for scored runs).
+    The rest are then ranked from 1 as if the cell had no label, because a gap at rank 1 would itself say the
+    cell is labelled; the note says a mask is in force whether or not anything was removed, for the same
+    reason. Without `mask_cell` the tool behaves exactly as it always did."""
+    mask = " and l.cell_id <> ?" if mask_cell else ""
     con = connect(read_only=True)
     try:
         here = con.execute("select lon, lat from derived.cell where cell_id = ?", [cell_id]).fetchone()
         if not here:
             return ToolResult("label_context", {"cell_id": cell_id}, note="no such cell")
         rows = con.execute(
-            """
+            f"""
             select l.label_tier, l.label_name, c.lon, c.lat,
                    6371.0 * 2 * asin(sqrt(
                      pow(sin(radians(c.lat - ?) / 2), 2) +
                      cos(radians(?)) * cos(radians(c.lat)) * pow(sin(radians(c.lon - ?) / 2), 2))) as km
             from derived.cell_label l join derived.cell c using (cell_id)
-            where l.label_tier <> 'unlabelled'
+            where l.label_tier <> 'unlabelled'{mask}
             order by km limit 5
             """,
-            [here[1], here[1], here[0]],
+            [here[1], here[1], here[0], *([mask_cell] if mask_cell else [])],
         ).fetchall()
     finally:
         con.close()
-    out = ToolResult("label_context", {"cell_id": cell_id, "radius_km": radius_km})
+    args: dict[str, Any] = {"cell_id": cell_id, "radius_km": radius_km}
+    if mask_cell:
+        args["mask_cell"] = mask_cell
+    out = ToolResult("label_context", args)
     for i, (tier, name, _lon, _lat, km) in enumerate(rows):
         vid = f"c:near:{cell_id}:{i}"
         out.values |= _vals(stat(vid, round(float(km), 2), fmt="m2", unit="km",
@@ -225,6 +243,8 @@ def label_context(cell_id: str, radius_km: float = 25.0) -> ToolResult:
                          "distance_km_id": vid, "distance_km": round(float(km), 2)})
     out.note = ("A cell beside a known deposit will score well for reasons that have nothing to do with its "
                 "own evidence. This is the leakage check, not a recommendation.")
+    if mask_cell:
+        out.note += " The evaluated cell's own label is masked."
     return out
 
 
@@ -290,6 +310,230 @@ def retrieve(query: str, cell_id: str | None = None, k: int = 6, radius_km: floa
     return out
 
 
+# ---------------------------------------------------------------- the analyst's spatial tools
+
+#: the native evidence layers `nearby` may open. `value` is the attribute that is a feature's reading and
+#: `field` the unit-named key it is reported under; `text` is the attribute that says what was mapped (a rock
+#: unit, a surficial class, a conductor type). Nothing that names ground, a file or a company is listed, and
+#: the label and context layers are not here on purpose: a tool that counted deposits round a cell would be
+#: the answer key with a radius on it. The sediment fields are the card's own, so the two agree.
+NEARBY_LAYERS: dict[str, dict[str, str]] = {
+    "em_conductors": {"text": "CONDUCTOR_TYPE"},
+    "faults_250k": {"text": "FEAT_TYPE"},
+    "radioactive_boulders": {"value": "CPS", "field": "cps", "text": "LITHOLOGY"},
+    "lake_sediment_gsc": {"value": VALUE_FIELD["lake_sediment_gsc"], "field": "ppm"},
+    "lake_sediment_sgs": {"value": VALUE_FIELD["lake_sediment_sgs"], "field": "ppm"},
+    "lake_water_sgs": {"value": "U_PPM", "field": "ppm"},
+    "bedrock_250k": {"text": "LITHOLOGY"},
+    "surficial_250k": {"text": "MAIN_ENVIRONMENT"},
+    DRILLHOLE_LAYER: {"text": "COMMODITY_OF_INTEREST"},
+}
+#: a radius below the cell size asks about less than one cell; one above 20 km is a regional question
+NEARBY_RADIUS_M = (500.0, 20_000.0)
+NEARBY_MAX_K = 50
+#: how far `crosscheck` looks from the cell centre: the reach the point features are built with
+CROSSCHECK_RADIUS_M = 5000.0
+#: fewer lake-sediment samples than this within reach is thin sampling: one lake's reading is not a survey
+MIN_SED_SAMPLES = 3
+
+
+@lru_cache(maxsize=None)
+def layer_features(layer: str) -> list[dict[str, Any]]:
+    """One evidence layer as the card sees it: read once per process from the pulled file and reprojected
+    into the grid's CRS by the card's own routine, so a distance here is a distance on the card. The reading
+    and the mapped-unit text ride along under `properties`; nothing else from the file does."""
+    spec = NEARBY_LAYERS[layer]
+    tr = Transformer.from_crs(4326, GRID_EPSG, always_xy=True)
+    out: list[dict[str, Any]] = []
+    for f in IX.read_features(layer):
+        moved = reproject_feature(f, tr, spec.get("value"))
+        if moved is None:
+            continue
+        text = str((f.get("properties") or {}).get(spec["text"]) or "").strip() if "text" in spec else ""
+        if text:
+            moved["properties"]["text"] = text[:80]
+        out.append(moved)
+    return out
+
+
+def _check_layer(layer: str) -> None:
+    """Refuse anything that is not an evidence layer, saying why: a label is the answer, context is not evidence."""
+    if layer in NEARBY_LAYERS:
+        return
+    role = next((s.role for s in load_inventory().sources if s.key == layer), None)
+    if layer in LABEL_LAYERS or role == "label":
+        raise ToolError(f"{layer} is a label layer: the labels are the answer, never evidence")
+    if role == "context":
+        raise ToolError(f"{layer} is a context layer, not evidence")
+    raise ToolError(f"no evidence layer named {layer!r}; available: {', '.join(NEARBY_LAYERS)}")
+
+
+def _cell_centre(cell_id: str) -> tuple[float, float] | None:
+    con = connect(read_only=True)
+    try:
+        row = con.execute("select cx, cy from derived.cell where cell_id = ?", [cell_id]).fetchone()
+    finally:
+        con.close()
+    return (float(row[0]), float(row[1])) if row else None
+
+
+def _around(layer: str, centre: tuple[float, float], radius_m: float
+            ) -> list[tuple[float, dict[str, Any], BaseGeometry]]:
+    """The layer's features within `radius_m` of the centre, nearest first: a bbox pass over the window, then
+    the true distance. Ties keep the file's order, so the same inputs give the same rows."""
+    cx, cy = centre
+    here = Point(cx, cy)
+    hits: list[tuple[float, dict[str, Any], BaseGeometry]] = []
+    for f in within_window(layer_features(layer), (cx - radius_m, cy - radius_m, cx + radius_m, cy + radius_m)):
+        geom = shape(f["geometry"])
+        d = float(geom.distance(here))
+        if d <= radius_m:
+            hits.append((d, f, geom))
+    hits.sort(key=lambda hit: hit[0])
+    return hits
+
+
+def nearby(cell_id: str, layer: str, radius_m: float = 5000.0, k: int = 5) -> ToolResult:
+    """What one evidence layer holds around the cell: a count inside the radius and the k nearest features,
+    each with its true distance from the cell centre and, where the layer carries one, its reading.
+
+    This is the analyst's box maker. The window is the cell centre plus or minus the radius in the grid's
+    CRS, the features are the card's own reprojected copies, and the distances are shapely's in metres, so
+    the model never measures anything off the card. Zero inside the radius is returned as a value like any
+    other, because "nothing mapped here" is an answer and not a gap. Drillhole collars are flagged
+    `is_effort` on every row, so an arm that hides effort can drop them whole."""
+    _check_layer(layer)
+    lo, hi = NEARBY_RADIUS_M
+    if not lo <= float(radius_m) <= hi:
+        raise ToolError(f"radius_m must be between {lo:g} and {hi:g} m, not {radius_m}")
+    if not 0 <= int(k) <= NEARBY_MAX_K:
+        raise ToolError(f"k must be between 0 and {NEARBY_MAX_K}, not {k}")
+    radius_m, k = float(radius_m), int(k)
+    args: dict[str, Any] = {"cell_id": cell_id, "layer": layer, "radius_m": radius_m, "k": k}
+    centre = _cell_centre(cell_id)
+    if centre is None:
+        return ToolResult("nearby", args, note="no such cell")
+    hits = _around(layer, centre, radius_m)
+    spec = NEARBY_LAYERS[layer]
+    effort = layer == DRILLHOLE_LAYER
+    base = f"c:nb:{cell_id}:{layer}:{radius_m:g}"
+    out = ToolResult("nearby", args)
+    summary: dict[str, Any] = {"layer": layer, "is_effort": effort, "n_within": len(hits),
+                               "n_within_id": f"{base}:n_within"}
+    out.values |= _vals(stat(f"{base}:n_within", len(hits),
+                             note=f"{layer} features within {radius_m:g} m of cell {cell_id}"))
+    if hits:
+        nearest = round(hits[0][0], 1)
+        out.values |= _vals(stat(f"{base}:nearest_m", nearest, fmt="m1", unit="m",
+                                 note=f"distance from cell {cell_id} to the nearest {layer} feature"))
+        summary["nearest_m"], summary["nearest_m_id"] = nearest, f"{base}:nearest_m"
+    out.rows.append(summary)
+    for i, (d, f, _geom) in enumerate(hits[:k]):
+        vid = f"{base}:{i}:dist_m"
+        row: dict[str, Any] = {"layer": layer, "is_effort": effort, "dist_m": round(d, 1), "dist_m_id": vid}
+        out.values |= _vals(stat(vid, round(d, 1), fmt="m1", unit="m",
+                                 note=f"distance from cell {cell_id} to {layer} feature {i}"))
+        props = f.get("properties") or {}
+        field_key = spec.get("field")
+        if field_key:
+            reading = props.get("value")
+            if reading is None:
+                row["missing"] = "no reading recorded for this feature"
+            else:
+                rid = f"{base}:{i}:{field_key}"
+                out.values |= _vals(stat(rid, round(float(reading), 4), fmt=_fmt_for(field_key, reading),
+                                         unit=field_key, note=f"{layer} reading of feature {i} near cell {cell_id}"))
+                row[field_key], row[f"{field_key}_id"] = round(float(reading), 4), rid
+        if props.get("text"):
+            row["text"] = props["text"]
+        out.rows.append(row)
+    out.note = ("Counts say what was mapped or sampled inside the radius, not what is in the rock, and a layer "
+                "with nothing inside it is an absence of mapping unless coverage says the ground was surveyed.")
+    return out
+
+
+def _echo(out: ToolResult, row: dict[str, Any], feats: ToolResult, key: str) -> None:
+    """One cell feature copied into a crosscheck row under the ids and values `cell_features` gave it, so a
+    registry that holds both tools' results holds one copy. A null value is unknown, and the row then carries
+    the nearest-observation id the way `cell_features` does."""
+    src = next((r for r in feats.rows if r.get("feature") == key), None)
+    if src is None or src.get("value") is None:
+        row[key] = None
+        nid = (src or {}).get("nearest_observation_id")
+        if nid:
+            row[f"{key}_nearest_m_id"] = nid
+            out.values[nid] = feats.values[nid]
+        return
+    row[key], row[f"{key}_id"] = src["value"], src["value_id"]
+    out.values[src["value_id"]] = feats.values[src["value_id"]]
+
+
+def crosscheck(cell_id: str) -> ToolResult:
+    """The conjunctions the handbook reads together, computed rather than reasoned: one row per pair.
+
+    `conductor_fault`: among the conductors and faults within `CROSSCHECK_RADIUS_M` of the cell centre, the
+    smallest separation between any conductor and any fault, and how many such pairs cross (a shapely
+    intersects). Zero crossings is a real answer. A side with nothing inside the radius makes the pair
+    absent, not unknown: both are basin-wide line maps. The cell's own `d_conductor_m` and `d_fault_m` are
+    echoed with the ids and values `cell_features` gives them.
+
+    `sediment_sampling`: the lake-sediment anomaly beside the sampling it rests on. `sed_u_max_ppm` and
+    `sed_samples_n` are echoed the same way, and `thin_sampling` is a fixed rule: fewer than
+    `MIN_SED_SAMPLES` samples within 5 km. The threshold is a value with an id, so a memo can say which rule
+    it applied. A null anomaly means nobody sampled within reach, which is unknown and not low; a null count
+    leaves `thin_sampling` null rather than guessed."""
+    args: dict[str, Any] = {"cell_id": cell_id}
+    centre = _cell_centre(cell_id)
+    if centre is None:
+        return ToolResult("crosscheck", args, note="no such cell")
+    out = ToolResult("crosscheck", args)
+    feats = cell_features(cell_id)
+    radius = CROSSCHECK_RADIUS_M
+
+    pair = "conductor_fault"
+    row: dict[str, Any] = {"pair": pair, "radius_m": radius, "radius_m_id": f"c:x:{cell_id}:{pair}:radius_m"}
+    out.values |= _vals(stat(f"c:x:{cell_id}:{pair}:radius_m", radius, fmt="m1", unit="m",
+                             note=f"reach of the conductor-fault check around cell {cell_id}"))
+    _echo(out, row, feats, "d_conductor_m")
+    _echo(out, row, feats, "d_fault_m")
+    conductors = _around("em_conductors", centre, radius)
+    faults = _around("faults_250k", centre, radius)
+    crossings = sum(1 for _, _, c in conductors for _, _, f in faults if c.intersects(f))
+    row["crossings_n"], row["crossings_n_id"] = crossings, f"c:x:{cell_id}:{pair}:crossings_n"
+    out.values |= _vals(stat(f"c:x:{cell_id}:{pair}:crossings_n", crossings,
+                             note=f"conductor-fault crossings within {radius:g} m of cell {cell_id}"))
+    if conductors and faults:
+        sep = round(min(float(c.distance(f)) for _, _, c in conductors for _, _, f in faults), 1)
+        row["min_sep_m"], row["min_sep_m_id"] = sep, f"c:x:{cell_id}:{pair}:min_sep_m"
+        out.values |= _vals(stat(f"c:x:{cell_id}:{pair}:min_sep_m", sep, fmt="m1", unit="m",
+                                 note=f"smallest conductor-fault separation within {radius:g} m of cell {cell_id}"))
+        row["state"] = "known"
+    else:
+        row["state"] = "absent"
+        missing = [name for name, hits in (("conductor", conductors), ("fault", faults)) if not hits]
+        row["absent"] = f"no mapped {' or '.join(missing)} within the radius"
+    out.rows.append(row)
+
+    pair = "sediment_sampling"
+    row = {"pair": pair}
+    _echo(out, row, feats, "sed_u_max_ppm")
+    _echo(out, row, feats, "sed_samples_n")
+    row["min_samples"], row["min_samples_id"] = MIN_SED_SAMPLES, f"c:x:{cell_id}:{pair}:min_samples"
+    out.values |= _vals(stat(f"c:x:{cell_id}:{pair}:min_samples", MIN_SED_SAMPLES,
+                             note="fewer lake-sediment samples than this within reach counts as thin sampling"))
+    samples = row.get("sed_samples_n")
+    row["thin_sampling"] = None if samples is None else bool(samples < MIN_SED_SAMPLES)
+    if row.get("sed_u_max_ppm") is None:
+        row["state"] = "unknown"
+        row["missing"] = "no lake-sediment sample within reach; unknown, not low"
+    else:
+        row["state"] = "known"
+    out.rows.append(row)
+    out.note = ("Unknown and absent are different answers: a conjunction with one unknown side is unknown, and "
+                "one with a side that is mapped but empty inside the radius is absent.")
+    return out
+
+
 REGISTRY: dict[str, Callable[..., ToolResult]] = {
     "cell_features": cell_features,
     "cell_scores": cell_scores,
@@ -297,6 +541,8 @@ REGISTRY: dict[str, Callable[..., ToolResult]] = {
     "label_context": label_context,
     "coverage": coverage,
     "retrieve": retrieve,
+    "nearby": nearby,
+    "crosscheck": crosscheck,
 }
 
 #: what the model is told it may call, in the prompt
@@ -308,6 +554,10 @@ TOOL_HELP = {
     "label_context": "label_context(cell_id) - distance to the nearest known deposit or occurrence",
     "coverage": "coverage(feature_key=None) - how much of the grid a feature covers",
     "retrieve": "retrieve(query, cell_id, k) - passages from the assessment corpus about this ground",
+    "nearby": "nearby(cell_id, layer, radius_m, k) - the count and the k nearest features of one evidence "
+              "layer around the cell, with true distances",
+    "crosscheck": "crosscheck(cell_id) - conductor-fault separation and crossings, and the lake-sediment "
+                  "anomaly beside its sampling density",
 }
 
 
