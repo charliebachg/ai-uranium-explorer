@@ -184,11 +184,14 @@ def _metadata_passages(near: dict[str, float], query: str, k: int) -> list[Passa
     return sorted(out, key=lambda p: -p.score)[:k]
 
 
-def _page_passages(near: dict[str, float], query: str, k: int, snippet_chars: int) -> list[Passage]:
+def _page_passages(near: dict[str, float], query: str, k: int, snippet_chars: int,
+                   excluded: frozenset[str] = frozenset()) -> list[Passage]:
     corpus = load_corpus()
     if not corpus.n_docs:
         return []
-    allowed = {i for i, (fn, _sha, _pg) in enumerate(corpus.doc_ids) if fn in near} if near else None
+    allowed = ({i for i, (fn, _sha, _pg) in enumerate(corpus.doc_ids) if fn in near} if near
+               else {i for i, (fn, _sha, _pg) in enumerate(corpus.doc_ids) if fn not in excluded} if excluded
+               else None)
     ranked = corpus.score(query, allowed)[:k]
     if not ranked:
         return []
@@ -224,7 +227,8 @@ def _snippet(text: str, query: str, width: int) -> str:
     return ("..." if start else "") + text[start:start + width].strip() + ("..." if start + width < len(text) else "")
 
 
-def _extracted_passages(near: dict[str, float], query: str, k: int) -> list[Passage]:
+def _extracted_passages(near: dict[str, float], query: str, k: int,
+                        excluded: frozenset[str] = frozenset()) -> list[Passage]:
     """Values this pipeline read page by page: the only tier a number may come from."""
     con = connect(read_only=True)
     try:
@@ -238,6 +242,8 @@ def _extracted_passages(near: dict[str, float], query: str, k: int) -> list[Pass
     scored: list[Passage] = []
     for file_num, value_id, page, printed, unit, quote, field_name, status in rows:
         if near and file_num not in near:
+            continue
+        if file_num in excluded:
             continue
         hits = sum(1 for t in tokenize(f"{quote} {field_name or ''}") if t in terms)
         if not hits:
@@ -254,19 +260,25 @@ def _extracted_passages(near: dict[str, float], query: str, k: int) -> list[Pass
 def retrieve(
     query: str, lon: float | None = None, lat: float | None = None, radius_km: float = 40.0,
     k: int = 8, snippet_chars: int = 420, tiers: Iterable[str] = ("extracted", "page", "metadata"),
+    exclude_files: Iterable[str] | None = None,
 ) -> list[Passage]:
     """Passages about this ground, most trustworthy tier first.
 
     With no position the spatial filter is skipped and the whole corpus is ranked, which is right for a
-    question about the basin and wrong for a question about a cell.
+    question about the basin and wrong for a question about a cell. `exclude_files` names assessment files
+    no tier may return, which is how a benchmark keeps the reports about a cell's own ground out of its
+    evidence; empty, it changes nothing.
     """
+    excluded = frozenset(str(f) for f in (exclude_files or ()))
     near = files_near(lon, lat, radius_km) if lon is not None and lat is not None else {}
+    if excluded:
+        near = {f: d for f, d in near.items() if f not in excluded}
     out: list[Passage] = []
     tiers = tuple(tiers)
     if "extracted" in tiers:
-        out += _extracted_passages(near, query, max(2, k // 3))
+        out += _extracted_passages(near, query, max(2, k // 3), excluded)
     if "page" in tiers:
-        out += _page_passages(near, query, k, snippet_chars)
+        out += _page_passages(near, query, k, snippet_chars, excluded)
     if "metadata" in tiers:
         out += _metadata_passages(near, query, max(2, k // 3))
     return out

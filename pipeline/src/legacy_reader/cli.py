@@ -23,6 +23,12 @@ from .runtime.cli import cache_app, spend_app  # noqa: E402  (the runtime's own 
 
 app.add_typer(cache_app, name="cache")
 app.add_typer(spend_app, name="spend")
+from .bench.cli import bench_app  # noqa: E402  (the benchmark builder)
+
+app.add_typer(bench_app, name="bench")
+from .analyst.cli import bench_run_app  # noqa: E402  (arms over the frozen benchmark)
+
+app.add_typer(bench_run_app, name="arm")
 app.add_typer(run_app, name="run")
 replay_app = typer.Typer(no_args_is_help=True, help="Recorded model calls (strict replay)")
 app.add_typer(replay_app, name="replay")

@@ -1,0 +1,22 @@
+# Analyst_v0 arm. Every switch is stated; an arm differs from v0 in the one way its notes line names.
+[arm]
+name = "v0-text"
+agent = "v0"
+model = "claude-opus-5"
+effort = "medium"
+prompt_version = "analyst/v0/v1"
+max_budget_usd_per_call = 1.50
+timeout_s = 600
+workers = 2
+notes = "Does the map add anything: the pack alone, no card, against v0."
+
+[arm.inputs]
+card = false
+pack = true
+passages = false
+
+[arm.switches]
+drillholes = false
+label_context = false
+oof_scores = false
+effort_features = false

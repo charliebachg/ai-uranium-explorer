@@ -194,6 +194,21 @@ create table if not exists derived.cell_score (
   primary key (cell_id, model)
 );
 
+-- Out-of-fold scores: each cell scored by the fold model that never saw it, under the headline corrections.
+-- This is what a benchmark baseline is read from; `derived.cell_score` is fitted on every cell it scores and
+-- would hand a benchmark its own answer key. `fold_kind` names the split (spatial), `fold` the held-out group.
+create table if not exists derived.cell_score_oof (
+  cell_id     text not null,
+  model       text not null,          -- learned | effort | criteria
+  fold_kind   text not null,          -- spatial
+  fold        integer not null,
+  score       double,                 -- null where no fold model could score the cell
+  run_id      text not null,
+  computed_at text not null,
+  tier        text not null default 'derived' check (tier = 'derived'),
+  primary key (cell_id, model, fold_kind)
+);
+
 -- What each criterion contributed to a cell's criteria score, so the number can be argued with rather than
 -- just shown. Folklore criteria appear here with weight zero and a contribution of zero.
 create table if not exists derived.cell_criterion (
