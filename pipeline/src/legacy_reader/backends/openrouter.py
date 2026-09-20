@@ -54,6 +54,10 @@ ANSWER_TOKENS = 3000
 #: the budget a reply cut mid-thought is retried with: some endpoints refuse to disable reasoning outright
 #: ("Reasoning is mandatory for this endpoint"), so the retry thinks a little rather than not at all
 MIN_BUDGET = 512
+#: and some endpoints ignore the budget altogether and think as long as they like (GLM 5.3 Flash overran a
+#: 512-token budget with the same empty reply), so the retry also opens the completion room wide: a cheap
+#: model's long thought costs a fraction of a cent, a lost cell costs a resume
+RETRY_ROOM = 24000
 #: what a call is priced at when neither the reply nor the models endpoint says: high on purpose
 FALLBACK_PRICE = Price(per_mtok_in=2.0, per_mtok_out=8.0)
 #: a rate limit or a provider hiccup is waited out this many times before it is the caller's problem, with
@@ -179,7 +183,7 @@ class OpenRouterBackend:
         room on the retry. An explicit OPENROUTER_MAX_OUTPUT_TOKENS overrides both."""
         if self.max_output_tokens:
             return self.max_output_tokens
-        return (self._budget(req) if thinking else MIN_BUDGET) + ANSWER_TOKENS
+        return self._budget(req) + ANSWER_TOKENS if thinking else RETRY_ROOM
 
     def _worst_case_usd(self, req: ExtractionRequest, messages: list[dict[str, Any]]) -> float:
         tokens_in = int(_text_chars(messages) / 3.5) + IMAGE_TOKENS * len(req.images)
@@ -188,11 +192,12 @@ class OpenRouterBackend:
     def _payload(self, req: ExtractionRequest, messages: list[dict[str, Any]], structured: bool,
                  thinking: bool = True) -> dict[str, Any]:
         """`thinking` on: the reasoning budget for the request's effort as a hard cap, with the answer's room
-        on top. Off: the minimal budget, the fallback for a reply that was cut mid-thought even so."""
+        on top. Off: the minimal budget and a low effort hint, whichever the endpoint honours, with the
+        completion room opened wide for an endpoint that honours neither."""
         payload: dict[str, Any] = {
             "model": req.model, "messages": messages, "max_tokens": self._max_tokens(req, thinking),
             "usage": {"include": True},   # the provider's own dollar figure comes back in the usage block
-            "reasoning": {"max_tokens": self._budget(req) if thinking else MIN_BUDGET},
+            "reasoning": {"max_tokens": self._budget(req)} if thinking else {"max_tokens": MIN_BUDGET, "effort": "low"},
         }
         if structured:
             payload["response_format"] = {"type": "json_schema", "json_schema": {
