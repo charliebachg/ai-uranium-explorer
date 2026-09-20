@@ -379,6 +379,20 @@ BENCH_METRICS = ("f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all",
 BENCH_EXTRA = {"gate_rejection_rate": "ratio3", "probe_abstain_rate": "ratio3", "cost_usd_per_cell": "m2",
                "latency_s_per_cell": "m1"}
 BENCH_STRATA = ("deposit", "occurrence", "negative")
+#: the staged loop's per-stage columns (PRD §8.5) as the table names them without their `stage_` prefix, each
+#: with its formatter and what it counts. Only a staged arm has them: a v0 arm answers in one call and carries
+#: none, and a column identical across every arm so far (the shallow share, refusals per rule) stays in table.json
+BENCH_STAGES = {
+    "n_chains": ("int", "chains the staged loop ran; the denominator of the other stage columns"),
+    "gate_rejection_rate": ("ratio3", "node gate refusals over executor attempts"),
+    "valid_rate": ("ratio3", "share of chains a verifier round validated"),
+    "verifier_catch_rate": ("ratio3", "share of chains the verifier refused at least once"),
+    "rounds_to_valid_mean": ("m2", "verifier rounds per chain, over the chains that validated"),
+    "reexecuted_mean": ("m2", "nodes re-executed on the verifier's feedback, per chain"),
+    "verifier_agreement_rate": ("ratio3", "share of chains whose verifier label matched the final verdict"),
+    "decider_agreement_rate": ("ratio3", "share of chains where the weighted sum and the adjudicator fell on the "
+                                         "same side of the threshold"),
+}
 
 
 def _version_key(name: str) -> list[Any]:
@@ -391,7 +405,8 @@ def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dic
     cells of the frozen benchmark, from the highest version that has a table.
 
     Every number becomes a value under `c:bench:<version>:<row>:<metric>` (`.lo`/`.hi` for an interval's
-    bounds, `:<stratum>:<key>` for a stratum), so the page prints the row through `<V>` like any other. A row
+    bounds, `:<stratum>:<key>` for a stratum, `:stage:<key>` for one of the staged loop's per-stage columns),
+    so the page prints the row through `<V>` like any other. A row
     scored on no cells, an arm still running, is left out: it has nothing to print yet. Absent, not empty,
     until a table has been written."""
     root = out_dir or (PATHS.out / "bench")
@@ -449,6 +464,18 @@ def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dic
                 extra[key] = vid
             if extra:
                 row["extra"] = extra
+            stages: dict[str, str] = {}
+            chains = _num(r.get("stage_n_chains"))
+            for key, (fmt, what) in BENCH_STAGES.items():
+                v = _num(r.get(f"stage_{key}"))
+                if v is None:
+                    continue
+                vid = f"{pre}:stage:{key}"
+                over = f"; over {int(chains)} chains" if chains and key != "n_chains" else ""
+                vals.append(stat(vid, int(v) if fmt == "int" else round(v, 4), fmt=fmt, note=f"{what}{over}; {note}"))
+                stages[key] = vid
+            if stages:
+                row["stages"] = stages
         strata: dict[str, dict[str, str]] = {}
         for stratum, cell in (r.get("strata") or {}).items():
             if stratum not in BENCH_STRATA or not isinstance(cell, dict):

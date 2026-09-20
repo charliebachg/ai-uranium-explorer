@@ -41,10 +41,23 @@ POSITIVE_LABELS = ("deposit", "occurrence")
 LABEL_STRATA = ("deposit", "occurrence", "negative")
 BASELINE_MODELS = ("learned", "effort", "criteria")
 FOLD_KIND = "spatial"
+#: the staged loop's per-stage columns the bench table carries for an arm (PRD §8.5), each with the formatter
+#: the store's metric row and the Eval page print it with. A v0 arm and a baseline have no stages, so their
+#: rows hold null under each; so does a stage a run never had (no verifier, no rounds).
+STAGE_COLUMNS: dict[str, str] = {
+    "stage_n_chains": "int",
+    "stage_gate_rejection_rate": "ratio3",
+    "stage_valid_rate": "ratio3",
+    "stage_verifier_catch_rate": "ratio3",
+    "stage_rounds_to_valid_mean": "m2",
+    "stage_reexecuted_mean": "m2",
+    "stage_verifier_agreement_rate": "ratio3",
+    "stage_decider_agreement_rate": "ratio3",
+}
 #: the metrics a table row carries into derived.metric, when finite
 TABLE_METRICS = ("precision", "recall", "f1", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all", "ece",
                  "ece_committed", "abstain_rate", "gate_rejection_rate", "probe_abstain_rate",
-                 "cost_usd_per_cell", "latency_s_per_cell")
+                 "cost_usd_per_cell", "latency_s_per_cell", *STAGE_COLUMNS)
 NAN = float("nan")
 
 
@@ -224,9 +237,10 @@ def score_run(run_dir: Path, key: dict[str, dict[str, Any]], boot: int = BOOT, s
 def stage_metrics(rows: dict[str, dict[str, Any]]) -> dict[str, float]:
     """The per-stage metrics PRD §8.4 asks of the staged loop, from the counts each v1 row carries under
     `stages`: the node gate's rejection rate over every executor attempt, the share of nodes recorded unknown
-    after three attempts, the share of chains a round validated, rounds and re-executions per chain, how often
-    the verifier's recorded label and the weighted decider agreed with the final verdict, the shallow-path
-    share, and refusals per leakage rule. Flat floats under a `stage_` prefix so the MLflow flattener keeps
+    after three attempts, the share of chains a round validated, the share the verifier refused at least once,
+    rounds per chain and rounds over the chains that validated, re-executions per chain, how often the
+    verifier's recorded label and the weighted decider agreed with the final verdict, the shallow-path share,
+    and refusals per leakage rule. Flat floats under a `stage_` prefix so the MLflow flattener keeps
     them. Empty for a run without chains, so a v0 score is unchanged."""
     st = [r["stages"] for r in rows.values() if isinstance(r.get("stages"), dict)]
     if not st:
@@ -247,6 +261,11 @@ def stage_metrics(rows: dict[str, dict[str, Any]]) -> dict[str, float]:
         "stage_unknown_recorded_rate": total("n_recorded_unknown") / nodes if nodes else NAN,
         "stage_valid_rate": rate([bool(s.get("valid")) for s in st]),
         "stage_rounds_mean": rate([s.get("rounds") for s in st]),
+        # the verifier caught a chain when its first round did not validate it; a chain with no round at all
+        # (no verifier) was neither caught nor passed, so it is left out of the rate
+        "stage_verifier_catch_rate": rate([None if not s.get("rounds") else not (s["rounds"] == 1 and bool(s.get("valid")))
+                                           for s in st]),
+        "stage_rounds_to_valid_mean": rate([s.get("rounds") for s in st if bool(s.get("valid")) and s.get("rounds")]),
         "stage_reexecuted_mean": rate([s.get("n_reexecuted") for s in st]),
         "stage_verifier_agreement_rate": rate([s.get("verifier_agreement") for s in st]),
         "stage_decider_agreement_rate": rate([s.get("decider_agreement") for s in st]),
@@ -275,7 +294,7 @@ def random_expected(base_rate: float, n: int, bins: int = BINS) -> dict[str, Any
         "run_id": None, "mlflow_run_id": None, "cost_usd": 0.0,
         "precision": pi, "recall": 0.5, "f1": (2 * pi * 0.5 / (pi + 0.5)) if pi + 0.5 else NAN,
         "pr_auc": pi, "roc_auc": 0.5, "pr_auc_all": pi, "roc_auc_all": 0.5,
-        "ece": float(np.mean(np.abs(pi - mids))), "abstain_rate": 0.0,
+        "ece": float(np.mean(np.abs(pi - mids))), "abstain_rate": 0.0, **dict.fromkeys(STAGE_COLUMNS),
         "note": "analytic expectation for a uniform random probability at a 0.5 threshold; no interval",
     }
 
@@ -284,7 +303,7 @@ def _row(name: str, model: str, y: np.ndarray, p: np.ndarray, abstain: np.ndarra
          boot: int, seed: int, **extra: Any) -> dict[str, Any]:
     m = metrics(y, p, verdicts_at(p), abstain, boot=boot, seed=seed, strata=strata)
     return {"name": name, "kind": "baseline", "model": model, "n_cells": int(len(y)), "run_id": None,
-            "mlflow_run_id": None, "cost_usd": 0.0, **m, **extra}
+            "mlflow_run_id": None, "cost_usd": 0.0, **dict.fromkeys(STAGE_COLUMNS), **m, **extra}
 
 
 def oof_scores(con: Any, cell_ids: list[str], fold_kind: str = FOLD_KIND) -> tuple[dict[str, dict[str, float]], str | None]:
@@ -365,13 +384,26 @@ def _effort_of(summary: dict[str, Any]) -> str | None:
     return None
 
 
+def _stages_of(summary: dict[str, Any]) -> dict[str, float]:
+    """The per-stage metrics from the run's own cells rather than from the summary's score, so a run scored
+    before a stage column existed still fills it; the summary's score stands for everything else. Empty when
+    the run directory is gone, or the run has no chains, and a v0 score is then unchanged."""
+    rd = summary.get("run_dir")
+    if not rd or not (Path(rd) / "cells.jsonl").is_file():
+        return {}
+    return stage_metrics(read_cells(Path(rd)))
+
+
 def arm_row(summary: dict[str, Any]) -> dict[str, Any]:
-    """A table row from the summary `run_arm` wrote for an arm."""
-    score = dict(summary.get("score") or {})
+    """A table row from the summary `run_arm` wrote for an arm: its score as written, the per-stage columns
+    re-derived from the run's cells, and null under a stage the arm never had (a v0 arm has no verifier and
+    no rounds), so every row carries the same columns."""
+    score = dict(summary.get("score") or {}) | _stages_of(summary)
+    stages = {k: float(score[k]) if _number(score.get(k)) else None for k in STAGE_COLUMNS}
     return {"name": summary["arm"], "kind": "arm", "model": summary.get("model"), "effort": _effort_of(summary),
             "n_cells": int(score.get("n", 0)), "run_id": summary.get("run_id"),
             "mlflow_run_id": summary.get("mlflow_run_id"), "cost_usd": float(score.get("cost_usd_total") or 0.0),
-            "pending": len(summary.get("pending") or []), **score}
+            "pending": len(summary.get("pending") or []), **score, **stages}
 
 
 def table(version: str, con: Any = None, boot: int = BOOT, seed: int = 0, write: bool = True,
@@ -410,7 +442,8 @@ def write_metrics(rows: list[dict[str, Any]], version: str, con: Any, now: str |
             ci = r.get(f"{key}_ci")
             out.append({
                 "metric_key": f"bench.{version}.{r['name']}.{key}", "run_id": r.get("run_id") or now,
-                "value": float(val), "fmt": "usd" if key.startswith("cost") else ("s1" if key.startswith("latency") else "ratio3"), "computed_at": now,
+                "value": float(val), "computed_at": now,
+                "fmt": STAGE_COLUMNS.get(key) or ("usd" if key.startswith("cost") else ("s1" if key.startswith("latency") else "ratio3")),
                 "note": f"{key}; {r['kind']} {r['name']} ({r.get('model')}) on {r.get('n_cells')} open cells of "
                         f"benchmark {version}"
                         + (f"; 95% CI {ci[0]:.3f}-{ci[1]:.3f}" if isinstance(ci, list) and len(ci) == 2

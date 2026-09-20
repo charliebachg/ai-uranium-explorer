@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-20T19:43:08+00:00",
+ "generated_at": "2026-09-20T20:22:23+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -5851,7 +5851,7 @@
  "bench": {
   "version": "v1",
   "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
-  "computed_at": "2026-09-20T19:27:00+00:00",
+  "computed_at": "2026-09-20T20:22:06+00:00",
   "rows": [
    {
     "name": "v0-features",
@@ -6416,6 +6416,16 @@
      "cost_usd_per_cell": "c:bench:v1:v1-anthropic-or:cost_usd_per_cell",
      "latency_s_per_cell": "c:bench:v1:v1-anthropic-or:latency_s_per_cell"
     },
+    "stages": {
+     "n_chains": "c:bench:v1:v1-anthropic-or:stage:n_chains",
+     "gate_rejection_rate": "c:bench:v1:v1-anthropic-or:stage:gate_rejection_rate",
+     "valid_rate": "c:bench:v1:v1-anthropic-or:stage:valid_rate",
+     "verifier_catch_rate": "c:bench:v1:v1-anthropic-or:stage:verifier_catch_rate",
+     "rounds_to_valid_mean": "c:bench:v1:v1-anthropic-or:stage:rounds_to_valid_mean",
+     "reexecuted_mean": "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean",
+     "verifier_agreement_rate": "c:bench:v1:v1-anthropic-or:stage:verifier_agreement_rate",
+     "decider_agreement_rate": "c:bench:v1:v1-anthropic-or:stage:decider_agreement_rate"
+    },
     "strata": {
      "deposit": {
       "n": "c:bench:v1:v1-anthropic-or:deposit:n",
@@ -6498,6 +6508,16 @@
      "probe_abstain_rate": "c:bench:v1:v1-openrouter:probe_abstain_rate",
      "cost_usd_per_cell": "c:bench:v1:v1-openrouter:cost_usd_per_cell",
      "latency_s_per_cell": "c:bench:v1:v1-openrouter:latency_s_per_cell"
+    },
+    "stages": {
+     "n_chains": "c:bench:v1:v1-openrouter:stage:n_chains",
+     "gate_rejection_rate": "c:bench:v1:v1-openrouter:stage:gate_rejection_rate",
+     "valid_rate": "c:bench:v1:v1-openrouter:stage:valid_rate",
+     "verifier_catch_rate": "c:bench:v1:v1-openrouter:stage:verifier_catch_rate",
+     "rounds_to_valid_mean": "c:bench:v1:v1-openrouter:stage:rounds_to_valid_mean",
+     "reexecuted_mean": "c:bench:v1:v1-openrouter:stage:reexecuted_mean",
+     "verifier_agreement_rate": "c:bench:v1:v1-openrouter:stage:verifier_agreement_rate",
+     "decider_agreement_rate": "c:bench:v1:v1-openrouter:stage:decider_agreement_rate"
     },
     "strata": {
      "deposit": {
@@ -17849,6 +17869,78 @@
    "unit": "s",
    "note": "latency_s_per_cell; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
   },
+  "c:bench:v1:v1-anthropic-or:stage:n_chains": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:n_chains",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 76,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "chains the staged loop ran; the denominator of the other stage columns; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:gate_rejection_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0711,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "node gate refusals over executor attempts; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:valid_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:valid_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7105,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains a verifier round validated; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:verifier_catch_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:verifier_catch_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7237,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains the verifier refused at least once; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:rounds_to_valid_mean": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:rounds_to_valid_mean",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.7593,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "verifier rounds per chain, over the chains that validated; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2.0526,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "nodes re-executed on the verifier's feedback, per chain; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:verifier_agreement_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:verifier_agreement_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.75,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains whose verifier label matched the final verdict; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:stage:decider_agreement_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:stage:decider_agreement_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7368,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains where the weighted sum and the adjudicator fell on the same side of the threshold; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
   "c:bench:v1:v1-anthropic-or:deposit:n": {
    "id": "c:bench:v1:v1-anthropic-or:deposit:n",
    "kind": "stat",
@@ -18236,6 +18328,78 @@
    "fmt": "m1",
    "unit": "s",
    "note": "latency_s_per_cell; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:n_chains": {
+   "id": "c:bench:v1:v1-openrouter:stage:n_chains",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 130,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "chains the staged loop ran; the denominator of the other stage columns; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:gate_rejection_rate": {
+   "id": "c:bench:v1:v1-openrouter:stage:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0908,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "node gate refusals over executor attempts; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:valid_rate": {
+   "id": "c:bench:v1:v1-openrouter:stage:valid_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4846,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains a verifier round validated; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:verifier_catch_rate": {
+   "id": "c:bench:v1:v1-openrouter:stage:verifier_catch_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7308,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains the verifier refused at least once; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:rounds_to_valid_mean": {
+   "id": "c:bench:v1:v1-openrouter:stage:rounds_to_valid_mean",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.6032,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "verifier rounds per chain, over the chains that validated; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:reexecuted_mean": {
+   "id": "c:bench:v1:v1-openrouter:stage:reexecuted_mean",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3.6769,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "nodes re-executed on the verifier's feedback, per chain; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:verifier_agreement_rate": {
+   "id": "c:bench:v1:v1-openrouter:stage:verifier_agreement_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6692,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains whose verifier label matched the final verdict; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:stage:decider_agreement_rate": {
+   "id": "c:bench:v1:v1-openrouter:stage:decider_agreement_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6154,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains where the weighted sum and the adjudicator fell on the same side of the threshold; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
   },
   "c:bench:v1:v1-openrouter:deposit:n": {
    "id": "c:bench:v1:v1-openrouter:deposit:n",
@@ -19843,7 +20007,7 @@
    "id": "c:bench:v1:criteria:f1",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5507,
+   "value": 0.5811,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "f1; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19852,7 +20016,7 @@
    "id": "c:bench:v1:criteria:f1.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4848,
+   "value": 0.5278,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; f1; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19861,7 +20025,7 @@
    "id": "c:bench:v1:criteria:f1.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6154,
+   "value": 0.6275,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; f1; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19870,7 +20034,7 @@
    "id": "c:bench:v1:criteria:precision",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4318,
+   "value": 0.4388,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "precision; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19879,7 +20043,7 @@
    "id": "c:bench:v1:criteria:precision.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3846,
+   "value": 0.4021,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; precision; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19888,7 +20052,7 @@
    "id": "c:bench:v1:criteria:precision.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4783,
+   "value": 0.4742,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; precision; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19897,7 +20061,7 @@
    "id": "c:bench:v1:criteria:recall",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.76,
+   "value": 0.86,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "recall; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19906,7 +20070,7 @@
    "id": "c:bench:v1:criteria:recall.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.64,
+   "value": 0.76,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; recall; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19915,7 +20079,7 @@
    "id": "c:bench:v1:criteria:recall.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.88,
+   "value": 0.94,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; recall; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19924,7 +20088,7 @@
    "id": "c:bench:v1:criteria:pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4687,
+   "value": 0.4453,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19933,7 +20097,7 @@
    "id": "c:bench:v1:criteria:pr_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3941,
+   "value": 0.3827,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19942,7 +20106,7 @@
    "id": "c:bench:v1:criteria:pr_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5803,
+   "value": 0.5574,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19951,7 +20115,7 @@
    "id": "c:bench:v1:criteria:roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.513,
+   "value": 0.4919,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19960,7 +20124,7 @@
    "id": "c:bench:v1:criteria:roc_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4001,
+   "value": 0.3797,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19969,7 +20133,7 @@
    "id": "c:bench:v1:criteria:roc_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.615,
+   "value": 0.6005,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19978,7 +20142,7 @@
    "id": "c:bench:v1:criteria:pr_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4687,
+   "value": 0.4453,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19987,7 +20151,7 @@
    "id": "c:bench:v1:criteria:pr_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3941,
+   "value": 0.3827,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -19996,7 +20160,7 @@
    "id": "c:bench:v1:criteria:pr_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5803,
+   "value": 0.5574,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20005,7 +20169,7 @@
    "id": "c:bench:v1:criteria:roc_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.513,
+   "value": 0.4919,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20014,7 +20178,7 @@
    "id": "c:bench:v1:criteria:roc_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4001,
+   "value": 0.3797,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20023,7 +20187,7 @@
    "id": "c:bench:v1:criteria:roc_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.615,
+   "value": 0.6005,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20032,7 +20196,7 @@
    "id": "c:bench:v1:criteria:ece",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1985,
+   "value": 0.2997,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "ece; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20041,7 +20205,7 @@
    "id": "c:bench:v1:criteria:ece.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1605,
+   "value": 0.267,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; ece; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20050,7 +20214,7 @@
    "id": "c:bench:v1:criteria:ece.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2734,
+   "value": 0.3867,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; ece; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20095,7 +20259,7 @@
    "id": "c:bench:v1:criteria:deposit:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8889,
+   "value": 1.0,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the deposit cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20122,7 +20286,7 @@
    "id": "c:bench:v1:criteria:occurrence:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6875,
+   "value": 0.7812,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the occurrence cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20149,7 +20313,7 @@
    "id": "c:bench:v1:criteria:negative:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2188,
+   "value": 0.1406,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -20164,5 +20328,5 @@
    "note": "abstain_rate over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
   }
  },
- "build_id": "358bf69f3717"
+ "build_id": "2f05404c3b9c"
 }

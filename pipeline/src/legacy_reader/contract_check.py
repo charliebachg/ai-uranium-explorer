@@ -347,7 +347,7 @@ def check_bench(e: Errors, where: str, b: Any, known: set[str]) -> None:
         _ref(e, f"{w}.n", r.get("n"), known)
         _ref(e, f"{w}.n_pos", r.get("n_pos"), known, nullable=True)
         _ref(e, f"{w}.n_neg", r.get("n_neg"), known, nullable=True)
-        for group in ("metrics", "extra"):
+        for group in ("metrics", "extra", "stages"):
             for key, vid in (r.get(group) or {}).items():
                 _ref(e, f"{w}.{group}.{key}", vid, known)
         for key, bounds in (r.get("ci") or {}).items():

@@ -133,7 +133,7 @@ test("with the service down the cells still draw and both panels say why", async
   // A hole read from a report may sit on top of the centre cell since the reading pass, and the hovercard
   // names the hole first; probe a few offsets so the cursor lands on the cell itself.
   const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  const offsets = [[0, 0], [24, 0], [0, 24], [-24, 0], [0, -24], [24, 24], [-24, -24]];
+  const offsets: [number, number][] = [[0, 0], [24, 0], [0, 24], [-24, 0], [0, -24], [24, 24], [-24, -24]];
   let hit = centre;
   await expect(async () => {
     for (const [dx, dy] of offsets) {

@@ -374,7 +374,12 @@ chain, its verdicts and its decision are stored in the agent tier and shown on t
 memos. Two switches, off by default and each an arm, cut the call count: `skip_unmeasured` lets the harness
 write the unknown node for a criterion whose feature has no value here, and `executor_batch` asks for every
 criterion's node in one call and gates them one by one. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
-over the frozen benchmark, blinded, beside v0 and the baselines.
+over the frozen benchmark, blinded, beside v0 and the baselines. The Eval page's benchmark table carries a
+second group of columns for the staged arms, per chain and from the run's own rows: the chains counted, the
+node gate's refusals over executor attempts, the share of chains a verifier round validated, the share the
+verifier refused at least once, rounds over the chains that validated, nodes re-executed on the verifier's
+feedback, and how often the verifier's own label and the weighted-sum decider agreed with the final verdict.
+A single-call arm and a baseline have no stages and show a dash there.
 
 ## 7. The other three pages
 
@@ -383,8 +388,9 @@ over the frozen benchmark, blinded, beside v0 and the baselines.
   and enabled-cell file, as `lr prospect gate` last scored it), and four recorded gaps (the magnetic grid is
   now *published, not yet pulled*).
 - **Eval** — what the reading run did, what the checks caught, the fold tests from §5.6, the Phase 0 re-test,
-  the model search with its registry decision and model card, the dated hindcast, and the gate scorecard from
-  §6.4. Every row of the three tracked tables names its MLflow run and the store snapshot it read. It states at
+  the model search with its registry decision and model card, the dated hindcast, the analyst benchmark with
+  the staged loop's per-stage columns (§6.7), and the gate scorecard from §6.4. Every row of the three tracked
+  tables names its MLflow run and the store snapshot it read. It states at
   the top that these are run statistics, not accuracy, because no gold set has been labelled.
 - **Limits** — what this demo can and cannot claim, carried from the project's research with each line cited.
 

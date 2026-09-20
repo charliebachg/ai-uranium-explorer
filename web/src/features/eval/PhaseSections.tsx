@@ -2,6 +2,7 @@ import { V } from "@/components/values/V";
 import type {
   BenchBlock,
   BenchRow,
+  BenchStage,
   HeadlineBlock,
   HeadlineRow,
   HindcastBlock,
@@ -395,9 +396,24 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
   );
 }
 
+/** The staged loop's per-stage columns in the order the table prints them, each with its heading. */
+const STAGE_COLUMNS: [BenchStage, string][] = [
+  ["n_chains", "Chains"],
+  ["gate_rejection_rate", "Node gate"],
+  ["valid_rate", "Valid"],
+  ["verifier_catch_rate", "Caught"],
+  ["rounds_to_valid_mean", "Rounds to valid"],
+  ["reexecuted_mean", "Re-executed"],
+  ["verifier_agreement_rate", "Verifier agrees"],
+  ["decider_agreement_rate", "Deciders agree"],
+];
+
 /**
  * The analyst benchmark: every arm and every baseline scored on the same open cells, arms first, each group
  * ranked by F1. A baseline row is muted: it is arithmetic on the fitted scores, not a run, and names none.
+ * The second group of columns is the staged loop's per-stage metrics, per chain; a single-call arm and a
+ * baseline have no stages and print a dash there. The table is wider than a phone, so it scrolls inside its
+ * own container rather than the page.
  */
 export function BenchSection({ block }: { block?: BenchBlock }) {
   if (!block?.rows.length) return null;
@@ -409,31 +425,52 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
   return (
     <Section
       title="The analyst benchmark"
-      hint="One row is one arm or one baseline on the same open cells of the frozen benchmark. Probe cells are not scored; an abstention is never a positive, so it counts against recall, and an answer the gate refused is an abstention too. Intervals are bootstraps over cells."
+      hint="One row is one arm or one baseline on the same open cells of the frozen benchmark. Probe cells are not scored; an abstention is never a positive, so it counts against recall, and an answer the gate refused is an abstention too. Intervals are bootstraps over cells. The staged loop's columns are per chain, from the run's own rows: the node gate's refusals over executor attempts, the share of chains a verifier round validated, the share the verifier refused at least once, rounds over the chains that validated, nodes re-executed on the verifier's feedback, and how often the verifier's own label and the weighted-sum decider agreed with the final verdict. A single-call arm has no stages and shows none; the shallow-path share and the refusals per leakage rule stay in the run summary, being the same in every arm so far."
     >
-      <table className="w-full text-[12.5px]" data-testid="bench-table">
-        <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
-          <tr>
-            <th className="py-1.5 text-left font-normal">Row</th>
-            <th className="py-1.5 text-left font-normal">Kind</th>
-            <th className="py-1.5 text-left font-normal">Model</th>
-            <th className="py-1.5 text-right font-normal">n</th>
-            <th className="py-1.5 text-right font-normal">
-              <span data-chrome>F1</span>
-            </th>
-            <th className="py-1.5 text-right font-normal">PR-AUC</th>
-            <th className="py-1.5 text-right font-normal">Abstain</th>
-            <th className="py-1.5 text-right font-normal">Gate rejected</th>
-            <th className="py-1.5 text-right font-normal">$ per cell</th>
-            <th className="py-1.5 text-right font-normal">run</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <BenchLine key={`${r.kind}.${r.name}`} row={r} />
-          ))}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12.5px]" data-testid="bench-table">
+          <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+            <tr>
+              <th colSpan={10} className="py-1 text-left font-normal">
+                against the labels
+              </th>
+              <th
+                colSpan={STAGE_COLUMNS.length}
+                className="border-line border-l py-1 pl-3 text-left font-normal"
+              >
+                the staged loop, per chain
+              </th>
+            </tr>
+            <tr>
+              <th className="py-1.5 text-left font-normal">Row</th>
+              <th className="py-1.5 text-left font-normal">Kind</th>
+              <th className="py-1.5 text-left font-normal">Model</th>
+              <th className="py-1.5 text-right font-normal">n</th>
+              <th className="py-1.5 text-right font-normal">
+                <span data-chrome>F1</span>
+              </th>
+              <th className="py-1.5 text-right font-normal">PR-AUC</th>
+              <th className="py-1.5 text-right font-normal">Abstain</th>
+              <th className="py-1.5 text-right font-normal">Gate rejected</th>
+              <th className="py-1.5 text-right font-normal">$ per cell</th>
+              <th className="py-1.5 text-right font-normal">run</th>
+              {STAGE_COLUMNS.map(([key, label], i) => (
+                <th
+                  key={key}
+                  className={cn("py-1.5 pl-3 text-right font-normal", i === 0 && "border-line border-l")}
+                >
+                  {label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <BenchLine key={`${r.kind}.${r.name}`} row={r} />
+            ))}
+          </tbody>
+        </table>
+      </div>
       <BenchNaming block={block} />
     </Section>
   );
@@ -484,6 +521,15 @@ function BenchLine({ row }: { row: BenchRow }) {
       <td className="py-1.5 text-right">
         {runId ? <RunId id={runId} /> : <span className="text-ink-3">–</span>}
       </td>
+      {STAGE_COLUMNS.map(([key], i) => (
+        <td
+          key={key}
+          className={cn("py-1.5 pl-3 text-right", i === 0 && "border-line border-l")}
+          data-stage={key}
+        >
+          <Metric id={row.stages?.[key]} />
+        </td>
+      ))}
     </tr>
   );
 }

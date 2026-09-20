@@ -735,10 +735,29 @@ export const BenchExtra = z.enum([
 export type BenchExtra = z.infer<typeof BenchExtra>;
 
 /**
+ * The staged loop's per-stage columns (PRD §8.5), per chain: what only a staged arm reports. The node gate's
+ * refusals over executor attempts; the share of chains a verifier round validated and the share the verifier
+ * refused at least once; rounds over the chains that validated; nodes re-executed on the verifier's feedback;
+ * and how often the verifier's own label and the weighted-sum decider agreed with the final verdict. A
+ * single-call arm has no stages and carries none.
+ */
+export const BenchStage = z.enum([
+  "n_chains",
+  "gate_rejection_rate",
+  "valid_rate",
+  "verifier_catch_rate",
+  "rounds_to_valid_mean",
+  "reexecuted_mean",
+  "verifier_agreement_rate",
+  "decider_agreement_rate",
+]);
+export type BenchStage = z.infer<typeof BenchStage>;
+
+/**
  * One row of the analyst benchmark table (`lr bench table`): one arm or one baseline scored on the same open
  * cells of the frozen benchmark. Every number is a value id under `c:bench:<version>:<row>:<metric>`; an
- * interval's bounds are `.lo` and `.hi` of the metric's id. A baseline is arithmetic on the fitted scores, so
- * it names no run.
+ * interval's bounds are `.lo` and `.hi` of the metric's id, and a stage column sits under `:stage:<key>`. A
+ * baseline is arithmetic on the fitted scores, so it names no run.
  */
 export const BenchRow = z.object({
   name: z.string(),
@@ -755,6 +774,8 @@ export const BenchRow = z.object({
   metrics: z.partialRecord(BenchMetric, StatRef),
   ci: z.partialRecord(BenchMetric, z.tuple([StatRef, StatRef])).optional(),
   extra: z.partialRecord(BenchExtra, StatRef).optional(),
+  /** Present only on a staged arm; a stage the run never had (no verifier, no rounds) is simply absent. */
+  stages: z.partialRecord(BenchStage, StatRef).optional(),
   strata: z
     .partialRecord(
       z.enum(["deposit", "occurrence", "negative"]),

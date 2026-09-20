@@ -97,6 +97,19 @@ describe("contract", () => {
       extra: { cost_usd_per_cell: "c:bench:v1:v0:cost_usd_per_cell" },
       strata: { deposit: { n: "c:bench:v1:v0:deposit:n", accuracy: "c:bench:v1:v0:deposit:accuracy" } },
     };
+    // a staged arm adds the per-stage columns; a stage the run never had is absent, not null
+    const staged = {
+      ...arm,
+      name: "v1",
+      stages: {
+        n_chains: "c:bench:v1:v1:stage:n_chains",
+        gate_rejection_rate: "c:bench:v1:v1:stage:gate_rejection_rate",
+        valid_rate: "c:bench:v1:v1:stage:valid_rate",
+        verifier_catch_rate: "c:bench:v1:v1:stage:verifier_catch_rate",
+        rounds_to_valid_mean: "c:bench:v1:v1:stage:rounds_to_valid_mean",
+        decider_agreement_rate: "c:bench:v1:v1:stage:decider_agreement_rate",
+      },
+    };
     // a baseline names no run and may carry nothing beyond its metrics
     const baseline = {
       name: "random_expected",
@@ -115,10 +128,18 @@ describe("contract", () => {
       manifest_sha256: "b".repeat(64),
       computed_at: null,
       versions: [],
-      rows: [arm, baseline],
+      rows: [arm, staged, baseline],
     };
     expect(BenchBlock.safeParse(block).success).toBe(true);
     expect(BenchBlock.safeParse({ ...block, rows: [{ ...arm, kind: "model" }] }).success).toBe(false);
+    // a stage column the contract does not name is refused, and a stage must be a value id, never a number
+    expect(
+      BenchBlock.safeParse({ ...block, rows: [{ ...staged, stages: { calls_per_chain: "c:bench:v1:v1:stage:calls" } }] })
+        .success,
+    ).toBe(false);
+    expect(
+      BenchBlock.safeParse({ ...block, rows: [{ ...staged, stages: { valid_rate: 0.71 } }] }).success,
+    ).toBe(false);
     expect(BenchBlock.safeParse({ ...block, rows: [{ ...arm, metrics: { f1: "0.65" } }] }).success).toBe(
       false,
     );
