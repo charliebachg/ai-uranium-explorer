@@ -51,12 +51,10 @@ IMAGE_TOKENS = 1600
 REASONING_BUDGET = {"low": 2000, "medium": 4000, "high": 8000, "xhigh": 12000, "max": 16000}
 #: the answer itself needs this much room beyond the thinking
 ANSWER_TOKENS = 3000
-#: the budget a reply cut mid-thought is retried with: some endpoints refuse to disable reasoning outright
-#: ("Reasoning is mandatory for this endpoint"), so the retry thinks a little rather than not at all
-MIN_BUDGET = 512
-#: and some endpoints ignore the budget altogether and think as long as they like (GLM 5.3 Flash overran a
-#: 512-token budget with the same empty reply), so the retry also opens the completion room wide: a cheap
-#: model's long thought costs a fraction of a cent, a lost cell costs a resume
+#: a reply cut mid-thought is retried with a low effort hint instead of a budget (some endpoints refuse to
+#: disable reasoning outright, and GLM 5.3 Flash ignored a 512-token budget with the same empty reply) and
+#: the completion room opened wide: a cheap model's long thought costs a fraction of a cent, a lost cell costs
+#: a resume. OpenRouter takes an effort or a budget, never both in one request.
 RETRY_ROOM = 24000
 #: what a call is priced at when neither the reply nor the models endpoint says: high on purpose
 FALLBACK_PRICE = Price(per_mtok_in=2.0, per_mtok_out=8.0)
@@ -192,12 +190,13 @@ class OpenRouterBackend:
     def _payload(self, req: ExtractionRequest, messages: list[dict[str, Any]], structured: bool,
                  thinking: bool = True) -> dict[str, Any]:
         """`thinking` on: the reasoning budget for the request's effort as a hard cap, with the answer's room
-        on top. Off: the minimal budget and a low effort hint, whichever the endpoint honours, with the
-        completion room opened wide for an endpoint that honours neither."""
+        on top. Off: a low effort hint with the completion room opened wide, for an endpoint that ignored the
+        budget."""
         payload: dict[str, Any] = {
             "model": req.model, "messages": messages, "max_tokens": self._max_tokens(req, thinking),
             "usage": {"include": True},   # the provider's own dollar figure comes back in the usage block
-            "reasoning": {"max_tokens": self._budget(req)} if thinking else {"max_tokens": MIN_BUDGET, "effort": "low"},
+            # one of the two, never both: OpenRouter refuses a reasoning object carrying an effort and a budget
+            "reasoning": {"max_tokens": self._budget(req)} if thinking else {"effort": "low"},
         }
         if structured:
             payload["response_format"] = {"type": "json_schema", "json_schema": {

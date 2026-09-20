@@ -205,9 +205,9 @@ def test_the_requests_effort_is_a_hard_reasoning_budget_and_a_cut_reply_is_asked
     resp = OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path))
     first, second = http.sent[0]["json"], http.sent[1]["json"]
     assert first["reasoning"] == {"max_tokens": 4000} and first["max_tokens"] == 4000 + OR.ANSWER_TOKENS, "medium effort: a 4,000-token budget"
-    assert second["reasoning"] == {"max_tokens": OR.MIN_BUDGET, "effort": "low"} and second["max_tokens"] == OR.RETRY_ROOM, \
-        "the fallback thinks a little, or at low effort, with the room opened wide for an endpoint that ignores both"
-    assert resp.structured == {"status": "met"} and resp.envelope["reasoning"] == {"max_tokens": OR.MIN_BUDGET, "effort": "low"}
+    assert second["reasoning"] == {"effort": "low"} and second["max_tokens"] == OR.RETRY_ROOM, \
+        "the fallback is an effort hint alone (never both with a budget) with the room opened wide"
+    assert resp.structured == {"status": "met"} and resp.envelope["reasoning"] == {"effort": "low"}
     assert len(env.read_text().splitlines()) == 2, "the cut attempt was charged too"
     http = FakeHttp([(200, reply({"status": "met"}))])
     OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path, model="qwen/qwen3.8-flash").__class__(**{**request(tmp_path).__dict__, "effort": "low"}))
