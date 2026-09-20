@@ -443,10 +443,18 @@ class VerifierVerdict:
 
     @classmethod
     def from_model(cls, payload: dict[str, Any], round: int) -> "VerifierVerdict":
+        """The verdict as the model returned it, with its prose clipped to the protocol's lengths. The
+        feedback and the rationale are guidance, not evidence, so cutting them loses nothing a gate checks;
+        a provider that ignores a schema's maxLength once voided a whole chain for 72 characters of it."""
         return cls(round=round, valid=payload.get("valid", False), faulty=list(payload.get("faulty") or []),
-                   feedback=str(payload.get("feedback") or ""), candidate_label=payload.get("candidate_label", ""),
+                   feedback=_clip(str(payload.get("feedback") or ""), FEEDBACK_MAX),
+                   candidate_label=payload.get("candidate_label", ""),
                    candidate_probability=payload.get("candidate_probability", -1.0),
-                   rationale=str(payload.get("rationale") or ""))
+                   rationale=_clip(str(payload.get("rationale") or ""), RATIONALE_MAX))
+
+
+def _clip(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
 
 
 VERIFIER_SCHEMA: dict[str, Any] = {

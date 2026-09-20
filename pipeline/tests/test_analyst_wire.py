@@ -282,3 +282,14 @@ def test_parse_id_reads_both_schemes_and_the_grid_wide_kinds() -> None:
     assert W.parse_id("c:pass:0:page") == (None, "pass", ("0", "page"))
     assert W.parse_id("c:metric:learned.spatial.auc") == (None, "metric", ("learned.spatial.auc",))
     assert W.parse_id("820") == (None, "", ("820",))
+
+
+def test_a_verifier_verdict_with_prose_over_the_limit_is_clipped_not_refused() -> None:
+    """A provider that ignores a schema's maxLength once returned 672 characters of feedback and the whole
+    chain was voided for it; the prose is guidance, so it is cut and the verdict stands."""
+    from legacy_reader.analyst.wire import FEEDBACK_MAX, RATIONALE_MAX, VerifierVerdict
+
+    v = VerifierVerdict.from_model({"valid": False, "faulty": [{"node_id": "n02", "reason": "cover"}], "feedback": "x" * 900,
+                                    "candidate_label": "insufficient", "candidate_probability": 0.3, "rationale": "y" * 500}, round=0)
+    assert len(v.feedback) == FEEDBACK_MAX and v.feedback.endswith("…") and len(v.rationale) == RATIONALE_MAX
+    assert v.check() == [] and v.faulty_ids() == ["n02"]

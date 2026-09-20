@@ -416,7 +416,8 @@ class _Loop:
             calls.append(_account(resp))
             with span("stage:gate", kind="gate", round=round, attempt=attempt):
                 node, problems = self._gate(resp, seg, node_id, depends_on, round, attempt, req.model)
-                set_attrs(n_problems=len(problems), published=not problems)
+                # the first reasons travel with the span, so a run's rejections can be read without the prompts
+                set_attrs(n_problems=len(problems), published=not problems, problems=[p[:160] for p in problems[:3]])
             if not problems:
                 return _Executed(replace(node, published=True), calls, attempt, attempt - 1)
         assert node is not None
