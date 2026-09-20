@@ -119,6 +119,25 @@ def _forbidden_names() -> set[str] | None:
         con.close()
 
 
+def _preload_layers(log: Callable[[str], None]) -> int:
+    """Read every map layer the template plan's `nearby` and `crosscheck` calls touch, once, on the main
+    thread, before any worker starts. The loader is cached per process, but forty workers making their first
+    call at the same moment each parsed the same 24,000-feature layer before the cache held it, and the
+    runner reached 6.9 GB on a 9 GB machine. Layers that cannot be read (a test world) are skipped and said."""
+    from ..prospect import tools as T
+    from .plan import FEATURE_LAYER
+
+    layers = sorted(set(FEATURE_LAYER.values()) | {"em_conductors", "faults_250k"})
+    loaded = 0
+    for layer in layers:
+        try:
+            T.layer_features(layer)
+            loaded += 1
+        except Exception as err:  # noqa: BLE001 - no pulled layer here: the tools will say so per call
+            log(f"  layer {layer} not preloaded: {type(err).__name__}")
+    return loaded
+
+
 def _store_sha() -> str | None:
     """The store's content hash, so a v1 run (which reads the live tools, not the frozen packs) names the
     store it ran against; None when the snapshot module cannot say."""
@@ -309,6 +328,8 @@ def run_arm(
     run_id = str(manifest.run_id)
     manifest.write(rd)
     shared: dict[str, Any] = {"forbidden": _forbidden_names()} if staged else {}
+    if staged:
+        log(f"  preloaded {_preload_layers(log)} map layers for the workers")
 
     carried: dict[str, dict[str, Any]] = {}
     if resume:
@@ -485,6 +506,7 @@ def run_cells(
     con = con or connect()
     try:
         card_paths = cards(list(cell_ids), rd / "cards", log=log, con=con) if arm.inputs.card else {}
+        log(f"  preloaded {_preload_layers(log)} map layers for the workers")
         log(f"  chains: arm {arm.name} over {len(cell_ids)} cell(s), budget "
             f"{'none' if budget_usd is None else f'${budget_usd:.2f}'}, run {run_id}")
         budget = manifest.budget()
