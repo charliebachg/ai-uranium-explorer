@@ -29,6 +29,8 @@ dependencies = [
   "alembic==1.18.4",
   "psycopg[binary]==3.3.3",
   "mcp==2.2.0",
+  "opentelemetry-exporter-otlp-proto-http==1.44.0",   # the same 1.44.0 as the SDK MLflow brought in; imported only when LR_OTLP_ENDPOINT is set
+  "boto3==1.43.98",   # the seed pack over S3 (the compose MinIO locally, any S3 elsewhere)
 ]
 
 [project.optional-dependencies]
@@ -36,7 +38,7 @@ layout = ["docling[ocrmac]==2.128.0"]
 mlflow = ["mlflow==3.16.1"]
 
 [dependency-groups]
-dev = ["pytest==9.1.1"]
+dev = ["pytest==9.1.1", "moto==5.2.3"]   # moto: the S3 seed transport is tested against a fake bucket, no network
 
 [project.scripts]
 lr = "legacy_reader.cli:app"

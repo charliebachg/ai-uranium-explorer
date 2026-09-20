@@ -10,6 +10,11 @@ When MLflow is importable and `LR_TRACING_MLFLOW` is not "0", the same spans are
 trace can be browsed and linked to the run that produced it. The mirror is best-effort by design: a failure
 there is logged once and never raises, because a missing trace viewer must not fail a memo.
 
+When `LR_OTLP_ENDPOINT` is set, the same spans are also exported over OTLP (`otlp.py`: an OpenTelemetry SDK
+span started and ended beside each of ours, same ids and attributes, batched from a bounded queue and flushed
+at the end of the run), so any backend that speaks OTLP is a configuration. Same rule: best-effort, one warning,
+never a raise, and never a wait inside a model call. Unset, the SDK is not imported.
+
 Spans in worker threads (the scheduler's pool) attach to the run's root span rather than starting a trace of
 their own: context variables do not cross into a pool thread, so the active trace is also held process-wide.
 """
@@ -28,6 +33,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterator
 
+from . import otlp
 from .runs import run_dir as default_run_dir
 
 #: our span kinds, and the MLflow span type each is mirrored as
@@ -49,7 +55,9 @@ class Span:
     status: str = "ok"
     error: str | None = None
     t0: float = field(default_factory=time.monotonic, repr=False)
+    t_epoch_ns: int = field(default_factory=time.time_ns, repr=False)   # what the OTLP span's clock starts from
     mirror: Any = field(default=None, repr=False)   # the MLflow LiveSpan, when mirrored
+    otel: Any = field(default=None, repr=False)     # the OpenTelemetry SDK span, when exporting over OTLP
 
     def as_record(self) -> dict[str, Any]:
         return {
@@ -67,6 +75,7 @@ class Trace:
     path: Path
     root: Span | None = None
     mlflow: Any = None                        # the configured mlflow module, or None when not mirroring
+    otlp: Any = None                          # the OTLP bridge (`otlp.Bridge`), or None when not exporting
     lock: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
 
@@ -147,6 +156,30 @@ def _mirror_end(tr: Trace, span: Span) -> None:
         tr.mlflow = None
 
 
+# ---------------------------------------------------------------- the OTLP export
+
+
+def _otlp_start(tr: Trace, span: Span, parent: Span | None) -> Any:
+    if tr.otlp is None:
+        return None
+    try:
+        return tr.otlp.start(span, parent, tr.run_id)
+    except Exception as err:  # noqa: BLE001 - best-effort: the file has the span regardless
+        otlp.warn_once(print, "start_span", err)
+        tr.otlp = None
+        return None
+
+
+def _otlp_end(tr: Trace, span: Span) -> None:
+    if span.otel is None or tr.otlp is None:
+        return
+    try:
+        tr.otlp.end(span, tr.run_id)
+    except Exception as err:  # noqa: BLE001
+        otlp.warn_once(print, "end_span", err)
+        tr.otlp = None
+
+
 # ---------------------------------------------------------------- spans
 
 
@@ -154,6 +187,7 @@ def _finish(tr: Trace, span: Span) -> None:
     span.ended_at = _now()
     span.duration_ms = round((time.monotonic() - span.t0) * 1000.0, 3)
     _mirror_end(tr, span)
+    _otlp_end(tr, span)
     line = json.dumps(span.as_record(), separators=(",", ":"), default=str)
     with tr.lock:
         tr.path.parent.mkdir(parents=True, exist_ok=True)
@@ -175,9 +209,11 @@ def trace(run_id: str, kind: str, run_dir: Path | None = None, log: Callable[[st
     directory.mkdir(parents=True, exist_ok=True)
     tr = Trace(trace_id=uuid.uuid4().hex, run_id=run_id, kind=kind, path=directory / "spans.jsonl")
     tr.mlflow = _mlflow_module(log)
+    tr.otlp = otlp.bridge(log)
     root = Span(trace_id=tr.trace_id, span_id=uuid.uuid4().hex[:16], parent_id=None, name=run_id, kind=kind,
                 started_at=_now(), attrs={"run_id": run_id, "run_kind": kind, **attrs})
     root.mirror = _mirror_start(tr, root, None, ROOT_SPAN_TYPE)
+    root.otel = _otlp_start(tr, root, None)
     if root.mirror is not None:
         try:
             root.attrs["mlflow_trace_id"] = root.mirror.trace_id
@@ -203,6 +239,13 @@ def trace(run_id: str, kind: str, run_dir: Path | None = None, log: Callable[[st
                 tr.mlflow.flush_trace_async_logging()
             except Exception as err:  # noqa: BLE001
                 _warn_once(log, "flush", err)
+        if tr.otlp is not None:
+            # bounded: a backend that is down costs the run's end a few seconds, never a model call
+            try:
+                if not tr.otlp.flush():
+                    otlp.warn_once(log, "flush", "the backend did not take the run's spans in time")
+            except Exception as err:  # noqa: BLE001
+                otlp.warn_once(log, "flush", err)
 
 
 @contextmanager
@@ -216,6 +259,7 @@ def span(name: str, kind: str = "tool", **attrs: Any) -> Iterator[Span | None]:
     sp = Span(trace_id=tr.trace_id, span_id=uuid.uuid4().hex[:16], parent_id=parent.span_id if parent else None,
               name=name, kind=kind, started_at=_now(), attrs=dict(attrs))
     sp.mirror = _mirror_start(tr, sp, parent, SPAN_TYPES.get(kind, "UNKNOWN"))
+    sp.otel = _otlp_start(tr, sp, parent)
     token = _span_var.set(sp)
     try:
         yield sp

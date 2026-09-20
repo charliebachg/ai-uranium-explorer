@@ -26,13 +26,17 @@ data only. It proposes no drill targets and makes no geological judgement.
 
 ## Running it
 
-    # a fresh clone: the analytics store (pipeline/data/lr.duckdb) is gitignored, so first obtain a seed pack
-    # from the team (<seed host: to be decided; nothing publishes the pack yet>) and put it at
-    # pipeline/data/seed/latest (the directory holding manifest.json, or a symlink to it); then
-    docker compose up -d --build     # the app's first start runs `lr store seed ensure`: unpacks the pack into
-                                     # pipeline/data/lr.duckdb, verifying every table's hash and row count, and serves on :8787
+    # a fresh clone: the analytics store (pipeline/data/lr.duckdb) is gitignored, so first pull the seed pack
+    # from the URL the team publishes it at (an s3://bucket/prefix or an https:// directory; the URL is a
+    # deployment choice, ask for it), into pipeline/data/seed/<hash>/ with data/seed/latest pointed at it:
+    cd pipeline && uv sync && uv run lr store seed pull <url>    # reads manifest.json then every file, sha256 checked; refuses a mismatch
+    cd .. && docker compose up -d --build     # the app's first start runs `lr store seed ensure`: unpacks the pack into
+                                              # pipeline/data/lr.duckdb, verifying every table's hash and row count, and serves on :8787
+    # (with LR_SEED_URL set for the app, as the compose file sets it to the compose MinIO, ensure pulls by itself)
     # or without Docker
-    cd pipeline && uv sync && uv run lr store seed unpack data/seed/latest && uv run lr prospect serve
+    cd pipeline && uv run lr store seed unpack data/seed/latest && uv run lr prospect serve
+    # whoever publishes: pack the store, then push it (the compose MinIO with LR_S3_ENDPOINT=http://127.0.0.1:9000, or any S3)
+    uv run lr store seed pack && uv run lr store seed push data/seed/latest --to s3://seeds/latest
     # the public pack (9 MB) rebuilds the derived tier, the layer registry and the scenes; the read and agent
     # tiers come back as empty tables, so there are no document readings or chains until the private pack
     # (team only, 22 MB: page text and quotes never leave the team) is unpacked instead
@@ -57,6 +61,9 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr store seed pack --private   # every table, the read and agent tiers included: page text and quotes never leave the team
     uv run lr store seed verify data/seed/latest        # every sha256 and row count against the manifest, and the manifest against its own address; exit 1 on a mismatch
     uv run lr store seed unpack <pack> --into <file>    # rebuild a store from a pack: schema.sql, load, tier audit, recount; refuses an existing file
+    uv run lr store seed push <pack> --to s3://bucket/prefix   # verify, then upload under <prefix>/<hash>/ with the manifest last, and point <prefix>/manifest.json at it (LR_S3_ENDPOINT for MinIO; credentials from the AWS env names)
+    uv run lr store seed pull <url> [--into DIR]        # s3:// or https://: the manifest, then every file with its sha256 checked; refuses on a mismatch and leaves nothing behind
+    LR_OTLP_ENDPOINT=http://127.0.0.1:4318 uv run lr arm run ...   # any traced run also exports its spans over OTLP/HTTP to that backend (Jaeger, Tempo, a hosted one); unset, spans.jsonl and the MLflow mirror are all there is
     LR_REAL_DATA=1 uv run pytest -m real_data           # the quick model search against the store, read-only, each arm against its stored interval (about a minute); CI unpacks the public pack first
     uv run lr prospect gate          # the five-column readiness gate (present, licensed, covers, servable, versioned); exit 1 when red
     uv run lr prospect drift         # feature distributions now against the latest snapshot; exit 1 on drift

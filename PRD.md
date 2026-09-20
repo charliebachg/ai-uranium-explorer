@@ -615,9 +615,18 @@ MineTRACE protocol, one day.
   registry, the scenes); the read and agent tiers and every table keyed by assessment file ship as empty
   shapes, and only `--private` (36 tables, 22 MB) carries them. `unpack` applies `schema.sql`, loads, runs
   the tier audit and refuses on any hash or count mismatch; the container's first start runs `ensure`.
-  Measured on the live store: pack 3 s, unpack 3 s, every row identical on the way back. **Open**: where the
-  pack is hosted; nothing publishes it yet, so a fresh clone still gets it from the team.
-- **Not started**: auth and roles; OpenTelemetry traces; background jobs.
+  Measured on the live store: pack 3 s, unpack 3 s, every row identical on the way back. **Hosting
+  (2026-09-21)**: `lr store seed push <pack> --to s3://bucket/prefix` uploads a verified pack under
+  `<prefix>/<hash>/`, its manifest last, then `<prefix>/manifest.json` as the pointer, so a partial push is
+  never taken for a pack; `lr store seed pull <url>` (an `s3://` prefix, or an `https://` directory for a
+  static host) reads the manifest, then every file with its sha256 checked, and refuses on any mismatch
+  leaving nothing behind; `ensure` pulls from `LR_SEED_URL` when there is neither a store nor a pack on disk,
+  and an empty prefix is "no seed", not a failed start. The compose file points the app at the compose MinIO
+  (`s3://seeds/latest`). Tested against a fake S3 (moto) and a local static server; not yet exercised against
+  the live MinIO. The mechanism exists; the URL is a deployment choice.
+- **Traces (2026-09-21)**: the in-house spans (`spans.jsonl` per run, mirrored to MLflow Tracing) also export
+  over OTLP/HTTP when `LR_OTLP_ENDPOINT` is set, same ids and attributes, batched and bounded (§A.2).
+- **Not started**: auth and roles; background jobs.
 
 ### A.2 Requirements
 
@@ -645,10 +654,16 @@ MineTRACE protocol, one day.
   OpenTelemetry-based, already installed with the experiment tracker (MLflow 3.16), stores traces beside the
   runs and the registry in the same SQLite file, links a trace to the MLflow run that produced it, and gives
   the benchmark its per-stage metrics from spans. The structured run logs (`events.jsonl`, `calls.jsonl`,
-  the manifest) stay as the ground truth for cost. **Backlog**: an OTLP exporter to Grafana Tempo or Jaeger
-  for traces and Prometheus for metrics once the server has more than one client; alerting on budget and
-  gate-rejection rates; log shipping. No vendor SDK in the code path: the instrumentation is OpenTelemetry,
-  so the backend is a configuration, and Langfuse (backlog, §9.6) plugs in over OTLP without touching the code.
+  the manifest) stay as the ground truth for cost. **OTLP exporter built 2026-09-21; the backend is a
+  configuration**: with `LR_OTLP_ENDPOINT` set, every span is also exported over OTLP/HTTP (protobuf) with the
+  file's own trace and span ids, the same attributes (run id, kind, cell, tool, value ids count, cost, latency,
+  cache key, session id), resource `service.name=legacy-reader` and the pipeline version, from a bounded queue
+  in batches, flushed at the end of each run, never blocking a model call and never raising; `LR_OTLP_HEADERS`
+  carries an auth header for a hosted backend; unset, the exporter is not imported. The compose file carries a
+  commented Jaeger service as the example. **Backlog**: Prometheus for metrics once the server has more than
+  one client; alerting on budget and gate-rejection rates; log shipping. No vendor SDK in the code path: the
+  instrumentation is OpenTelemetry, so the backend is a configuration, and Langfuse (backlog, §9.6) plugs in
+  over OTLP without touching the code.
 - **One-command deploy:** `docker compose up` locally; a container image + migrations for anywhere else.
   Migrations via Alembic; the schema is code.
 
@@ -672,10 +687,13 @@ MineTRACE protocol, one day.
   serving process mixed read-only and read-write DuckDB connections, which DuckDB refuses, so it now runs
   in one mode; and the warm-up had been started before the schema was applied.
 - A fresh clone reaches a running app in one command, with a seeded database, in under 15 minutes. **Met on
-  the mechanism, open on the hosting (2026-09-21)**: the image builds in about 2 minutes, and with a seed pack
-  at `pipeline/data/seed/latest` the app's first start unpacks it into the gitignored store in 3 seconds,
-  verifying every table's hash and row count (§A.1). What is still missing is a place the pack is published
-  from; until one is chosen the clone obtains the pack from the team, and the README says so in place of a URL.
+  the mechanism (2026-09-21)**: the image builds in about 2 minutes, and with a seed pack at
+  `pipeline/data/seed/latest` the app's first start unpacks it into the gitignored store in 3 seconds,
+  verifying every table's hash and row count (§A.1). The pack now travels: `lr store seed push` publishes it
+  to any S3 (the compose MinIO included) and `lr store seed pull <url>` fetches it from an `s3://` or
+  `https://` URL with every hash checked, and the app's first start pulls from `LR_SEED_URL` by itself when
+  nothing is on disk. The mechanism exists; the URL is a deployment choice, and the README names the two
+  commands in place of a host.
 - Every e2e test that passes today passes against the API-backed app. **Met**: 24 e2e and 59 unit tests green
   with retries off, typecheck and lint clean; the API's own suite is 12 tests, the pipeline's 540.
 
@@ -1095,7 +1113,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | Phase | Weeks | What ships | Gate to next phase |
 |---|---|---|---|
 | **0 · Settle the headline** | done | §C.2.1: 48 configurations, three folds, intervals, area-budget capture, MineTRACE protocol | **Confirmed in writing, FINDINGS.md F1** |
-| **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. Seed pack: the store as content-addressed Parquet, unpacked on first start (2026-09-21). **Open**: evidence reads through PostGIS, jobs, auth, tracing, where the seed pack is hosted, §B catalogue + lineage | e2e green against the API (met); one-command start (met given a seed pack; the pack is not yet published anywhere); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
+| **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. Seed pack: the store as content-addressed Parquet, unpacked on first start (2026-09-21). Seed pack transport: push to S3, pull from s3:// or https://, `ensure` pulls from `LR_SEED_URL` (2026-09-21, tested against a fake S3, not yet the live MinIO). OTLP export of the run spans as a configuration (2026-09-21). **Open**: evidence reads through PostGIS, jobs, auth, §B catalogue + lineage | e2e green against the API (met); one-command start (met given a seed pack; the pack's URL is a deployment choice); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
 | **2 · Data ownership** | done for the prototype | §B: gap re-verification (magnetics: published, not yet pulled); the 15 enabled cells frozen with their selection rule (§9.3); their 18 enabled files fetched in full (858 MB raw); lineage clean, every layer hashed; snapshots with feature quantiles; the five-column gate as a command and on the data page. OCR pass over the enabled files' 8,853 pages done (2026-09-20), the OCR-backed text index rebuilt, assay sheets read, the Opus-only read of the top-two drilling files per cell complete (208 of 212 pages, four on the give-up list; F5); 22 reports on the dashboard | Every on-screen value walks to a hashed source pull (**met**: lineage clean, snapshot named by every run); **the §9.1 readiness checklist is green for the focused tasks (met 2026-09-20, `lr prospect gate` green at snapshot 073bd46408b7 with every file read)** |
 | **3 · ML programme** | done for the prototype | §C.2.2–C.2.4: MLflow tracking and registry with the promotion rule (nothing served), six candidates, six ablations, block sizes, the dated hindcast; every run pinned to a store snapshot (`--snapshot`), the drift check (`lr prospect drift`), the model card and every run id on the Eval page; re-run 2026-09-19 pinned, numbers reproduced exactly (seeded). The real-data CI regression runs from the seed pack (`pytest -m real_data`, 2026-09-21). **Backlog**: 1 km and 5 km cells, the LLM-derived features arm | Eval page links every number to a run: **met** (three tables, each row naming its MLflow run and store snapshot) |
 | **4a-lite · Runtime minimum** | done 2026-09-20 | §8.1: cache key covers system prompt and schema (B22); run manifest per invocation; budget ledger checked before every call; OpenTelemetry spans into MLflow Tracing; per-cell incremental results (done in Phase 2) | A prompt change can no longer be served a stale answer (test); a run replays from its manifest; no model calls |

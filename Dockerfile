@@ -1,7 +1,8 @@
 # One image: the built site and the API that serves it. The analytics store (pipeline/data) is mounted, not
 # copied: it is a gigabyte of pulls and a DuckDB file, and it belongs to the machine that computed it. A fresh
 # clone has no store; the first start unpacks the seed pack at LR_SEED_DIR (`lr store seed ensure`) into
-# pipeline/data/lr.duckdb, verifying every table's hash on the way, and does nothing when a store is present.
+# pipeline/data/lr.duckdb, verifying every table's hash on the way, pulling it from LR_SEED_URL first when
+# there is none on disk, and does nothing when a store is present.
 FROM node:22-alpine AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./

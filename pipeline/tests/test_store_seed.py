@@ -276,6 +276,182 @@ def test_ensure_unpacks_only_when_the_store_is_missing(store: Path, tmp_path: Pa
     assert SEED.seed_dir() == SEED.seed_root() / "latest"
 
 
+# ---------------------------------------------------------------- hosting: push and pull
+
+
+@pytest.fixture
+def s3(monkeypatch: pytest.MonkeyPatch):
+    """A fake S3 in this process (moto): no network, no endpoint, the standard AWS names set to test values."""
+    from moto import mock_aws
+
+    for name in ("LR_S3_ENDPOINT", "LR_S3_KEY", "LR_S3_SECRET", "AWS_PROFILE", "AWS_SESSION_TOKEN"):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+    with mock_aws():
+        import boto3
+
+        yield boto3.client("s3", region_name="us-east-1")
+
+
+def _keys(client, bucket: str) -> list[str]:
+    out = client.list_objects_v2(Bucket=bucket)
+    return sorted(o["Key"] for o in out.get("Contents", []))
+
+
+def _same_pack(a: Path, b: Path) -> bool:
+    files = sorted(p.relative_to(a) for p in a.rglob("*") if p.is_file())
+    return files == sorted(p.relative_to(b) for p in b.rglob("*") if p.is_file()) and all(
+        (a / f).read_bytes() == (b / f).read_bytes() for f in files)
+
+
+def test_push_writes_the_pack_under_its_hash_with_the_manifest_last_and_pull_brings_it_back(store: Path, tmp_path: Path, s3, monkeypatch) -> None:
+    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    h = m["pack_sha256"][:16]
+    order: list[str] = []
+    real_put = SEED._S3.put
+    monkeypatch.setattr(SEED._S3, "put", lambda self, name, src: (order.append(name), real_put(self, name, src)))
+    out = SEED.push(Path(m["dir"]), "s3://seeds/latest", log=lambda *a: None)
+    assert out["pack_sha256"] == m["pack_sha256"] and out["files"] == len(order)
+    assert order[-2:] == [f"{h}/manifest.json", "manifest.json"], "the pack's manifest closes its directory; the pointer closes the push"
+    assert all(name.startswith(f"{h}/") for name in order[:-1])
+    keys = _keys(s3, "seeds")
+    assert f"latest/{h}/manifest.json" in keys and "latest/manifest.json" in keys and f"latest/{h}/derived.cell.parquet" in keys
+    assert f"latest/{h}/shapes/read.corpus_page.parquet" in keys, "the shapes travel too"
+    assert not any(k.startswith("latest/") and k.count("/") == 1 and k != "latest/manifest.json" for k in keys), "nothing but the pointer sits at the prefix"
+
+    pulled = SEED.pull("s3://seeds/latest", into=tmp_path / "pulled", log=lambda *a: None)
+    d = Path(pulled["dir"])
+    assert d == tmp_path / "pulled" / h and (tmp_path / "pulled" / "latest").resolve() == d.resolve()
+    assert pulled["pack_sha256"] == m["pack_sha256"] and _same_pack(Path(m["dir"]), d), "every byte the same"
+    assert SEED.verify(d, log=lambda *a: None)["pack_sha256"] == m["pack_sha256"]
+    assert not list((tmp_path / "pulled").glob(".pulling-*"))
+
+    pinned = SEED.pull(f"s3://seeds/latest/{h}", into=tmp_path / "pinned", log=lambda *a: None)
+    assert _same_pack(Path(pinned["dir"]), d), "one pack's own directory pulls the same"
+    logged: list[str] = []
+    again = SEED.pull("s3://seeds/latest", into=tmp_path / "pulled", log=logged.append)
+    assert again["dir"] == str(d) and any("kept" in line for line in logged), "a pack already on disk that verifies is kept"
+
+    rebuilt = tmp_path / "from-remote.duckdb"
+    SEED.unpack(d, into=rebuilt, log=lambda *a: None)
+    assert _counts(rebuilt)["derived.cell_feature"] == 2
+
+
+def test_pull_refuses_a_tampered_object_or_manifest_and_leaves_nothing_behind(store: Path, tmp_path: Path, s3) -> None:
+    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    h = m["pack_sha256"][:16]
+    SEED.push(Path(m["dir"]), "s3://seeds/latest", log=lambda *a: None)
+    raw = bytearray((Path(m["dir"]) / "derived.cell.parquet").read_bytes())
+    raw[len(raw) // 2] ^= 0xFF
+    s3.put_object(Bucket="seeds", Key=f"latest/{h}/derived.cell.parquet", Body=bytes(raw))
+    into = tmp_path / "pulled"
+    with pytest.raises(SEED.SeedError, match="derived.cell.parquet: sha256 .* pull refused"):
+        SEED.pull("s3://seeds/latest", into=into, log=lambda *a: None)
+    assert not (into / h).exists() and not (into / "latest").exists() and not list(into.glob(".pulling-*"))
+
+    edited = json.loads((Path(m["dir"]) / "manifest.json").read_text())
+    edited["tables"]["derived.cell"]["rows"] = 1
+    s3.put_object(Bucket="seeds", Key="latest/manifest.json", Body=json.dumps(edited).encode())
+    with pytest.raises(SEED.SeedError, match="own pack_sha256"):
+        SEED.pull("s3://seeds/latest", into=into, log=lambda *a: None)
+    assert not list(into.iterdir()), "nothing behind"
+
+    with pytest.raises(SEED.SeedError, match="not found"):
+        SEED.pull("s3://seeds/nowhere", into=into, log=lambda *a: None)
+    with pytest.raises(SEED.SeedError, match="unsupported seed URL"):
+        SEED.pull("ftp://seeds/latest", into=into, log=lambda *a: None)
+
+
+def test_a_push_that_stops_part_way_leaves_no_pointer_to_pull(store: Path, tmp_path: Path, s3, monkeypatch) -> None:
+    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    h = m["pack_sha256"][:16]
+    real_put = SEED._S3.put
+
+    def failing_put(self, name: str, src: Path) -> None:
+        if name.endswith("manifest.json"):
+            raise RuntimeError("connection reset")
+        real_put(self, name, src)
+
+    monkeypatch.setattr(SEED._S3, "put", failing_put)
+    with pytest.raises(RuntimeError, match="connection reset"):
+        SEED.push(Path(m["dir"]), "s3://seeds/latest", log=lambda *a: None)
+    keys = _keys(s3, "seeds")
+    assert f"latest/{h}/derived.cell.parquet" in keys and "latest/manifest.json" not in keys
+    monkeypatch.setattr(SEED._S3, "put", real_put)
+    with pytest.raises(SEED.SeedError, match="manifest.json not found"):
+        SEED.pull("s3://seeds/latest", into=tmp_path / "pulled", log=lambda *a: None)
+    with pytest.raises(SEED.SeedError, match="pull only"):
+        SEED.push(Path(m["dir"]), "https://example.invalid/seeds", log=lambda *a: None)
+    with pytest.raises(SEED.SeedError, match="refused"):
+        (Path(m["dir"]) / "derived.cell.parquet").write_bytes(b"not parquet")
+        SEED.push(Path(m["dir"]), "s3://seeds/latest", log=lambda *a: None)
+
+
+@pytest.fixture
+def static_host(tmp_path: Path):
+    """A pushed layout served by the stdlib HTTP server in a thread: <site>/latest/<hash>/... and <site>/latest/manifest.json."""
+    import threading
+    from functools import partial
+    from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+
+    site = tmp_path / "site"
+    site.mkdir()
+    handler = partial(SimpleHTTPRequestHandler, directory=str(site))
+    handler.log_message = lambda *a, **k: None   # type: ignore[attr-defined]
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    yield site, f"http://127.0.0.1:{server.server_address[1]}"
+    server.shutdown()
+    server.server_close()
+
+
+def test_pull_over_https_reads_the_manifest_then_every_file_and_verifies_each(store: Path, tmp_path: Path, static_host) -> None:
+    import shutil
+
+    site, base = static_host
+    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    h = m["pack_sha256"][:16]
+    shutil.copytree(m["dir"], site / "latest" / h)
+    shutil.copy(Path(m["dir"]) / "manifest.json", site / "latest" / "manifest.json")
+
+    pulled = SEED.pull(f"{base}/latest", into=tmp_path / "pulled", log=lambda *a: None)
+    assert _same_pack(Path(pulled["dir"]), Path(m["dir"])) and Path(pulled["dir"]).name == h
+    pinned = SEED.pull(f"{base}/latest/{h}/", into=tmp_path / "pinned", log=lambda *a: None)
+    assert _same_pack(Path(pinned["dir"]), Path(m["dir"]))
+
+    (site / "latest" / h / "shapes" / "read.corpus_page.parquet").write_bytes(b"\x00")
+    with pytest.raises(SEED.SeedError, match="shapes/read.corpus_page.parquet: sha256"):
+        SEED.pull(f"{base}/latest", into=tmp_path / "bad", log=lambda *a: None)
+    assert not list((tmp_path / "bad").iterdir())
+    with pytest.raises(SEED.SeedError, match="not found"):
+        SEED.pull(f"{base}/elsewhere", into=tmp_path / "bad", log=lambda *a: None)
+
+
+def test_ensure_pulls_from_the_seed_url_when_nothing_is_on_disk(store: Path, tmp_path: Path, s3, monkeypatch) -> None:
+    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    SEED.push(Path(m["dir"]), "s3://seeds/latest", log=lambda *a: None)
+    root = tmp_path / "clone-seed"
+    monkeypatch.setattr(SEED, "seed_root", lambda: root)
+    monkeypatch.setenv("LR_SEED_DIR", str(root / "latest"))
+    target = tmp_path / "clone" / "lr.duckdb"
+    monkeypatch.delenv("LR_SEED_URL", raising=False)
+    assert SEED.ensure(into=target, log=lambda *a: None) == "no-seed" and not target.exists()
+    monkeypatch.setenv("LR_SEED_URL", "s3://seeds/nothing-published-yet")
+    assert SEED.ensure(into=target, log=lambda *a: None) == "no-seed" and not target.exists(), "an empty prefix is no seed, not a fault"
+    assert not (root / "latest").exists()
+    monkeypatch.setenv("LR_SEED_URL", "s3://seeds/latest")
+    logged: list[str] = []
+    assert SEED.ensure(into=target, log=logged.append) == "pulled" and target.is_file()
+    assert (root / "latest").resolve() == (root / m["pack_sha256"][:16]).resolve(), "the pulled pack is the local pack from now on"
+    assert _counts(target)["derived.cell"] == 2
+    assert SEED.ensure(into=target, log=lambda *a: None) == "present"
+    assert SEED.ensure(into=tmp_path / "second" / "lr.duckdb", log=lambda *a: None) == "unpacked", "the pack on disk serves the next store"
+    assert not any("testing" in line for line in logged), "no credential in a log line"
+
+
 # ---------------------------------------------------------------- the real-data regression (PRD C.2.4)
 
 

@@ -22,7 +22,8 @@ any of it. Every score on the map is retrospective. See §8.
 ## 2. Running it
 
     cd pipeline && uv sync
-    uv run lr store seed unpack data/seed/latest   # a fresh clone only: rebuild the analytics store from the seed pack, every table's hash verified (the README says where the pack comes from)
+    uv run lr store seed pull <url>                # a fresh clone only: fetch the seed pack from the URL the team publishes it at (s3:// or https://), every file's sha256 checked
+    uv run lr store seed unpack data/seed/latest   # ...and rebuild the analytics store from it, every table's hash verified again
     uv run lr prospect serve          # localhost:8787 — the evidence record and the live chat
     cd ../web && npm install && npm run dev    # http://localhost:5173
 
@@ -377,6 +378,16 @@ when you change a prompt.
 cost figure on the ledger, images sent as parts) while `claude-*` ids stay on the CLI. Each adapter keys
 the cache under its own family, so two models never share an answer.
 
+**Traces.** Every run is a trace and every cell, tool call, model call and gate check inside it is a span
+with a parent, a duration, its attributes (the run id, the cell, the tool, how many value ids came back, the
+cache key, cost and latency of a model call, the session id) and whether it failed. The file is the record:
+`data/runs/<run id>/spans.jsonl`, one line per span as it closes, beside the run's manifest and call log,
+and it survives any backend. The same spans are mirrored to MLflow Tracing beside the
+experiment runs, and, when `LR_OTLP_ENDPOINT` is set, exported over OTLP/HTTP to whatever backend answers
+there (Jaeger, Grafana Tempo, a hosted one with `LR_OTLP_HEADERS` for its auth header) with the same ids and
+attributes, so the backend is a configuration and not a code change. Both are best-effort: batched, flushed at
+the end of the run, never in the way of a model call, and a backend that is down costs one warning.
+
 ### 6.7 The staged analyst (Analyst v1)
 
 The panel of 6.2 reasons in one pass; the staged analyst reasons in stages, after STA-CoT (Findings of EMNLP
@@ -429,8 +440,8 @@ in-house loops use and taking `cell_id` and `session_id`. The server never asks 
 Every session is a run: a directory under `data/runs/<id>-mcp/` with the manifest of 6.6 (store hash,
 prompt hashes, fold, blind-list hash, the scores seen, every abstention and insight) and `spans.jsonl`, one
 span per call carrying the arguments' hash (never their values), the result ids, the latency, the session and
-the run id, mirrored to MLflow Tracing when that is on. Handles expire after four hours and are bound to the
-key that opened them.
+the run id, mirrored to MLflow Tracing when that is on and exported over OTLP when an endpoint is set (6.6).
+Handles expire after four hours and are bound to the key that opened them.
 
 **Connecting.** `lr mcp serve --stdio` is what a client launches; put this in `.mcp.json` (Claude Code) or
 `.cursor/mcp.json` (Cursor) at the project root:

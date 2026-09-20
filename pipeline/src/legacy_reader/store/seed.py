@@ -12,6 +12,13 @@ in the public pack only when every source it carries is marked redistributable t
 assessment file (`file_num`, `doc_sha256`) holds material from documents that carry no named licence and goes
 only in the private pack, as does everything in the `read` tier and the `agent` tier. The decision and its
 reason are written per table into the manifest, so a reader of the pack can see why a table is missing.
+
+Hosting is a transport over the same files, content-addressed by the pack hash: `push` uploads a verified pack
+to `s3://bucket/prefix` under `<prefix>/<hash>/`, its manifest last, then writes `<prefix>/manifest.json` as
+the pointer to the current pack, last of all, so a partial upload is never taken for a pack. `pull` reads the
+manifest at an `s3://` or `https://` URL (a static host, a release's asset directory) and then every file it
+names, checking each sha256 on the way, and refuses on any mismatch leaving nothing behind. `ensure` pulls
+from `LR_SEED_URL` when there is neither a store nor a pack on disk. The URL is a deployment choice.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ import re
 import shutil
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import quote, urlsplit
 
 import duckdb
 
@@ -42,6 +50,10 @@ BATCH = 200_000
 
 class SeedError(Exception):
     """A pack that does not describe what is on disk, or a store that cannot be rebuilt from it."""
+
+
+class SeedMissing(SeedError):
+    """Nothing at the URL: no manifest published there (yet). `ensure` treats it as no seed, not as a fault."""
 
 
 def seed_root() -> Path:
@@ -510,24 +522,255 @@ def unpack(src: Path, into: Path | None = None, log: Callable[[str], None] = pri
     return sidecar
 
 
+# ---------------------------------------------------------------- hosting: push and pull
+
+
+def seed_url() -> str | None:
+    """Where `ensure` pulls a pack from when none is on disk: `LR_SEED_URL`, an `s3://` or `https://` URL, or None."""
+    return os.environ.get("LR_SEED_URL", "").strip() or None
+
+
+def _shown(url: str) -> str:
+    """A URL as it may be logged: scheme, host and path; never a query string or user info."""
+    parts = urlsplit(url)
+    host = parts.hostname or ""
+    if parts.port:
+        host += f":{parts.port}"
+    return f"{parts.scheme}://{host}{parts.path}"
+
+
+def _files(manifest: dict[str, Any]) -> list[tuple[str, str, int]]:
+    """Every file a pack holds besides its manifest: (relative name, sha256, bytes), tables then shapes."""
+    out = [(t["file"], t["sha256"], int(t["bytes"])) for _, t in sorted(manifest.get("tables", {}).items())]
+    out += [(t["shape"], t["shape_sha256"], int(t["shape_bytes"])) for _, t in sorted(manifest.get("excluded", {}).items())
+            if "shape" in t]
+    return out
+
+
+class _S3:
+    """An S3-compatible prefix: the compose MinIO locally (`LR_S3_ENDPOINT`), any S3 elsewhere.
+
+    Credentials come from boto3's own chain, the standard AWS names first (`AWS_ACCESS_KEY_ID`,
+    `AWS_SECRET_ACCESS_KEY`); when those are unset the pair the compose file starts MinIO with (`LR_S3_KEY`,
+    `LR_S3_SECRET`) stands in, so one `.env` serves both. Nothing here logs a credential or a signed URL."""
+
+    scheme = "s3"
+
+    def __init__(self, url: str) -> None:
+        import boto3
+        from botocore.config import Config
+
+        parts = urlsplit(url)
+        if parts.scheme != "s3" or not parts.netloc:
+            raise SeedError(f"not an s3://bucket/prefix URL: {url!r}")
+        self.url = url
+        self.bucket = parts.netloc
+        self.prefix = parts.path.strip("/")
+        endpoint = os.environ.get("LR_S3_ENDPOINT", "").strip() or None
+        creds: dict[str, str] = {}
+        if not os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("LR_S3_KEY"):
+            creds = {"aws_access_key_id": os.environ["LR_S3_KEY"], "aws_secret_access_key": os.environ.get("LR_S3_SECRET", "")}
+        # path-style addressing for a self-hosted endpoint (MinIO answers at host/bucket, not bucket.host)
+        extra = {"s3": {"addressing_style": "path"}} if endpoint else {}
+        config = Config(signature_version="s3v4", retries={"max_attempts": 4}, **extra)
+        self.client = boto3.client("s3", endpoint_url=endpoint, config=config,
+                                   region_name=os.environ.get("AWS_DEFAULT_REGION") or "us-east-1", **creds)
+
+    def key(self, name: str) -> str:
+        return f"{self.prefix}/{name}" if self.prefix else name
+
+    def get(self, name: str, dest: Path) -> None:
+        from botocore.exceptions import ClientError
+
+        try:
+            self.client.download_file(self.bucket, self.key(name), str(dest))
+        except ClientError as err:
+            code = err.response.get("Error", {}).get("Code", "")
+            if code in ("404", "NoSuchKey", "NoSuchBucket", "NotFound"):
+                raise SeedMissing(f"{self.key(name)} not found at {_shown(self.url)}") from None
+            raise SeedError(f"{self.key(name)} at {_shown(self.url)}: {code or type(err).__name__}") from None
+
+    def put(self, name: str, src: Path) -> None:
+        self.client.upload_file(str(src), self.bucket, self.key(name))
+
+    def ensure_bucket(self) -> None:
+        from botocore.exceptions import ClientError
+
+        try:
+            self.client.head_bucket(Bucket=self.bucket)
+            return
+        except ClientError as err:
+            if err.response.get("Error", {}).get("Code", "") not in ("404", "NoSuchBucket", "NotFound"):
+                raise SeedError(f"bucket {self.bucket}: {err.response.get('Error', {}).get('Code') or 'refused'}") from None
+        region = self.client.meta.region_name
+        kwargs = {} if region == "us-east-1" else {"CreateBucketConfiguration": {"LocationConstraint": region}}
+        try:
+            self.client.create_bucket(Bucket=self.bucket, **kwargs)
+        except ClientError as err:
+            raise SeedError(f"bucket {self.bucket} does not exist and could not be created "
+                            f"({err.response.get('Error', {}).get('Code')}); create it first") from None
+
+
+class _Https:
+    """A static host: a directory of files behind any web server, or a release's asset directory. Pull only."""
+
+    scheme = "https"
+
+    def __init__(self, url: str) -> None:
+        parts = urlsplit(url)
+        if parts.scheme not in ("https", "http") or not parts.netloc:
+            raise SeedError(f"not an https:// URL: {url!r}")
+        self.url = url
+        self.base = url.rstrip("/")
+
+    def get(self, name: str, dest: Path) -> None:
+        import httpx
+
+        target = f"{self.base}/{quote(name)}"
+        try:
+            with httpx.stream("GET", target, follow_redirects=True, timeout=120.0) as resp:
+                if resp.status_code == 404:
+                    raise SeedMissing(f"{name} not found at {_shown(self.base)}")
+                resp.raise_for_status()
+                with dest.open("wb") as fh:
+                    for chunk in resp.iter_bytes():
+                        fh.write(chunk)
+        except httpx.HTTPError as err:
+            raise SeedError(f"{name} at {_shown(self.base)}: {type(err).__name__}: {str(err)[:200]}") from None
+
+    def put(self, name: str, src: Path) -> None:
+        raise SeedError("https:// is pull only; push to an s3:// URL and serve it from there")
+
+
+def _remote(url: str) -> _S3 | _Https:
+    scheme = urlsplit(url).scheme
+    if scheme == "s3":
+        return _S3(url)
+    if scheme in ("https", "http"):
+        return _Https(url)
+    raise SeedError(f"unsupported seed URL {url!r}: s3://bucket/prefix or https://host/path")
+
+
+def push(src: Path, to: str, log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Upload a pack to `to` (an `s3://bucket/prefix`): every file under `<prefix>/<hash>/`, that directory's
+    manifest after them, then `<prefix>/manifest.json` as the pointer to the current pack, last of all.
+
+    The pack is verified on disk first, so nothing unverifiable is ever published. A push that stops part way
+    leaves the pointer where it was (at the previous pack, or absent), which is what makes the layout safe to
+    pull from while it is being written to."""
+    manifest = verify(src, log=log)
+    p = Path(manifest["dir"])
+    remote = _remote(to)
+    if isinstance(remote, _Https):
+        raise SeedError("https:// is pull only; push to an s3:// URL and serve it from there")
+    remote.ensure_bucket()
+    h = manifest["pack_sha256"][:16]
+    files = _files(manifest)
+    total = 0
+    for name, _sha, size in files:
+        remote.put(f"{h}/{name}", p / name)
+        total += size
+        log(f"  {name:<44} {size / 1e6:8.2f} MB -> {h}/")
+    remote.put(f"{h}/{MANIFEST}", p / MANIFEST)
+    remote.put(MANIFEST, p / MANIFEST)
+    log(f"  pack {h} ({manifest['scope']}): {len(files)} files, {total / 1e6:.1f} MB pushed to {_shown(to)}; "
+        f"{_shown(to).rstrip('/')}/{MANIFEST} now names it")
+    return {"url": to, "pack_sha256": manifest["pack_sha256"], "scope": manifest["scope"], "files": len(files) + 2, "bytes": total}
+
+
+def pull(url: str, into: Path | None = None, log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Fetch the pack at `url` into `into/<hash>/` (default `data/seed`) and point `into/latest` at it.
+
+    `url` is a prefix holding `manifest.json` and `<hash>/` beside it (what `push` writes), or one pack's own
+    directory (`<prefix>/<hash>`). The manifest is read first and checked against its own address; every file
+    is then fetched and its sha256 checked as it lands; `verify` runs over the whole at the end. Any mismatch
+    refuses the pull and removes what was fetched. A pack already present under `into` is kept if it verifies."""
+    remote = _remote(url)
+    root = into or seed_root()
+    root.mkdir(parents=True, exist_ok=True)
+    work = root / f".pulling-{os.getpid()}"
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir()
+    try:
+        remote.get(MANIFEST, work / MANIFEST)
+        try:
+            manifest = json.loads((work / MANIFEST).read_text())
+        except ValueError as err:
+            raise SeedError(f"{MANIFEST} at {_shown(url)} is not JSON: {err}") from None
+        if manifest.get("version") != SEED_VERSION:
+            raise SeedError(f"pack at {_shown(url)} is version {manifest.get('version')!r}, expected {SEED_VERSION}")
+        if pack_hash(manifest) != manifest.get("pack_sha256"):
+            raise SeedError(f"{MANIFEST} at {_shown(url)} does not hash to its own pack_sha256; refused")
+        h = manifest["pack_sha256"][:16]
+        # the files sit beside the manifest when the URL is the pack's own directory, else under <hash>/
+        sub = "" if url.rstrip("/").endswith("/" + h) else f"{h}/"
+        total = 0
+        for name, sha, size in _files(manifest):
+            dest = work / name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            remote.get(sub + name, dest)
+            got = _sha256(dest)
+            if got != sha:
+                raise SeedError(f"{name}: sha256 {got[:12]} differs from the manifest's {sha[:12]}; pull refused")
+            total += size
+            log(f"  {name:<44} {size / 1e6:8.2f} MB  sha256 ok")
+        verify(work, log=lambda *a: None)
+    except BaseException:
+        shutil.rmtree(work, ignore_errors=True)
+        raise
+    dest = root / h
+    if dest.exists():
+        try:
+            verify(dest, log=lambda *a: None)
+            shutil.rmtree(work)
+            log(f"  pack {h} already under {root} and verifies; kept")
+        except SeedError:
+            shutil.rmtree(dest)
+            work.rename(dest)
+            log(f"  pack {h} under {root} did not verify; replaced")
+    else:
+        work.rename(dest)
+    latest = root / "latest"
+    if latest.is_symlink() or latest.exists():
+        latest.unlink() if latest.is_symlink() or latest.is_file() else shutil.rmtree(latest)
+    latest.symlink_to(dest.name)
+    log(f"  pack {h} ({manifest['scope']}): {len(manifest['tables'])} tables, {total / 1e6:.1f} MB from {_shown(url)} -> {dest}")
+    manifest["dir"] = str(dest)
+    return manifest
+
+
 def ensure(seed: Path | None = None, into: Path | None = None, log: Callable[[str], None] = print) -> str:
     """The container's first step: unpack the seed when there is no store. Returns what it did.
 
-    "present" when a store exists (nothing touched), "unpacked" when the seed was unpacked into place, and
-    "no-seed" when there is neither; that last case is not an error here, so the app still starts and says
-    what is missing."""
+    "present" when a store exists (nothing touched), "unpacked" when a pack on disk was unpacked into place,
+    "pulled" when there was no pack on disk and `LR_SEED_URL` supplied one (pulled under `data/seed`, then
+    unpacked), and "no-seed" when there is none of these; that last case is not an error here, so the app
+    still starts and says what is missing."""
     target = into or db_path()
     if target.is_file():
         log(f"  store present at {target}; seed not needed")
         return "present"
     src = seed or seed_dir()
-    if not (src / MANIFEST).is_file():
-        log(f"  no store at {target} and no seed pack at {src} (set LR_SEED_DIR, or put a pack at "
-            f"{seed_root() / 'latest'}); the app starts without a store")
+    if (src / MANIFEST).is_file():
+        unpack(src, target, log=log)
+        return "unpacked"
+    url = seed_url()
+    if not url:
+        log(f"  no store at {target} and no seed pack at {src} (set LR_SEED_DIR, put a pack at "
+            f"{seed_root() / 'latest'}, or set LR_SEED_URL to pull one); the app starts without a store")
         return "no-seed"
-    unpack(src, target, log=log)
-    return "unpacked"
+    log(f"  no store at {target} and no seed pack at {src}; pulling from {_shown(url)}")
+    try:
+        pulled = pull(url, into=seed_root(), log=log)
+    except SeedMissing as err:
+        # nothing published there yet is the no-seed case, not a fault: the app starts and says so. A pack that
+        # is there and does not verify is a fault, and still raises.
+        log(f"  {err}; the app starts without a store")
+        return "no-seed"
+    unpack(Path(pulled["dir"]), target, log=log)
+    return "pulled"
 
 
-__all__ = ["RULE", "SEED_VERSION", "SeedError", "decisions", "ensure", "pack", "pack_hash", "seed_dir", "seed_root",
-           "unpack", "verify", "TIER_BY_SCHEMA"]
+__all__ = ["RULE", "SEED_VERSION", "SeedError", "SeedMissing", "decisions", "ensure", "pack", "pack_hash", "pull", "push",
+           "seed_dir", "seed_root", "seed_url", "unpack", "verify", "TIER_BY_SCHEMA"]

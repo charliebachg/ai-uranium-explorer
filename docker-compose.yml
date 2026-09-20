@@ -2,7 +2,8 @@
 # and tiles, Redis for the job queue. DuckDB stays the analytics engine and lives in pipeline/data, not here.
 # `docker compose up -d --build` brings everything up; `lr store migrate` then `lr store sync-pg` fill the
 # serving database. A fresh clone has no analytics store: put a seed pack at pipeline/data/seed/latest (that
-# directory is mounted into the app) and the app unpacks it into pipeline/data/lr.duckdb on its first start.
+# directory is mounted into the app), or publish one to the compose MinIO (`lr store seed push <pack> --to
+# s3://seeds/latest`), and the app unpacks it into pipeline/data/lr.duckdb on its first start.
 services:
   app:
     build: .
@@ -10,6 +11,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      minio:
+        condition: service_started   # the first start may pull the seed pack from it
     environment:
       LR_PG_DSN: postgresql://${LR_PG_USER:-lr}:${LR_PG_PASSWORD:-lr}@db:5432/${LR_PG_DB:-lr}
       LR_S3_ENDPOINT: http://minio:9000
@@ -17,6 +20,18 @@ services:
       # the seed pack the first start unpacks when pipeline/data/lr.duckdb is missing; a container path, under
       # the mounted data directory, so a pack the host keeps at pipeline/data/seed/latest is what the app sees
       LR_SEED_DIR: /app/pipeline/data/seed/latest
+      # ...and when there is none there either, where `lr store seed ensure` pulls one from: the compose MinIO,
+      # bucket `seeds`, prefix `latest` (what `lr store seed push <pack> --to s3://seeds/latest` writes, with
+      # LR_S3_ENDPOINT=http://127.0.0.1:9000 on the host). An empty bucket is "no seed", not a failed start.
+      # Written 2026-09-21 against moto's fake S3 in the test suite; not exercised against the live MinIO that
+      # day (Docker was not reachable on the development machine), so the first real run is the check.
+      LR_SEED_URL: s3://seeds/latest
+      # the S3 client reads the standard AWS names; these are the pair MinIO below is started with
+      AWS_ACCESS_KEY_ID: ${LR_S3_KEY:-lr}
+      AWS_SECRET_ACCESS_KEY: ${LR_S3_SECRET:-lr-minio-secret}
+      # traces over OTLP/HTTP to a backend, when one is running (the commented service below); unset, the
+      # spans stay in each run's spans.jsonl and the MLflow mirror, and the SDK is not imported
+      # LR_OTLP_ENDPOINT: http://jaeger:4318
     env_file:
       - path: pipeline/.env      # the OpenAI key and its spend ceiling; gitignored, never copied into the image
         required: false
@@ -45,6 +60,16 @@ services:
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
+  # A trace backend, for when the machine has room for one (the development machine has 9 GB and does not):
+  # Jaeger's all-in-one takes OTLP/HTTP on :4318 and shows traces on :16686. Uncomment it and the app's
+  # LR_OTLP_ENDPOINT above. Grafana Tempo is the other choice the PRD names (its image needs a config file;
+  # see grafana/tempo's docker-compose examples), and any OTLP backend, hosted or not, works the same way:
+  # the instrumentation is OpenTelemetry, so the backend is this configuration and not a code change.
+  # jaeger:
+  #   image: jaegertracing/all-in-one:1.62.0
+  #   environment:
+  #     COLLECTOR_OTLP_ENABLED: "true"
+  #   ports: ["16686:16686", "4318:4318"]
 volumes:
   lr-pg: {}
   lr-minio: {}

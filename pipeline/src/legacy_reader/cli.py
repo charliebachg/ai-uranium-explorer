@@ -870,9 +870,45 @@ def store_seed_unpack_cmd(
         raise typer.Exit(1)
 
 
+@seed_app.command("push")
+def store_seed_push_cmd(
+    src: str = typer.Argument(..., help="the pack directory, or its manifest.json"),
+    to: str = typer.Option(..., "--to", help="s3://bucket/prefix; endpoint from LR_S3_ENDPOINT, credentials from the AWS env names"),
+) -> None:
+    """Verify a pack, then upload it under <prefix>/<hash>/ with its manifest last, and point <prefix>/manifest.json at it."""
+    from pathlib import Path
+
+    from .store.seed import SeedError, push
+
+    try:
+        out = push(Path(src), to, log=typer.echo)
+    except SeedError as e:
+        typer.echo(f"  {e}")
+        raise typer.Exit(1)
+    typer.echo(json.dumps(out))
+
+
+@seed_app.command("pull")
+def store_seed_pull_cmd(
+    url: str = typer.Argument(..., help="s3://bucket/prefix or https://host/path: a prefix push wrote, or one pack's <hash>/ directory"),
+    into: str = typer.Option(None, "--into", help="root to write <hash>/ and the latest symlink under; default data/seed"),
+) -> None:
+    """Fetch manifest.json, then every file it names with its sha256 checked; refuses on any mismatch and leaves nothing behind."""
+    from pathlib import Path
+
+    from .store.seed import SeedError, pull
+
+    try:
+        m = pull(url, into=Path(into) if into else None, log=typer.echo)
+    except SeedError as e:
+        typer.echo(f"  {e}")
+        raise typer.Exit(1)
+    typer.echo(json.dumps({"pack_sha256": m["pack_sha256"], "scope": m["scope"], "tables": len(m["tables"]), "dir": m["dir"]}))
+
+
 @seed_app.command("ensure")
 def store_seed_ensure_cmd() -> None:
-    """The container's first step: unpack LR_SEED_DIR (default data/seed/latest) when data/lr.duckdb is missing; otherwise nothing."""
+    """The container's first step: when data/lr.duckdb is missing, unpack LR_SEED_DIR (default data/seed/latest), or pull LR_SEED_URL first; otherwise nothing."""
     from .store.seed import SeedError, ensure
 
     try:
