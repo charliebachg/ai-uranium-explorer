@@ -221,7 +221,8 @@ def test_a_benchmark_session_lets_nothing_that_places_the_ground_reach_the_model
                                          f"b:{BENCH}:cell:holes_n"]
     assert s.refusals == {"B17": 1, "B18": 1, "B30": 1}
     assert (s.stage / "tool_04_retrieve.json").is_file()
-    assert "Jefferson et al. 2007 on the McArthur River camp" in text, "literature text is the same for every cell"
+    assert "Jefferson et al. 2007" not in text and "McArthur" not in text, \
+        "the literature line goes: the executor reads the raw file, and the line names deposits"
 
 
 def test_a_benchmark_session_refuses_a_cell_named_by_id_and_needs_a_bench_id(
@@ -294,7 +295,7 @@ def test_effort_off_drops_effort_rows_and_refuses_the_drillhole_layer(store: Pat
         s.call("nearby", {"cell_id": "$cell", "layer": "compilation"})
     assert err.value.rule == "switch" and world.received["nearby"] == []
     assert s.call("nearby", {"cell_id": "$cell", "layer": "em_conductors"}).rows[0]["count"] == 4
-    assert s.refusals == {"switch": 2}, "one effort row and one refused call"
+    assert s.refusals == {"switch": 1} and s.effort_rows_dropped == 1, "one refused call; a dropped effort row is the switch working"
 
 
 def test_criteria_off_refuses_the_breakdown(store: Path, world: FakeWorld, tmp_path: Path) -> None:
@@ -339,3 +340,31 @@ def test_the_default_registry_is_the_live_one(store: Path, tmp_path: Path) -> No
     out = s.call("cell_features", {"cell_id": "$cell"})
     assert out.tool == "cell_features" and f"c:cell:{CELL}:d_conductor_m" in s.values
     assert (tmp_path / "live" / "tool_01_cell_features.json").is_file()
+
+
+def test_a_blinded_result_loses_the_literature_evidence_and_every_place_name(store: Path, world: FakeWorld, tmp_path: Path) -> None:
+    """The frozen packs kept `evidence` because their renderer never printed it; the executor reads the raw
+    file, so a blinded session drops the field and scrubs the handbook's own place names everywhere else."""
+    from legacy_reader.prospect.tools import ToolResult
+
+    def criteria_breakdown(cell_id: str) -> ToolResult:
+        out = ToolResult("criteria_breakdown", {"cell_id": cell_id})
+        out.rows = [{"criterion": "unconformity_depth", "state": "met", "weight": 2.0, "status": "assumed",
+                     "evidence": "Cigar Lake 480 m, McArthur River 530 to 640 m",
+                     "caveat": "drawn from deposits found in the Athabasca; survival bias"}]
+        out.note = "Unknown and absent are different answers."
+        return out
+
+    tools = {**fake_registry(world), "criteria_breakdown": criteria_breakdown}
+    for purpose in ("benchmark", "scored"):
+        s = S.Session.open(CELL, purpose, fold=FOLD, switches=ALL_ON, bench_id="b-0009" if purpose == "benchmark" else None,
+                           blind=[], stage=tmp_path / purpose, tools=tools, forbidden=set())
+        s.call("criteria_breakdown", {"cell_id": "$cell"})
+        text = everything(s)
+        assert "evidence" not in json.loads((s.stage / "tool_01_criteria_breakdown.json").read_text())["rows"][0]
+        for leak in ("Cigar", "McArthur", "Athabasca"):
+            assert leak not in text, (purpose, leak)
+        assert "survival bias" in text, "the caveat survives, scrubbed"
+    live = S.Session.open(CELL, "dashboard", fold=None, switches=ALL_ON, stage=tmp_path / "live", tools=tools)
+    live.call("criteria_breakdown", {"cell_id": "$cell"})
+    assert "Cigar Lake" in everything(live), "the dashboard is not closed-book"

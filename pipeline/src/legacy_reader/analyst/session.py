@@ -43,6 +43,11 @@ from ..prospect import tools as T
 from ..runtime.tracing import set_attrs, span
 from ..store import connect
 from .arms import Switches
+from .v0 import PLACE_NAMES
+
+#: deposits, camps and regions the handbook names: scrubbed from every blinded result along with the store's
+#: own names, because the executor reads the raw tool files and a criterion's literature line names them
+PLACES: frozenset[str] = frozenset(PLACE_NAMES)
 
 Purpose = Literal["dashboard", "scored", "benchmark"]
 PURPOSES: tuple[str, ...] = ("dashboard", "scored", "benchmark")
@@ -72,6 +77,16 @@ def _cited(row: dict[str, Any]) -> set[str]:
     """The ids a row points at: every `*_id` key, which is how the tools bind a row to its values."""
     return {v for k, v in row.items() if k.endswith("_id") and isinstance(v, str)}
 
+
+
+def _closed_book(payload: Any) -> Any:
+    """The payload without any row's `evidence` field: the literature line behind a criterion, which names
+    the deposits its threshold was read from. The caveat stays; it is scrubbed like everything else."""
+    if isinstance(payload, dict):
+        return {k: _closed_book(v) for k, v in payload.items() if k != "evidence"}
+    if isinstance(payload, list):
+        return [_closed_book(v) for v in payload]
+    return payload
 
 def _swap(node: Any, old: str, new: str) -> Any:
     """`old` replaced by `new` in every string value; keys are left alone, as `scrub` leaves them."""
@@ -114,6 +129,8 @@ class Session:
     expert_ids: set[str] = field(default_factory=set)
     #: every refusal, a whole call or a single row, by the rule that refused it
     refusals: dict[str, int] = field(default_factory=dict)
+    #: effort rows removed because the arm's switch is off: a switch acting as designed, not a refusal
+    effort_rows_dropped: int = 0
 
     @classmethod
     def open(cls, cell_id: str, purpose: Purpose, *, fold: int | None, switches: Switches,
@@ -237,7 +254,7 @@ class Session:
             result = self._drop_rows(result, "B30", lambda r: r.get("distance_km") == 0.0)
         if not self.switches.effort_features:
             kept = P.drop_effort(result)
-            self._refuse("switch", len(result.rows) - len(kept.rows))
+            self.effort_rows_dropped += len(result.rows) - len(kept.rows)
             result = kept
         return result
 
@@ -276,11 +293,18 @@ class Session:
         the model's own, so a keyword the session added (the mask, the blind-list) is never read back."""
         payload = result.as_json()
         del payload["args"]
-        if self.purpose == "benchmark":
-            payload = P.scrub(P.anonymise(payload, self.cell_id, self.bench_id), self.forbidden)
-        elif self.purpose == "scored":
-            # the cell-id pattern would otherwise cut the id out of every value it sits in
-            payload = _swap(P.scrub(_swap(payload, self.cell_id, _KEEP), self.forbidden), _KEEP, self.cell_id)
+        if self.blinded:
+            # The frozen packs kept a criterion's literature `evidence` and `caveat` because their renderer
+            # never printed them; the executor reads the raw file, so here the evidence line goes (it names
+            # the deposits a threshold came from) and nothing is exempt from the scrub, the handbook's own
+            # place names included.
+            payload = _closed_book(payload)
+            names = self.forbidden | PLACES
+            if self.purpose == "benchmark":
+                payload = P.scrub(P.anonymise(payload, self.cell_id, self.bench_id), names, keep=frozenset())
+            else:
+                # the cell-id pattern would otherwise cut the id out of every value it sits in
+                payload = _swap(P.scrub(_swap(payload, self.cell_id, _KEEP), names, keep=frozenset()), _KEEP, self.cell_id)
         payload["args"] = shown_args
         expert = {vid for vid, v in payload["values"].items()
                   if isinstance(v, dict) and (v.get("tier") == "expert" or v.get("expert") is True)}
@@ -326,4 +350,5 @@ class Session:
             "switches": asdict(self.switches), "scores_seen": list(self.scores_seen),
             "n_values": len(self.values), "n_expert_ids": len(self.expert_ids), "n_calls": len(self.calls),
             "refusals": {rule: self.refusals.get(rule, 0) for rule in RULES},
+            "effort_rows_dropped": self.effort_rows_dropped,
         }
