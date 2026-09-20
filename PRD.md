@@ -539,6 +539,7 @@ MineTRACE protocol, one day.
 
 | Item | Why not now | Unblocks when |
 |---|---|---|
+| Observability stack beyond MLflow Tracing (OTLP to Tempo or Jaeger, Prometheus metrics, alerts on budget and gate rejections) | one client, one machine; MLflow Tracing already holds every span | the MCP server has a second client, or a run is unattended overnight |
 | The other eight switches of the §8.5 matrix | each is another 6–13 hours per arm | the four-arm table shows where the variance is |
 | Multimodal arm and Tier 4 chip agreement | Sentinel-2 and DEM features not built; effort mask (B15) not designed | §B.2 chips exist |
 | Deep learning models (§C.2.2) | no chips; 60 positives | §B.2 chips exist and the PU re-test says the labels support it |
@@ -593,8 +594,16 @@ MineTRACE protocol, one day.
   transcript *is* the benchmark data for §D.
 - **Auth** minimal but real: API keys per user, roles (viewer / geologist / admin). Enough to record *who*
   adjudicated a memo.
-- **Observability:** OpenTelemetry traces; every agent run a trace, every tool call a span carrying the value
-  ids it returned. Cost and latency per turn recorded, not estimated.
+- **Observability (decided 2026-09-20, built with 4a):** instrument with the **OpenTelemetry API** (every
+  agent run a trace, every tool call and model call a span carrying the value ids it returned, the cache key,
+  cost and latency, session and run id) and use **MLflow Tracing** as the backend for the prototype: it is
+  OpenTelemetry-based, already installed with the experiment tracker (MLflow 3.16), stores traces beside the
+  runs and the registry in the same SQLite file, links a trace to the MLflow run that produced it, and gives
+  the benchmark its per-stage metrics from spans. The structured run logs (`events.jsonl`, `calls.jsonl`,
+  the manifest) stay as the ground truth for cost. **Backlog**: an OTLP exporter to Grafana Tempo or Jaeger
+  for traces and Prometheus for metrics once the server has more than one client; alerting on budget and
+  gate-rejection rates; log shipping. No vendor SDK in the code path: the instrumentation is OpenTelemetry,
+  so the backend is a configuration.
 - **One-command deploy:** `docker compose up` locally; a container image + migrations for anywhere else.
   Migrations via Alembic; the schema is code.
 
