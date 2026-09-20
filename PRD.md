@@ -902,19 +902,102 @@ Six deterministic tools (`cell_features`, `cell_scores`, `criteria_breakdown`, `
 - **Unknown-vs-absent everywhere**: every tool distinguishes "no observation" from "observed low", in its
   return type, not in prose.
 
-### E.3 Why an MCP server (must)
-Today the tools exist only inside our loop. Exposing them over the **Model Context Protocol** means:
-- The **same** tools serve our UI, a geologist's own Claude or Cursor session, and the benchmark harness — one
-  contract, one implementation, one place to fix a bug.
-- A geologist can bring their own client. That is the difference between "a demo app" and "a capability
-  their team can adopt."
-- The tool contract becomes testable and versioned independently of any agent design.
-- Configurations in §D become swappable clients of the same server, which is what makes the comparison fair.
+### E.3 The MCP server — why, and the design (must; designed 2026-09-20, built in Phase 4a)
 
-Design: a FastMCP server over the FastAPI backend; each tool returns typed values with ids (the value-id
-contract carried into the protocol); resources for the handbook and criteria; prompts for the three roles.
-Auth by API key. The custom loop is retired in favour of the model's native tool calling against the server,
-with the gate applied to the streamed tool results.
+**Why.** Today the tools exist only inside our loop. Exposing them over the **Model Context Protocol** means
+the **same** tools serve our UI, a geologist's own Claude or Cursor session, and the benchmark harness: one
+contract, one implementation, one place to fix a bug. A geologist can bring their own client, which is the
+difference between "a demo app" and "a capability their team can adopt". The tool contract becomes testable
+and versioned independently of any agent design, and the §8.5 configurations become swappable clients of the
+same server, which is what makes their comparison fair.
+
+**What the field has done.** GeoMMAgent (Xiao et al. 2026) wraps its remote-sensing toolkit in
+MCP-compliant tools and runs plan → execute → self-evaluate over them, reaching 88.4% on GeoMMBench against
+86.5% for human experts. GeoMCP (2026) exposes geotechnical method cards: the assistant orchestrates, a
+constrained engine computes, units are checked before evaluation, every result carries its calculation trace,
+and the cards reproduce Eurocode worked examples to 0.15%. The SPECFEM MCP suite (Ren et al. 2025) decomposes a
+simulation code into discrete agent-executable tools with both automated and human-in-the-loop modes. The
+science-and-HPC experience report (2025) is the closest thing to a design manual: mid-level tool granularity,
+resources for data and tools for actions, structured predictable errors, job ids instead of blocking for long
+operations, server-side validation and per-client quotas. Our design follows those, adds the value-id contract
+none of them has, and keeps one boundary they all keep: the server computes, the client reasons.
+
+**Design principles**
+1. **A model never computes; a tool always does.** Every number a tool returns is a `Val` with an id inside
+   `structuredContent`; the `content` text block is the prose the model may quote back. A number that is not
+   in the session's registry cannot reach a memo, a chat answer, a node or the screen.
+2. **Resources hold data, tools take actions.** The handbook, the criteria table, a cell's evidence record,
+   its stored chains, run manifests, the readiness gate and the reading inventory are resources. Tools are
+   the questions a geologist asks and the three actions an agent may take.
+3. **Mid-level granularity**: one tool per question (features here, scores here, what each criterion
+   contributed, what is known nearby, what the files say), not one per column and not one "analyse".
+4. **Unknown and absent are distinct types** in every `outputSchema`, never a null.
+5. **Errors are tool results**, `isError: true` with the reason the model can act on (a cell outside the
+   grid, a feature not measured, a file on the blind-list); protocol errors only for a malformed request.
+6. **No session on the wire**: `open_session` returns a handle and every call carries it, so the gate can
+   bind a claim to the values returned in that session and the manifest can name them. Handles are opaque,
+   expire, and are validated against the caller's key on every call.
+7. **Long work is a Task**, not a blocked call: `run_analyst` returns a task handle, the chain runs offline
+   and resumably (Phase 2's lesson), the client polls `tasks/get`, and a spend approval surfaces as
+   `input_required`.
+8. **The gate is middleware in three places**: the server stamps every outgoing result into the session
+   registry; the client adapter checks every message an agent emits against that registry before passing it
+   on; the store checks the whole chain at publish. A rejection goes back to its producer with the number.
+9. **Auth by API key with scopes** (`read`, `record`, `run`); `tools/list` is filtered by scope, as the
+   protocol allows. Local-only by default; the public-safe build never serves non-redistributable text.
+10. **Every call is a span**: arguments hash, result ids, cost, latency, session and run id, exported with
+    OpenTelemetry, so §D computes per-stage metrics from traces rather than logs.
+11. **Sampling is deliberately unused.** The server never asks a client's model for a completion; that would
+    put a model inside the thing that is supposed to be deterministic.
+
+**Transport and hosting.** Streamable HTTP mounted on the FastAPI app at `/mcp` (same process, same store
+connection, same cache and spend ledger), plus stdio for a local Claude Code or Cursor session. FastMCP from
+the Python SDK; `serverInfo.version` is the tool-contract version (`prospect/tools/v2`); the tool list is
+deterministic with a `ttlMs`, so clients and prompt caches can hold it.
+
+**Tool catalogue v1**
+
+| Tool | Kind | Arguments | `structuredContent` | Notes |
+|---|---|---|---|---|
+| `open_session` | action | `cell_id`, `purpose` (dashboard, scored, benchmark), `fold?` | `session_id`, `cell`, `fold`, `blind_list_hash`, `expires_at` | scored and benchmark sessions turn on the out-of-fold scores, the label mask and the blind-list |
+| `cell_features` | read | `session_id`, `cell_id` | features with value ids, observation counts, `unknown` flags | exists today |
+| `cell_scores` | read | `session_id`, `cell_id` | criteria, learned, effort scores; model version and fold seen | out-of-fold only in scored sessions (B18) |
+| `criteria_breakdown` | read | `session_id`, `cell_id` | per-criterion contribution, evidence ids, status published / assumed / folklore | exists today |
+| `label_context` | read | `session_id`, `cell_id`, `radius_km` | nearest deposit and occurrence with distances | the evaluated cell's own label masked in scored sessions (B30) |
+| `nearby` | read | `session_id`, `cell_id`, `layer`, `radius_m` | counts and nearest features from one evidence layer | new; the analyst's box maker, deterministic |
+| `coverage` | read | `session_id`, `feature_key?` | share of the grid covered, thin flag | exists today |
+| `crosscheck` | read | `session_id`, `hole_id` or `cell_id` | provincial matches, offsets, datum signatures | from `derived.crosscheck` |
+| `retrieve` | read | `session_id`, `query`, `cell_id?`, `k`, `radius_km` | passages with file, page, tier, `source` (text layer or OCR) | blind-list enforced in scored sessions (B17) |
+| `check_claims` | read | `session_id`, `claims[]` | problems list, resolved ids | the gate as a callable, so a stock client can self-check before answering |
+| `abstain` | action | `session_id`, `reason` (not_measured, outside_grid, no_value, out_of_scope), `detail` | `abstain_id` | refusal becomes measurable (GeoBenchX) |
+| `record_insight` | action | `session_id`, `cell_id`, `text`, `author` | `expert_id` | writes the `expert` tier; client confirms |
+| `run_analyst` | task | `session_id`, `cell_id`, `config`, `budget_usd` | task handle → `chain_id`, verdict, manifest id | Phase 4d; until then returns `isError` "not available" |
+
+Annotations: every read tool `readOnlyHint: true`, `openWorldHint: false` (a closed store); the two actions
+and the task are idempotent by handle. Resources: `lr://handbook`, `lr://criteria`, `lr://cell/{id}/evidence`,
+`lr://cell/{id}/chains`, `lr://run/{id}/manifest`, `lr://readiness/gate`, `lr://reading/inventory`. Prompts:
+`proponent`, `skeptic`, `adjudicator`, `analyst.executor` (the node protocol), `analyst.verifier` (the
+skeptic brief), `interface.router`, each taking `cell_id` and `session_id`, so any client runs the same roles.
+
+**What Phase 4a builds** (the rest is backlog below): the server with the ten read and action tools (the six
+that exist, `open_session`, `nearby`, `check_claims`, `abstain`; `record_insight` with the `expert` tier
+schema; `run_analyst` as a stub), the seven resources, the six prompts, the gate middleware, run manifests,
+API-key scopes, spans to a local exporter, both transports, and contract tests: every number carries an id,
+unknown and absent are distinct types, a scored session refuses a blind-listed file and serves only
+out-of-fold scores, a stock client (Claude Code as MCP client) gets a gated answer.
+
+**MCP backlog, stated as such**
+
+| Item | Why not in 4a | Unblocks when |
+|---|---|---|
+| Tasks extension for `run_analyst` (polling, `input_required` spend approval, durable handles) | the analyst loop does not exist until 4d | Phase 4d |
+| OAuth in place of API keys | local and single-tenant today | a second organisation uses the server |
+| Per-client rate limits and quotas | one client at a time | the benchmark harness runs arms in parallel |
+| `notifications/tools/list_changed` and resource subscriptions | the tool list is fixed per version | tools change between versions |
+| MCP Apps (the evidence rail rendered inline in a chat client) | UI work with no bearing on the benchmark | a geologist asks for it |
+| Skills over MCP (the handbook and the node protocol as discoverable skills) | prompts cover it | the spec's skills extension stabilises |
+| `x-mcp-header` routing, caching headers | single process | a proxy sits in front of the server |
+| Image content in results (page crops beside a passage) | the passages carry page and box already | the extractor agent's review queue (4b) |
 
 ### E.4 Agent runtime (should)
 Keep the orchestration in-house and small (a typed state machine over MCP calls) rather than adopting a large
@@ -941,7 +1024,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. **Open**: evidence reads through PostGIS, jobs, auth, tracing, the seed snapshot, §B catalogue + lineage | e2e green against the API (met); one-command start (met when the store exists); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
 | **2 · Data ownership** | done for the prototype | §B: gap re-verification (magnetics: published, not yet pulled); the 15 enabled cells frozen with their selection rule (§9.3); their 18 enabled files fetched in full (858 MB raw); lineage clean, every layer hashed; snapshots with feature quantiles; the five-column gate as a command and on the data page. OCR pass over the enabled files' 8,853 pages done (2026-09-20), the OCR-backed text index rebuilt, assay sheets read, the Opus-only read of the top-two drilling files per cell complete (208 of 212 pages, four on the give-up list; F5); 22 reports on the dashboard | Every on-screen value walks to a hashed source pull (**met**: lineage clean, snapshot named by every run); **the §9.1 readiness checklist is green for the focused tasks (met 2026-09-20, `lr prospect gate` green at snapshot 073bd46408b7 with every file read)** |
 | **3 · ML programme** | done for the prototype | §C.2.2–C.2.4: MLflow tracking and registry with the promotion rule (nothing served), six candidates, six ablations, block sizes, the dated hindcast; every run pinned to a store snapshot (`--snapshot`), the drift check (`lr prospect drift`), the model card and every run id on the Eval page; re-run 2026-09-19 pinned, numbers reproduced exactly (seeded). **Backlog**: 1 km and 5 km cells, the LLM-derived features arm, the real-data CI regression (needs the seed snapshot) | Eval page links every number to a run: **met** (three tables, each row naming its MLflow run and store snapshot) |
-| **4a · Runtime and tool contract** | 1 | §8.1, §E.3: MCP server over the six tools plus abstain, record-insight and run-analyst; gate as middleware at every handoff; run manifests; tracing; cache key covers prompt and schema | A stock client gets a gated answer; a run replays from its manifest; B22 closed |
+| **4a · Runtime and tool contract** | 1 | §8.1, §E.3 (design v1, 2026-09-20): the MCP server with its tool catalogue, resources and prompts; `open_session` handles; gate as middleware at every handoff; run manifests; API-key scopes; tracing; cache key covers prompt and schema; `run_analyst` stubbed until 4d | A stock client gets a gated answer; a run replays from its manifest; the contract tests in §E.3 pass; B22 closed |
 | **4b · Extractor agent** | 1 | §8.2: schema-constrained reading loop, validators, second-family agreement, review queue; `expert` tier schema | The Phase 2 pre-read re-run through the new loop with second-family agreement; 30 hand-keyed pages as the first Tier 4 gold; precision and recall measured against them |
 | **4c · Interface agent** | 1 | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff | Tier 1 pass rate, refusal and false-refusal rates measured with a denominator; the 30 rating questions drafted |
 | **4d · Analyst agent v1** | 2 | §8.4: stages 0–6 on the structured arm; both deciders; out-of-fold scores and blind-list enforced by tests | Chains computed and stored for every enabled cell (§9.4); every node gated; B17 and B18 have failing-then-passing tests |
