@@ -1,6 +1,6 @@
 """Stage 3, the mechanical verifier: the free gate every node passes before a model sees it.
 
-Five rules, none of them judgement:
+Six rules, none of them judgement:
 
 1. **Every number resolves.** `memo.check_claims` binds each number in the text to a cited value id, with
    the same leniency for quoted strings a memo gets and no more.
@@ -13,9 +13,17 @@ Five rules, none of them judgement:
    the membership id counts. A node may state the opposite if it says so ("however", "but", "despite").
 4. **Unknown only where unmeasured.** A node may say `unknown` when its feature has no value here or it
    cites no value for that feature; citing a present value for the feature and calling it unknown is a
-   dodge. Strength is 0 when unknown.
+   dodge. Strength is 0 when unknown. A feature whose layer was never mapped around the cell (rule 6) counts
+   as unmeasured here, whatever value the distance feature carries.
 5. **No arithmetic.** An equals sign, a plus, a "≈", or "sum", "average", "total of", "per cent of" next
    to a number: the model computed, and the model never computes.
+6. **Absence of mapping is not absence of features.** A `not_met` node is refused when the staged `nearby`
+   (or `crosscheck`) result for its layer says `in_footprint` is 0: nothing of that layer was mapped or
+   sampled around the cell, so an empty radius there is unknown, and the feedback names the layer and the
+   cell and says to record unknown. A `met` node is never refused this way, because a feature inside the
+   radius is evidence whatever the footprint says. The layer is the plan's own `FEATURE_LAYER` for a
+   criterion and `CROSSCHECK_LAYERS` for a pair; a node whose registry holds no flag for its layer is not
+   held to a footprint nobody computed.
 
 A rejected node goes back to the executor with `feedback` that escalates the way STA-CoT's rule controller
 does (their Appendix C.2): the reasons; then the reasons and the ids the node may cite; then the protocol in
@@ -32,12 +40,21 @@ import numpy as np
 
 from ..prospect.criteria import CriteriaSet, Criterion, membership
 from ..prospect.memo import NUMBER, NUMBER_LABEL, NUMBER_UNIT, check_claims
+from .plan import FEATURE_LAYER
 from .wire import MAX_ATTEMPTS, TEXT_MAX, Node, parse_id
 
 __all__ = ["MAX_ATTEMPTS", "check_node", "feedback", "record_unknown"]
 
 #: a node may cite a value against its status when it says so
 HEDGES = re.compile(r"\b(however|but|despite)\b", re.I)
+#: the evidence layers each cross-check pair combines, for rule 6: the same layers `crosscheck` flags
+CROSSCHECK_LAYERS: dict[str, tuple[str, ...]] = {
+    "conductor_fault": ("em_conductors", "faults_250k"),
+    "sediment_sampling": ("lake_sediment_gsc",),
+}
+#: the last part of a footprint flag's id, from either tool: `c:nb:<cell>:<layer>:<radius>:in_footprint` and
+#: `c:x:<cell>:<pair>:<layer>:in_footprint` both name the layer before it
+IN_FOOTPRINT = "in_footprint"
 #: the forms arithmetic takes in prose; a dash is not here because "1975-1978" is a survey period
 ARITHMETIC: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"\d\s*=\s*\d"), "an equals sign between numbers"),
@@ -110,6 +127,40 @@ def _unknown(node: Node, values: dict[str, dict], c: Criterion, coverage_unknown
     return problems
 
 
+def _layers(node: Node, c: Criterion | None) -> tuple[str, ...]:
+    """The evidence layers a node's answer rests on: the criterion feature's layer, or a pair's layers."""
+    if node.kind == "criterion":
+        layer = FEATURE_LAYER.get(c.feature) if c else None
+        return (layer,) if layer else ()
+    if node.kind == "crosscheck":
+        return CROSSCHECK_LAYERS.get(node.criterion or "", ())
+    return ()
+
+
+def _unmapped(values: dict[str, dict], cell_ids_allowed: set[str], layers: tuple[str, ...]
+              ) -> dict[str, tuple[str, str]]:
+    """Per layer whose staged footprint flag says 0, the (cell, id) that says so: the registry's word on
+    where nothing was mapped or sampled. A layer with no flag in the registry is absent here, because a
+    footprint nobody computed refuses nothing."""
+    out: dict[str, tuple[str, str]] = {}
+    for vid, v in sorted(values.items()):
+        cell, kind, suffix = parse_id(vid)
+        if kind not in ("nb", "x") or cell not in cell_ids_allowed or not suffix or suffix[-1] != IN_FOOTPRINT:
+            continue
+        layer = next((layer for layer in layers if layer in suffix[:-1]), None)
+        if layer is not None and layer not in out and v.get("value") == 0:
+            out[layer] = (cell, vid)
+    return out
+
+
+def _footprint(unmapped: dict[str, tuple[str, str]]) -> list[str]:
+    """Rule 6, for a `not_met` node: one line per layer whose footprint does not reach the cell, naming the
+    layer, the cell and the flag, and saying what to return instead."""
+    return [f"footprint: nothing of {layer} was mapped or sampled around cell {cell} ({vid} is 0), so an empty "
+            f"radius there is unknown, not not_met; return status unknown with strength 0 and say so in "
+            f"unknown_reason" for layer, (cell, vid) in unmapped.items()]
+
+
 def check_node(node: Node, values: dict[str, dict], context: str, criteria: CriteriaSet,
                cell_ids_allowed: set[str], coverage_unknown: set[str]) -> list[str]:
     """Every problem with a node, as feedback lines. `values` is the registry of what the tools returned for
@@ -126,8 +177,9 @@ def check_node(node: Node, values: dict[str, dict], context: str, criteria: Crit
             problems.append(f"ids: {vid!r} is not a value id")
         elif cell is not None and cell not in cell_ids_allowed:
             problems.append(f"ids: {vid} cites an id from another cell ({cell})")
+    c = next((c for c in criteria.criteria if c.key == node.criterion), None) if node.kind == "criterion" else None
+    unmapped = _unmapped(values, cell_ids_allowed, _layers(node, c))
     if node.kind == "criterion":
-        c = next((c for c in criteria.criteria if c.key == node.criterion), None)
         if c is None:
             problems.append(f"criterion: {node.criterion!r} is not in the criteria table")
         elif c.status == "folklore":
@@ -135,13 +187,17 @@ def check_node(node: Node, values: dict[str, dict], context: str, criteria: Crit
         elif node.status in ("met", "not_met"):
             problems += _polarity(node, values, c)     # 3
         elif node.status == "unknown":
-            problems += _unknown(node, values, c, coverage_unknown)  # 4
+            # 4: outside the layer's footprint the feature is unmeasured here, whatever value it carries
+            problems += _unknown(node, values, c, coverage_unknown | ({c.feature} if unmapped else set()))
     elif node.status == "unknown" and node.strength != 0:
         problems.append(f"strength: must be 0 when the status is unknown, not {node.strength}")
     # 5. no arithmetic
     for pattern, what in ARITHMETIC:
         if pattern.search(node.text):
             problems.append(f"arithmetic: the text has {what}; the model never computes")
+    # 6. absence of mapping is not absence of features
+    if node.status == "not_met":
+        problems += _footprint(unmapped)
     return list(dict.fromkeys(problems))
 
 
@@ -149,7 +205,8 @@ PROTOCOL = (
     "1. Every number in text has its value id in value_ids: no other number, no arithmetic, no place name.",
     "2. met or not_met only from the criterion's own feature value or membership id, on the side its "
     "threshold says; say 'however' if you cite the other side.",
-    "3. unknown, with strength 0 and an unknown_reason, when the feature has no value here.",
+    "3. unknown, with strength 0 and an unknown_reason, when the feature has no value here or nothing of its "
+    "layer was mapped or sampled around the cell (in_footprint is 0).",
 )
 
 

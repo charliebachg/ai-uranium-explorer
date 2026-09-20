@@ -12,12 +12,14 @@ that is not in the registry cannot reach the page, whatever the model writes.
 from __future__ import annotations
 
 import json
+from collections import Counter
 from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import Any, Callable
 
+import shapely
 from pyproj import Transformer
-from shapely.geometry import Point, shape
+from shapely.geometry import Point, Polygon, shape
 from shapely.geometry.base import BaseGeometry
 
 from .. import index as IX
@@ -356,6 +358,82 @@ def layer_features(layer: str) -> list[dict[str, Any]]:
     return out
 
 
+# ---------------------------------------------------------------- the layer footprint
+
+#: how far one feature vouches for the ground around it, in metres, by the kind of geometry a layer holds. A
+#: layer's footprint is the union of these halos over every feature, and a polygon layer's is the union of its
+#: polygons. The union of halos was chosen over a concave hull because a hull draws one outline round the
+#: layer and fills every gap inside it, so an unsampled hole inside a survey or an unflown corridor between
+#: two survey blocks would read as mapped; the halos leave both open, and the one parameter is a distance a
+#: geologist can check rather than a hull ratio.
+#:   point  regional lake-sediment surveys sample about one lake per 6 to 13 km2, a sample every 2.4 to 3.6 km
+#:          (in the GSC layer here the median spacing between samples is 2.4 km and the 99th percentile
+#:          4.1 km), so 5 km joins one survey's samples into a patch and leaves a hole open where no lake was
+#:          sampled for 10 km. Boulder records and drillhole collars are placed, not gridded, and for them the
+#:          halo says somebody worked within 5 km. It is also the radius the point features are built with.
+#:   line   EM surveys are flown in blocks and the conductor picks are joined along strike, so one block's
+#:          traces lie a few km apart across strike (the 99th percentile of the spacing between traces here is
+#:          1.6 km): 5 km joins a block's traces and leaves the gap between blocks open, where 10 km bridges
+#:          neighbouring blocks. The faults are drawn on the same map sheets as the bedrock polygons, and 5 km
+#:          leaves out only ground the sheets show without a fault for 5 km, which is the direction the error
+#:          is allowed to go.
+FOOTPRINT_HALO_M: dict[str, float] = {"point": 5000.0, "line": 5000.0}
+_GEOMETRY_KIND = {"Point": "point", "MultiPoint": "point", "LineString": "line", "MultiLineString": "line",
+                  "Polygon": "polygon", "MultiPolygon": "polygon"}
+
+
+@dataclass(frozen=True)
+class Footprint:
+    """The ground a layer says anything about: one geometry in the grid's CRS, the kind of geometry it was
+    built from and the halo it used (None for a polygon layer). A cell inside it is one the layer could have
+    said something about; a cell outside it is one nobody mapped or sampled, and an empty radius there is not
+    an absence."""
+
+    layer: str
+    geometry: BaseGeometry
+    kind: str
+    halo_m: float | None
+
+    @property
+    def rule(self) -> str:
+        """What the footprint is, in one clause, for the value note and the summary row."""
+        if self.kind == "empty":
+            return f"nothing, because the {self.layer} layer has no features"
+        if self.halo_m is None:
+            return f"the union of the {self.layer} polygons"
+        return f"the ground within {self.halo_m:g} m of any {self.layer} feature"
+
+    def contains(self, centre: tuple[float, float]) -> int:
+        """1 when the point lies inside the footprint, 0 outside it: a 0/1 statistic like the counts, so it
+        is a value with an id and not a flag the model reads and forgets."""
+        return int(self.geometry.intersects(Point(*centre)))
+
+
+@lru_cache(maxsize=None)
+def layer_footprint(layer: str) -> Footprint:
+    """One layer's footprint, computed once per process from the layer's own features the way `layer_features`
+    is read once: the store holds no per-cell footprint, and the survey footprints it does hold cover airborne
+    and ground surveys only. The kind is the layer's commonest geometry, so a stray multi-part feature does
+    not change the rule. The geometry is prepared, because every `nearby` call asks it one point-in-polygon
+    question."""
+    geoms = [shape(f["geometry"]) for f in layer_features(layer)]
+    if not geoms:
+        return Footprint(layer, Polygon(), "empty", None)   # nothing mapped anywhere: no cell is inside
+    kind = Counter(_GEOMETRY_KIND.get(g.geom_type, "polygon") for g in geoms).most_common(1)[0][0]
+    halo = FOOTPRINT_HALO_M.get(kind)
+    geometry = shapely.union_all(geoms if halo is None else shapely.buffer(geoms, halo))
+    shapely.prepare(geometry)
+    return Footprint(layer, geometry, kind, halo)
+
+
+def _footprint_value(vid: str, fp: Footprint, cell_id: str, centre: tuple[float, float]) -> tuple[int, dict[str, Any]]:
+    """The 0/1 footprint statistic for one cell and layer, with the value the registry holds for it."""
+    inside = fp.contains(centre)
+    return inside, stat(vid, inside, note=f"1 when cell {cell_id} lies inside the mapped extent of {fp.layer}, "
+                                          f"{fp.rule}; 0 when nothing of the layer was mapped or sampled "
+                                          f"around the cell")
+
+
 def _check_layer(layer: str) -> None:
     """Refuse anything that is not an evidence layer, saying why: a label is the answer, context is not evidence."""
     if layer in NEARBY_LAYERS:
@@ -400,8 +478,11 @@ def nearby(cell_id: str, layer: str, radius_m: float = 5000.0, k: int = 5) -> To
     This is the analyst's box maker. The window is the cell centre plus or minus the radius in the grid's
     CRS, the features are the card's own reprojected copies, and the distances are shapely's in metres, so
     the model never measures anything off the card. Zero inside the radius is returned as a value like any
-    other, because "nothing mapped here" is an answer and not a gap. Drillhole collars are flagged
-    `is_effort` on every row, so an arm that hides effort can drop them whole."""
+    other, because "nothing mapped here" is an answer and not a gap, but only where the layer reaches: the
+    summary also says whether the cell lies inside the layer's footprint (`layer_footprint`), as a 0/1
+    value with an id, and when it does not the note says that nothing of the layer was mapped or sampled
+    around the cell, so an empty radius there is unknown. Drillhole collars are flagged `is_effort` on every
+    row, so an arm that hides effort can drop them whole."""
     _check_layer(layer)
     lo, hi = NEARBY_RADIUS_M
     if not lo <= float(radius_m) <= hi:
@@ -427,6 +508,24 @@ def nearby(cell_id: str, layer: str, radius_m: float = 5000.0, k: int = 5) -> To
         out.values |= _vals(stat(f"{base}:nearest_m", nearest, fmt="m1", unit="m",
                                  note=f"distance from cell {cell_id} to the nearest {layer} feature"))
         summary["nearest_m"], summary["nearest_m_id"] = nearest, f"{base}:nearest_m"
+    # the footprint rides under the same base as the counts: the same 0/1 for every radius, but a value the
+    # node can cite beside the count it qualifies
+    fp = layer_footprint(layer)
+    inside, flag = _footprint_value(f"{base}:in_footprint", fp, cell_id, centre)
+    out.values |= _vals(flag)
+    summary["in_footprint"], summary["in_footprint_id"] = inside, f"{base}:in_footprint"
+    if fp.halo_m is not None:
+        # the halo is the rule's one parameter, so it is a value with an id like the crosscheck's thresholds
+        out.values |= _vals(stat(f"{base}:footprint_halo_m", fp.halo_m, fmt="m1", unit="m",
+                                 note=f"how far one {layer} feature vouches for the ground around it; the "
+                                      f"layer's footprint is the union of these halos"))
+        summary["footprint_halo_m"], summary["footprint_halo_m_id"] = fp.halo_m, f"{base}:footprint_halo_m"
+    if inside:
+        summary["footprint_note"] = (f"the cell lies inside the mapped extent of {layer} ({fp.rule}), so an "
+                                     f"empty radius here is an absence")
+    else:
+        summary["footprint_note"] = (f"nothing of {layer} was mapped or sampled around this cell (its footprint "
+                                     f"is {fp.rule}), so an empty radius here is unknown, not an absence")
     out.rows.append(summary)
     for i, (d, f, _geom) in enumerate(hits[:k]):
         vid = f"{base}:{i}:dist_m"
@@ -447,8 +546,9 @@ def nearby(cell_id: str, layer: str, radius_m: float = 5000.0, k: int = 5) -> To
         if props.get("text"):
             row["text"] = props["text"]
         out.rows.append(row)
-    out.note = ("Counts say what was mapped or sampled inside the radius, not what is in the rock, and a layer "
-                "with nothing inside it is an absence of mapping unless coverage says the ground was surveyed.")
+    out.note = ("Counts say what was mapped or sampled inside the radius, not what is in the rock. A layer with "
+                "nothing inside the radius is an absence only where in_footprint is 1; where it is 0 nothing "
+                "of the layer was mapped or sampled around the cell, and the criterion is unknown, not not met.")
     return out
 
 
@@ -474,14 +574,17 @@ def crosscheck(cell_id: str) -> ToolResult:
     `conductor_fault`: among the conductors and faults within `CROSSCHECK_RADIUS_M` of the cell centre, the
     smallest separation between any conductor and any fault, and how many such pairs cross (a shapely
     intersects). Zero crossings is a real answer. A side with nothing inside the radius makes the pair
-    absent, not unknown: both are basin-wide line maps. The cell's own `d_conductor_m` and `d_fault_m` are
-    echoed with the ids and values `cell_features` gives them.
+    absent when that layer's footprint reaches the cell, and unknown when it does not: the line maps are
+    basin-wide, but their surveys are not. Each side's `in_footprint` rides on the row as a 0/1 value with
+    an id, the same statistic `nearby` returns. The cell's own `d_conductor_m` and `d_fault_m` are echoed
+    with the ids and values `cell_features` gives them.
 
     `sediment_sampling`: the lake-sediment anomaly beside the sampling it rests on. `sed_u_max_ppm` and
     `sed_samples_n` are echoed the same way, and `thin_sampling` is a fixed rule: fewer than
     `MIN_SED_SAMPLES` samples within 5 km. The threshold is a value with an id, so a memo can say which rule
     it applied. A null anomaly means nobody sampled within reach, which is unknown and not low; a null count
-    leaves `thin_sampling` null rather than guessed."""
+    leaves `thin_sampling` null rather than guessed. The sediment layer's `in_footprint` rides on the row
+    too."""
     args: dict[str, Any] = {"cell_id": cell_id}
     centre = _cell_centre(cell_id)
     if centre is None:
@@ -496,12 +599,20 @@ def crosscheck(cell_id: str) -> ToolResult:
                              note=f"reach of the conductor-fault check around cell {cell_id}"))
     _echo(out, row, feats, "d_conductor_m")
     _echo(out, row, feats, "d_fault_m")
-    conductors = _around("em_conductors", centre, radius)
-    faults = _around("faults_250k", centre, radius)
+    sides = (("conductor", "em_conductors"), ("fault", "faults_250k"))
+    hits_by = {side: _around(layer, centre, radius) for side, layer in sides}
+    conductors, faults = hits_by["conductor"], hits_by["fault"]
     crossings = sum(1 for _, _, c in conductors for _, _, f in faults if c.intersects(f))
     row["crossings_n"], row["crossings_n_id"] = crossings, f"c:x:{cell_id}:{pair}:crossings_n"
     out.values |= _vals(stat(f"c:x:{cell_id}:{pair}:crossings_n", crossings,
                              note=f"conductor-fault crossings within {radius:g} m of cell {cell_id}"))
+    # each side's footprint, under the pair's own ids: the node gate reads the flag from either tool
+    mapped: dict[str, int] = {}
+    for side, layer in sides:
+        vid = f"c:x:{cell_id}:{pair}:{layer}:in_footprint"
+        mapped[side], flag = _footprint_value(vid, layer_footprint(layer), cell_id, centre)
+        out.values |= _vals(flag)
+        row[f"{side}_in_footprint"], row[f"{side}_in_footprint_id"] = mapped[side], vid
     if conductors and faults:
         sep = round(min(float(c.distance(f)) for _, _, c in conductors for _, _, f in faults), 1)
         row["min_sep_m"], row["min_sep_m_id"] = sep, f"c:x:{cell_id}:{pair}:min_sep_m"
@@ -509,9 +620,16 @@ def crosscheck(cell_id: str) -> ToolResult:
                                  note=f"smallest conductor-fault separation within {radius:g} m of cell {cell_id}"))
         row["state"] = "known"
     else:
-        row["state"] = "absent"
-        missing = [name for name, hits in (("conductor", conductors), ("fault", faults)) if not hits]
-        row["absent"] = f"no mapped {' or '.join(missing)} within the radius"
+        missing = [side for side, _layer in sides if not hits_by[side]]
+        unmapped = [side for side in missing if not mapped[side]]
+        if unmapped:
+            # an empty side outside its footprint was never surveyed here: the conjunction is unknown
+            row["state"] = "unknown"
+            row["missing"] = (f"no {' or '.join(unmapped)} was mapped around this cell at all, so the pair is "
+                              f"unknown, not absent")
+        else:
+            row["state"] = "absent"
+            row["absent"] = f"no mapped {' or '.join(missing)} within the radius"
     out.rows.append(row)
 
     pair = "sediment_sampling"
@@ -521,16 +639,22 @@ def crosscheck(cell_id: str) -> ToolResult:
     row["min_samples"], row["min_samples_id"] = MIN_SED_SAMPLES, f"c:x:{cell_id}:{pair}:min_samples"
     out.values |= _vals(stat(f"c:x:{cell_id}:{pair}:min_samples", MIN_SED_SAMPLES,
                              note="fewer lake-sediment samples than this within reach counts as thin sampling"))
+    vid = f"c:x:{cell_id}:{pair}:lake_sediment_gsc:in_footprint"
+    sampled, flag = _footprint_value(vid, layer_footprint("lake_sediment_gsc"), cell_id, centre)
+    out.values |= _vals(flag)
+    row["sediment_in_footprint"], row["sediment_in_footprint_id"] = sampled, vid
     samples = row.get("sed_samples_n")
     row["thin_sampling"] = None if samples is None else bool(samples < MIN_SED_SAMPLES)
     if row.get("sed_u_max_ppm") is None:
         row["state"] = "unknown"
-        row["missing"] = "no lake-sediment sample within reach; unknown, not low"
+        row["missing"] = ("no lake-sediment sample within reach; unknown, not low" if sampled else
+                          "no lake-sediment sample within reach and none around this cell at all; unknown, not low")
     else:
         row["state"] = "known"
     out.rows.append(row)
     out.note = ("Unknown and absent are different answers: a conjunction with one unknown side is unknown, and "
-                "one with a side that is mapped but empty inside the radius is absent.")
+                "one with a side that is mapped but empty inside the radius is absent. A side whose layer has "
+                "in_footprint 0 was never mapped or sampled around the cell, so an empty radius there is unknown.")
     return out
 
 
@@ -555,7 +679,8 @@ TOOL_HELP = {
     "coverage": "coverage(feature_key=None) - how much of the grid a feature covers",
     "retrieve": "retrieve(query, cell_id, k) - passages from the assessment corpus about this ground",
     "nearby": "nearby(cell_id, layer, radius_m, k) - the count and the k nearest features of one evidence "
-              "layer around the cell, with true distances",
+              "layer around the cell, with true distances, and whether the cell lies inside the layer's "
+              "mapped footprint (an empty radius outside it is unknown, not an absence)",
     "crosscheck": "crosscheck(cell_id) - conductor-fault separation and crossings, and the lake-sediment "
                   "anomaly beside its sampling density",
 }

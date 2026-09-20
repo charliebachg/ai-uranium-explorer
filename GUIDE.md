@@ -290,8 +290,11 @@ model trained on public labels partly learns exploration history.
 
 `cell_features`, `cell_scores`, `criteria_breakdown`, `label_context`, `coverage`, `retrieve`, and two the
 staged analyst added: `nearby` (what one evidence layer holds around the cell: counts, nearest distances, the
-nearest features) and `crosscheck` (the conjunctions the handbook names, computed: conductor with fault,
-sediment anomaly with sampling density).
+nearest features, and whether the cell lies inside the layer's mapped footprint, so that an empty radius where
+nothing was ever mapped or sampled reads as unknown rather than absent) and `crosscheck` (the conjunctions
+the handbook names, computed: conductor with fault, sediment anomaly with sampling density, each side carrying
+the same footprint flag). The footprint is built in memory from the layer's own geometry, the union of 5 km
+halos round its points or lines or of its map polygons, and the halo is itself a value with an id.
 
 Every number a tool returns arrives inside a **Val with an id**. The model never computes anything — no
 arithmetic, no distances, no conversions — because that boundary is where documented GIS-agent failures happen.
@@ -381,7 +384,8 @@ rules live in it as code: out-of-fold scores only, blind-listed retrieval, the c
 values marked. A **plan** lists one segment per criterion and two cross-checks. An **executor** (Sonnet 5)
 answers one segment from the tool results the session staged, as a node: met, not met or unknown, a strength,
 the ids it cites, one sentence. A mechanical **gate** checks every node (ids resolve, the right cell, polarity,
-unknown only where unmeasured, no arithmetic) and sends it back with feedback that escalates over three
+unknown only where unmeasured, no arithmetic, and no "not met" where the layer's footprint does not reach the
+cell) and sends it back with feedback that escalates over three
 attempts. A **verifier** (Opus 5, the skeptic's brief) reads the whole chain and names the faulty nodes; those
 and their dependents are re-executed, up to K rounds (three by default). Two **deciders** always run: a weighted sum over node
 strengths and an adjudicator; a chain that never validates takes the majority over rounds or abstains. The

@@ -42,7 +42,8 @@ WORLD: dict[str, list[dict]] = {
         feature(Point(CX, CY + 2500), value=None),                           # 2500 m, no reading
         feature(Point(CX + 30_000, CY), value=9000.0),                       # outside every radius
     ],
-    "lake_sediment_gsc": [],
+    # one sample 4000 m east: inside the 5 km footprint halo, outside a 2500 m radius
+    "lake_sediment_gsc": [feature(Point(CX + 4000, CY), value=3.0)],
     "bedrock_250k": [feature(box(CX - 5000, CY - 5000, CX + 5000, CY + 5000), text="Quartz arenite")],
     "compilation": [feature(Point(CX + 100, CY), text="Uranium"), feature(Point(CX, CY - 4000))],
 }
@@ -72,7 +73,8 @@ def _add_feature(db: Path, cell_id: str, key: str, value: float | None, n_obs: i
 @pytest.fixture
 def world(prospect_sandbox, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Eight cells, the first at the centre of the hand-placed world, the second far from it; the layer reader
-    replaced by the world itself, already in grid metres, so no reprojection blurs a distance."""
+    replaced by the world itself, already in grid metres, so no reprojection blurs a distance. The footprint
+    cache is cleared on both sides, because it is built from whatever `layer_features` returned last."""
     df = bench_frame(n_dep=2, n_occ=2, n_neg=2, n_probe=2)
     df.loc[0, ["cx", "cy"]] = (CX, CY)
     df.loc[1, ["cx", "cy"]] = (CX + 60_000, CY)
@@ -82,7 +84,9 @@ def world(prospect_sandbox, monkeypatch: pytest.MonkeyPatch) -> Path:
     _add_feature(prospect_sandbox.db, FAR, "sed_u_max_ppm", None, 0, 4200.0)
     monkeypatch.setattr(ST, "db_path", lambda: prospect_sandbox.db)
     monkeypatch.setattr(T, "layer_features", lambda layer: WORLD.get(layer, []))
-    return prospect_sandbox.db
+    T.layer_footprint.cache_clear()
+    yield prospect_sandbox.db
+    T.layer_footprint.cache_clear()
 
 
 def assert_every_number_has_an_id(result: T.ToolResult) -> None:
@@ -139,13 +143,19 @@ def test_the_radius_changes_the_count_and_is_part_of_every_id(world: Path) -> No
 
 
 def test_zero_inside_the_radius_is_an_answer_with_an_id(world: Path) -> None:
-    out = T.nearby(CELL, "lake_sediment_gsc", radius_m=5000)
-    assert out.rows == [{"layer": "lake_sediment_gsc", "is_effort": False, "n_within": 0,
-                         "n_within_id": f"c:nb:{CELL}:lake_sediment_gsc:5000:n_within"}]
-    assert out.values[f"c:nb:{CELL}:lake_sediment_gsc:5000:n_within"]["value"] == 0
-    assert "nearest_m" not in out.rows[0] and "absence of mapping" in out.note
+    """Inside the layer's footprint (the one sample sits 4 km off, within the 5 km halo) an empty 2.5 km radius
+    is an absence; the summary carries the count, the footprint flag and the halo, each under an id."""
+    out = T.nearby(CELL, "lake_sediment_gsc", radius_m=2500)
+    base = f"c:nb:{CELL}:lake_sediment_gsc:2500"
+    summary, = out.rows
+    assert summary["n_within"] == 0 and summary["n_within_id"] == f"{base}:n_within"
+    assert summary["in_footprint"] == 1 and summary["in_footprint_id"] == f"{base}:in_footprint"
+    assert summary["footprint_halo_m"] == 5000.0 and summary["footprint_halo_m_id"] == f"{base}:footprint_halo_m"
+    assert "an absence" in summary["footprint_note"] and "unknown" not in summary["footprint_note"]
+    assert out.values[f"{base}:n_within"]["value"] == 0 and out.values[f"{base}:in_footprint"]["value"] == 1
+    assert "nearest_m" not in summary and "in_footprint is 1" in out.note
     far = T.nearby(FAR, "radioactive_boulders", radius_m=20_000)
-    assert far.rows[0]["n_within"] == 0
+    assert far.rows[0]["n_within"] == 0 and far.rows[0]["in_footprint"] == 0
 
 
 def test_a_polygon_over_the_cell_is_at_distance_zero_and_carries_its_unit_as_text(world: Path) -> None:
@@ -217,15 +227,21 @@ def test_layer_features_reads_the_pulled_file_the_way_the_card_does(prospect_san
     }
     monkeypatch.setattr(IX, "read_features", lambda key: pulled[key])
     T.layer_features.cache_clear()
+    T.layer_footprint.cache_clear()
     try:
         sed = T.nearby(CELL, "lake_sediment_sgs", radius_m=1000)
         rock = T.nearby(CELL, "bedrock_250k", radius_m=1000)
-        assert T.layer_features.cache_info().hits == 0 and T.layer_features.cache_info().misses == 2
+        # each layer read from the file once (the footprint's second look is a cache hit) and its footprint built once
+        assert T.layer_features.cache_info().misses == 2 and T.layer_features.cache_info().hits == 2
+        assert T.layer_footprint.cache_info().misses == 2
         T.nearby(CELL, "bedrock_250k", radius_m=2000)
-        assert T.layer_features.cache_info().hits == 1, "a layer is read once per process"
+        assert T.layer_features.cache_info().misses == 2, "a layer is read once per process"
+        assert T.layer_footprint.cache_info().hits == 1 and T.layer_footprint.cache_info().misses == 2
     finally:
         T.layer_features.cache_clear()
+        T.layer_footprint.cache_clear()
     assert sed.rows[0]["n_within"] == 1 and sed.rows[1]["dist_m"] < 1.0 and sed.rows[1]["ppm"] == 12.5
+    assert sed.rows[0]["in_footprint"] == 1 and rock.rows[0]["in_footprint"] == 1
     assert rock.rows[1]["dist_m"] == 0.0 and rock.rows[1]["text"] == "graphitic pelitic gneiss"
     assert "not-copied" not in json.dumps(rock.as_json())
 
@@ -247,11 +263,21 @@ def test_a_crossing_pair_gives_one_crossing_and_zero_separation(world: Path) -> 
         assert out.values[vid] == feats.values[vid]
 
 
-def test_a_side_with_nothing_in_reach_makes_the_pair_absent_with_zero_crossings(world: Path) -> None:
-    row = next(r for r in T.crosscheck(FAR).rows if r["pair"] == "conductor_fault")
+def test_a_side_with_nothing_in_reach_and_no_footprint_makes_the_pair_unknown(world: Path) -> None:
+    """The far cell is 60 km from every line: neither layer was surveyed there, so the pair is unknown, not
+    absent, and each side's footprint flag is a 0 with an id of the pair's own."""
+    out = T.crosscheck(FAR)
+    row = next(r for r in out.rows if r["pair"] == "conductor_fault")
     assert row["crossings_n"] == 0 and row["crossings_n_id"] == f"c:x:{FAR}:conductor_fault:crossings_n"
-    assert row["state"] == "absent" and "min_sep_m" not in row
-    assert row["absent"] == "no mapped conductor or fault within the radius"
+    assert row["state"] == "unknown" and "min_sep_m" not in row and "absent" not in row
+    assert row["missing"] == ("no conductor or fault was mapped around this cell at all, so the pair is unknown, "
+                              "not absent")
+    for side, layer in (("conductor", "em_conductors"), ("fault", "faults_250k")):
+        vid = f"c:x:{FAR}:conductor_fault:{layer}:in_footprint"
+        assert row[f"{side}_in_footprint"] == 0 and row[f"{side}_in_footprint_id"] == vid
+        assert out.values[vid]["value"] == 0 and layer in out.values[vid]["note"]
+    near = next(r for r in T.crosscheck(CELL).rows if r["pair"] == "conductor_fault")
+    assert near["conductor_in_footprint"] == 1 and near["fault_in_footprint"] == 1 and near["state"] == "known"
 
 
 def test_the_sediment_pair_conditions_the_anomaly_on_its_sampling(world: Path) -> None:
@@ -275,6 +301,8 @@ def test_an_unsampled_cell_is_unknown_and_carries_the_nearest_observation_id(wor
     assert row["sed_u_max_ppm_nearest_m_id"] == nid and out.values[nid]["value"] == 4200.0
     assert row["state"] == "unknown" and "unknown, not low" in row["missing"]
     assert row["sed_samples_n"] == 5.0 and row["thin_sampling"] is False
+    assert row["sediment_in_footprint"] == 0 and "none around this cell at all" in row["missing"]
+    assert row["sediment_in_footprint_id"] == f"c:x:{FAR}:sediment_sampling:lake_sediment_gsc:in_footprint"
 
 
 # ---------------------------------------------------------------- ids, registry, label mask
