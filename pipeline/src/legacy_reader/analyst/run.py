@@ -186,7 +186,8 @@ def run_arm(
     if stopped is not None:
         log(f"  stopped: {stopped}; {len(pending)} cell(s) pending, re-run with resume={run_id}")
     summary: dict[str, Any] = {
-        "run_id": run_id, "run_dir": str(rd), "arm": arm.name, "model": arm.model, "version": version,
+        "run_id": run_id, "run_dir": str(rd), "arm": arm.name, "model": arm.model, "effort": arm.effort,
+        "version": version,
         "manifest_sha256": bench.manifest_sha256, "planned": len(planned), "carried": len(carried),
         "done": len(done), "failed": len(failed), "pending": sorted(pending), "spent_usd": round(spent, 4),
         "budget_usd": budget_usd, "budget_exhausted": isinstance(stopped, BudgetExhausted),

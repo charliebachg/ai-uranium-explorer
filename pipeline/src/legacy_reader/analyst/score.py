@@ -310,10 +310,25 @@ def baselines(version: str, con: Any, boot: int = BOOT, seed: int = 0, fold_kind
 
 # ---------------------------------------------------------------- the table
 
+def _effort_of(summary: dict[str, Any]) -> str | None:
+    """The reasoning effort the arm ran at: in the summary, or in the run's manifest for runs written before
+    the summary carried it (the manifest's config is the arm file as loaded)."""
+    if summary.get("effort"):
+        return str(summary["effort"])
+    rd = summary.get("run_dir")
+    if rd and (Path(rd) / "manifest.json").is_file():
+        try:
+            cfg = json.loads((Path(rd) / "manifest.json").read_text()).get("config") or {}
+            return str(cfg["effort"]) if cfg.get("effort") else None
+        except (OSError, json.JSONDecodeError):
+            return None
+    return None
+
+
 def arm_row(summary: dict[str, Any]) -> dict[str, Any]:
     """A table row from the summary `run_arm` wrote for an arm."""
     score = dict(summary.get("score") or {})
-    return {"name": summary["arm"], "kind": "arm", "model": summary.get("model"),
+    return {"name": summary["arm"], "kind": "arm", "model": summary.get("model"), "effort": _effort_of(summary),
             "n_cells": int(score.get("n", 0)), "run_id": summary.get("run_id"),
             "mlflow_run_id": summary.get("mlflow_run_id"), "cost_usd": float(score.get("cost_usd_total") or 0.0),
             "pending": len(summary.get("pending") or []), **score}

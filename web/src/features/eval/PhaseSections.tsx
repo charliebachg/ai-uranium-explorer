@@ -456,6 +456,12 @@ function BenchLine({ row }: { row: BenchRow }) {
       <td className="py-1.5">{row.kind}</td>
       <td className="py-1.5">
         <span data-ident>{row.model ?? "–"}</span>
+        {row.effort ? (
+          <span className="text-ink-3" data-chrome>
+            {" "}
+            · {row.effort}
+          </span>
+        ) : null}
       </td>
       <td className="py-1.5 text-right">
         <V id={row.n} />

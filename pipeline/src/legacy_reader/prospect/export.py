@@ -413,7 +413,8 @@ def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dic
         pre = f"c:bench:{version}:{name}"
         note = f"{kind} {name} ({r.get('model')}) on {int(n)} open cells of benchmark {version}"
         vals.append(stat(f"{pre}:n", int(n), note=f"labelled open cells scored; {note}"))
-        row: dict[str, Any] = {"name": name, "kind": kind, "model": r.get("model"), "n": f"{pre}:n",
+        row: dict[str, Any] = {"name": name, "kind": kind, "model": r.get("model"),
+                               "effort": r.get("effort"), "n": f"{pre}:n",
                                "n_pos": None, "n_neg": None, "run_id": r.get("run_id"),
                                "mlflow_run_id": r.get("mlflow_run_id"), "metrics": {}}
         for key, what in (("n_pos", "positive cells"), ("n_neg", "negative cells")):

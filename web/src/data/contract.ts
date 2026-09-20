@@ -744,6 +744,8 @@ export const BenchRow = z.object({
   name: z.string(),
   kind: z.enum(["arm", "baseline"]),
   model: z.string().nullable(),
+  /** The reasoning effort the arm ran at (low, medium, high); null for a baseline. */
+  effort: z.string().nullable().optional(),
   n: StatRef,
   n_pos: StatRef.nullable(),
   n_neg: StatRef.nullable(),
