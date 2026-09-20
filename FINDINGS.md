@@ -39,6 +39,21 @@ first is read as the first; and forty workers parsing the same map layer on thei
 runner to 6.9 GB, so the layers are preloaded once. The final pass ran 130 cells in about 35 minutes with no
 failure; the whole day of attempts cost about $15.
 
+**Addendum, 2026-09-21: the same two models through OpenRouter's Anthropic listing.** `v1-anthropic-or` is
+v1 with `anthropic/claude-sonnet-5` and `anthropic/claude-opus-5` through OpenRouter instead of the Claude
+CLI: pay per token, no subscription limit, twenty cells in parallel. Chained onto the stopped v1 run and
+parked at 76 of 130 cells (run `20260920T190845Z-bench`, MLflow `f98e3ffc`; 35 cells via the CLI, 41 via
+OpenRouter). Per call: Sonnet executor $0.047 and 6 s median, Opus verifier $0.076 and 30 s, adjudicator
+$0.081; $1.02 a cell over the two OpenRouter batches. On the 67 labelled cells reached: F1 0.360 [0.18,
+0.51], PR-AUC 0.539 [0.36, 0.85], ROC-AUC 0.612, ECE 0.116, 61% abstaining; v0 on the same cells F1 0.500,
+PR-AUC 0.432 [0.35, 0.62]; the effort null 0.614 [0.50, 0.75]; the learned model 0.473. The first 35 cells
+had put the loop at 0.716; with 67 the ranking still sits above the single call and the learned model and
+below the effort null, with every interval overlapping, and the price is abstention: the OpenRouter batches
+validated 23 of 40 chains against 31 of 35 for the CLI batch, which could be the later cells being harder or
+the transport (Opus through the API thinks under a 4,000-token budget; the CLI's medium effort is its own
+setting), and the run cannot separate the two. Stopped by the user on cost; the remaining 54 cells resume
+from that run id at about $1 a cell.
+
 **What it decides.** The gates and the harness carry a hundredfold cheaper stack without change: every number
 still resolves or the node is refused, a chain no round validates still abstains, and a run of 130 cells
 costs six dollars. The verdict quality does not survive the swap of the *verifier*: F1 0.29 against 0.48, and
