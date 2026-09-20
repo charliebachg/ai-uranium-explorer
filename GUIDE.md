@@ -317,7 +317,7 @@ gate-eval` puts real claims and deliberately corrupted ones to it — digit slip
 invented, conversion done by hand, a real number cited to the wrong value, a number cited to nothing — with no
 model in the loop, so it is deterministic and free.
 
-**Result: 210 of 223 fabrications refused, 0 of 90 true claims wrongly refused.** The 13 that get through are
+**Result (re-run 2026-09-20 on the 22-report evidence packs): 224 of 232 fabrications refused, 0 of 128 true claims wrongly refused; on the first, four-report packs it was 210 of 223 and 0 of 90.** The 8 that get through are
 small round numbers that also appear in quotable text. The full breakdown is on the **Eval** page.
 
 Running it changed the system three times: the allowance used to be a substring test over the whole tool

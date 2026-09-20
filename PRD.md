@@ -66,7 +66,7 @@ every agent answer from a versioned input, and can deploy the whole thing on a f
   still ahead, 0.178 against 0.111, intervals separate, on both label sets. **Confirmed, not an artefact.**
   Effort alone ranks the 60 deposit cells at ROC-AUC 0.90 to 0.95; the geology model does not transfer across
   camps. Thinning showed a third of effort's apparent skill was counting one camp many times.
-- **Gate:** 210 of 223 corrupted claims refused, 0 of 90 true claims wrongly refused — on synthetic corruption
+- **Gate:** 224 of 232 corrupted claims refused, 0 of 128 true claims wrongly refused (re-run 2026-09-20 on the 22-report evidence packs; 210 of 223 and 0 of 90 on the first four) — on synthetic corruption
   only. Two named holes: a correct value from the wrong cell passes; negated evidence passes.
 - **Stack:** Python 3.13 / uv / typer / DuckDB / scikit-learn / rasterio / pystac; React 19 / Vite 8 / TS 6 /
   Tailwind 4 / MapLibre 6 / zod 4 / zustand; Claude Code headless and an OpenAI adapter with a spend ceiling.
