@@ -711,6 +711,67 @@ export const HindcastBlock = z.object({
 });
 export type HindcastBlock = z.infer<typeof HindcastBlock>;
 
+/** The metrics a benchmark row prints; a metric the table could not compute (NaN) is simply absent. */
+export const BenchMetric = z.enum([
+  "f1",
+  "precision",
+  "recall",
+  "pr_auc",
+  "roc_auc",
+  "pr_auc_all",
+  "roc_auc_all",
+  "ece",
+  "abstain_rate",
+]);
+export type BenchMetric = z.infer<typeof BenchMetric>;
+
+/** What only an arm can report: the gate's refusals, the probes, and what a cell cost. */
+export const BenchExtra = z.enum([
+  "gate_rejection_rate",
+  "probe_abstain_rate",
+  "cost_usd_per_cell",
+  "latency_s_per_cell",
+]);
+export type BenchExtra = z.infer<typeof BenchExtra>;
+
+/**
+ * One row of the analyst benchmark table (`lr bench table`): one arm or one baseline scored on the same open
+ * cells of the frozen benchmark. Every number is a value id under `c:bench:<version>:<row>:<metric>`; an
+ * interval's bounds are `.lo` and `.hi` of the metric's id. A baseline is arithmetic on the fitted scores, so
+ * it names no run.
+ */
+export const BenchRow = z.object({
+  name: z.string(),
+  kind: z.enum(["arm", "baseline"]),
+  model: z.string().nullable(),
+  n: StatRef,
+  n_pos: StatRef.nullable(),
+  n_neg: StatRef.nullable(),
+  run_id: z.string().nullable(),
+  mlflow_run_id: z.string().nullable(),
+  note: z.string().optional(),
+  metrics: z.partialRecord(BenchMetric, StatRef),
+  ci: z.partialRecord(BenchMetric, z.tuple([StatRef, StatRef])).optional(),
+  extra: z.partialRecord(BenchExtra, StatRef).optional(),
+  strata: z
+    .partialRecord(
+      z.enum(["deposit", "occurrence", "negative"]),
+      z.object({ n: StatRef.optional(), accuracy: StatRef.optional(), abstain_rate: StatRef.optional() }),
+    )
+    .optional(),
+});
+export type BenchRow = z.infer<typeof BenchRow>;
+
+/** The analyst benchmark table for the highest benchmark version that has one; earlier versions are named. */
+export const BenchBlock = z.object({
+  version: z.string(),
+  manifest_sha256: z.string().nullable(),
+  computed_at: z.string().nullable(),
+  rows: z.array(BenchRow),
+  versions: z.array(z.string()),
+});
+export type BenchBlock = z.infer<typeof BenchBlock>;
+
 /** One column of the five-column readiness gate: ok or not, and the gate's own note saying why. */
 export const GateCell = z.object({ ok: z.boolean(), note: z.string() });
 
@@ -767,6 +828,8 @@ export const Readiness = z.object({
   search: SearchBlock.optional(),
   /** Phase 3: the dated hindcast, later discoveries ranked by models frozen at a cutoff. */
   hindcast: HindcastBlock.optional(),
+  /** The analyst benchmark: every arm and baseline on the frozen benchmark's open cells (`lr bench table`). */
+  bench: BenchBlock.optional(),
   /** What the fabrication gate scored on the adversarial suite: `lr prospect gate-eval`. */
   gate: z
     .object({

@@ -133,3 +133,125 @@ def test_a_green_gate_with_a_failing_column_is_refused_by_the_contract() -> None
                 "licensed": {"ok": True, "note": "ok"}, "covers": {"ok": True, "note": "ok"},
                 "servable": {"ok": True, "note": "ok"}, "versioned": {"ok": True, "note": "ok"}}]}}
     assert any("green with a failing column" in err for err in check_readiness(doc))
+
+
+# ---------------------------------------------------------------- the analyst benchmark table
+
+ARM = {
+    "name": "v0-retrieval", "kind": "arm", "model": "claude-opus-5", "n_cells": 40, "run_id": "20260920T061420Z-bench",
+    "mlflow_run_id": "9c1e4b2a", "cost_usd": 12.5, "pending": 0, "n": 40, "n_pos": 20, "n_neg": 20, "base_rate": 0.5,
+    "abstain_n": 8, "abstain_denominator": 40, "precision": 0.7, "recall": 0.6, "f1": 0.6462, "f1_ci": [0.51, 0.77],
+    "abstain_rate": 0.2, "abstain_rate_ci": [0.1, 0.33], "pr_auc": 0.71, "pr_auc_ci": [0.6, 0.82], "roc_auc": 0.75,
+    "pr_auc_all": 0.66, "roc_auc_all": 0.7, "ece": float("nan"), "ece_committed": 0.12,
+    "gate_rejection_rate": 0.05, "gate_rejection_denominator": 40, "probe_abstain_rate": 0.8, "n_probe": 5,
+    "n_rejected": 2, "n_failed": 0, "cost_usd_total": 12.5, "cost_usd_per_cell": 0.2778, "latency_s_per_cell": None,
+    "from_cache_share": 0.0,
+    "strata": {"deposit": {"n": 10, "accuracy": 0.8, "abstain_rate": 0.1},
+               "occurrence": {"n": 10, "accuracy": 0.5, "abstain_rate": 0.3},
+               "negative": {"n": 20, "accuracy": 0.7, "abstain_rate": 0.2}},
+}
+BASELINE = {
+    "name": "random_expected", "kind": "baseline", "model": "random", "n_cells": 40, "run_id": None, "mlflow_run_id": None,
+    "cost_usd": 0.0, "precision": 0.5, "recall": 0.5, "f1": 0.5, "pr_auc": 0.5, "roc_auc": 0.5, "pr_auc_all": 0.5,
+    "roc_auc_all": 0.5, "ece": 0.25, "abstain_rate": 0.0,
+    "note": "analytic expectation for a uniform random probability at a 0.5 threshold; no interval",
+}
+
+
+def _bench_table(root: Path, version: str, rows: list[dict]) -> None:
+    (root / version).mkdir(parents=True)
+    (root / version / "table.json").write_text(json.dumps(
+        {"version": version, "computed_at": "2026-09-20T06:23:16+00:00", "manifest_sha256": "b" * 64, "rows": rows}))
+
+
+def _readiness_with(bench: dict, vals: list[dict]) -> dict:
+    return {"schema_version": "1.0.0", "grid": {}, "totals": {}, "caveats": ["x"], "features": [], "sources": [],
+            "gaps": [], "values": registry(*vals), "bench": bench}
+
+
+def test_no_bench_table_means_no_block(tmp_path: Path) -> None:
+    vals: list[dict] = []
+    assert X._bench_block(vals, tmp_path) is None
+    assert X._bench_block(vals, tmp_path / "nowhere") is None
+    assert vals == []
+
+
+def test_bench_rows_carry_every_metric_as_a_value_and_name_their_run(tmp_path: Path) -> None:
+    _bench_table(tmp_path, "v1", [ARM, BASELINE])
+    vals: list[dict] = []
+    b = X._bench_block(vals, tmp_path)
+    assert b is not None
+    assert b["version"] == "v1" and b["manifest_sha256"] == "b" * 64 and b["versions"] == []
+    assert b["computed_at"] == "2026-09-20T06:23:16+00:00"
+    arm, base = b["rows"]
+    reg = registry(*vals)
+
+    # the arm: counts, metrics, intervals, what only an arm reports, and the strata, each a value with an id
+    assert arm["kind"] == "arm" and arm["model"] == "claude-opus-5" and arm["run_id"] == "20260920T061420Z-bench"
+    assert arm["mlflow_run_id"] == "9c1e4b2a" and "note" not in arm
+    assert arm["n"] == "c:bench:v1:v0-retrieval:n" and reg[arm["n"]] ["value"] == 40 and reg[arm["n"]]["fmt"] == "int"
+    assert reg[arm["n_pos"]]["value"] == 20 and reg[arm["n_neg"]]["value"] == 20
+    assert arm["metrics"]["f1"] == "c:bench:v1:v0-retrieval:f1"
+    assert reg[arm["metrics"]["f1"]]["value"] == 0.6462 and reg[arm["metrics"]["f1"]]["fmt"] == "ratio3"
+    assert set(arm["metrics"]) == {"f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all",
+                                   "abstain_rate"}   # ece is NaN in the table, so it is not a value
+    assert arm["ci"] == {"f1": ["c:bench:v1:v0-retrieval:f1.lo", "c:bench:v1:v0-retrieval:f1.hi"],
+                         "abstain_rate": ["c:bench:v1:v0-retrieval:abstain_rate.lo", "c:bench:v1:v0-retrieval:abstain_rate.hi"],
+                         "pr_auc": ["c:bench:v1:v0-retrieval:pr_auc.lo", "c:bench:v1:v0-retrieval:pr_auc.hi"]}
+    assert [reg[v]["value"] for v in arm["ci"]["f1"]] == [0.51, 0.77]
+    # latency is null in the table, so the extras stop at the three that are numbers, each with its formatter
+    assert arm["extra"] == {"gate_rejection_rate": "c:bench:v1:v0-retrieval:gate_rejection_rate",
+                            "probe_abstain_rate": "c:bench:v1:v0-retrieval:probe_abstain_rate",
+                            "cost_usd_per_cell": "c:bench:v1:v0-retrieval:cost_usd_per_cell"}
+    assert reg[arm["extra"]["cost_usd_per_cell"]]["fmt"] == "m2" and reg[arm["extra"]["gate_rejection_rate"]]["fmt"] == "ratio3"
+    assert arm["strata"]["deposit"] == {"n": "c:bench:v1:v0-retrieval:deposit:n",
+                                        "accuracy": "c:bench:v1:v0-retrieval:deposit:accuracy",
+                                        "abstain_rate": "c:bench:v1:v0-retrieval:deposit:abstain_rate"}
+    assert reg["c:bench:v1:v0-retrieval:deposit:accuracy"]["value"] == 0.8
+
+    # the baseline: no run, no interval, nothing an arm alone reports, and its note travels
+    assert base["kind"] == "baseline" and base["run_id"] is None and base["n_pos"] is None
+    assert base["note"].startswith("analytic expectation") and "ci" not in base and "extra" not in base
+    assert base["metrics"]["ece"] == "c:bench:v1:random_expected:ece" and reg[base["metrics"]["ece"]]["value"] == 0.25
+
+    # every id the block references resolves, and the contract agrees
+    e = Errors()
+    known = check_registry(e, "values", reg)
+    for r in b["rows"]:
+        for vid in [r["n"], r["n_pos"], r["n_neg"], *r["metrics"].values(), *r.get("extra", {}).values(),
+                    *(bound for pair in r.get("ci", {}).values() for bound in pair),
+                    *(vid for cell in r.get("strata", {}).values() for vid in cell.values())]:
+            _ref(e, "row", vid, known, nullable=True)
+    assert list(e) == []
+    from legacy_reader.contract_check import check_readiness
+
+    assert [err for err in check_readiness(_readiness_with(b, vals)) if ".bench" in err] == []
+
+
+def test_the_contract_refuses_an_arm_without_a_run_and_an_unbacked_number(tmp_path: Path) -> None:
+    from legacy_reader.contract_check import check_readiness
+
+    _bench_table(tmp_path, "v1", [{**ARM, "run_id": None, "mlflow_run_id": None}, BASELINE])
+    vals: list[dict] = []
+    b = X._bench_block(vals, tmp_path)
+    assert b is not None
+    errors = check_readiness(_readiness_with(b, vals))
+    assert any("rows[0]: no run id" in err for err in errors)
+    assert not any("rows[1]" in err for err in errors)   # a baseline is arithmetic, not a run
+    b["rows"][1]["metrics"]["f1"] = "c:bench:v1:random_expected:nowhere"
+    assert any("rows[1].metrics.f1" in err and "unbacked" in err for err in check_readiness(_readiness_with(b, vals)))
+
+
+def test_bench_takes_the_highest_version_and_drops_a_row_scored_on_no_cells(tmp_path: Path) -> None:
+    _bench_table(tmp_path, "v2", [BASELINE])
+    _bench_table(tmp_path, "v10", [
+        {"name": "v0", "kind": "arm", "model": "claude-opus-5", "n_cells": 0, "run_id": "r", "mlflow_run_id": None,
+         "cost_usd": 0.0, "pending": 40},   # still running: nothing to print yet
+        BASELINE,
+    ])
+    vals: list[dict] = []
+    b = X._bench_block(vals, tmp_path)
+    assert b is not None
+    assert b["version"] == "v10" and b["versions"] == ["v2"]
+    assert [r["name"] for r in b["rows"]] == ["random_expected"]
+    assert all(v["id"].startswith("c:bench:v10:") for v in vals)

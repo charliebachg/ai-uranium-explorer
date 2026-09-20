@@ -1,5 +1,13 @@
 import { V } from "@/components/values/V";
-import type { HeadlineBlock, HeadlineRow, HindcastBlock, SearchBlock, SearchRow } from "@/data/contract";
+import type {
+  BenchBlock,
+  BenchRow,
+  HeadlineBlock,
+  HeadlineRow,
+  HindcastBlock,
+  SearchBlock,
+  SearchRow,
+} from "@/data/contract";
 import { resolveValue } from "@/data/registry";
 import { Section } from "@/features/eval/EvalPage";
 import { cn } from "@/lib/cn";
@@ -384,6 +392,137 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
       </p>
       <Naming block={block} />
     </Section>
+  );
+}
+
+/**
+ * The analyst benchmark: every arm and every baseline scored on the same open cells, arms first, each group
+ * ranked by F1. A baseline row is muted: it is arithmetic on the fitted scores, not a run, and names none.
+ */
+export function BenchSection({ block }: { block?: BenchBlock }) {
+  if (!block?.rows.length) return null;
+  const byF1 = (a: BenchRow, b: BenchRow) => (numberOf(b.metrics.f1) ?? -1) - (numberOf(a.metrics.f1) ?? -1);
+  const rows = [
+    ...block.rows.filter((r) => r.kind === "arm").sort(byF1),
+    ...block.rows.filter((r) => r.kind === "baseline").sort(byF1),
+  ];
+  return (
+    <Section
+      title="The analyst benchmark"
+      hint="One row is one arm or one baseline on the same open cells of the frozen benchmark. Probe cells are not scored; an abstention is never a positive, so it counts against recall, and an answer the gate refused is an abstention too. Intervals are bootstraps over cells."
+    >
+      <table className="w-full text-[12.5px]" data-testid="bench-table">
+        <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+          <tr>
+            <th className="py-1.5 text-left font-normal">Row</th>
+            <th className="py-1.5 text-left font-normal">Kind</th>
+            <th className="py-1.5 text-left font-normal">Model</th>
+            <th className="py-1.5 text-right font-normal">n</th>
+            <th className="py-1.5 text-right font-normal">
+              <span data-chrome>F1</span>
+            </th>
+            <th className="py-1.5 text-right font-normal">PR-AUC</th>
+            <th className="py-1.5 text-right font-normal">Abstain</th>
+            <th className="py-1.5 text-right font-normal">Gate rejected</th>
+            <th className="py-1.5 text-right font-normal">$ per cell</th>
+            <th className="py-1.5 text-right font-normal">run</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <BenchLine key={`${r.kind}.${r.name}`} row={r} />
+          ))}
+        </tbody>
+      </table>
+      <BenchNaming block={block} />
+    </Section>
+  );
+}
+
+function BenchLine({ row }: { row: BenchRow }) {
+  const baseline = row.kind === "baseline";
+  const runId = row.mlflow_run_id ?? row.run_id;
+  return (
+    <tr
+      className={cn("border-line border-t", baseline && "text-ink-3")}
+      data-testid="bench-row"
+      data-kind={row.kind}
+      data-row={row.name}
+      title={row.note}
+    >
+      <td className={cn("py-1.5", !baseline && "text-ink-2")}>
+        <span data-ident>{row.name}</span>
+      </td>
+      <td className="py-1.5">{row.kind}</td>
+      <td className="py-1.5">
+        <span data-ident>{row.model ?? "–"}</span>
+      </td>
+      <td className="py-1.5 text-right">
+        <V id={row.n} />
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={row.metrics.f1} ci={row.ci?.f1} />
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={row.metrics.pr_auc} ci={row.ci?.pr_auc} />
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={row.metrics.abstain_rate} />
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={row.extra?.gate_rejection_rate} />
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={row.extra?.cost_usd_per_cell} />
+      </td>
+      <td className="py-1.5 text-right">
+        {runId ? <RunId id={runId} /> : <span className="text-ink-3">–</span>}
+      </td>
+    </tr>
+  );
+}
+
+/** A stored value with its interval, or a dash where the table has none: never a typed-in figure. */
+function Metric({ id, ci }: { id?: string; ci?: [string, string] }) {
+  if (!id) return <span className="text-ink-3">–</span>;
+  return (
+    <>
+      <V id={id} />
+      <Interval ci={ci} />
+    </>
+  );
+}
+
+/** What the table was scored against: the benchmark version, its manifest, and when it was computed. */
+function BenchNaming({ block }: { block: BenchBlock }) {
+  return (
+    <p className="mt-2 text-[11px] text-ink-3">
+      benchmark <span data-ident>{block.version}</span>
+      {block.manifest_sha256 ? (
+        <>
+          {" "}
+          · manifest <RunId id={block.manifest_sha256} />
+        </>
+      ) : null}
+      {block.computed_at ? (
+        <>
+          {" "}
+          · computed <span data-chrome>{block.computed_at.slice(0, 16).replace("T", " ")}</span>
+        </>
+      ) : null}
+      {block.versions.length ? (
+        <>
+          {" "}
+          · earlier tables not shown:{" "}
+          {block.versions.map((v, i) => (
+            <span key={v}>
+              {i ? ", " : ""}
+              <span data-ident>{v}</span>
+            </span>
+          ))}
+        </>
+      ) : null}
+    </p>
   );
 }
 

@@ -326,6 +326,39 @@ def check_manifest(doc: Any, path: str = "manifest.json") -> Errors:
 PROSPECT_ROLES = {"feature", "label", "context"}
 PROSPECT_TIERS = {"native", "read", "derived"}
 GAP_STATUS = {"not_addressable", "not_published", "not_public", "unverified", "published_not_pulled"}
+BENCH_KINDS = {"arm", "baseline"}
+
+
+def check_bench(e: Errors, where: str, b: Any, known: set[str]) -> None:
+    """The analyst benchmark block: every number resolves, and every arm names the run it was scored from.
+
+    A baseline is the one row allowed no run id: it is arithmetic on the fitted scores, not a tracked run."""
+    if not isinstance(b, dict) or not b.get("version") or not isinstance(b.get("rows"), list):
+        e.add(where, "the benchmark block must name its version and carry rows")
+        return
+    for i, r in enumerate(b["rows"]):
+        w = f"{where}.rows[{i}]"
+        if not isinstance(r, dict):
+            e.add(w, "a row is an object")
+            continue
+        _enum(e, f"{w}.kind", r.get("kind"), BENCH_KINDS)
+        if not r.get("run_id") and r.get("kind") != "baseline":
+            e.add(w, "no run id: an arm without a tracked run is not reportable")
+        _ref(e, f"{w}.n", r.get("n"), known)
+        _ref(e, f"{w}.n_pos", r.get("n_pos"), known, nullable=True)
+        _ref(e, f"{w}.n_neg", r.get("n_neg"), known, nullable=True)
+        for group in ("metrics", "extra"):
+            for key, vid in (r.get(group) or {}).items():
+                _ref(e, f"{w}.{group}.{key}", vid, known)
+        for key, bounds in (r.get("ci") or {}).items():
+            if not isinstance(bounds, list) or len(bounds) != 2:
+                e.add(f"{w}.ci.{key}", "an interval is its two bounds")
+                continue
+            for j, bound in enumerate(bounds):
+                _ref(e, f"{w}.ci.{key}[{j}]", bound, known)
+        for stratum, cell in (r.get("strata") or {}).items():
+            for key, vid in (cell or {}).items():
+                _ref(e, f"{w}.strata.{stratum}.{key}", vid, known)
 
 
 def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:
@@ -392,6 +425,8 @@ def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:
             for i, r in enumerate(b.get(extra) or []):
                 _ref(e, f"{where}.{extra}[{i}].value_id", r.get("value_id"), known)
         _ref(e, f"{where}.cells", b.get("cells"), known, nullable=True)
+    if doc.get("bench") is not None:
+        check_bench(e, f"{path}.bench", doc["bench"], known)
     rg = doc.get("readiness_gate")
     if rg is not None:
         where = f"{path}.readiness_gate"

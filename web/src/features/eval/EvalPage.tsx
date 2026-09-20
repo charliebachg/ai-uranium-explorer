@@ -6,7 +6,7 @@ import { V } from "@/components/values/V";
 import type { Readiness, RunSummary } from "@/data/contract";
 import { loadReadiness, loadRunSummary } from "@/data/loader";
 import { resolveValue } from "@/data/registry";
-import { HeadlineSection, HindcastSection, SearchSection } from "@/features/eval/PhaseSections";
+import { BenchSection, HeadlineSection, HindcastSection, SearchSection } from "@/features/eval/PhaseSections";
 import { MetricsStrip } from "@/features/prospect/MetricsStrip";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/state/store";
@@ -159,6 +159,7 @@ export function EvalPage() {
       <HeadlineSection block={readiness?.headline} />
       <SearchSection block={readiness?.search} />
       <HindcastSection block={readiness?.hindcast} />
+      <BenchSection block={readiness?.bench} />
       <GateSection readiness={readiness} />
     </Shell>
   );

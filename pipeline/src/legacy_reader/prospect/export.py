@@ -373,6 +373,103 @@ def _phase_blocks(vals: list[dict[str, Any]], out_dir: Path | None = None) -> di
     return blocks
 
 
+#: the metrics the Eval page prints per benchmark row; the rest stay in table.json and the tracker
+BENCH_METRICS = ("f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all", "ece", "abstain_rate")
+#: what only an arm can report, with the formatter each takes: the gate, the probes, and what a cell cost
+BENCH_EXTRA = {"gate_rejection_rate": "ratio3", "probe_abstain_rate": "ratio3", "cost_usd_per_cell": "m2",
+               "latency_s_per_cell": "m1"}
+BENCH_STRATA = ("deposit", "occurrence", "negative")
+
+
+def _version_key(name: str) -> list[Any]:
+    """`v10` sorts after `v2`: the digits of a version name compare as numbers, the rest as text."""
+    return [(0, int(p)) if p.isdigit() else (1, p) for p in re.split(r"(\d+)", name) if p]
+
+
+def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dict[str, Any] | None:
+    """The analyst benchmark table (`lr bench table`): every arm and every baseline scored on the same open
+    cells of the frozen benchmark, from the highest version that has a table.
+
+    Every number becomes a value under `c:bench:<version>:<row>:<metric>` (`.lo`/`.hi` for an interval's
+    bounds, `:<stratum>:<key>` for a stratum), so the page prints the row through `<V>` like any other. A row
+    scored on no cells, an arm still running, is left out: it has nothing to print yet. Absent, not empty,
+    until a table has been written."""
+    root = out_dir or (PATHS.out / "bench")
+    tables = {p.parent.name: p for p in root.glob("*/table.json")} if root.is_dir() else {}
+    if not tables:
+        return None
+    versions = sorted(tables, key=_version_key)
+    version = versions[-1]
+    try:
+        d = json.loads(tables[version].read_text())
+    except json.JSONDecodeError:
+        return None
+    rows = []
+    for r in d.get("rows") or []:
+        n = _num(r.get("n_cells", r.get("n")))
+        if not n:
+            continue
+        name, kind = str(r["name"]), str(r.get("kind"))
+        pre = f"c:bench:{version}:{name}"
+        note = f"{kind} {name} ({r.get('model')}) on {int(n)} open cells of benchmark {version}"
+        vals.append(stat(f"{pre}:n", int(n), note=f"labelled open cells scored; {note}"))
+        row: dict[str, Any] = {"name": name, "kind": kind, "model": r.get("model"), "n": f"{pre}:n",
+                               "n_pos": None, "n_neg": None, "run_id": r.get("run_id"),
+                               "mlflow_run_id": r.get("mlflow_run_id"), "metrics": {}}
+        for key, what in (("n_pos", "positive cells"), ("n_neg", "negative cells")):
+            v = _num(r.get(key))
+            if v is not None:
+                vals.append(stat(f"{pre}:{key}", int(v), note=f"{what}; {note}"))
+                row[key] = f"{pre}:{key}"
+        if r.get("note"):
+            row["note"] = str(r["note"])
+        ci: dict[str, list[str]] = {}
+        for metric in BENCH_METRICS:
+            v = _num(r.get(metric))
+            if v is None:
+                continue
+            vid = f"{pre}:{metric}"
+            vals.append(stat(vid, round(v, 4), fmt="ratio3", note=f"{metric}; {note}"))
+            row["metrics"][metric] = vid
+            bounds = _interval(vals, vid, r.get(f"{metric}_ci"), f"{metric}; {note}")
+            if bounds:
+                ci[metric] = bounds
+        if ci:
+            row["ci"] = ci
+        if kind == "arm":
+            extra: dict[str, str] = {}
+            for key, fmt in BENCH_EXTRA.items():
+                v = _num(r.get(key))
+                if v is None:
+                    continue
+                vid = f"{pre}:{key}"
+                vals.append(stat(vid, round(v, 4), fmt=fmt, note=f"{key}; {note}",
+                                 unit="s" if key.startswith("latency") else None))
+                extra[key] = vid
+            if extra:
+                row["extra"] = extra
+        strata: dict[str, dict[str, str]] = {}
+        for stratum, cell in (r.get("strata") or {}).items():
+            if stratum not in BENCH_STRATA or not isinstance(cell, dict):
+                continue
+            entry: dict[str, str] = {}
+            for key, fmt in (("n", "int"), ("accuracy", "ratio3"), ("abstain_rate", "ratio3")):
+                v = _num(cell.get(key))
+                if v is None:
+                    continue
+                vid = f"{pre}:{stratum}:{key}"
+                vals.append(stat(vid, int(v) if fmt == "int" else round(v, 4), fmt=fmt,
+                                 note=f"{key} over the {stratum} cells; {note}"))
+                entry[key] = vid
+            if entry:
+                strata[stratum] = entry
+        if strata:
+            row["strata"] = strata
+        rows.append(row)
+    return {"version": version, "manifest_sha256": d.get("manifest_sha256"), "computed_at": d.get("computed_at"),
+            "rows": rows, "versions": versions[:-1]}
+
+
 def _gate_block(vals: list[dict[str, Any]]) -> dict[str, Any] | None:
     """What the gate scored on the adversarial suite, if it has been run.
 
@@ -456,6 +553,7 @@ def build(log: Callable[[str], None] = print) -> dict[str, Any]:
     scores, metrics = _scores_geojson(vals)
     gate = _gate_block(vals)
     phases = _phase_blocks(vals)
+    bench = _bench_block(vals)
     gate_columns = _gate_columns_block()
 
     doc = {
@@ -477,6 +575,7 @@ def build(log: Callable[[str], None] = print) -> dict[str, Any]:
         **({"gate": gate} if gate else {}),
         **({"readiness_gate": gate_columns} if gate_columns else {}),
         **phases,
+        **({"bench": bench} if bench else {}),
         "sources": [
             {
                 "key": s.key, "title": s.title, "role": s.role, "bears_on": s.bears_on, "tier": s.tier,

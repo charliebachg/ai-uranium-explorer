@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { BBox, DatumGrid, Val, ValRegistry, ValueId } from "@/data/contract";
+import { BBox, BenchBlock, DatumGrid, Val, ValRegistry, ValueId } from "@/data/contract";
 
 const lineage = {
   file_num: "64L04-0075",
@@ -80,5 +80,50 @@ describe("contract", () => {
     expect(grid.nlat * grid.nlon).toBe(grid.de_m.length);
     const east = grid.checks.find((c) => c.label.startsWith("Eastern"));
     expect(east && Math.abs(east.computed_m - 34.2)).toBeLessThan(0.3);
+  });
+
+  it("accepts the analyst benchmark block as the pipeline writes it and refuses a row of the wrong kind", () => {
+    const arm = {
+      name: "v0",
+      kind: "arm",
+      model: "claude-opus-5",
+      n: "c:bench:v1:v0:n",
+      n_pos: "c:bench:v1:v0:n_pos",
+      n_neg: null,
+      run_id: "20260920T061420Z-bench",
+      mlflow_run_id: null,
+      metrics: { f1: "c:bench:v1:v0:f1", pr_auc: "c:bench:v1:v0:pr_auc" },
+      ci: { f1: ["c:bench:v1:v0:f1.lo", "c:bench:v1:v0:f1.hi"] },
+      extra: { cost_usd_per_cell: "c:bench:v1:v0:cost_usd_per_cell" },
+      strata: { deposit: { n: "c:bench:v1:v0:deposit:n", accuracy: "c:bench:v1:v0:deposit:accuracy" } },
+    };
+    // a baseline names no run and may carry nothing beyond its metrics
+    const baseline = {
+      name: "random_expected",
+      kind: "baseline",
+      model: "random",
+      n: "c:bench:v1:random_expected:n",
+      n_pos: null,
+      n_neg: null,
+      run_id: null,
+      mlflow_run_id: null,
+      note: "analytic expectation; no interval",
+      metrics: { f1: "c:bench:v1:random_expected:f1" },
+    };
+    const block = {
+      version: "v1",
+      manifest_sha256: "b".repeat(64),
+      computed_at: null,
+      versions: [],
+      rows: [arm, baseline],
+    };
+    expect(BenchBlock.safeParse(block).success).toBe(true);
+    expect(BenchBlock.safeParse({ ...block, rows: [{ ...arm, kind: "model" }] }).success).toBe(false);
+    expect(BenchBlock.safeParse({ ...block, rows: [{ ...arm, metrics: { f1: "0.65" } }] }).success).toBe(
+      false,
+    );
+    expect(
+      BenchBlock.safeParse({ ...block, rows: [{ ...arm, ci: { f1: ["c:bench:v1:v0:f1.lo"] } }] }).success,
+    ).toBe(false);
   });
 });

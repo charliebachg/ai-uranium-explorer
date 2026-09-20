@@ -45,6 +45,32 @@ test("eval page reports run statistics and refuses to call them accuracy", async
   expect(errors).toEqual([]);
 });
 
+test("the analyst benchmark table is on the page when the export carries it", async ({ page }) => {
+  await page.goto("/eval");
+  const evalPage = page.locator('[data-strict="eval"]');
+  await expect(evalPage.locator('[data-testid="hindcast-table"]')).toBeVisible();
+  // the block is absent, not empty, until `lr bench table` has run and the export has been rebuilt; the
+  // committed export may predate it, so the table is asserted only when the data carries it
+  const carried = await page.evaluate(async () => {
+    const res = await fetch("/data/prospect/readiness.json");
+    const doc = (await res.json()) as { bench?: { rows?: unknown[] } };
+    return Boolean(doc.bench?.rows?.length);
+  });
+  test.skip(!carried, "the export does not carry the analyst benchmark block yet");
+  const table = evalPage.locator('[data-testid="bench-table"]');
+  await expect(table).toBeVisible();
+  await expect(evalPage).toContainText("The analyst benchmark");
+  expect(await table.locator('[data-testid="bench-row"]').count()).toBeGreaterThan(0);
+  // arms come first, and every arm names its run; baselines follow, muted, naming none
+  const kinds = await table
+    .locator('[data-testid="bench-row"]')
+    .evaluateAll((rows) => rows.map((r) => r.getAttribute("data-kind")));
+  const firstBaseline = kinds.indexOf("baseline");
+  expect(firstBaseline === -1 || kinds.slice(firstBaseline).every((k) => k === "baseline")).toBe(true);
+  for (const row of await table.locator('[data-testid="bench-row"][data-kind="arm"]').all())
+    await expect(row.locator("[data-ident]").last()).toBeVisible();
+});
+
 test("limits page states what the demo cannot claim", async ({ page }) => {
   await page.goto("/limits");
   const limits = page.locator('[data-strict="limits"]');
