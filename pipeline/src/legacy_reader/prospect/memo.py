@@ -48,17 +48,19 @@ MAX_STEPS = 6
 #: a map scale of 1:250,000 and a survey period of 1975-1978 are names, not measurements, and the first run of
 #: this gate rejected three otherwise sound memos for quoting them. The rule that replaced it: a number must
 #: either match a value the claim cites, or appear verbatim in a tool result from this session.
-NUMBER = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?![\w:-]|\.\d)")
+# `(?<!\d,)`: a map scale written 1:250,000 used to yield the token "000", because the colon stopped the
+# scanner at "250,000" and it restarted after the comma; a number never begins inside a comma group
+NUMBER = re.compile(r"(?<![\w.:-])(?<!\d,)(\d(?:[\d,]*\d)?(?:\.\d+)?)(?![\w:-]|\.\d)")
 #: a number glued to its unit, as scanned report text prints it ("2310m", "95ft", "2.5ppm"): the same number
 #: whether or not a space follows it. The unit list is closed so a digit run inside an identifier (74H09,
 #: PLS12-023) is still not a number.
-NUMBER_UNIT = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?=(?:km|mm|cm|m|ft|in|ppm|ppb|cps|%|deg|kg|g|wt)\b)")
+NUMBER_UNIT = re.compile(r"(?<![\w.:-])(?<!\d,)(\d(?:[\d,]*\d)?(?:\.\d+)?)(?=(?:km|mm|cm|m|ft|in|ppm|ppb|cps|%|deg|kg|g|wt)\b)")
 BARE_OK = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100"}
 
 
 #: a number that ends a label, as a report's log prints a year or a depth before a colon ("2018: drilled",
 #: "111.4: sandstone"): the colon is followed by white space, unlike the colon inside a value id
-NUMBER_LABEL = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?=:(?:\s|$))")
+NUMBER_LABEL = re.compile(r"(?<![\w.:-])(?<!\d,)(\d(?:[\d,]*\d)?(?:\.\d+)?)(?=:(?:\s|$))")
 
 
 def numbers_in(text: str) -> list[str]:

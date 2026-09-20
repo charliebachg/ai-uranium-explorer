@@ -246,3 +246,22 @@ def test_migration_0004_creates_the_same_tables_and_columns_as_schema_sql(monkey
     assert "chain_cell_idx" in "\n".join(executed) and "chain_run_idx" in "\n".join(executed)
     mod.downgrade()
     assert all(f"drop table if exists agent.{t}" in executed[-1] for t in TABLES)
+
+
+def test_the_store_allows_a_claim_that_quotes_the_tool_transcript_it_is_given(con) -> None:
+    """The loop's gate lets a claim quote a string the tools returned (a map scale); the store applies the
+    same allowance when the loop hands it the transcript, and only the cited values' strings without it."""
+    decision = _decision(claims_json=[{"text": "The 1:250,000 polygon names a pelitic unit; the conductor is 1.2 km away.",
+                                       "value_ids": ["v:cond"]}])
+    context = "Mapped at 1:250,000 scale, so a line's position carries map-scale error"
+    # the scanner no longer reads "000" out of the scale, so this passes with or without the transcript
+    C.store_chain(con, _chain(chain_id="ch-scale"), [_node("n01")], [_verdict(0, True)], decision, context=context)
+    assert C.load_chain(con, "ch-scale")["chain"]["published"] is True
+    # a genuine quotation from the transcript: the survey period a tool printed as text
+    quoted = _decision(claims_json=[{"text": "The 1975 survey sampled this lake; the conductor is 1.2 km away.",
+                                     "value_ids": ["v:cond"]}])
+    with pytest.raises(C.ChainRefused, match="1975"):
+        C.store_chain(con, _chain(chain_id="ch-quote-refused"), [_node("n01")], [_verdict(0, True)], quoted)
+    C.store_chain(con, _chain(chain_id="ch-quote"), [_node("n01")], [_verdict(0, True)], quoted,
+                  context="lake sediment sampled in the 1975 survey")
+    assert C.load_chain(con, "ch-quote")["chain"]["published"] is True

@@ -154,7 +154,7 @@ def _as_values(values: Any) -> dict[str, dict[str, Any]]:
     return {str(v.get("value_id")): v for v in (values or [])}
 
 
-def _refusals(nodes: list[dict[str, Any]], decision: dict[str, Any] | None) -> list[str]:
+def _refusals(nodes: list[dict[str, Any]], decision: dict[str, Any] | None, context: str = "") -> list[str]:
     """Why a chain marked published may not be. Empty when it may."""
     problems: list[str] = []
     for n in current_nodes(nodes):
@@ -165,10 +165,13 @@ def _refusals(nodes: list[dict[str, Any]], decision: dict[str, Any] | None) -> l
         if not bool(decision.get("published")):
             problems.append("the decision did not pass its gate")
         values = _as_values(decision.get("values_json"))
-        # the store has no tool transcript: a number in a claim must come from a value the claim cites, or be
-        # a string one of the cited values carries (a hole name, an as-printed figure)
+        # The same rule the loop's gate applied: a number in a claim comes from a value the claim cites, or is
+        # a string the tools returned in that session (`context`, the loop's own transcript; a map scale, a
+        # hole name). Without the transcript the allowance is only the strings the cited values carry, which
+        # once refused a chain the loop had published for quoting "1:250,000" from a caveat.
         problems += [f"decision {p}" for p in
-                     check_claims(list(decision.get("claims_json") or []), values, context=quotable(values))]
+                     check_claims(list(decision.get("claims_json") or []), values,
+                                  context=(context + "\n" + quotable(values)) if context else quotable(values))]
     return problems
 
 
@@ -177,14 +180,15 @@ def _refusals(nodes: list[dict[str, Any]], decision: dict[str, Any] | None) -> l
 
 def store_chain(
     con: duckdb.DuckDBPyConnection | None, chain: dict[str, Any], nodes: list[dict[str, Any]],
-    verdicts: list[dict[str, Any]], decision: dict[str, Any] | None,
+    verdicts: list[dict[str, Any]], decision: dict[str, Any] | None, context: str = "",
 ) -> str:
     """Write a chain to the four `agent.chain*` tables in one transaction and return its id.
 
     Refuses, writing nothing, a chain marked published while any current node or the decision did not pass
     its gate, or whose decision claims cite an id that is not in `values_json` or state a number no cited
-    value backs. The enumerated fields are checked whatever the published flag says, because a dashboard
-    filters on them and a misspelt verdict would simply vanish from it."""
+    value backs and the tool transcript (`context`, what the loop's session returned as text) does not carry.
+    The enumerated fields are checked whatever the published flag says, because a dashboard filters on them
+    and a misspelt verdict would simply vanish from it."""
     chain_id = str(chain.get("chain_id") or "")
     if not chain_id:
         raise ChainRefused("a chain needs a chain_id")
@@ -197,7 +201,7 @@ def store_chain(
         if not 0 <= int(n.get("strength") or 0) <= 5:
             raise ChainRefused(f"node {n.get('node_id')} strength {n.get('strength')!r} is not in 0..5")
     if bool(chain.get("published")):
-        problems = _refusals(nodes, decision)
+        problems = _refusals(nodes, decision, context)
         if problems:
             raise ChainRefused(f"chain {chain_id} cannot be published: " + "; ".join(problems))
 

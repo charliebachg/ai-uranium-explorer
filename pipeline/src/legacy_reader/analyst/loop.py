@@ -634,13 +634,13 @@ class _Loop:
             stored = False
             if con is not None and self.session.purpose != "benchmark":
                 try:
-                    CH.store_chain(con, *self._store_rows(arm, manifest_sha256))
+                    CH.store_chain(con, *self._store_rows(arm, manifest_sha256), context=self.session.context)
                 except CH.ChainRefused as err:
                     if not chain.published:
                         raise
                     chain.published = False
                     self.problems.append(f"store: {err}")
-                    CH.store_chain(con, *self._store_rows(arm, manifest_sha256))
+                    CH.store_chain(con, *self._store_rows(arm, manifest_sha256), context=self.session.context)
                 stored = True
             set_attrs(published=chain.published, stored=stored)
 

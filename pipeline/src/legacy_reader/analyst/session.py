@@ -140,24 +140,26 @@ class Session:
         """A session over `cell_id` for one purpose.
 
         Scored and benchmark sessions are blinded: the blind-list is `blind` (the benchmark's frozen one) or
-        computed from the store, and the forbidden names are `forbidden` (the builder's set) or read from the
-        store, with the store's hole names added either way. `tools` is the registry to dispatch to, the live
-        one by default; `con` is opened read-only when a blinded session is not given one, and closed by
-        `close`. The stage directory receives one file per tool result, as the memo panel's does."""
+        computed from the store, and the forbidden names are `forbidden` (the caller's complete set, hole
+        names included, as the harness builds it once per run) or read from the store with the hole names
+        added. `tools` is the registry to dispatch to, the live one by default. The store is opened read-only
+        only when something has to be read from it, here or later for the out-of-fold scores, and closed by
+        `close`: a session handed everything it needs never touches the store, which is what lets a test run
+        beside a live chain run holding the file. The stage directory receives one file per tool result, as
+        the memo panel's does."""
         if purpose not in PURPOSES:
             raise SessionRefusal("purpose", f"purpose must be one of {PURPOSES}, not {purpose!r}")
         if purpose == "benchmark" and not bench_id:
             raise SessionRefusal("purpose", "a benchmark session needs the bench id the model is shown")
         blinded = purpose != "dashboard"
-        owns = blinded and con is None
+        owns = blinded and con is None and (blind is None or forbidden is None)
         if owns:
             con = connect(read_only=True)
         files: list[str] = []
         names: set[str] = set()
         if blinded:
             files = sorted(str(f) for f in blind) if blind is not None else compute_blind_list(cell_id, BLIND_RADIUS_KM, con)
-            names = set(forbidden) if forbidden is not None else P.forbidden_strings(con)
-            names |= P.hole_names(con)
+            names = set(forbidden) if forbidden is not None else P.forbidden_strings(con) | P.hole_names(con)
             if purpose == "benchmark":
                 names.add(cell_id)
         stage.mkdir(parents=True, exist_ok=True)
@@ -165,6 +167,13 @@ class Session:
                    bench_id=bench_id if purpose == "benchmark" else cell_id, blind_list=files,
                    tools=tools if tools is not None else T.REGISTRY, forbidden=frozenset(names), oof=oof,
                    con=con, owns_con=owns)
+
+    def _store(self) -> Any:
+        """The store connection, opened read-only on first need and owned by the session from then on."""
+        if self.con is None:
+            self.con = connect(read_only=True)
+            self.owns_con = True
+        return self.con
 
     @property
     def blinded(self) -> bool:
@@ -263,7 +272,7 @@ class Session:
         A row from another fold came from a model that may have seen this cell's label."""
         if self.fold is None:
             raise SessionRefusal("B18", "a blinded session serves out-of-fold scores, which need the session's fold")
-        served = P.oof_result(self.cell_id, con=self.con, oof=self.oof)
+        served = P.oof_result(self.cell_id, con=self._store() if self.oof is None else None, oof=self.oof)
         result = self._drop_rows(served, "B18", lambda r: r.get("fold") != self.fold)
         self.scores_seen += [{"model_version": r["model"], "fold_kind": "spatial", "fold": r["fold"]} for r in result.rows]
         return result

@@ -428,6 +428,21 @@ def run_arm(
 
 # ---------------------------------------------------------------- real cells, for the dashboard
 
+
+def _why_withheld(row: dict[str, Any]) -> str:
+    """The first reason a chain was not published: a gate or store problem, else the abstention (a chain no
+    round validated), else the verifier's last word."""
+    if row.get("problems"):
+        return str(row["problems"][0])
+    decision = (row.get("chain") or {}).get("decision") or {}
+    if decision.get("abstained_reason"):
+        return str(decision["abstained_reason"])
+    verdicts = (row.get("chain") or {}).get("verdicts") or []
+    if verdicts and not verdicts[-1].get("valid"):
+        faulty = ", ".join(f.get("node_id", "?") for f in verdicts[-1].get("faulty") or [])
+        return f"never valid; faulty {faulty or 'none named'}: {str(verdicts[-1].get('feedback') or '')[:90]}"
+    return "not published"
+
 CHAIN_KIND = "chain"
 
 
@@ -515,7 +530,7 @@ def run_cells(
                         log(f"    {cell_id}  {row['answer'].get('verdict', '?'):<22} p={row['answer'].get('probability', float('nan')):.2f}"
                             f"  ${row['cost_usd']:.3f}  rounds {st.get('rounds')} {'valid' if st.get('valid') else 'never valid'}"
                             f"  gate {st.get('n_gate_rejections')}/{st.get('attempts_total')}"
-                            f"{'' if row['published'] else '  WITHHELD: ' + (row['problems'] or ['?'])[0]}")
+                            f"{'' if row['published'] else '  WITHHELD: ' + _why_withheld(row)}")
                     elif status == "failed":
                         row = {"bench_id": cell_id, "answer": None, "problems": [f"{type(payload).__name__}: {payload}"],
                                "published": False, "cost_usd": 0.0, "duration_s": None, "error": str(payload), **base}

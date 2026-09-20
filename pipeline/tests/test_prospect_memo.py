@@ -319,3 +319,14 @@ def test_a_number_glued_to_its_unit_in_quoted_text_is_the_same_number() -> None:
     assert check_claims(claims, {}, context) == []
     # a number that is not in the text is still refused
     assert check_claims([{"text": "the holes total 2400 m", "value_ids": []}], {}, context)
+
+
+def test_a_map_scale_yields_no_number_and_a_claim_quoting_it_needs_no_id() -> None:
+    """1:250,000 once scanned as "000" after the colon stopped the match at 250,000; a chain was withheld for
+    it. No token starts inside a comma group, and the colon and the comma group are not a claim's numbers."""
+    from legacy_reader.prospect.memo import check_claims, numbers_in
+
+    assert numbers_in("Mapped at 1:250,000 scale, so a line's position carries map-scale error") == []
+    assert numbers_in("The 1:250,000 polygon at 0 m names a pelitic unit") == ["0"]
+    assert numbers_in("a reading of 12,500 ppm and 1,250,000 counts") == ["12,500", "1,250,000"]
+    assert check_claims([{"text": "The 1:250,000 bedrock polygon under the cell names a pelitic unit.", "value_ids": []}], {}) == []
