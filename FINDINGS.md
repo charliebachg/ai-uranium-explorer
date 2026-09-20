@@ -132,6 +132,17 @@ verifier on Opus, and the deciders scored as a ranking, not a threshold.
 **Probes.** On the 16 never-drilled cells the arms abstained 31 to 56% of the time and mostly said "evidence
 against" otherwise, a reasonable reading of empty ground.
 
+**Addendum, 2026-09-20 evening: the same single call on a cheap model.** `v0-qwen38`, Qwen 3.8 Flash through
+OpenRouter at medium reasoning effort, the same card and pack, the same gate (runs `20260920T144047Z-bench`
+and its resume `20260920T160038Z-bench`, MLflow `69c1da18`): F1 0.444 [0.33, 0.55], PR-AUC 0.496 [0.37,
+0.67], ROC-AUC 0.565, ECE 0.093, abstain 46%, 26 of 129 answers refused by the gate, one cell failed on a
+reply that reasoned past its length limit, $0.71 for 130 cells against $18.46 on Opus. The ranking sits
+inside Opus's interval and above the learned model's 0.497; the verdict is worse, mostly because it abstains
+twice as often; the gate refuses it as often as Sonnet. The calls take six minutes each at medium effort,
+because the model reasons for thousands of tokens over a pack Opus answers in forty seconds; seven of 130
+replies came back empty or malformed on the first pass, five of them recovered by a resume on a parser that
+reads the first complete object. A twenty-sixth of the cost buys the same ranking and a weaker verdict.
+
 **What this is not.** Fifty positives and 64 negatives: every interval is wide and printed. The labels are a
 drilling map; a "negative" is drilled ground with nothing recorded. One cell of the retrieval arm failed its
 call and counts as an abstention.
