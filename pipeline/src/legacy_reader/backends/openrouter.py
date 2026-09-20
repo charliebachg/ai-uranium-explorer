@@ -50,6 +50,9 @@ IMAGE_TOKENS = 1600
 REASONING_EFFORT = {"low": "low", "medium": "medium", "high": "high", "xhigh": "high", "max": "high"}
 #: what a call is priced at when neither the reply nor the models endpoint says: high on purpose
 FALLBACK_PRICE = Price(per_mtok_in=2.0, per_mtok_out=8.0)
+#: a rate limit or a provider hiccup is waited out this many times before it is the caller's problem, with
+#: the waits doubling from this many seconds; twenty-five cells at four segments each is a hundred requests
+RETRIES, BACKOFF_S = 4, 2.0
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 
 
@@ -180,6 +183,26 @@ class OpenRouterBackend:
             payload["response_format"] = {"type": "json_object"}
         return payload
 
+    def _post(self, headers: dict[str, str], payload: dict[str, Any]) -> Any:
+        """One request, with a rate limit, a provider error or a dropped connection waited out and retried
+        before it is raised: under many parallel cells these are the normal weather, not a failed cell."""
+        wait = BACKOFF_S
+        for n in range(RETRIES + 1):
+            try:
+                r = self.http.post(ENDPOINT, headers=headers, json=payload, timeout=self.timeout_s)
+            except httpx.HTTPError as err:
+                if n == RETRIES:
+                    raise TransientBackendError(f"{type(err).__name__} after {RETRIES} waits: {err}") from err
+                time.sleep(wait)
+                wait *= 2
+                continue
+            if (r.status_code == 429 or r.status_code >= 500) and n < RETRIES:
+                time.sleep(wait)
+                wait *= 2
+                continue
+            return r
+        raise TransientBackendError("unreachable")
+
     def call(self, req: ExtractionRequest) -> ExtractionResponse:
         """One request; a schema-shaped ask first, a plain JSON ask if the provider refuses the shape, and one
         retry of a reply that is not usable JSON. Every attempt that reaches the provider is charged."""
@@ -196,13 +219,10 @@ class OpenRouterBackend:
         last: Exception | None = None
         for attempt in (1, 2, 3):
             payload = self._payload(req, messages, structured, effort=effort, max_tokens=max_tokens)
-            try:
-                r = self.http.post(ENDPOINT, headers=headers, json=payload, timeout=self.timeout_s)
-            except httpx.HTTPError as err:
-                raise TransientBackendError(f"{type(err).__name__}: {err}") from err
+            r = self._post(headers, payload)
             status, text_body = r.status_code, r.text
             if status == 429 or status >= 500:
-                raise TransientBackendError(f"{status} from OpenRouter: {text_body[:300]}")
+                raise TransientBackendError(f"{status} from OpenRouter after {RETRIES} waits: {text_body[:300]}")
             if status in (401, 403):
                 raise BackendConfigError(f"{status} from OpenRouter: the key was refused ({text_body[:200]})")
             if status == 404:

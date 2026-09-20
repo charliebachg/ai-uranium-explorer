@@ -122,9 +122,14 @@ def test_a_reply_that_is_not_json_is_retried_and_then_refused_charged_each_time(
     assert len(env.read_text().splitlines()) == 3, "every attempt that reached the provider is on the ledger"
 
 
-def test_transient_and_configuration_failures_are_told_apart(tmp_path: Path, env: Path) -> None:
-    with pytest.raises(TransientBackendError):
-        OR.OpenRouterBackend(http=FakeHttp([(503, "busy")]), prices={}).call(request(tmp_path))
+def test_transient_and_configuration_failures_are_told_apart(tmp_path: Path, env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(OR.time, "sleep", lambda s: None)
+    http = FakeHttp([(503, "busy")] * (OR.RETRIES + 1))
+    with pytest.raises(TransientBackendError, match="waits"):
+        OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path))
+    assert len(http.sent) == OR.RETRIES + 1, "a provider error is waited out before it is raised"
+    http = FakeHttp([(429, "slow down"), (429, "slow down"), (200, reply({"status": "met"}))])
+    assert OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path)).structured == {"status": "met"}
     with pytest.raises(BackendConfigError, match="not found"):
         OR.OpenRouterBackend(http=FakeHttp([(404, "no such model")]), prices={}).call(request(tmp_path))
     with pytest.raises(BackendConfigError, match="refused"):
