@@ -107,23 +107,29 @@ def v1() -> S.BenchSpec:
     return S.load_spec("v1")
 
 
-def test_build_pack_carries_the_three_tools_and_no_effort_feature(store: Path) -> None:
+def test_build_pack_carries_every_part_under_v1_and_only_three_tools_with_the_switches_off(store: Path) -> None:
+    off = {"label_context": False, "oof_scores": False, "effort_features": False}
     con = ST.connect(store, read_only=True)
     try:
-        pack = P.build_pack("0000_0000", "b-0001", v1(), con=con)
+        full = P.build_pack("0000_0000", "b-0001", v1(), con=con)
+        lean = P.build_pack("0000_0000", "b-0001", v1(), con=con, switches=off)
     finally:
         con.close()
-    assert pack["bench_id"] == "b-0001" and pack["version"] == "v1"
-    assert set(pack["tools"]) == {"cell_features", "criteria_breakdown", "coverage"}
-    feats = {r["feature"] for r in pack["tools"]["cell_features"]["rows"]}
+    # v1 carries every part, so an arm can strip what it does not use and never has to add
+    assert full["bench_id"] == "b-0001" and full["version"] == "v1"
+    assert {"cell_features", "criteria_breakdown", "coverage"} <= set(full["tools"])
+    assert full["switches"] == {"label_context": True, "oof_scores": True, "effort_features": True}
+    assert all(k.startswith("b:b-0001:") for k in full["values"])
+    # with the switches off the pack is the closed-book minimum: three tools, no effort feature anywhere
+    assert set(lean["tools"]) == {"cell_features", "criteria_breakdown", "coverage"}
+    feats = {r["feature"] for r in lean["tools"]["cell_features"]["rows"]}
     assert "d_conductor_m" in feats and not feats & {"holes_n", "airborne_surveys_n", "holes_first_year"}
-    assert not {r["feature"] for r in pack["tools"]["coverage"]["rows"]} & {"holes_n"}
-    assert all(k.startswith("b:b-0001:") for k in pack["values"])
-    assert not any("holes_n" in k for k in pack["values"])
-    text = json.dumps(pack)
+    assert not {r["feature"] for r in lean["tools"]["coverage"]["rows"]} & {"holes_n"}
+    assert not any("holes_n" in k for k in lean["values"])
+    text = json.dumps(full)
     assert "0000_0000" not in text and "ASAMERA" not in text and "Cluff Lake" not in text and "Cigar Lake" not in text
-    row = next(r for r in pack["tools"]["cell_features"]["rows"] if r["feature"] == "d_conductor_m")
-    assert row["value_id"] in pack["values"] and pack["values"][row["value_id"]]["value"] == row["value"]
+    row = next(r for r in full["tools"]["cell_features"]["rows"] if r["feature"] == "d_conductor_m")
+    assert row["value_id"] in full["values"] and full["values"][row["value_id"]]["value"] == row["value"]
 
 
 def test_switches_add_label_context_effort_and_out_of_fold_scores(store: Path) -> None:
@@ -150,7 +156,8 @@ def test_switches_add_label_context_effort_and_out_of_fold_scores(store: Path) -
 def test_pack_text_is_compact_and_stable(store: Path) -> None:
     con = ST.connect(store, read_only=True)
     try:
-        pack = P.build_pack("0000_0000", "b-0001", v1(), con=con)
+        pack = P.build_pack("0000_0000", "b-0001", v1(), con=con,
+                            switches={"label_context": False, "oof_scores": False, "effort_features": False})
     finally:
         con.close()
     text = P.pack_text(pack)
