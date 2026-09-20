@@ -51,9 +51,19 @@ published the cell. Before the run, staging one benchmark cell through a real se
 the criteria rows carrying their literature lines, which name the deposits each threshold came from; blinded
 sessions now drop that line and scrub the handbook's own place names.
 
+**K = 3, same cells, same day.** With three verifier rounds the same fifteen cells validated 13 of 15 (run
+`20260920T130034Z-chain`, MLflow `a62ca4a4`): the five graphitic-host chains were repaired in round 2 or 3,
+the executor re-reading its node as unknown on the verifier's reason, at $0.35 to $0.75 a cell more. The two
+that still never validated are the two data faults: the footprint cell spent $2.59 over three rounds with the
+executor scoring distances to features outside the map's reach as "not met" and the verifier refusing it
+each time, and the boulder cell could not mark a count unknown while the source layer hands it a value of
+0.0. Neither is repairable from what the store holds; both are on the backlog. The node gate's rejection rate
+rose to 10% (re-executed nodes face it again); live spend for the K = 3 pass was $5.25 on top of the cached
+executor calls.
+
 **What it decides.** The cover mask and the zero-fill rule land before 5c, because the verifier will keep
-failing four chains in ten on them and the criteria baseline carries the same errors. K = 1 discards the
-verifier's most useful output; K = 3 is the default to test first. A chain costs $1.19, so a 114-cell arm is
+failing chains on them and the criteria baseline carries the same errors. K = 1 discards the verifier's most
+useful output; K = 3 is now the v1 default and K = 1 the ablation arm. A chain costs $1.19, so a 114-cell arm is
 about $135 and the seven arms about $950; the arm set is sized against usage, not run wholesale. The two
 deciders disagree on the threshold for four chains in ten, with the adjudicator the conservative one; 5c
 reports both and the ranking decides.
