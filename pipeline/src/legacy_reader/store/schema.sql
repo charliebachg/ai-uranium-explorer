@@ -486,3 +486,59 @@ create table if not exists expert.insight (
   tier            text not null default 'expert' check (tier = 'expert')
 );
 create index if not exists insight_cell_idx on expert.insight (cell_id, recorded_at);
+
+-- ---------------------------------------------------------------- tier B, continued: agreement and review
+
+-- The extractor's second-family agreement (PRD §8.2, stage 4). One row per value either reader found on a
+-- compared page: agreed, disagreed, or found by one reader only, with both readings as JSON and the first
+-- reading's `read.field_value` id when the store holds it. The values themselves are not touched: a
+-- consumer that wants agreed values only joins here on `value_id`. Read tier because it is about readings,
+-- and a reading is what it carries.
+create table if not exists read.agreement (
+  agreement_id   text primary key,     -- sha256 prefix of (run, page, field, the value id or the second reading)
+  file_num       text not null,
+  page           integer not null,
+  page_id        text,
+  field          text not null,
+  field_type     text not null,        -- depth | grade | recovery | coordinate | angle | identifier | text | page_level
+  status         text not null,        -- agreed | disagreed | only_a | only_b
+  matched_by     text not null,        -- box | text | none: how the two readings were paired
+  detail         text,
+  value_id       text,                 -- the first reading's value id, when it was filed
+  reading_a_json text,                 -- the first reading of this value (the reader model's), as the comparer saw it
+  reading_b_json text,                 -- the second family's reading
+  model_a        text,
+  model_b        text,
+  prompt_version text,
+  run_id         text not null,
+  compared_at    text not null,
+  tier           text not null default 'read' check (tier = 'read')
+);
+create index if not exists agreement_page_idx on read.agreement (file_num, page, status);
+
+-- The review queue (PRD §8.2, §A.2): every disagreement and every value only one reader found, open until a
+-- person decides. The decision is recorded on the row and never rewrites a reading: `resolution_json` carries
+-- the accepted reading (A's, B's, or the one the person typed) beside the two readings it chose between, and
+-- `resolved_by` is the key label of whoever decided (never the key).
+create table if not exists read.review_item (
+  queue_id        text primary key,    -- sha256 prefix of (page, field, the value id or the second reading)
+  file_num        text not null,
+  page            integer not null,
+  page_id         text,
+  field           text not null,
+  field_type      text,
+  value_id        text,                -- the first reading's value id, when it was filed
+  reading_a_json  text,
+  reading_b_json  text,
+  reason          text not null,       -- disagreed | only_a | only_b
+  status          text not null default 'open',   -- open | accepted_a | accepted_b | rejected | edited
+  run_id          text not null,
+  model_a         text,
+  model_b         text,
+  created_at      text not null,
+  resolved_by     text,
+  resolved_at     text,
+  resolution_json text,
+  tier            text not null default 'read' check (tier = 'read')
+);
+create index if not exists review_item_open_idx on read.review_item (status, file_num, created_at);

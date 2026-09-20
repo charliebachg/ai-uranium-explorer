@@ -257,3 +257,76 @@ def test_a_reply_with_a_second_object_or_a_remark_after_the_first_is_read_as_the
     assert _parse('{"status": "met"} -- that is my answer') == {"status": "met"}
     with pytest.raises(Exception):
         _parse('{"status": "met"')
+
+
+# ---------------------------------------------------------------- images
+
+
+class FakeTransport:
+    """Stands in for httpx.post: records the payload, answers with one JSON reply."""
+
+    def __init__(self, structured: dict) -> None:
+        self.sent: list[dict] = []
+        self.structured = structured
+
+    def __call__(self, url: str, headers: dict, json: dict, timeout: float):
+        self.sent.append(json)
+        body = {"id": "x1", "model": "gpt-5-mini", "usage": {"prompt_tokens": 3000, "completion_tokens": 50},
+                "choices": [{"message": {"content": __import__("json").dumps(self.structured)}}]}
+
+        class R:
+            status_code = 200
+            text = ""
+
+            def json(self_inner):
+                return body
+
+        return R()
+
+
+def image_request(tmp_path: Path, model: str = "gpt-5-mini") -> ExtractionRequest:
+    page = tmp_path / "page.png"
+    page.write_bytes(b"\x89PNG\r\n\x1a\nfakepage")
+    return ExtractionRequest(task="extract_page", images=(page,), system_prompt="transcribe",
+                             user_prompt="Read the page image at {STAGE_DIR}/page.png.", schema={"type": "object"},
+                             schema_version="1", prompt_version="v1", model=model, effort="low")
+
+
+def test_a_page_image_travels_as_a_data_url_part_beside_the_text(ledger: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The same message shape the OpenRouter adapter sends: a text part, then one image_url part per page."""
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-not-a-real-key")
+    transport = FakeTransport({"page_level": {}})
+    monkeypatch.setattr(O.httpx, "post", transport)
+    resp = O.OpenAIBackend().call(image_request(tmp_path))
+    user = transport.sent[0]["messages"][1]["content"]
+    assert isinstance(user, list) and [p["type"] for p in user] == ["text", "image_url"]
+    assert "{STAGE_DIR}" not in user[0]["text"]
+    assert user[1]["image_url"]["url"].startswith("data:image/png;base64,") and user[1]["image_url"]["detail"] == "high"
+    assert isinstance(transport.sent[0]["messages"][0]["content"], str), "the system message stays plain text"
+    assert resp.structured == {"page_level": {}} and resp.cost_usd > 0
+
+
+def test_a_request_without_images_keeps_the_plain_string_message(tmp_path: Path) -> None:
+    messages = O._messages(request())
+    assert isinstance(messages[1]["content"], str)
+
+
+def test_an_image_for_a_model_that_cannot_see_is_refused_before_anything_is_sent(ledger: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from legacy_reader.backends.base import BackendConfigError
+
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test-not-a-real-key")
+    monkeypatch.delenv("OPENAI_VISION_MODELS", raising=False)
+    transport = FakeTransport({})
+    monkeypatch.setattr(O.httpx, "post", transport)
+    with pytest.raises(BackendConfigError) as err:
+        O.OpenAIBackend().call(image_request(tmp_path, model="gpt-3.5-turbo"))
+    assert "images" in str(err.value) and transport.sent == []
+    monkeypatch.setenv("OPENAI_VISION_MODELS", "gpt-3.5-turbo")
+    assert O.takes_images("gpt-3.5-turbo"), "the operator can name a model the prefix list does not know"
+
+
+def test_the_pre_call_estimate_counts_the_image(tmp_path: Path, ledger: Path) -> None:
+    backend = O.OpenAIBackend()
+    text_only = backend._worst_case_usd(O._messages(request()), 0)
+    with_image = backend._worst_case_usd(O._messages(image_request(tmp_path)), 1)
+    assert with_image > text_only + S.Price.from_env().usd(O.IMAGE_TOKENS, 0) - 1e-9

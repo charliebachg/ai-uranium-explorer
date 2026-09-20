@@ -14,10 +14,18 @@ Three differences from the CLI adapter, all forced by the fact that an API call 
 * **The response schema travels in the prompt.** The tool-loop schema has a free-form `args` object, which
   strict structured output does not allow, so the call asks for JSON and this module validates the shape it
   gets back. A reply that is not usable JSON is retried once and then raised, never guessed at.
+
+One thing the same as the OpenRouter adapter: **images travel as parts.** A request's page images go into the
+user message as data URLs beside the text, the way OpenRouter sends them, so the extractor can read a page
+through an API key (PRD §9.6). Only for a model that takes images: the models endpoint does not say which do,
+so `VISION_MODEL_PREFIXES` (and `OPENAI_VISION_MODELS` in `.env`) does, and a request that carries an image
+for any other model is refused before it is sent, because an answer about a page the model never saw is
+exactly the confident wrong answer this pipeline exists to refuse.
 """
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import time
@@ -43,6 +51,12 @@ MODELS_ENDPOINT = "https://api.openai.com/v1/models"
 #: this is about 40k tokens of context: generous for a handbook and four tool results, and a hard stop long
 #: before a runaway bundle turns into a bill.
 MAX_STAGED_CHARS = 160_000
+#: model ids (by prefix) that take image parts; `OPENAI_VISION_MODELS` in .env adds to the list, comma-separated
+VISION_MODEL_PREFIXES: tuple[str, ...] = ("gpt-5", "gpt-4o", "gpt-4.1", "o3", "o4", "o1", "chatgpt-4o")
+#: a pessimistic token allowance for one page image in the pre-call estimate (a 200 dpi page tiles into
+#: several image patches; this is above what the pricing page gives for a 1275 by 1650 image)
+IMAGE_TOKENS = 2500
+MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
 
 
 def load_dotenv(start: Path | None = None) -> dict[str, str]:
@@ -117,7 +131,22 @@ def _staged_text(req: ExtractionRequest) -> str:
     return "\n\n".join(parts)
 
 
-def _messages(req: ExtractionRequest) -> list[dict[str, str]]:
+def takes_images(model: str) -> bool:
+    """Whether a model id is one this adapter will send image parts to."""
+    load_dotenv()
+    extra = tuple(m.strip() for m in os.environ.get("OPENAI_VISION_MODELS", "").split(",") if m.strip())
+    return model.startswith(VISION_MODEL_PREFIXES + extra)
+
+
+def _image_part(path: Path) -> dict[str, Any]:
+    mime = MIME.get(path.suffix.lower(), "image/png")
+    data = base64.b64encode(path.read_bytes()).decode()
+    return {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{data}", "detail": "high"}}
+
+
+def _messages(req: ExtractionRequest) -> list[dict[str, Any]]:
+    """System: the prompt and the schema. User: the prompt with the staged files inlined, then the page
+    images as parts (a plain string when there are none, so the chat's messages are unchanged)."""
     staged = _staged_text(req)
     # the CLI prompt points at a directory; here the same files are already in the message
     user = req.user_prompt.replace("{STAGE_DIR}", "the attached files, named")
@@ -127,8 +156,23 @@ def _messages(req: ExtractionRequest) -> list[dict[str, str]]:
         "Reply with a single JSON object and nothing else: no prose before or after it, no code fence. "
         f"It must validate against this JSON Schema:\n{schema}"
     )
-    content = f"{user}\n\n{staged}" if staged else user
+    text = f"{user}\n\n{staged}" if staged else user
+    if req.images:
+        content: Any = [{"type": "text", "text": text}] + [_image_part(Path(p)) for p in req.images]
+    else:
+        content = text
     return [{"role": "system", "content": system}, {"role": "user", "content": content}]
+
+
+def _text_chars(messages: list[dict[str, Any]]) -> int:
+    n = 0
+    for m in messages:
+        c = m["content"]
+        if isinstance(c, str):
+            n += len(c)
+        else:
+            n += sum(len(p.get("text", "")) for p in c if p.get("type") == "text")
+    return n
 
 
 def _parse(text: str) -> dict[str, Any]:
@@ -208,9 +252,9 @@ class OpenAIBackend:
                         on_delta(piece)
         return {**meta, "usage": usage, "_text": "".join(parts)}, 200, ""
 
-    def _worst_case_usd(self, messages: list[dict[str, str]]) -> float:
-        chars = sum(len(m["content"]) for m in messages)
-        return self.price.usd(int(chars / 3.5), self.max_output_tokens)
+    def _worst_case_usd(self, messages: list[dict[str, Any]], n_images: int = 0) -> float:
+        tokens_in = int(_text_chars(messages) / 3.5) + IMAGE_TOKENS * n_images
+        return self.price.usd(tokens_in, self.max_output_tokens)
 
     def call(
         self, req: ExtractionRequest, on_delta: Callable[[str], None] | None = None
@@ -221,10 +265,15 @@ class OpenAIBackend:
         Streaming changes nothing about what is checked: the fragments are re-assembled and parsed exactly as a
         whole reply would be, and the gate runs on the finished object. A partial answer is never published.
         """
-        messages = _messages(req)
         model = req.model if req.model and not req.model.startswith("claude") else model_name()
+        if req.images and not takes_images(model):
+            raise BackendConfigError(
+                f"model {model!r} is not known to take images; the request carries {len(req.images)}. "
+                "Name a vision model, or add this one to OPENAI_VISION_MODELS in .env if it does."
+            )
+        messages = _messages(req)
         # the estimate is deliberately pessimistic: four characters to a token would flatter the check
-        check(self._worst_case_usd(messages))
+        check(self._worst_case_usd(messages, len(req.images)))
 
         payload: dict[str, Any] = {
             "model": model,
@@ -278,7 +327,7 @@ class OpenAIBackend:
                 last = err
                 if attempt == 2:
                     raise SchemaInvalidError(f"the reply was not usable JSON after two tries: {err}") from err
-                check(self._worst_case_usd(messages))
+                check(self._worst_case_usd(messages, len(req.images)))
                 continue
             return ExtractionResponse(
                 structured=structured,

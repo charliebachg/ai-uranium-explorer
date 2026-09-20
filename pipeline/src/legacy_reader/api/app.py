@@ -40,6 +40,7 @@ from ..prospect.chat import Conversation, ask
 from . import auth as AUTH
 from . import jobs as JOBS
 from . import persist
+from . import review as REVIEW
 from .reads import Candidates, EvidenceCache
 from .models import (CellConversations, CellJobs, Cells, ChatResponse, ConversationRecord, Evidence, Job,
                      JobRequest, Whoami)
@@ -255,6 +256,7 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
         AUTH.check(who, kind_of(row["kind"]).role, f"cancelling a {row['kind']} job")
         return runner.cancel(job_id)
 
+    app.include_router(REVIEW.build_router(db_path))   # the extractor's review queue (PRD §8.2): api/review.py
 
     # the same tools over MCP (PRD §E.3), in this process and on this store connection mode: one route, and
     # the transport's session manager running inside the app's lifespan; the same keyring, and the job runner

@@ -43,7 +43,13 @@ from .interface.cli import interface_app  # noqa: E402  (the interface agent: PR
 
 app.add_typer(mcp_app, name="mcp")
 app.add_typer(interface_app, name="interface")
+from .extractor.cli import agent_cmd, gold_app  # noqa: E402  (the extractor agent and its gold: PRD §8.2)
 
+# `lr extract` stays the batch reader (the group's own callback below); `lr extract agent` is the loop
+extract_app = typer.Typer(invoke_without_command=True, help="Read routed pages: the batch reader, or the agent loop (`agent`).")
+extract_app.command("agent")(agent_cmd)
+app.add_typer(extract_app, name="extract")
+app.add_typer(gold_app, name="gold")
 
 
 @openai_app.command("models")
@@ -300,8 +306,9 @@ def run_phase1(
         typer.echo(f"--- {name}: {time.monotonic() - t0:.1f} s")
 
 
-@app.command("extract")
+@extract_app.callback()
 def extract_cmd(
+    ctx: typer.Context,
     config: str = typer.Option("phase2", "--config", help="configs/<id>.toml"),
     split: str = typer.Option("dev", "--split", help="dev or heldout"),
     files: list[str] = typer.Option(None, "--files", help="file numbers (repeatable)"),
@@ -314,6 +321,8 @@ def extract_cmd(
     retry_failed: bool = typer.Option(False, "--retry-failed", help="plan pages again that failed every attempt in an earlier run"),
 ) -> None:
     """Extract routed pages with the configured model, one page per call. Exits 75 on a usage limit."""
+    if ctx.invoked_subcommand is not None:
+        return   # `lr extract agent ...`: the loop runs, not the batch reader
     from .extract import stage_extract
 
     backend = None
