@@ -45,9 +45,12 @@ MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models"
 VERSION = "openrouter/v1/chat.completions"
 #: a card is 1000 px square; this is a pessimistic token allowance for one image in the pre-call estimate
 IMAGE_TOKENS = 1600
-#: the request's effort as the provider's reasoning effort: these models think before they answer, the
-#: thinking is billed as completion tokens, and unbounded it can eat the whole allowance and return nothing
-REASONING_EFFORT = {"low": "low", "medium": "medium", "high": "high", "xhigh": "high", "max": "high"}
+#: the request's effort as a hard budget of reasoning tokens: these models think before they answer, the
+#: thinking is billed as completion tokens, and an effort *hint* was not honoured (a verifier call took the
+#: same twelve minutes at low as at medium). A budget is a number the provider has to stop at.
+REASONING_BUDGET = {"low": 2000, "medium": 4000, "high": 8000, "xhigh": 12000, "max": 16000}
+#: the answer itself needs this much room beyond the thinking
+ANSWER_TOKENS = 3000
 #: what a call is priced at when neither the reply nor the models endpoint says: high on purpose
 FALLBACK_PRICE = Price(per_mtok_in=2.0, per_mtok_out=8.0)
 #: a rate limit or a provider hiccup is waited out this many times before it is the caller's problem, with
@@ -146,7 +149,7 @@ class OpenRouterBackend:
                  prices: dict[str, Price] | None = None, http: Any = None) -> None:
         load_dotenv()
         self.timeout_s = timeout_s
-        self.max_output_tokens = max_output_tokens or int(os.environ.get("OPENROUTER_MAX_OUTPUT_TOKENS", "8000"))
+        self.max_output_tokens = max_output_tokens or int(os.environ.get("OPENROUTER_MAX_OUTPUT_TOKENS", "0")) or None
         self.structured = structured
         self.prices: dict[str, Price] = dict(prices or {})
         self.prices_fetched = prices is not None
@@ -165,16 +168,28 @@ class OpenRouterBackend:
                 pass
         return self.prices.get(model, FALLBACK_PRICE)
 
+    def _budget(self, req: ExtractionRequest) -> int:
+        return REASONING_BUDGET.get(req.effort, REASONING_BUDGET["medium"])
+
+    def _max_tokens(self, req: ExtractionRequest, thinking: bool) -> int:
+        """Completion room: the reasoning budget plus the answer's own room, or the answer's alone when thinking
+        is off. An explicit OPENROUTER_MAX_OUTPUT_TOKENS overrides both."""
+        if self.max_output_tokens:
+            return self.max_output_tokens
+        return (self._budget(req) if thinking else 0) + ANSWER_TOKENS
+
     def _worst_case_usd(self, req: ExtractionRequest, messages: list[dict[str, Any]]) -> float:
         tokens_in = int(_text_chars(messages) / 3.5) + IMAGE_TOKENS * len(req.images)
-        return self._price(req.model).usd(tokens_in, self.max_output_tokens)
+        return self._price(req.model).usd(tokens_in, self._max_tokens(req, thinking=True))
 
     def _payload(self, req: ExtractionRequest, messages: list[dict[str, Any]], structured: bool,
-                 effort: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
+                 thinking: bool = True) -> dict[str, Any]:
+        """`thinking` on: the reasoning budget for the request's effort as a hard cap, with the answer's room
+        on top. Off: no reasoning at all, the fallback for a reply that was cut mid-thought even so."""
         payload: dict[str, Any] = {
-            "model": req.model, "messages": messages, "max_tokens": max_tokens or self.max_output_tokens,
+            "model": req.model, "messages": messages, "max_tokens": self._max_tokens(req, thinking),
             "usage": {"include": True},   # the provider's own dollar figure comes back in the usage block
-            "reasoning": {"effort": REASONING_EFFORT.get(effort or req.effort, "medium")},
+            "reasoning": {"max_tokens": self._budget(req)} if thinking else {"enabled": False},
         }
         if structured:
             payload["response_format"] = {"type": "json_schema", "json_schema": {
@@ -213,12 +228,11 @@ class OpenRouterBackend:
         headers = {"Authorization": f"Bearer {api_key()}", "Content-Type": "application/json",
                    "X-Title": "legacy-reader analyst"}
         structured = self.structured
-        effort: str | None = None
-        max_tokens: int | None = None
+        thinking = True
         started = time.monotonic()
         last: Exception | None = None
         for attempt in (1, 2, 3):
-            payload = self._payload(req, messages, structured, effort=effort, max_tokens=max_tokens)
+            payload = self._payload(req, messages, structured, thinking=thinking)
             r = self._post(headers, payload)
             status, text_body = r.status_code, r.text
             if status == 429 or status >= 500:
@@ -243,11 +257,11 @@ class OpenRouterBackend:
             choice = (body.get("choices") or [{}])[0]
             text = ((choice.get("message") or {}).get("content")) or ""
             if choice.get("finish_reason") == "length" and not text.strip():
-                # the thinking ate the allowance: ask again with less of it and more room, once
+                # the thinking ate the allowance despite the budget: ask again with no thinking at all
                 last = SchemaInvalidError("the reply hit its length limit while reasoning and carried no answer")
-                if attempt == 3:
+                if attempt == 3 or not thinking:
                     raise last
-                effort, max_tokens = "low", 2 * (max_tokens or self.max_output_tokens)
+                thinking = False
                 check(FAMILY, self._worst_case_usd(req, messages))
                 continue
             try:
@@ -262,7 +276,7 @@ class OpenRouterBackend:
                 structured=structured_out,
                 envelope={"id": body.get("id"), "provider": body.get("provider"), "finish_reason": choice.get("finish_reason"),
                           "structured_ask": structured, "cost_reported": cost is not None,
-                          "reasoning_effort": payload["reasoning"]["effort"],
+                          "reasoning": payload["reasoning"],
                           "reasoning_tokens": ((usage.get("completion_tokens_details") or {}).get("reasoning_tokens"))},
                 backend=FAMILY, backend_version=self.version,
                 model_requested=req.model, model_resolved=str(body.get("model") or req.model),
