@@ -329,6 +329,23 @@ def graphitic_host(cells: gpd.GeoDataFrame) -> pd.DataFrame:
                          "nearest_m": np.nan})
 
 
+def graphitic_host_surface(cells: gpd.GeoDataFrame) -> pd.DataFrame:
+    """1 where the mapped bedrock at the surface names a graphitic or pelitic host, 0 where it is mapped as
+    anything else (the sandstone cover included), null if unmapped.
+
+    This is `graphitic_host` before the cover rule, kept under an honest name for the learned model, which
+    fits on complete cases and imputes nothing: a feature that is null under the basin would drop every
+    covered cell from its frame, and the deposits are the covered cells. Read as "a host is mapped at the
+    surface" it is complete wherever the map is, and a 0 under the cover is a true statement about the
+    surface. The criteria score and the analyst read `graphitic_host`, which says unknown there.
+    """
+    cls = polygon_class(cells, "bedrock_250k", "LITHOLOGY")
+    text = cls["value_text"].fillna("").str.lower()
+    hit = text.apply(lambda t: any(w in t for w in GRAPHITIC_WORDS))
+    value = np.where(cls["n_obs"] > 0, hit.astype(float), np.nan)
+    return pd.DataFrame({"cell_id": cls["cell_id"], "value": value, "n_obs": cls["n_obs"], "nearest_m": np.nan})
+
+
 def polygon_overlap_count(cells: gpd.GeoDataFrame, layer_key: str) -> pd.DataFrame:
     """How many polygons cover the cell: for survey footprints, a direct measure of exploration effort."""
     polys = _layer(layer_key)
@@ -368,7 +385,12 @@ SPECS: tuple[FeatureSpec, ...] = (
                 "graphitic_host", ("bedrock_250k",),
                 notes="Null where the 1:250,000 map has no polygon, and null inside the basin outline unless the "
                       "map names a host there: the sandstone cover says nothing about the basement. Unmapped "
-                      "and covered are not the same as absent."),
+                      "and covered are not the same as absent. The criteria score and the analyst read this."),
+    FeatureSpec("graphitic_host_surface", "A graphitic or pelitic host is mapped at the surface", "pathway",
+                "graphitic_host_surface", ("bedrock_250k",),
+                notes="The same map read as a statement about the surface: 0 under the sandstone cover is true "
+                      "of the surface and says nothing about the basement. The learned model, which fits on "
+                      "complete cases, reads this one so that covered cells stay in its frame."),
     # ---- trap
     FeatureSpec("d_fault_m", "Distance to nearest mapped fault or lineament", "trap", "distance_to_lines",
                 ("faults_250k",), unit="m",
@@ -428,6 +450,7 @@ BUILDERS: dict[str, Callable[..., pd.DataFrame]] = {
     "idw": idw,
     "polygon_class": polygon_class,
     "graphitic_host": graphitic_host,
+    "graphitic_host_surface": graphitic_host_surface,
     "polygon_overlap_count": polygon_overlap_count,
     "point_year": point_year,
 }

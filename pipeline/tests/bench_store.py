@@ -67,6 +67,7 @@ def bench_frame(n_dep: int = 30, n_occ: int = 60, n_neg: int = 120, n_probe: int
         "sed_samples_n": rng.integers(0, 9, n).astype(float), "boulder_samples_n": rng.integers(0, 4, n).astype(float),
         "airborne_surveys_n": rng.integers(0, 5, n).astype(float), "ground_surveys_n": rng.integers(0, 5, n).astype(float),
     })
+    df["graphitic_host_surface"] = df["graphitic_host"]   # the learned model's complete-case twin, not a new draw
     df["criteria_score"] = (1.0 - df["d_conductor_m"] / 20_000).clip(0, 1).round(4)
     return df
 

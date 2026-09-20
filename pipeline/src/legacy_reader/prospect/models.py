@@ -39,7 +39,9 @@ TOOL = "prospect/models"
 #: geological features with enough coverage to fit on complete cases; the thin ones are named in the readiness
 #: scorecard and deliberately left out rather than imputed
 LEARNED_FEATURES = (
-    "d_conductor_m", "d_fault_m", "fault_density", "graphitic_host", "unconformity_depth_m",
+    # graphitic_host_surface, not graphitic_host: the latter is unknown under the basin cover (rightly, for the
+    # criteria score and the analyst), and a complete-case fit would lose every covered cell for it
+    "d_conductor_m", "d_fault_m", "fault_density", "graphitic_host_surface", "unconformity_depth_m",
     "water_fraction", "vegetation_fraction", "bare_fraction", "elevation_m", "relief_m",
 )
 EFFORT_FEATURES = (

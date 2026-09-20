@@ -238,3 +238,16 @@ def test_polygon_overlap_count_measures_survey_effort(patch_layer):
     out = F.polygon_overlap_count(c, "surveys")
     assert out["value"].iloc[0] == 2.0
     assert out["value"].iloc[1] == 0.0
+
+
+def test_graphitic_host_surface_keeps_the_covered_cells_complete_for_the_learned_model(patch_layer):
+    c = cells(3)
+    c["in_basin"] = [True, True, False]
+    patch_layer["bedrock_250k"] = gpd.GeoDataFrame(
+        {"LITHOLOGY": ["conglomeratic quartz arenite", "graphitic metapelite"]},
+        geometry=[box(0, 0, 2000, 2000), box(2000, 0, 4000, 2000)], crs=f"EPSG:{EPSG}",
+    )
+    surface = F.graphitic_host_surface(c)
+    assert surface["value"].iloc[0] == 0.0 and surface["value"].iloc[1] == 1.0 and np.isnan(surface["value"].iloc[2])
+    host = F.graphitic_host(c)
+    assert np.isnan(host["value"].iloc[0]), "the cover-aware feature says unknown where the surface one says 0"

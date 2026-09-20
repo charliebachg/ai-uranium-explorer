@@ -40,6 +40,7 @@ def frame(n: int = 1200, seed: int = 0) -> pd.DataFrame:
         "sed_samples_n": rng.integers(0, 9, n).astype(float), "boulder_samples_n": rng.integers(0, 4, n).astype(float),
         "airborne_surveys_n": rng.integers(0, 5, n).astype(float), "ground_surveys_n": rng.integers(0, 5, n).astype(float),
     })
+    df["graphitic_host_surface"] = df["graphitic_host"]   # the learned model's complete-case twin, not a new draw
     return df
 
 
