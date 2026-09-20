@@ -350,3 +350,88 @@ create table if not exists agent.conversation_turn (
   created_at       text not null,
   tier             text not null default 'agent' check (tier = 'agent')
 );
+
+-- Analyst chains (PRD §8.4, Stage 6): the staged analyst loop, as published. One row per chain, one per node
+-- attempt, one per verifier round, one decision. A chain the gate refused is kept with `published` false as
+-- the record of that refusal, never as argument. Nothing here is a source of numbers: a node cites values by
+-- id, and the decision carries the cited values themselves (`values_json`, as `conversation_turn` does) so a
+-- chain can be re-scored without the store it ran against.
+create table if not exists agent.chain (
+  chain_id          text primary key,
+  cell_id           text not null,      -- the real cell
+  bench_id          text,               -- the anonymised id, in benchmark runs
+  purpose           text not null,      -- dashboard | scored | benchmark
+  run_id            text not null,
+  arm               text not null,
+  fold              integer,
+  planner           text not null,      -- template | model
+  rounds            integer not null,   -- verifier rounds run
+  valid             boolean not null,   -- true: a round validated the chain
+  final_verdict     text not null,      -- evidence_against | insufficient | supports_closer_look
+  final_probability double,
+  weighted_score    double,             -- decider (a): the weighted sum over node strengths
+  weights_version   text,               -- which out-of-fold fit the weights came from
+  verifier_label    text,               -- the last verifier's candidate label: recorded, not acted on
+  majority_label    text,               -- the vote over rounds, when K was exhausted
+  abstained_reason  text,               -- why the chain publishes "insufficient" without a verdict of its own
+  published         boolean not null,   -- false: the gate refused the chain as a whole
+  models_json       text not null,      -- executor, verifier and adjudicator model ids
+  manifest_sha256   text,               -- the run manifest this chain was published with
+  blind_list_hash   text,               -- the retrieval blind-list in force (B17)
+  cost_usd          double,
+  duration_s        double,
+  created_at        text not null,
+  tier              text not null default 'agent' check (tier = 'agent')
+);
+create table if not exists agent.chain_node (
+  chain_id        text not null,
+  node_id         text not null,        -- n01, n02 ... in plan order
+  round           integer not null,     -- the verifier round this attempt was executed in
+  attempt         integer not null,     -- the mechanical gate's retry within the round
+  segment_id      text not null,
+  kind            text not null,        -- criterion | crosscheck | retrieval
+  criterion       text,
+  status          text not null,        -- met | not_met | unknown
+  strength        integer not null,     -- 0..5
+  value_ids_json  text not null,        -- the value ids the node rests on
+  expert_ids_json text not null,        -- those of them that are expert-tier, labelled as such (B19)
+  depends_on_json text not null,        -- the node ids this one builds on
+  text            text not null,        -- the node's one sentence
+  published       boolean not null,     -- true: passed the node gate
+  problems_json   text not null,        -- what the node gate objected to, [] when it passed
+  model           text not null,
+  cost_usd        double,
+  duration_s      double,
+  created_at      text not null,
+  tier            text not null default 'agent' check (tier = 'agent'),
+  primary key (chain_id, node_id, round, attempt)
+);
+create table if not exists agent.chain_verdict (
+  chain_id              text not null,
+  round                 integer not null,
+  valid                 boolean not null,
+  faulty_json           text not null,  -- [{node_id, reason}]: the nodes sent back to Stage 2
+  feedback              text,
+  candidate_label       text,           -- the verifier's own label, for the per-stage agreement metric
+  candidate_probability double,
+  rationale             text,
+  model                 text not null,
+  cost_usd              double,
+  duration_s            double,
+  created_at            text not null,
+  tier                  text not null default 'agent' check (tier = 'agent'),
+  primary key (chain_id, round)
+);
+create table if not exists agent.chain_decision (
+  chain_id         text primary key,
+  adjudicator_json text not null,       -- the answer: verdict, probability, claims, unknown and absent criteria, next_observation, rationale
+  claims_json      text not null,       -- the claims alone, with their value ids, for the digit scan
+  values_json      text not null,       -- the cited values by id, so the chain is self-contained
+  published        boolean not null,
+  problems_json    text not null,
+  model            text not null,
+  cost_usd         double,
+  duration_s       double,
+  created_at       text not null,
+  tier             text not null default 'agent' check (tier = 'agent')
+);
