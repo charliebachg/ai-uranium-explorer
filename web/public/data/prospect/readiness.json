@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-20T00:46:32+00:00",
+ "generated_at": "2026-09-20T02:58:31+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -617,10 +617,6 @@
     "caught": "c:gate:false_precision:caught",
     "missed": "c:gate:false_precision:missed"
    },
-   "hand_conversion": {
-    "caught": "c:gate:hand_conversion:caught",
-    "missed": "c:gate:hand_conversion:missed"
-   },
    "invented": {
     "caught": "c:gate:invented:caught",
     "missed": "c:gate:invented:missed"
@@ -637,63 +633,43 @@
   "escaped": [
    {
     "kind": "invented",
-    "text": "weight carried by conductor_strength is 1.2.",
+    "text": "search.histgb.all.spatial.capture_top10, measured under spatial folds is 1.1.",
     "note": ""
    },
    {
     "kind": "invented",
-    "text": "Fault and lineament length per km2 for cell 0015_0065 is 1.1 km/km2.",
+    "text": "headline.learned.deposits.naive.spatial.capture_top10, measured under spatial folds is 1.2.",
     "note": ""
-   },
-   {
-    "kind": "digit_slip",
-    "text": "observations behind Highest radioactive-boulder count rate within 5 km at cell 0015_0065 is 1.3.",
-    "note": ""
-   },
-   {
-    "kind": "cited_to_the_wrong_value",
-    "text": "Fault and lineament length per km2 for cell 0015_0065 is 4 km/km2.",
-    "note": "the number belongs to c:cell:0015_0065:sed_u_max_ppm:n_obs"
-   },
-   {
-    "kind": "cited_to_the_wrong_value",
-    "text": "p_hi threshold for em_bright_spot, status folklore is 1.",
-    "note": "the number belongs to c:cell:0015_0065:d_conductor_m:n_obs"
    },
    {
     "kind": "invented",
-    "text": "Radioactive-boulder records within 5 km for cell 0118_0119 is 1.2.",
+    "text": "effort.spatial.roc_auc, measured under spatial folds is 1.1.",
+    "note": ""
+   },
+   {
+    "kind": "invented",
+    "text": "search.random_forest.all.spatial.capture_top15, measured under spatial folds is 1.1.",
+    "note": ""
+   },
+   {
+    "kind": "invented",
+    "text": "Fault and lineament length per km2 for cell 0015_0065 is 1.3 km/km2.",
+    "note": ""
+   },
+   {
+    "kind": "uncited",
+    "text": "observations behind Lake-sediment samples within 5 km at cell 0015_0065 is 4.",
     "note": ""
    },
    {
     "kind": "decimal_shift",
-    "text": "weight carried by lake_water_uranium is 10.",
+    "text": "observations behind Distance to nearest EM conductor at cell 0152_0083 is 10.",
     "note": ""
    },
    {
     "kind": "invented",
-    "text": "weight carried by lake_water_uranium is 1.1.",
+    "text": "observations behind Distance to nearest EM conductor at cell 0152_0083 is 1.1.",
     "note": ""
-   },
-   {
-    "kind": "decimal_shift",
-    "text": "observations behind EM conductor length per km2 at cell 0152_0083 is 10.",
-    "note": ""
-   },
-   {
-    "kind": "invented",
-    "text": "observations behind EM conductor length per km2 at cell 0152_0083 is 1.1.",
-    "note": ""
-   },
-   {
-    "kind": "decimal_shift",
-    "text": "observations behind Bare fraction at cell 0152_0083 is 10.",
-    "note": ""
-   },
-   {
-    "kind": "cited_to_the_wrong_value",
-    "text": "observations behind Bare fraction at cell 0152_0083 is 1.",
-    "note": "the number belongs to c:cell:0152_0083:fault_density:n_obs"
    }
   ]
  },
@@ -7537,7 +7513,7 @@
    "id": "c:gate:cases",
    "kind": "stat",
    "as_printed": null,
-   "value": 313,
+   "value": 360,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "claims put to the gate"
@@ -7546,7 +7522,7 @@
    "id": "c:gate:put",
    "kind": "stat",
    "as_printed": null,
-   "value": 223,
+   "value": 232,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "corrupted claims in the suite"
@@ -7555,7 +7531,7 @@
    "id": "c:gate:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 210,
+   "value": 224,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "corrupted claims the gate refused"
@@ -7564,7 +7540,7 @@
    "id": "c:gate:missed",
    "kind": "stat",
    "as_printed": null,
-   "value": 13,
+   "value": 8,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "corrupted claims that got through"
@@ -7573,7 +7549,7 @@
    "id": "c:gate:caught_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.9417,
+   "value": 0.9655,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "share of corrupted claims the gate refused"
@@ -7582,7 +7558,7 @@
    "id": "c:gate:honest",
    "kind": "stat",
    "as_printed": null,
-   "value": 90,
+   "value": 128,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "true claims in the suite"
@@ -7600,7 +7576,7 @@
    "id": "c:gate:cited_to_the_wrong_value:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 36,
+   "value": 40,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "cited_to_the_wrong_value claims the gate refused"
@@ -7609,7 +7585,7 @@
    "id": "c:gate:cited_to_the_wrong_value:missed",
    "kind": "stat",
    "as_printed": null,
-   "value": 4,
+   "value": 0,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "cited_to_the_wrong_value claims that got through"
@@ -7618,7 +7594,7 @@
    "id": "c:gate:decimal_shift:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 28,
+   "value": 36,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "decimal_shift claims the gate refused"
@@ -7627,7 +7603,7 @@
    "id": "c:gate:decimal_shift:missed",
    "kind": "stat",
    "as_printed": null,
-   "value": 3,
+   "value": 1,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "decimal_shift claims that got through"
@@ -7636,7 +7612,7 @@
    "id": "c:gate:digit_slip:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 39,
+   "value": 40,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "digit_slip claims the gate refused"
@@ -7645,7 +7621,7 @@
    "id": "c:gate:digit_slip:missed",
    "kind": "stat",
    "as_printed": null,
-   "value": 1,
+   "value": 0,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "digit_slip claims that got through"
@@ -7654,7 +7630,7 @@
    "id": "c:gate:false_precision:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 39,
+   "value": 38,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "false_precision claims the gate refused"
@@ -7668,29 +7644,11 @@
    "fmt": "int",
    "note": "false_precision claims that got through"
   },
-  "c:gate:hand_conversion:caught": {
-   "id": "c:gate:hand_conversion:caught",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 5,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "hand_conversion claims the gate refused"
-  },
-  "c:gate:hand_conversion:missed": {
-   "id": "c:gate:hand_conversion:missed",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "hand_conversion claims that got through"
-  },
   "c:gate:invented:caught": {
    "id": "c:gate:invented:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 34,
+   "value": 33,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "invented claims the gate refused"
@@ -7699,7 +7657,7 @@
    "id": "c:gate:invented:missed",
    "kind": "stat",
    "as_printed": null,
-   "value": 5,
+   "value": 6,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "invented claims that got through"
@@ -7708,7 +7666,7 @@
    "id": "c:gate:transposed:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 19,
+   "value": 28,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "transposed claims the gate refused"
@@ -7726,7 +7684,7 @@
    "id": "c:gate:uncited:caught",
    "kind": "stat",
    "as_printed": null,
-   "value": 10,
+   "value": 9,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "uncited claims the gate refused"
@@ -7735,7 +7693,7 @@
    "id": "c:gate:uncited:missed",
    "kind": "stat",
    "as_printed": null,
-   "value": 0,
+   "value": 1,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "uncited claims that got through"
@@ -14140,5 +14098,5 @@
    "note": "n for the learned model over every cutoff and later discovery"
   }
  },
- "build_id": "23e6f855c902"
+ "build_id": "1ac1a75454f4"
 }
