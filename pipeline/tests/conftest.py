@@ -14,12 +14,14 @@ from legacy_reader.paths import PATHS
 
 @pytest.fixture(autouse=True)
 def prospect_sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
-    """No test hashes the real store, reads the real snapshots or writes the real data/out/prospect.
+    """No test hashes the real store, reads the real snapshots, writes the real data/out/prospect, charges the
+    real spend ledger or mirrors spans to the real MLflow store.
 
     The snapshot module's store path and snapshot directory, and the tracking module's output directory, point
     into the test's temporary directory; `make_store()` creates an empty store at that path for a test that
     wants a snapshot to name."""
     from legacy_reader.prospect import tracking as TR
+    from legacy_reader.runtime import spend as SP
     from legacy_reader.store import connect, write_meta
     from legacy_reader.store import snapshot as SN
 
@@ -30,6 +32,11 @@ def prospect_sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleN
     monkeypatch.setattr(SN, "snapshots_dir", lambda: snaps)
     monkeypatch.setattr(SN, "_git_commit", lambda: "deadbeef")
     monkeypatch.setattr(TR, "OUT_DIR", out)
+    # the spend ledger and its ceilings are the sandbox's, and no test mirrors spans to the real MLflow store
+    monkeypatch.setattr(SP, "ledger_path", lambda: root / "spend.jsonl")
+    monkeypatch.setattr(SP, "legacy_ledger_path", lambda: root / "openai_spend.jsonl")
+    monkeypatch.delenv("LR_MAX_SPEND_USD", raising=False)
+    monkeypatch.setenv("LR_TRACING_MLFLOW", "0")
 
     def make_store() -> Path:
         con = connect(db)

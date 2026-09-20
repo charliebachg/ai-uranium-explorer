@@ -148,6 +148,9 @@ class OpenAIBackend:
     """One HTTP call per request, with the spend ceiling checked before anything is sent."""
 
     family = FAMILY
+    #: the ledger line is written here, not by the cache wrapper: a reply that fails to parse is still
+    #: charged, and the retry is a second line
+    records_spend = True
 
     def __init__(self, timeout_s: float = 120.0, max_output_tokens: int | None = None) -> None:
         load_dotenv()

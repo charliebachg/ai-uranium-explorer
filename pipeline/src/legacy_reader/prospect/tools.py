@@ -15,6 +15,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
+from ..runtime.tracing import set_attrs, span
 from ..store import connect
 from ..values import stat
 from .criteria import load as load_criteria
@@ -246,8 +247,12 @@ def coverage(feature_key: str | None = None) -> ToolResult:
     return out
 
 
-def retrieve(query: str, cell_id: str | None = None, k: int = 6, radius_km: float = 40.0) -> ToolResult:
-    """Passages from the assessment corpus about this ground, most trustworthy tier first."""
+def retrieve(query: str, cell_id: str | None = None, k: int = 6, radius_km: float = 40.0,
+             exclude_files: list[str] | None = None) -> ToolResult:
+    """Passages from the assessment corpus about this ground, most trustworthy tier first.
+
+    `exclude_files` keeps named assessment files out of every tier (a benchmark's blind-list); empty, the
+    tool behaves as it always did and the argument is not echoed."""
     lon = lat = None
     if cell_id:
         con = connect(read_only=True)
@@ -257,8 +262,11 @@ def retrieve(query: str, cell_id: str | None = None, k: int = 6, radius_km: floa
             con.close()
         if row:
             lon, lat = float(row[0]), float(row[1])
-    passages = retrieve_passages(query, lon=lon, lat=lat, radius_km=radius_km, k=k)
-    out = ToolResult("retrieve", {"query": query, "cell_id": cell_id, "k": k, "radius_km": radius_km})
+    passages = retrieve_passages(query, lon=lon, lat=lat, radius_km=radius_km, k=k, exclude_files=exclude_files)
+    args: dict[str, Any] = {"query": query, "cell_id": cell_id, "k": k, "radius_km": radius_km}
+    if exclude_files:
+        args["exclude_files"] = list(exclude_files)
+    out = ToolResult("retrieve", args)
     for i, p in enumerate(passages):
         row: dict[str, Any] = {
             "tier": p.tier, "citation": p.cite(), "file": p.file_num, "page": p.page,
@@ -312,7 +320,11 @@ def call(tool: str, args: dict[str, Any]) -> ToolResult:
     fn = REGISTRY.get(tool)
     if fn is None:
         raise ToolError(f"no tool named {tool!r}; available: {', '.join(sorted(REGISTRY))}")
-    try:
-        return fn(**args)
-    except TypeError as err:
-        raise ToolError(f"{tool}: {err}") from err
+    # a tool span when a run is being traced, nothing otherwise: the arguments' names, never their values
+    with span(f"tool:{tool}", kind="tool", tool=tool, arg_keys=sorted(args)):
+        try:
+            result = fn(**args)
+        except TypeError as err:
+            raise ToolError(f"{tool}: {err}") from err
+        set_attrs(n_values=len(result.values), n_rows=len(result.rows))
+        return result

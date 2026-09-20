@@ -42,6 +42,7 @@ from .backends.cache import CachedBackend
 from .ids import sha256_json, short
 from .paths import PATHS
 from .prompts import CarryItem, assert_clean, prompt_version, system_prompt, user_prompt
+from .runtime.runs import new_run_id, run_dir  # noqa: F401  (module attributes: tests monkeypatch ex.run_dir)
 from .render import read_pages
 
 EXTRACT_VERSION = "extract/v1"
@@ -283,14 +284,6 @@ def context_hash(carry: list[CarryItem]) -> str:
 
 
 # --------------------------------------------------------------------------------- run log
-
-def run_dir(run_id: str) -> Path:
-    return PATHS.runs / run_id
-
-
-def new_run_id(config_id: str) -> str:
-    return dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ") + f"-{config_id}"
-
 
 class RunLog:
     """manifest.json plus two append-only JSONL files (queried later with DuckDB)."""

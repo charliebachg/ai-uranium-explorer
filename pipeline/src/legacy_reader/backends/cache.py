@@ -4,9 +4,14 @@ Layout (under `data/cache/`):
     calls/<k[:2]>/<k>.json       one successful call, request + response + raw envelope
     failures/<k[:2]>/<k>.jsonl   one line per failed attempt (appended, never read back as a success)
 
-The key is `ExtractionRequest.cache_key(inner.family)`: task, backend family, image sha256s, render
-params, prompt version, schema version, model, effort and carry-context hash. The staged temp path,
-the wall clock and the run id are deliberately outside it, so a re-run is free and resumable.
+The key is `ExtractionRequest.cache_key(inner.family)`: task, backend family, image and staged-file sha256s,
+render params, prompt version, schema version, model, effort, carry-context hash, and the sha256 of the
+system prompt, the user prompt and the schema themselves (B22). The staged temp path, the wall clock and the
+run id are deliberately outside it, so a re-run is free and resumable.
+
+Before a live call the wrapper asks the spend ledger whether the run's budget and the cumulative ceilings
+allow it, and after one it records what the call cost. A cache hit does neither: nothing was spent. Both
+paths are a model span when a trace is open.
 """
 
 from __future__ import annotations
@@ -16,14 +21,17 @@ import json
 import inspect
 import os
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any, Callable
 
 from ..ids import sha256_file
 from ..paths import PATHS
+from ..runtime.spend import RunBudget, check as check_budget, record as record_spend
+from ..runtime.tracing import set_attrs, span
 from .base import Backend, BackendError, ExtractionRequest, ExtractionResponse
 
-RECORD_VERSION = "call-record/v1"
+RECORD_VERSION = "call-record/v2"
 
 
 def streams(backend: object) -> bool:
@@ -72,10 +80,25 @@ def request_summary(req: ExtractionRequest) -> dict[str, Any]:
         "effort": req.effort,
         "prompt_version": req.prompt_version,
         "schema_version": req.schema_version,
+        "system_hash": req.system_hash(),
+        "user_hash": req.user_hash(),
+        "schema_hash": req.schema_hash(),
         "context_hash": req.context_hash,
         "render_params": req.render_params,
         "images": [{"name": p.name, "sha256": sha256_file(p)} for p in req.images],
+        "stage_files": req.stage_hashes(),
     }
+
+
+def tokens_of(usage: dict[str, Any]) -> tuple[int, int]:
+    """Input and output tokens from either family's usage block: the CLI counts cache reads and writes as
+    input beside `input_tokens`; the API reports `prompt_tokens` and `completion_tokens`."""
+    def n(*keys: str) -> int:
+        return sum(int(usage.get(k) or 0) for k in keys)
+
+    tokens_in = n("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens") or n("prompt_tokens")
+    tokens_out = n("output_tokens") or n("completion_tokens")
+    return tokens_in, tokens_out
 
 
 def build_record(req: ExtractionRequest, resp: ExtractionResponse, extra: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -119,12 +142,22 @@ def response_from_record(rec: dict[str, Any], key: str) -> ExtractionResponse:
 
 
 class CachedBackend:
-    """Wraps any backend with the on-disk cache. `family` mirrors the inner backend, so the key is stable."""
+    """Wraps any backend with the on-disk cache. `family` mirrors the inner backend, so the key is stable.
 
-    def __init__(self, inner: Backend, root: Path | None = None, refresh: bool = False):
+    `run_budget` is the run's own ceiling, checked with `estimate_usd` (the worst case for one call) before
+    every live call and charged after it. A backend that settles the ledger itself — the OpenAI adapter, which
+    charges a reply that fails to parse — says so with `records_spend = True`, and the wrapper then adds the
+    cost to the run budget only.
+    """
+
+    def __init__(self, inner: Backend, root: Path | None = None, refresh: bool = False,
+                 run_budget: RunBudget | None = None, estimate_usd: float = 0.50):
         self.inner = inner
         self.root = root or PATHS.cache
         self.refresh = refresh
+        self.run_budget = run_budget
+        self.estimate_usd = estimate_usd
+        self._budget_lock = threading.Lock()   # the scheduler charges from its worker threads
         self.hits = 0
         self.misses = 0
 
@@ -185,21 +218,42 @@ class CachedBackend:
     ) -> ExtractionResponse:
         """`on_delta` is forwarded to a backend that can stream. A cache hit never streams, because nothing is
         being generated — it returns the recorded answer whole, which is the honest thing for it to do."""
-        if not self.refresh:
-            hit = self.cached(req)
-            if hit is not None:
-                self.hits += 1
-                return hit
-        self.misses += 1
-        try:
-            resp = self.inner.call(req, on_delta=on_delta) if on_delta and streams(self.inner) \
-                else self.inner.call(req)
-        except BackendError as e:
-            self.record_failure(req, e, attempt)
-            raise
-        except Exception as e:  # unexpected: still recorded, still never cached
-            self.record_failure(req, e, attempt)
-            raise
-        write_atomic(record_path(resp.cache_key, self.root),
-                     json.dumps(build_record(req, resp), separators=(",", ":")) + "\n")
-        return resp
+        key = self.key_for(req)
+        with span(f"model:{req.task}", kind="model", task=req.task, model=req.model, effort=req.effort,
+                  cache_key=key, backend_family=self.family):
+            if not self.refresh:
+                hit = self.cached(req)
+                if hit is not None:
+                    self.hits += 1
+                    set_attrs(from_cache=True, cost_usd=hit.cost_usd, duration_s=hit.duration_s)
+                    return hit
+            self.misses += 1
+            # before anything leaves the machine: the run's budget, then the cumulative ceilings
+            check_budget(self.family, self.estimate_usd, self.run_budget)
+            try:
+                resp = self.inner.call(req, on_delta=on_delta) if on_delta and streams(self.inner) \
+                    else self.inner.call(req)
+            except BackendError as e:
+                self.record_failure(req, e, attempt)
+                raise
+            except Exception as e:  # unexpected: still recorded, still never cached
+                self.record_failure(req, e, attempt)
+                raise
+            self.charge(req, resp)
+            set_attrs(from_cache=False, cost_usd=resp.cost_usd, duration_s=resp.duration_s,
+                      model_resolved=resp.model_resolved)
+            write_atomic(record_path(resp.cache_key, self.root),
+                         json.dumps(build_record(req, resp), separators=(",", ":")) + "\n")
+            return resp
+
+    def charge(self, req: ExtractionRequest, resp: ExtractionResponse) -> float:
+        """Put a live call's cost on the ledger (unless the backend already did) and on the run budget."""
+        usd = float(resp.cost_usd or 0.0)
+        if not getattr(self.inner, "records_spend", False):
+            tokens_in, tokens_out = tokens_of(resp.usage or {})
+            record_spend(self.family, resp.model_resolved or resp.model_requested, usd, tokens_in, tokens_out,
+                         task=req.task)
+        if self.run_budget is not None:
+            with self._budget_lock:
+                self.run_budget.spent_usd += usd
+        return usd

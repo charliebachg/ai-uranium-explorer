@@ -63,11 +63,13 @@ def test_cache_key_changes_with_every_input_that_changes_the_answer(tmp_path):
     assert make_request(tmp_path, image=other).cache_key("claude_cli") != k
 
 
-def test_cache_key_ignores_what_does_not_change_the_answer(tmp_path):
+def test_cache_key_tracks_the_prompt_texts_not_only_their_versions(tmp_path):
+    """B22: an edited prompt under an unchanged version must not be served the old prompt's answer."""
     a = make_request(tmp_path)
     b = make_request(tmp_path, system_prompt="a totally different system prompt text")
-    assert a.cache_key("claude_cli") == b.cache_key("claude_cli"), \
-        "the prompt version, not the prompt text, is what the key tracks"
+    assert a.cache_key("claude_cli") != b.cache_key("claude_cli")
+    assert a.cache_key("claude_cli") == make_request(tmp_path).cache_key("claude_cli"), \
+        "an equal request keeps its key"
 
 
 def test_a_success_is_cached_and_served_without_a_second_call(tmp_path):
