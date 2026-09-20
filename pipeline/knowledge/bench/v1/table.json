@@ -1,0 +1,552 @@
+{
+ "version": "v1",
+ "computed_at": "2026-09-20T06:23:16+00:00",
+ "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
+ "rows": [
+  {
+   "name": "v0-retrieval",
+   "kind": "arm",
+   "model": "claude-opus-5",
+   "n_cells": 0,
+   "run_id": "20260920T061420Z-bench",
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "pending": 1
+  },
+  {
+   "name": "v0",
+   "kind": "arm",
+   "model": "claude-opus-5",
+   "n_cells": 4,
+   "run_id": "20260920T054916Z-bench",
+   "mlflow_run_id": "0a340e5b8b304c4eb51967e3acd4e3c4",
+   "cost_usd": 0.841502,
+   "pending": 0,
+   "n_rows": 5,
+   "n_labelled": 4,
+   "n_probe": 1,
+   "n_unknown_key": 0,
+   "n_answered": 5,
+   "n_rejected": 0,
+   "n_failed": 0,
+   "gate_rejection_rate": 0.0,
+   "gate_rejection_denominator": 5,
+   "probe_abstain_rate": 1.0,
+   "cost_usd_total": 0.841502,
+   "cost_usd_per_cell": 0.1683004,
+   "latency_s_per_cell": 39.976,
+   "from_cache_share": 0.0,
+   "n": 4,
+   "n_pos": 3,
+   "n_neg": 1,
+   "base_rate": 0.75,
+   "abstain_n": 2,
+   "abstain_denominator": 4,
+   "precision": 1.0,
+   "recall": 0.6666666666666666,
+   "f1": 0.8,
+   "abstain_rate": 0.5,
+   "pr_auc": null,
+   "roc_auc": null,
+   "pr_auc_all": 0.6666666666666666,
+   "roc_auc_all": 0.16666666666666666,
+   "ece": 0.325,
+   "ece_committed": 0.65,
+   "precision_ci": [
+    1.0,
+    1.0
+   ],
+   "recall_ci": [
+    0.0,
+    1.0
+   ],
+   "f1_ci": [
+    0.0,
+    1.0
+   ],
+   "abstain_rate_ci": [
+    0.25,
+    1.0
+   ],
+   "pr_auc_ci": [
+    null,
+    null
+   ],
+   "roc_auc_ci": [
+    null,
+    null
+   ],
+   "pr_auc_all_ci": [
+    0.6666666666666666,
+    0.75
+   ],
+   "roc_auc_all_ci": [
+    0.0,
+    0.5
+   ],
+   "ece_ci": [
+    0.25,
+    0.6125
+   ],
+   "ece_committed_ci": [
+    0.65,
+    0.6500000000000001
+   ],
+   "strata": {
+    "deposit": {
+     "n": 2,
+     "accuracy": 0.5,
+     "abstain_rate": 0.5
+    },
+    "occurrence": {
+     "n": 1,
+     "accuracy": 1.0,
+     "abstain_rate": 0.0
+    },
+    "negative": {
+     "n": 1,
+     "accuracy": 0.0,
+     "abstain_rate": 1.0
+    }
+   }
+  },
+  {
+   "name": "random_expected",
+   "kind": "baseline",
+   "model": "random",
+   "n_cells": 114,
+   "run_id": null,
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "precision": 0.43859649122807015,
+   "recall": 0.5,
+   "f1": 0.46728971962616817,
+   "pr_auc": 0.43859649122807015,
+   "roc_auc": 0.5,
+   "pr_auc_all": 0.43859649122807015,
+   "roc_auc_all": 0.5,
+   "ece": 0.252280701754386,
+   "abstain_rate": 0.0,
+   "note": "analytic expectation for a uniform random probability at a 0.5 threshold; no interval"
+  },
+  {
+   "name": "random",
+   "kind": "baseline",
+   "model": "random",
+   "n_cells": 114,
+   "run_id": null,
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 0,
+   "abstain_denominator": 114,
+   "precision": 0.4444444444444444,
+   "recall": 0.56,
+   "f1": 0.49557522123893805,
+   "abstain_rate": 0.0,
+   "pr_auc": 0.42439314779153503,
+   "roc_auc": 0.49406249999999996,
+   "pr_auc_all": 0.42439314779153503,
+   "roc_auc_all": 0.49406249999999996,
+   "ece": 0.27511129381497823,
+   "ece_committed": 0.27511129381497823,
+   "precision_ci": [
+    0.3620689655172414,
+    0.5246110030564045
+   ],
+   "recall_ci": [
+    0.42,
+    0.7
+   ],
+   "f1_ci": [
+    0.3893682399213373,
+    0.5811965811965812
+   ],
+   "abstain_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pr_auc_ci": [
+    0.36945984651070296,
+    0.5243828131428355
+   ],
+   "roc_auc_ci": [
+    0.386859375,
+    0.6047109374999999
+   ],
+   "pr_auc_all_ci": [
+    0.36945984651070296,
+    0.5243828131428355
+   ],
+   "roc_auc_all_ci": [
+    0.386859375,
+    0.6047109374999999
+   ],
+   "ece_ci": [
+    0.21235922457056808,
+    0.38184374675181243
+   ],
+   "ece_committed_ci": [
+    0.21235922457056808,
+    0.38184374675181243
+   ],
+   "strata": {
+    "deposit": {
+     "n": 18,
+     "accuracy": 0.5555555555555556,
+     "abstain_rate": 0.0
+    },
+    "occurrence": {
+     "n": 32,
+     "accuracy": 0.5625,
+     "abstain_rate": 0.0
+    },
+    "negative": {
+     "n": 64,
+     "accuracy": 0.453125,
+     "abstain_rate": 0.0
+    }
+   },
+   "note": "one uniform draw, seed 0, 0.5 threshold"
+  },
+  {
+   "name": "copy_learned",
+   "kind": "baseline",
+   "model": "learned",
+   "n_cells": 114,
+   "run_id": null,
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 0,
+   "abstain_denominator": 114,
+   "precision": 0.5833333333333334,
+   "recall": 0.14,
+   "f1": 0.22580645161290322,
+   "abstain_rate": 0.0,
+   "pr_auc": 0.49674464504382854,
+   "roc_auc": 0.5084375,
+   "pr_auc_all": 0.49674464504382854,
+   "roc_auc_all": 0.5084375,
+   "ece": 0.21229304601188395,
+   "ece_committed": 0.21229304601188395,
+   "precision_ci": [
+    0.2727272727272727,
+    0.8461538461538461
+   ],
+   "recall_ci": [
+    0.06,
+    0.24
+   ],
+   "f1_ci": [
+    0.0967741935483871,
+    0.3582089552238806
+   ],
+   "abstain_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pr_auc_ci": [
+    0.4049006436254336,
+    0.6092312914325735
+   ],
+   "roc_auc_ci": [
+    0.39780468750000003,
+    0.613125
+   ],
+   "pr_auc_all_ci": [
+    0.4049006436254336,
+    0.6092312914325735
+   ],
+   "roc_auc_all_ci": [
+    0.39780468750000003,
+    0.613125
+   ],
+   "ece_ci": [
+    0.17716778199978805,
+    0.30785587738585685
+   ],
+   "ece_committed_ci": [
+    0.17716778199978805,
+    0.30785587738585685
+   ],
+   "strata": {
+    "deposit": {
+     "n": 18,
+     "accuracy": 0.1111111111111111,
+     "abstain_rate": 0.0
+    },
+    "occurrence": {
+     "n": 32,
+     "accuracy": 0.15625,
+     "abstain_rate": 0.0
+    },
+    "negative": {
+     "n": 64,
+     "accuracy": 0.921875,
+     "abstain_rate": 0.0
+    }
+   },
+   "n_missing": 0,
+   "note": "an analyst that copies the out-of-fold learned score and abstains where there is none"
+  },
+  {
+   "name": "learned",
+   "kind": "baseline",
+   "model": "learned",
+   "n_cells": 114,
+   "run_id": null,
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 0,
+   "abstain_denominator": 114,
+   "precision": 0.5833333333333334,
+   "recall": 0.14,
+   "f1": 0.22580645161290322,
+   "abstain_rate": 0.0,
+   "pr_auc": 0.49674464504382854,
+   "roc_auc": 0.5084375,
+   "pr_auc_all": 0.49674464504382854,
+   "roc_auc_all": 0.5084375,
+   "ece": 0.21229304601188395,
+   "ece_committed": 0.21229304601188395,
+   "precision_ci": [
+    0.2727272727272727,
+    0.8461538461538461
+   ],
+   "recall_ci": [
+    0.06,
+    0.24
+   ],
+   "f1_ci": [
+    0.0967741935483871,
+    0.3582089552238806
+   ],
+   "abstain_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pr_auc_ci": [
+    0.4049006436254336,
+    0.6092312914325735
+   ],
+   "roc_auc_ci": [
+    0.39780468750000003,
+    0.613125
+   ],
+   "pr_auc_all_ci": [
+    0.4049006436254336,
+    0.6092312914325735
+   ],
+   "roc_auc_all_ci": [
+    0.39780468750000003,
+    0.613125
+   ],
+   "ece_ci": [
+    0.17716778199978805,
+    0.30785587738585685
+   ],
+   "ece_committed_ci": [
+    0.17716778199978805,
+    0.30785587738585685
+   ],
+   "strata": {
+    "deposit": {
+     "n": 18,
+     "accuracy": 0.1111111111111111,
+     "abstain_rate": 0.0
+    },
+    "occurrence": {
+     "n": 32,
+     "accuracy": 0.15625,
+     "abstain_rate": 0.0
+    },
+    "negative": {
+     "n": 64,
+     "accuracy": 0.921875,
+     "abstain_rate": 0.0
+    }
+   },
+   "n_missing": 0,
+   "note": "the out-of-fold learned score at a 0.5 threshold (spatial folds); a missing score is 0.5"
+  },
+  {
+   "name": "effort",
+   "kind": "baseline",
+   "model": "effort",
+   "n_cells": 114,
+   "run_id": null,
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 0,
+   "abstain_denominator": 114,
+   "precision": 0.6578947368421053,
+   "recall": 0.5,
+   "f1": 0.5681818181818182,
+   "abstain_rate": 0.0,
+   "pr_auc": 0.659252771993887,
+   "roc_auc": 0.6675,
+   "pr_auc_all": 0.659252771993887,
+   "roc_auc_all": 0.6675,
+   "ece": 0.16998658263424182,
+   "ece_committed": 0.16998658263424182,
+   "precision_ci": [
+    0.5365853658536586,
+    0.7931288032454361
+   ],
+   "recall_ci": [
+    0.36,
+    0.64
+   ],
+   "f1_ci": [
+    0.43902439024390244,
+    0.6888888888888889
+   ],
+   "abstain_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pr_auc_ci": [
+    0.5556971757260366,
+    0.7757167967754117
+   ],
+   "roc_auc_ci": [
+    0.5590390625,
+    0.764390625
+   ],
+   "pr_auc_all_ci": [
+    0.5556971757260366,
+    0.7757167967754117
+   ],
+   "roc_auc_all_ci": [
+    0.5590390625,
+    0.764390625
+   ],
+   "ece_ci": [
+    0.12546723054624093,
+    0.26305391049938043
+   ],
+   "ece_committed_ci": [
+    0.12546723054624093,
+    0.26305391049938043
+   ],
+   "strata": {
+    "deposit": {
+     "n": 18,
+     "accuracy": 0.7777777777777778,
+     "abstain_rate": 0.0
+    },
+    "occurrence": {
+     "n": 32,
+     "accuracy": 0.34375,
+     "abstain_rate": 0.0
+    },
+    "negative": {
+     "n": 64,
+     "accuracy": 0.796875,
+     "abstain_rate": 0.0
+    }
+   },
+   "n_missing": 0,
+   "note": "the out-of-fold effort score at a 0.5 threshold (spatial folds); a missing score is 0.5"
+  },
+  {
+   "name": "criteria",
+   "kind": "baseline",
+   "model": "criteria",
+   "n_cells": 114,
+   "run_id": null,
+   "mlflow_run_id": null,
+   "cost_usd": 0.0,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 0,
+   "abstain_denominator": 114,
+   "precision": 0.4318181818181818,
+   "recall": 0.76,
+   "f1": 0.5507246376811594,
+   "abstain_rate": 0.0,
+   "pr_auc": 0.4687064661890556,
+   "roc_auc": 0.51296875,
+   "pr_auc_all": 0.4687064661890556,
+   "roc_auc_all": 0.51296875,
+   "ece": 0.19854551410806645,
+   "ece_committed": 0.19854551410806645,
+   "precision_ci": [
+    0.38459302325581396,
+    0.47827243293246996
+   ],
+   "recall_ci": [
+    0.64,
+    0.88
+   ],
+   "f1_ci": [
+    0.48484848484848486,
+    0.6153846153846154
+   ],
+   "abstain_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pr_auc_ci": [
+    0.394146032957476,
+    0.5802545252738289
+   ],
+   "roc_auc_ci": [
+    0.40012890625,
+    0.6150117187499999
+   ],
+   "pr_auc_all_ci": [
+    0.394146032957476,
+    0.5802545252738289
+   ],
+   "roc_auc_all_ci": [
+    0.40012890625,
+    0.6150117187499999
+   ],
+   "ece_ci": [
+    0.16048968534511934,
+    0.2733927888878828
+   ],
+   "ece_committed_ci": [
+    0.16048968534511934,
+    0.2733927888878828
+   ],
+   "strata": {
+    "deposit": {
+     "n": 18,
+     "accuracy": 0.8888888888888888,
+     "abstain_rate": 0.0
+    },
+    "occurrence": {
+     "n": 32,
+     "accuracy": 0.6875,
+     "abstain_rate": 0.0
+    },
+    "negative": {
+     "n": 64,
+     "accuracy": 0.21875,
+     "abstain_rate": 0.0
+    }
+   },
+   "n_missing": 0,
+   "note": "the out-of-fold criteria score at a 0.5 threshold (spatial folds); a missing score is 0.5"
+  }
+ ]
+}
