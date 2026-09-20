@@ -1,112 +1,201 @@
 {
  "version": "v1",
- "computed_at": "2026-09-20T06:23:16+00:00",
+ "computed_at": "2026-09-20T07:06:34+00:00",
  "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
  "rows": [
   {
-   "name": "v0-retrieval",
+   "name": "v0-sonnet",
    "kind": "arm",
-   "model": "claude-opus-5",
-   "n_cells": 0,
-   "run_id": "20260920T061420Z-bench",
-   "mlflow_run_id": null,
-   "cost_usd": 0.0,
-   "pending": 1
+   "model": "claude-sonnet-5",
+   "effort": "medium",
+   "n_cells": 114,
+   "run_id": "20260920T064823Z-bench",
+   "mlflow_run_id": "f51b55fbb0ec415eb11befc7d5ea3e13",
+   "cost_usd": 8.8697246,
+   "pending": 0,
+   "n_rows": 130,
+   "n_labelled": 114,
+   "n_probe": 16,
+   "n_unknown_key": 0,
+   "n_answered": 129,
+   "n_rejected": 25,
+   "n_failed": 1,
+   "gate_rejection_rate": 0.1937984496124031,
+   "gate_rejection_denominator": 129,
+   "probe_abstain_rate": 0.5625,
+   "cost_usd_total": 8.8697246,
+   "cost_usd_per_cell": 0.06822865076923078,
+   "latency_s_per_cell": 41.54736434108528,
+   "from_cache_share": 0.0,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 38,
+   "abstain_denominator": 114,
+   "precision": 0.4492753623188406,
+   "recall": 0.62,
+   "f1": 0.5210084033613446,
+   "abstain_rate": 0.3333333333333333,
+   "pr_auc": 0.48446625810169125,
+   "roc_auc": 0.5411149825783972,
+   "pr_auc_all": 0.42502376700645944,
+   "roc_auc_all": 0.48874999999999996,
+   "ece": 0.16578947368421051,
+   "ece_committed": 0.19605263157894737,
+   "precision_ci": [
+    0.37142857142857144,
+    0.5211420698101653
+   ],
+   "recall_ci": [
+    0.48,
+    0.76
+   ],
+   "f1_ci": [
+    0.423728813559322,
+    0.6050799008127841
+   ],
+   "abstain_rate_ci": [
+    0.23684210526315788,
+    0.42105263157894735
+   ],
+   "pr_auc_ci": [
+    0.3900982701278708,
+    0.6094186879899679
+   ],
+   "roc_auc_ci": [
+    0.41771326481692334,
+    0.6701615917865917
+   ],
+   "pr_auc_all_ci": [
+    0.3766548631369776,
+    0.5021953960480432
+   ],
+   "roc_auc_all_ci": [
+    0.38935546875000004,
+    0.5973828125
+   ],
+   "ece_ci": [
+    0.0948135964912281,
+    0.2538684210526316
+   ],
+   "ece_committed_ci": [
+    0.13408384364155954,
+    0.2647483766233766
+   ],
+   "strata": {
+    "deposit": {
+     "n": 18,
+     "accuracy": 0.7777777777777778,
+     "abstain_rate": 0.2222222222222222
+    },
+    "occurrence": {
+     "n": 32,
+     "accuracy": 0.53125,
+     "abstain_rate": 0.34375
+    },
+    "negative": {
+     "n": 64,
+     "accuracy": 0.046875,
+     "abstain_rate": 0.359375
+    }
+   }
   },
   {
    "name": "v0",
    "kind": "arm",
    "model": "claude-opus-5",
-   "n_cells": 4,
-   "run_id": "20260920T054916Z-bench",
-   "mlflow_run_id": "0a340e5b8b304c4eb51967e3acd4e3c4",
-   "cost_usd": 0.841502,
+   "effort": "medium",
+   "n_cells": 114,
+   "run_id": "20260920T063446Z-bench",
+   "mlflow_run_id": "3b30307c767145359af2e2743d2efc05",
+   "cost_usd": 18.455293,
    "pending": 0,
-   "n_rows": 5,
-   "n_labelled": 4,
-   "n_probe": 1,
+   "n_rows": 130,
+   "n_labelled": 114,
+   "n_probe": 16,
    "n_unknown_key": 0,
-   "n_answered": 5,
-   "n_rejected": 0,
+   "n_answered": 130,
+   "n_rejected": 1,
    "n_failed": 0,
-   "gate_rejection_rate": 0.0,
-   "gate_rejection_denominator": 5,
-   "probe_abstain_rate": 1.0,
-   "cost_usd_total": 0.841502,
-   "cost_usd_per_cell": 0.1683004,
-   "latency_s_per_cell": 39.976,
+   "gate_rejection_rate": 0.007692307692307693,
+   "gate_rejection_denominator": 130,
+   "probe_abstain_rate": 0.375,
+   "cost_usd_total": 18.455293,
+   "cost_usd_per_cell": 0.1419637923076923,
+   "latency_s_per_cell": 40.47807692307692,
    "from_cache_share": 0.0,
-   "n": 4,
-   "n_pos": 3,
-   "n_neg": 1,
-   "base_rate": 0.75,
-   "abstain_n": 2,
-   "abstain_denominator": 4,
-   "precision": 1.0,
-   "recall": 0.6666666666666666,
-   "f1": 0.8,
-   "abstain_rate": 0.5,
-   "pr_auc": null,
-   "roc_auc": null,
-   "pr_auc_all": 0.6666666666666666,
-   "roc_auc_all": 0.16666666666666666,
-   "ece": 0.325,
-   "ece_committed": 0.65,
+   "n": 114,
+   "n_pos": 50,
+   "n_neg": 64,
+   "base_rate": 0.43859649122807015,
+   "abstain_n": 27,
+   "abstain_denominator": 114,
+   "precision": 0.4358974358974359,
+   "recall": 0.68,
+   "f1": 0.53125,
+   "abstain_rate": 0.23684210526315788,
+   "pr_auc": 0.522656816411246,
+   "roc_auc": 0.5859291084854996,
+   "pr_auc_all": 0.48748907855525986,
+   "roc_auc_all": 0.5603125000000001,
+   "ece": 0.08385964912280695,
+   "ece_committed": 0.0926436781609195,
    "precision_ci": [
-    1.0,
-    1.0
+    0.3749623493975904,
+    0.4935106033207299
    ],
    "recall_ci": [
-    0.0,
-    1.0
+    0.56,
+    0.8
    ],
    "f1_ci": [
-    0.0,
-    1.0
+    0.45161290322580644,
+    0.6046511627906976
    ],
    "abstain_rate_ci": [
-    0.25,
-    1.0
+    0.16666666666666666,
+    0.3157894736842105
    ],
    "pr_auc_ci": [
-    null,
-    null
+    0.42321077768601034,
+    0.6493242522250616
    ],
    "roc_auc_ci": [
-    null,
-    null
+    0.46503795765954226,
+    0.7023168679865107
    ],
    "pr_auc_all_ci": [
-    0.6666666666666666,
-    0.75
+    0.4151594965872759,
+    0.5834911632901996
    ],
    "roc_auc_all_ci": [
-    0.0,
-    0.5
+    0.45701953125,
+    0.667828125
    ],
    "ece_ci": [
-    0.25,
-    0.6125
+    0.05394298245614033,
+    0.17696271929824559
    ],
    "ece_committed_ci": [
-    0.65,
-    0.6500000000000001
+    0.0692516149870801,
+    0.19764220928658452
    ],
    "strata": {
     "deposit": {
-     "n": 2,
-     "accuracy": 0.5,
-     "abstain_rate": 0.5
+     "n": 18,
+     "accuracy": 0.7777777777777778,
+     "abstain_rate": 0.2222222222222222
     },
     "occurrence": {
-     "n": 1,
-     "accuracy": 1.0,
-     "abstain_rate": 0.0
+     "n": 32,
+     "accuracy": 0.625,
+     "abstain_rate": 0.25
     },
     "negative": {
-     "n": 1,
-     "accuracy": 0.0,
-     "abstain_rate": 1.0
+     "n": 64,
+     "accuracy": 0.078125,
+     "abstain_rate": 0.234375
     }
    }
   },
