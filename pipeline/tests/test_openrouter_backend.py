@@ -212,3 +212,15 @@ def test_the_requests_effort_is_a_hard_reasoning_budget_and_a_cut_reply_is_asked
     http = FakeHttp([(200, reply({"status": "met"}))])
     OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path, model="qwen/qwen3.8-flash").__class__(**{**request(tmp_path).__dict__, "effort": "low"}))
     assert http.sent[0]["json"]["reasoning"] == {"max_tokens": 2000}
+
+
+def test_the_accounts_in_flight_credit_reservation_is_waited_out_and_an_empty_balance_is_raised(tmp_path: Path, env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(OR.time, "sleep", lambda s: None)
+    busy = (402, {"error": {"message": "This request would exceed your available credits given your current in-flight requests.",
+                            "code": 402, "metadata": {"reason": "in_flight_budget_exhausted"}}})
+    http = FakeHttp([busy, busy, (200, reply({"status": "met"}))])
+    assert OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path)).structured == {"status": "met"}
+    assert len(http.sent) == 3
+    http = FakeHttp([busy] * (OR.RETRIES + 1))
+    with pytest.raises(TransientBackendError, match="402"):
+        OR.OpenRouterBackend(http=http, prices={}).call(request(tmp_path))
