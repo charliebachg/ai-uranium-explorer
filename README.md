@@ -56,6 +56,7 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr arm run --arm v0               # one arm over the open cells: cached, budgeted, traced, scored; arms live in configs/arms/
     uv run lr arm run --arm v1               # the staged loop: template plan, executor per criterion, gate, verifier, both deciders
     uv run lr arm chain --enabled --arm v1   # chains for the enabled cells into the agent tier, shown on the dashboard's evidence panel
+    uv run lr arm chain --enabled --arm v1-cheap --backend auto   # a vendor/model id in an arm goes to OpenRouter (OPENROUTER_API_KEY in .env), a claude-* id to the CLI
     uv run lr arm table                      # every arm's latest run beside the random, learned, effort and criteria baselines
 
     # web

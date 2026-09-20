@@ -25,7 +25,16 @@ def _factory(kind: str) -> Callable[[Any], Any]:
         from ..backends.claude_cli import ClaudeCliBackend
 
         return lambda arm: ClaudeCliBackend(timeout_s=arm.timeout_s, max_budget_usd=arm.max_budget_usd_per_call)
-    raise typer.BadParameter(f"--backend must be claude or replay, not {kind!r}")
+    if kind == "auto":
+        # a vendor/model id goes to OpenRouter, a bare claude id to the CLI: one arm, two adapters, two ledgers
+        from ..backends.claude_cli import ClaudeCliBackend
+        from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
+        from ..backends.router import RoutedBackend
+
+        return lambda arm: RoutedBackend(
+            [(is_openrouter_model, OpenRouterBackend(timeout_s=arm.timeout_s))],
+            default=ClaudeCliBackend(timeout_s=arm.timeout_s, max_budget_usd=arm.max_budget_usd_per_call))
+    raise typer.BadParameter(f"--backend must be claude, auto or replay, not {kind!r}")
 
 
 def _f(x: Any, digits: int = 3) -> str:
@@ -55,7 +64,7 @@ def run_cmd(
     cells: list[str] = typer.Option(None, "--cells", help="bench ids to run (repeatable or comma-separated); "
                                                           "default every open cell"),
     track: bool = typer.Option(True, "--track/--no-track", help="log one MLflow run for the arm"),
-    backend: str = typer.Option("claude", "--backend", help="claude (live, cached) or replay (recorded only)"),
+    backend: str = typer.Option("claude", "--backend", help="claude (live, cached), auto (claude for claude-* ids, OpenRouter for vendor/model ids) or replay"),
     resume: str = typer.Option(None, "--resume", help="carry finished cells forward from this run id"),
 ) -> None:
     """Run one arm over the open cells of a frozen benchmark. Exits 3 on budget, 75 on a usage limit."""
@@ -86,7 +95,7 @@ def chain_cmd(
     budget_usd: float = typer.Option(15.0, "--budget-usd", help="ceiling on live spend for this run"),
     workers: int = typer.Option(1, "--workers", help="cells in parallel; the segments inside a cell run in parallel anyway"),
     track: bool = typer.Option(True, "--track/--no-track", help="log one MLflow run"),
-    backend: str = typer.Option("claude", "--backend", help="claude (live, cached) or replay (recorded only)"),
+    backend: str = typer.Option("claude", "--backend", help="claude (live, cached), auto (claude for claude-* ids, OpenRouter for vendor/model ids) or replay"),
 ) -> None:
     """Run the staged analyst over real cells for the dashboard: chains land in the agent tier. Exits 3 on
     budget, 75 on a usage limit."""

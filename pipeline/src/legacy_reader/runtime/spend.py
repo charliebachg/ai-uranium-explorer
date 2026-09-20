@@ -32,7 +32,8 @@ from typing import Any
 from ..paths import PATHS
 
 #: backend families that have a ceiling of their own, as (environment variable, default)
-FAMILY_CAPS: dict[str, tuple[str, float]] = {"openai": ("OPENAI_MAX_SPEND_USD", 2.00)}
+FAMILY_CAPS: dict[str, tuple[str, float]] = {"openai": ("OPENAI_MAX_SPEND_USD", 2.00),
+                                              "openrouter": ("OPENROUTER_MAX_SPEND_USD", 25.00)}
 TOTAL_CAP: tuple[str, float] = ("LR_MAX_SPEND_USD", 300.0)
 
 _append_lock = threading.Lock()

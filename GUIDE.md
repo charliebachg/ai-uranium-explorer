@@ -353,6 +353,11 @@ when you change a prompt.
 
 ---
 
+**OpenRouter.** Any OpenAI-compatible model can take an analyst role: an arm names a `vendor/model` id and
+`--backend auto` sends that role to OpenRouter (key in `.env`, its own spend ceiling, the provider's own
+cost figure on the ledger, images sent as parts) while `claude-*` ids stay on the CLI. Each adapter keys
+the cache under its own family, so two models never share an answer.
+
 ### 6.7 The staged analyst (Analyst v1)
 
 The panel of 6.2 reasons in one pass; the staged analyst reasons in stages, after STA-CoT (Findings of EMNLP

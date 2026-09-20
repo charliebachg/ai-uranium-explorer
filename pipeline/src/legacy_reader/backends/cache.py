@@ -165,8 +165,15 @@ class CachedBackend:
     def family(self) -> str:
         return self.inner.family
 
+    def target(self, req: ExtractionRequest) -> Any:
+        """The adapter that will answer this request: the inner backend, or the one a router picks for the
+        request's model. The cache key, the budget family and the spend record all follow it, so a routed
+        arm's OpenRouter calls and CLI calls never share a key or a ledger line."""
+        route = getattr(self.inner, "route", None)
+        return route(req) if callable(route) else self.inner
+
     def key_for(self, req: ExtractionRequest) -> str:
-        return req.cache_key(self.inner.family)
+        return req.cache_key(self.target(req).family)
 
     def cached(self, req: ExtractionRequest) -> ExtractionResponse | None:
         key = self.key_for(req)
@@ -219,8 +226,9 @@ class CachedBackend:
         """`on_delta` is forwarded to a backend that can stream. A cache hit never streams, because nothing is
         being generated — it returns the recorded answer whole, which is the honest thing for it to do."""
         key = self.key_for(req)
+        target = self.target(req)
         with span(f"model:{req.task}", kind="model", task=req.task, model=req.model, effort=req.effort,
-                  cache_key=key, backend_family=self.family):
+                  cache_key=key, backend_family=target.family):
             if not self.refresh:
                 hit = self.cached(req)
                 if hit is not None:
@@ -229,7 +237,7 @@ class CachedBackend:
                     return hit
             self.misses += 1
             # before anything leaves the machine: the run's budget, then the cumulative ceilings
-            check_budget(self.family, self.estimate_usd, self.run_budget)
+            check_budget(target.family, self.estimate_usd, self.run_budget)
             try:
                 resp = self.inner.call(req, on_delta=on_delta) if on_delta and streams(self.inner) \
                     else self.inner.call(req)
@@ -249,9 +257,10 @@ class CachedBackend:
     def charge(self, req: ExtractionRequest, resp: ExtractionResponse) -> float:
         """Put a live call's cost on the ledger (unless the backend already did) and on the run budget."""
         usd = float(resp.cost_usd or 0.0)
-        if not getattr(self.inner, "records_spend", False):
+        target = self.target(req)
+        if not getattr(target, "records_spend", False):
             tokens_in, tokens_out = tokens_of(resp.usage or {})
-            record_spend(self.family, resp.model_resolved or resp.model_requested, usd, tokens_in, tokens_out,
+            record_spend(target.family, resp.model_resolved or resp.model_requested, usd, tokens_in, tokens_out,
                          task=req.task)
         if self.run_budget is not None:
             with self._budget_lock:
