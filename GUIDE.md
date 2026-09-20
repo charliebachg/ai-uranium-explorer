@@ -386,9 +386,11 @@ attempts. A **verifier** (Opus 5, the skeptic's brief) reads the whole chain and
 and their dependents are re-executed, up to K rounds (three by default). Two **deciders** always run: a weighted sum over node
 strengths and an adjudicator; a chain that never validates takes the majority over rounds or abstains. The
 chain, its verdicts and its decision are stored in the agent tier and shown on the evidence panel under the
-memos. Two switches, off by default and each an arm, cut the call count: `skip_unmeasured` lets the harness
-write the unknown node for a criterion whose feature has no value here, and `executor_batch` asks for every
-criterion's node in one call and gates them one by one. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
+memos. Three switches, off by default and each an arm, cut the cost: `skip_unmeasured` lets the harness
+write the unknown node for a criterion whose feature has no value here, `executor_batch` asks for every
+criterion's node in one call and gates them one by one, and `segment_scoped` (`v1-scoped`, `v1-scoped-batch`)
+stages each executor only its own criterion's rows of the feature, criteria, coverage and cross-check tables
+instead of the whole tables, with the gate holding its node to what it saw. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
 over the frozen benchmark, blinded, beside v0 and the baselines. The Eval page's benchmark table carries a
 second group of columns for the staged arms, per chain and from the run's own rows: the chains counted, the
 node gate's refusals over executor attempts, the share of chains a verifier round validated, the share the

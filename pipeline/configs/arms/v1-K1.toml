@@ -38,3 +38,4 @@ segment_workers = 4
 retrieval = false
 skip_unmeasured = false
 executor_batch = false
+segment_scoped = false

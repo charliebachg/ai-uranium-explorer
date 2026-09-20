@@ -64,6 +64,7 @@ class LoopSpec:
     retrieval: bool
     skip_unmeasured: bool   # a criterion with no value here is settled unknown by the harness, no executor call
     executor_batch: bool    # one executor call over every criterion instead of one per segment
+    segment_scoped: bool    # each executor sees only its own criterion's rows of the tables, not the whole tables
 
     def config(self, effort: str, prompt_version: str) -> Any:
         """The loop's own configuration object; imported here so an arm file can be parsed without the loop."""
@@ -75,7 +76,7 @@ class LoopSpec:
                           triage=self.triage, executor_context=self.executor_context, decider=self.decider,
                           segment_workers=self.segment_workers, retrieval=self.retrieval,
                           skip_unmeasured=self.skip_unmeasured, executor_batch=self.executor_batch,
-                          prompt_version=prompt_version)
+                          segment_scoped=self.segment_scoped, prompt_version=prompt_version)
 
 
 @dataclass(frozen=True)

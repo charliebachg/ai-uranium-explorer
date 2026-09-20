@@ -329,3 +329,30 @@ def test_the_default_factory_opens_a_benchmark_session_from_the_cells_file(world
         assert sess.fold == 0 and sess.blind_list == ["74H09-0039"] and sess.switches == arm.switches
     finally:
         sess.close()
+
+
+def test_a_scoped_v1_run_records_the_switch_on_its_manifest_and_stages_each_segment_its_own_rows(world) -> None:
+    """`segment_scoped` is a loop switch like the other two: in the arm file, on the manifest, in its hash;
+    the scoped files hash into the cache key like any staged file, so a scoped run never replays a whole one."""
+    from legacy_reader.ids import sha256_json
+    from fake_loop_world import FEATURES
+
+    rt, bench = world
+    run_v1(bench, LoopBackend(), rt, cells=["b01"])
+    plain = FakeManifest.started[-1]
+    backend = LoopBackend()
+    s = run_v1(bench, backend, rt, cells=["b01"], arm=v1_arm(segment_scoped=True))
+    m = FakeManifest.started[-1]
+    assert (plain.config["loop"]["segment_scoped"], m.config["loop"]["segment_scoped"]) == (False, True)
+    assert sha256_json(plain.config) != sha256_json(m.config)
+    assert backend.calls and s["spent_usd"] > 0, "the whole run's cache served none of it"
+    row = rows(rt, s["run_id"])["b01"]
+    assert row["published"] is True and row["session"]["scoped_rows_dropped"] > 0
+    stage = rt.runs / s["run_id"] / "stages" / "b01"
+    shown = json.loads((stage / "tool_01_cell_features.json").read_text())
+    private = json.loads((stage / "private" / "tool_01_cell_features.json").read_text())
+    assert [r["feature"] for r in shown["rows"]] == ["d_conductor_m"]
+    assert [r["feature"] for r in private["rows"]] == [f for f, *_ in FEATURES], "the private copy is the whole result"
+    again = LoopBackend()
+    s2 = run_v1(bench, again, rt, cells=["b01"], arm=v1_arm(segment_scoped=True))
+    assert again.calls == [] and s2["spent_usd"] == 0.0

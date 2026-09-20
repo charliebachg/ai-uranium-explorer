@@ -37,6 +37,14 @@ module decides, and why:
   construction asks one executor call for every criterion, gates the reply node by node, and sends only the
   refused criteria down the per-segment path at attempt 2. Both are arms to measure (PRD 8.5), off by
   default, so every other arm runs exactly as before.
+* **A third cuts what each executor reads.** Under `segment_scoped` every segment's call is staged through
+  the session under the segment's scope (`plan.segment_scope`), so its files hold its own rows of the
+  feature, criteria, coverage and cross-check tables and nothing of another criterion's, while the file
+  names and the prompts stay the ones the whole tables give. The gate then holds a node to its segment's
+  view plus the ids of the prior nodes it was shown, so a value the executor never saw is refused as an id
+  no tool returned. The harness reads the whole `cell_features` once more for itself, after the segments'
+  files, because where unknown is allowed and where the nearest observation is are facts about the whole
+  table; the verifier and the deciders read the whole chain over the whole registry as before.
 """
 
 from __future__ import annotations
@@ -62,7 +70,7 @@ from . import nodegate as G
 from . import prompts as PR
 from . import v0 as V0
 from .arms import Inputs, Switches
-from .plan import CELL, bind, check_plan, template_plan
+from .plan import CELL, Scope, bind, check_plan, segment_scope, template_plan
 from .session import Session, SessionRefusal
 from .v0 import ABSTAIN, NEGATIVE, POSITIVE, VERDICTS
 from .wire import (ADJUDICATOR_SCHEMA, FEEDBACK_MAX, MAX_ATTEMPTS, NODE_SCHEMA, NODES_SCHEMA, PLAN_SCHEMA,
@@ -113,6 +121,8 @@ class LoopConfig:
     skip_unmeasured: bool = False
     #: one executor call over every criterion of the first construction instead of one per segment
     executor_batch: bool = False
+    #: each segment is staged only its own rows of the tables every segment's calls return whole
+    segment_scoped: bool = False
     prompt_version: str = PR.PROMPT_VERSION
 
     def __post_init__(self) -> None:
@@ -121,7 +131,8 @@ class LoopConfig:
                                      ("executor_context", self.executor_context, CONTEXTS)):
             if value not in allowed:
                 raise ValueError(f"{name}: {value!r} is not one of {allowed}")
-        for name, flag in (("skip_unmeasured", self.skip_unmeasured), ("executor_batch", self.executor_batch)):
+        for name, flag in (("skip_unmeasured", self.skip_unmeasured), ("executor_batch", self.executor_batch),
+                           ("segment_scoped", self.segment_scoped)):
             if not isinstance(flag, bool):
                 raise ValueError(f"{name}: {flag!r} is not True or False")
         if self.rounds < 1:
@@ -208,11 +219,14 @@ class _Loop:
 
     # ---------------------------------------------------------------- shared
 
-    def _call(self, tool: str, args: dict[str, Any]) -> T.ToolResult:
+    def _call(self, tool: str, args: dict[str, Any], scope: Scope | None = None) -> T.ToolResult:
         """One tool call through the session, `$cell` bound to the id the model knows the cell by (the session
-        maps that id, or the placeholder, to the real cell; a benchmark session refuses the real id)."""
-        result = self.session.call(tool, bind(args, self.session.bench_id))
-        self.served[tool] = result
+        maps that id, or the placeholder, to the real cell; a benchmark session refuses the real id). A call
+        under a scope is a segment's view, not the loop's own reading of the tool, so it never becomes what
+        `served` holds: the loop reads the whole table or nothing."""
+        result = self.session.call(tool, bind(args, self.session.bench_id), scope=scope)
+        if scope is None:
+            self.served[tool] = result
         return result
 
     def _request(self, task: str, system: str, user: str, schema: dict[str, Any], model: str, effort: str,
@@ -440,8 +454,8 @@ class _Loop:
                     status="unknown", strength=0, value_ids=cited, text=text,
                     unknown_reason=f"no value for {feature} at this cell", round=round, attempt=1,
                     model=DETERMINISTIC, published=True)
-        problems = G.check_node(node, self.session.values, self.session.context, self.criteria,
-                                {self.session.bench_id}, self._coverage_unknown())
+        values, context = self._registry(seg, [])
+        problems = G.check_node(node, values, context, self.criteria, {self.session.bench_id}, self._coverage_unknown())
         if problems:
             raise RuntimeError(f"the harness's unmeasured node for {seg.segment_id} failed the gate: {problems}")
         return _Executed(node, [], 0, 0, skipped=True)
@@ -484,7 +498,9 @@ class _Loop:
                 if payload is None:
                     problems = [f"batch: the reply has no node for {s.criterion}; return one node for it"]
                 else:
-                    node, problems = self._gate(payload, s, ids[s.segment_id], [], round, 1, meta)
+                    # gated against its own segment's registry: the batch read every segment's files, and a
+                    # scoped arm still holds each node to what its segment was shown
+                    node, problems = self._gate(payload, s, ids[s.segment_id], [], round, 1, meta, self._registry(s, []))
                     if not problems:
                         passed[s.segment_id] = _Executed(replace(node, published=True), [], 1, 0)
                 set_attrs(n_problems=len(problems), published=not problems, problems=[p[:160] for p in problems[:3]])
@@ -494,15 +510,37 @@ class _Loop:
 
     def _stage_tools(self, segments: list[Segment]) -> None:
         """Every segment's tool calls, in order, through the session; a refused call is remembered on the
-        segment and skipped, so the executor reads what the arm allows and nothing says what it does not."""
+        segment and skipped, so the executor reads what the arm allows and nothing says what it does not.
+        Under `segment_scoped` each call carries the segment's scope, so its file holds its own rows and the
+        file names stay the ones the whole tables give; the loop then reads the whole `cell_features` once
+        for itself, after every segment's file and in no executor's list, because the gate's word on where
+        unknown is allowed and the nearest observation a settled node cites come from the whole table."""
+        scoped: set[str] = set()
         for seg in segments:
+            scope = segment_scope(seg, self.criteria) if self.cfg.segment_scoped else None
             start = len(self.session.calls)
             for call in seg.tool_calls:
                 try:
-                    self._call(call["tool"], dict(call.get("args") or {}))
+                    self._call(call["tool"], dict(call.get("args") or {}), scope=scope)
                 except SessionRefusal as refusal:
                     self.refused.setdefault(seg.segment_id, []).append(f"{call['tool']}: {refusal.rule}")
+                    continue
+                if scope is not None:
+                    scoped.add(call["tool"])
             self.files[seg.segment_id] = [c["file"] for c in self.session.calls[start:]]
+        if "cell_features" in scoped and "cell_features" not in self.served:
+            self._call("cell_features", {"cell_id": CELL})
+
+    def _registry(self, seg: Segment, prior: list[Node]) -> tuple[dict[str, dict[str, Any]], str]:
+        """What a node of this segment is gated against: the session's whole registry and context, or under
+        `segment_scoped` the segment's own view plus the values of the prior nodes it was shown, which its
+        prompt tells it to cite by id. A value the executor never saw is not there, so a node citing one is
+        refused as an id no tool returned, with the feedback the gate already gives."""
+        if not self.cfg.segment_scoped:
+            return self.session.values, self.session.context
+        values, context = self.session.registry(seg.segment_id)
+        shown = {v: self.session.values[v] for n in prior for v in n.value_ids if v in self.session.values}
+        return {**values, **shown}, context
 
     def _prior(self, seg: Segment, done: dict[str, Node], order: dict[str, int]) -> list[Node]:
         """What the executor may read besides its staged files: its dependencies' current nodes always (an
@@ -524,11 +562,13 @@ class _Loop:
         base = PR.executor_user(seg, files, card=bool(self.images), prior_nodes=prior)
         if note:
             base = f"{note}\n\n{base}"
+        registry = self._registry(seg, prior)
+        allowed = sorted(registry[0])
         calls: list[_Call] = []
         problems: list[str] = list(rejected or [])
         node: Node | None = None
         for attempt in range(2 if rejected else 1, MAX_ATTEMPTS + 1):
-            user = base if attempt == 1 else f"{base}\n\n{G.feedback(problems, attempt, self.session.allowed_ids())}"
+            user = base if attempt == 1 else f"{base}\n\n{G.feedback(problems, attempt, allowed)}"
             req = self._request(
                 TASK_EXECUTE, PR.default_executor_system(), user, NODE_SCHEMA, self.cfg.executor_model,
                 self.cfg.executor_effort or self.cfg.effort,
@@ -540,7 +580,8 @@ class _Loop:
             meta = dict(model=resp.model_resolved or req.model, cost_usd=float(resp.cost_usd or 0.0),
                         duration_s=float(resp.duration_s or 0.0))
             with span("stage:gate", kind="gate", round=round, attempt=attempt):
-                node, problems = self._gate(dict(resp.structured or {}), seg, node_id, depends_on, round, attempt, meta)
+                node, problems = self._gate(dict(resp.structured or {}), seg, node_id, depends_on, round, attempt,
+                                            meta, registry)
                 # the first reasons travel with the span, so a run's rejections can be read without the prompts
                 set_attrs(n_problems=len(problems), published=not problems, problems=[p[:160] for p in problems[:3]])
             if not problems:
@@ -549,13 +590,15 @@ class _Loop:
         return _Executed(G.record_unknown(node, problems), calls, MAX_ATTEMPTS, MAX_ATTEMPTS)
 
     def _gate(self, payload: dict[str, Any], seg: Segment, node_id: str, depends_on: list[str], round: int,
-              attempt: int, meta: dict[str, Any]) -> tuple[Node, list[str]]:
+              attempt: int, meta: dict[str, Any],
+              registry: tuple[dict[str, dict[str, Any]], str]) -> tuple[Node, list[str]]:
         """Stage 3 on one answer (`payload`, the node as the model returned it; `meta`, the model, cost and
-        duration the harness attributes to it): the node under the segment's identity and every problem
-        with it. A model that answered about another segment is refused by `from_model` before the rules
-        run; that is a rejection like any other, and the node it leaves is what the unknown record is made
-        from. A place name is refused here too, where the executor can fix it, because every later prompt
-        builder would refuse to render the node and nothing at that point can."""
+        duration the harness attributes to it; `registry`, the values and context this segment may cite
+        from, `_registry`): the node under the segment's identity and every problem with it. A model that
+        answered about another segment is refused by `from_model` before the rules run; that is a rejection
+        like any other, and the node it leaves is what the unknown record is made from. A place name is
+        refused here too, where the executor can fix it, because every later prompt builder would refuse to
+        render the node and nothing at that point can."""
         try:
             node = Node.from_model(payload, node_id, seg, depends_on, round, attempt)
         except ValueError as err:
@@ -563,8 +606,8 @@ class _Loop:
                          status="unknown", strength=0, depends_on=list(depends_on), round=round, attempt=attempt)
             return replace(blank, **meta), [str(err)]
         node = replace(node, **meta)
-        problems = G.check_node(node, self.session.values, self.session.context, self.criteria,
-                                {self.session.bench_id}, self._coverage_unknown())
+        values, context = registry
+        problems = G.check_node(node, values, context, self.criteria, {self.session.bench_id}, self._coverage_unknown())
         leaked = V0.place_names_in(node.text)
         if leaked:
             problems.append(f"closed-book: the text names a place ({', '.join(leaked)}); no place names")

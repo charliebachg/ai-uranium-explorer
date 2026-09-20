@@ -73,11 +73,20 @@ def fake_registry(world: FakeWorld) -> dict[str, Callable[..., ToolResult]]:
     def criteria_breakdown(cell_id: str) -> ToolResult:
         world.received["criteria_breakdown"].append({"cell_id": cell_id})
         mem, weight = f"c:crit:{cell_id}:conductor_proximity", f"c:crit:{cell_id}:conductor_proximity:weight"
+        fmem, fweight, fhi = (f"c:crit:{cell_id}:fault_proximity", f"c:crit:{cell_id}:fault_proximity:weight",
+                              f"c:crit:{cell_id}:fault_proximity:hi")
         out = ToolResult("criteria_breakdown", {"cell_id": cell_id})
         out.rows = [{"criterion": "conductor_proximity", "state": "met", "membership": 0.9, "membership_id": mem,
                      "weight": 3.0, "weight_id": weight, "status": "assumed",
-                     "evidence": "Jefferson et al. 2007 on the McArthur River camp"}]
-        out.values = {mem: stat(mem, 0.9, fmt="ratio3"), weight: stat(weight, 3.0, fmt="m2")}
+                     "evidence": "Jefferson et al. 2007 on the McArthur River camp"},
+                    # a second criterion, its threshold nested the way the live tool nests them
+                    {"criterion": "fault_proximity", "state": "not met", "membership": 0.2, "membership_id": fmem,
+                     "weight": 2.0, "weight_id": fweight, "status": "assumed",
+                     "thresholds": {"hi": {"value": 3000.0, "value_id": fhi}},
+                     "evidence": "Thomas et al. 2000 on fault corridors"}]
+        out.values = {mem: stat(mem, 0.9, fmt="ratio3"), weight: stat(weight, 3.0, fmt="m2"),
+                      fmem: stat(fmem, 0.2, fmt="ratio3"), fweight: stat(fweight, 2.0, fmt="m2"),
+                      fhi: stat(fhi, 3000.0, fmt="m1", unit="m")}
         return out
 
     def label_context(cell_id: str, radius_km: float = 25.0, mask_cell: str | None = None) -> ToolResult:

@@ -72,6 +72,7 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr bench interface build --version v1   # the interface track's mechanical tiers (PRD §D.3.1 role 2): tier 1 exact answers and abstentions, tier 3 observed failures; gold by code, no model; `audit` regenerates every item from the store, `show` prints the counts
     uv run lr arm run --arm v0 --version v2  # one arm over the open cells: cached, budgeted, traced, scored; arms live in configs/arms/
     uv run lr arm run --arm v1               # the staged loop: template plan, executor per criterion, gate, verifier, both deciders
+    uv run lr arm run --arm v1-scoped        # the same loop with each executor staged only its own criterion's rows of the tables (v1-skipunmeasured, v1-batch and v1-scoped-batch are the other cost switches)
     uv run lr arm chain --enabled --arm v1   # chains for the enabled cells into the agent tier, shown on the dashboard's evidence panel
     uv run lr arm chain --enabled --arm v1-cheap --backend auto   # a vendor/model id in an arm goes to OpenRouter (OPENROUTER_API_KEY in .env), a claude-* id to the CLI
     uv run lr arm run --arm v1-anthropic-or --backend auto --workers 20 --budget-usd 60 --resume <run id>   # the same two models pay-per-token, many cells at once, carrying a stopped run forward

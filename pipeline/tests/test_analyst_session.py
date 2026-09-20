@@ -368,3 +368,58 @@ def test_a_blinded_result_loses_the_literature_evidence_and_every_place_name(sto
     live = S.Session.open(CELL, "dashboard", fold=None, switches=ALL_ON, stage=tmp_path / "live", tools=tools)
     live.call("criteria_breakdown", {"cell_id": "$cell"})
     assert "Cigar Lake" in everything(live), "the dashboard is not closed-book"
+
+
+# ---------------------------------------------------------------- the scoped view
+
+
+def test_a_scoped_call_stages_only_the_scopes_rows_and_keeps_the_private_copy_whole(store: Path, world: FakeWorld, tmp_path: Path) -> None:
+    """`segment_scoped`: a call carrying a scope stages the rows the scope names and the values they cite,
+    keeps the tool's note, records the view the segment is gated against, and leaves the leakage rules, the
+    session's own registry and the private unscrubbed copy as they were."""
+    s = opened(store, world, tmp_path)
+    scope = S.Scope(key="s01", features=frozenset({"d_conductor_m"}), criteria=frozenset({"conductor_proximity"}))
+    cond, obs, holes = f"c:cell:{CELL}:d_conductor_m", f"c:cell:{CELL}:d_conductor_m:n_obs", f"c:cell:{CELL}:holes_n"
+    out = s.call("cell_features", {"cell_id": "$cell"}, scope=scope)
+    assert [r["feature"] for r in out.rows] == ["d_conductor_m"] and set(out.values) == {cond, obs}
+    assert out.note.startswith("Effort features describe"), "the tool's note is kept"
+    assert s.scoped_rows_dropped == 1 and s.refusals == {} and s.effort_rows_dropped == 0
+    assert set(s.values) == {cond, obs} and holes not in s.values
+    assert set(s.views) == {"s01"} and set(s.views["s01"].values) == {cond, obs}
+    assert "nearest conductor to cell" in s.views["s01"].context
+    assert s.registry("s01") == (s.views["s01"].values, s.views["s01"].context) and s.allowed_ids("s01") == [cond, obs]
+    assert s.registry("s02") == ({}, "") and s.allowed_ids("s02") == [], "a scope nothing was staged under sees nothing"
+    assert s.registry() == (s.values, s.context) and s.allowed_ids() == [cond, obs]
+    entry = s.calls[-1]
+    assert entry["scope"] == "s01" and entry["ids"] == [cond, obs] and entry["rows"] == 1
+    shown = json.loads((s.stage / entry["file"]).read_text())
+    raw = json.loads((s.stage / entry["private_file"]).read_text())
+    assert [r["feature"] for r in shown["rows"]] == ["d_conductor_m"]
+    assert [r["feature"] for r in raw["rows"]] == ["d_conductor_m", "holes_n"] and holes in raw["values"], \
+        "the private unscrubbed copy is the whole result"
+    # the breakdown: the criterion's own row with its weight and its nested threshold id, nothing of the other
+    mem, weight = f"c:crit:{CELL}:conductor_proximity", f"c:crit:{CELL}:conductor_proximity:weight"
+    fmem, fweight, fhi = f"c:crit:{CELL}:fault_proximity", f"c:crit:{CELL}:fault_proximity:weight", f"c:crit:{CELL}:fault_proximity:hi"
+    out = s.call("criteria_breakdown", {"cell_id": "$cell"}, scope=scope)
+    assert [r["criterion"] for r in out.rows] == ["conductor_proximity"] and set(out.values) == {mem, weight}
+    fault = s.call("criteria_breakdown", {"cell_id": "$cell"}, scope=S.Scope("s03", criteria=frozenset({"fault_proximity"})))
+    assert [r["criterion"] for r in fault.rows] == ["fault_proximity"] and set(fault.values) == {fmem, fweight, fhi}
+    assert set(s.views["s01"].values) == {cond, obs, mem, weight} and set(s.views["s03"].values) == {fmem, fweight, fhi}
+    assert s.scoped_rows_dropped == 3
+    # the gate binds to the scope's view and to nothing outside it
+    assert s.check_claims([{"text": "The nearest conductor is 820 m away.", "value_ids": [cond]}], scope="s01") == []
+    assert s.check_claims([{"text": "820 m", "value_ids": [cond]}], scope="s03") == \
+        [f"claim 0: cites {cond}, which no tool returned in this session", "claim 0: the number 820 is not backed by any value this claim cites"]
+    # a tool outside the tables reaches the segment whole, and the leakage rules have already run on it
+    out = s.call("retrieve", {"query": "graphitic conductor", "cell_id": "$cell"}, scope=scope)
+    assert [r["tier"] for r in out.rows] == ["page", "expert"] and s.refusals == {"B17": 1}
+    out = s.call("label_context", {"cell_id": "$cell"}, scope=scope)
+    assert [r["distance_km"] for r in out.rows] == [12.4] and s.refusals == {"B17": 1, "B30": 1}
+    assert f"c:near:{CELL}:1" in s.views["s01"].values and f"c:near:{CELL}:0" not in s.values
+    assert s.expert_ids == {f"c:expert:{CELL}:1"} and s.scoped_rows_dropped == 3
+    # a call without a scope is not a view: it lands only in the session's registry
+    s.call("nearby", {"cell_id": "$cell", "layer": "em_conductors"})
+    assert "scope" not in s.calls[-1] and set(s.views) == {"s01", "s03"}
+    assert s.manifest_fields()["scoped_rows_dropped"] == 3
+    assert "scope" not in json.dumps([json.loads(p.read_text()) for p in s.stage.glob("tool_*.json")]), \
+        "the scope is the harness's business; nothing staged names it"

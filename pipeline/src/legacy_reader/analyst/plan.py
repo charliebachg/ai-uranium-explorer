@@ -19,10 +19,19 @@ with a strength is a number the deciders would read.
 layer or feature, so the template drops any call that names one; `criteria` off drops `criteria_breakdown`;
 `label_context` and `oof_scores` off drop their tools (the template never calls them, and `check_plan`
 holds a model planner to the same rule).
+
+**A segment's scope is wiring, not judgement.** Four of the tools return a table the template stages whole
+for every segment: a row per feature (`cell_features`, `coverage`), per criterion (`criteria_breakdown`) or
+per cross-check pair (`crosscheck`). Under the `segment_scoped` arm the session narrows each staged result to
+the segment's own rows, and `segment_scope` is where "its own" is decided, from the segment's kind and the
+criteria table alone: a criterion segment owns its criterion's feature and key, a cross-check the keys and
+features of the criteria it combines and its pair, a retrieval nothing of the tables. Every other tool
+answers the segment's own call and is never narrowed.
 """
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from ..prospect import models as M
@@ -68,9 +77,83 @@ _CROSSCHECK_PURPOSE: dict[str, tuple[str, tuple[str, ...]]] = {
 }
 
 
+#: the tools whose result is a table with a row per feature, criterion or pair, and the column that names the
+#: row; every other tool answers one segment's own call and is never narrowed
+TABLE_KEYS: dict[str, str] = {"cell_features": "feature", "coverage": "feature", "criteria_breakdown": "criterion",
+                              "crosscheck": "pair"}
+
+
 def bind(args: dict[str, Any], cell_id: str) -> dict[str, Any]:
     """The tool call's arguments for one cell: `$cell` replaced, everything else as written."""
     return {k: (cell_id if v == CELL else v) for k, v in args.items()}
+
+
+def ids_in(row: Any) -> set[str]:
+    """Every id a row cites, at any depth: each `*_id` key, which is how the tools bind a row to its values.
+    A criterion's thresholds sit nested (`thresholds.<param>.value_id`), and a threshold is a number the
+    executor may cite, so the walk does not stop at the top level."""
+    out: set[str] = set()
+    if isinstance(row, dict):
+        for k, v in row.items():
+            if k.endswith("_id") and isinstance(v, str):
+                out.add(v)
+            else:
+                out |= ids_in(v)
+    elif isinstance(row, list):
+        for v in row:
+            out |= ids_in(v)
+    return out
+
+
+@dataclass(frozen=True)
+class Scope:
+    """What one segment may see of the tables (`TABLE_KEYS`): the features, criteria and cross-check pairs
+    whose rows are its own, kept under `key`, the segment id. An empty set sees no row of that table, only
+    the tool's note; a tool outside the tables is the segment's own call and reaches it whole."""
+
+    key: str
+    features: frozenset[str] = frozenset()
+    criteria: frozenset[str] = frozenset()
+    pairs: frozenset[str] = frozenset()
+
+    def keeps(self, tool: str, row: dict[str, Any]) -> bool:
+        column = TABLE_KEYS.get(tool)
+        if column is None:
+            return True
+        own = {"feature": self.features, "criterion": self.criteria, "pair": self.pairs}[column]
+        return row.get(column) in own
+
+    def narrow(self, tool: str, rows: list[dict[str, Any]],
+               values: dict[str, dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
+        """The rows the scope keeps, in their order, and the values those rows cite; a tool outside the
+        tables comes back as it was. A value no kept row cites is left out too, because a value the
+        executor was never shown is not one it may cite."""
+        if tool not in TABLE_KEYS:
+            return rows, values
+        keep = [r for r in rows if self.keeps(tool, r)]
+        cited: set[str] = set()
+        for r in keep:
+            cited |= ids_in(r)
+        return keep, {k: v for k, v in values.items() if k in cited}
+
+
+def segment_scope(segment: Segment, criteria: CriteriaSet) -> Scope:
+    """The rows one segment owns, from its kind and the criteria table: a criterion segment its criterion's
+    feature and key (so its value, observations, thresholds, weight, membership and coverage rows); a
+    cross-check the keys and features of the criteria it combines and its own pair; a retrieval nothing of
+    the tables, its passages being its own call. A criterion the table lacks owns no row, and a cross-check
+    combines only the criteria the table has, the same rule `template_plan` builds its dependencies by."""
+    by_key = {c.key: c for c in criteria.criteria}
+    key = segment.criterion or ""
+    keys: list[str] = []
+    pairs: list[str] = []
+    if segment.kind == "criterion" and key in by_key:
+        keys = [key]
+    elif segment.kind == "crosscheck" and key in _CROSSCHECK_PURPOSE:
+        keys = [k for k in _CROSSCHECK_PURPOSE[key][1] if k in by_key]
+        pairs = [key]
+    return Scope(segment.segment_id, features=frozenset(by_key[k].feature for k in keys),
+                 criteria=frozenset(keys), pairs=frozenset(pairs))
 
 
 def _names_effort(tool: str, args: dict[str, Any]) -> bool:

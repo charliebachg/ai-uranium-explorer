@@ -1,7 +1,7 @@
 # Analyst v1 arm: the staged loop (PRD §8.4). Every switch is stated; an arm differs from v1 in the one way
 # its notes line names.
 [arm]
-name = "v1-cheap"
+name = "v1-scoped-batch"
 agent = "v1"
 model = "claude-opus-5"
 effort = "medium"
@@ -9,7 +9,7 @@ prompt_version = "analyst/v1/v1"
 max_budget_usd_per_call = 1.50
 timeout_s = 600
 workers = 2
-notes = "A cheap vision executor on OpenRouter (GLM 5.3 Flash) under the Opus 5 verifier: the executor is the role the evidence says can be weak behind a strong verifier."
+notes = "The scoped views under the batch executor: one call over every criterion reads the union of the segments' scoped files, one row per table per criterion instead of the whole tables, and each node is still gated against its own segment's view; measures whether the two cost switches compose or whether a batch that sees every segment's rows borrows across them."
 
 [arm.inputs]
 card = true
@@ -24,7 +24,7 @@ effort_features = false
 criteria = true
 
 [arm.loop]
-executor_model = "z-ai/glm-5.3-flash"
+executor_model = "claude-sonnet-5"
 verifier_model = "claude-opus-5"
 adjudicator_model = "claude-opus-5"
 planner_model = "claude-opus-5"
@@ -37,5 +37,5 @@ decider = "both"
 segment_workers = 4
 retrieval = false
 skip_unmeasured = false
-executor_batch = false
-segment_scoped = false
+executor_batch = true
+segment_scoped = true

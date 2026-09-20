@@ -1,11 +1,15 @@
 """The staged loop: a clean chain end to end, the gate's escalation, the verifier's repairs, K exhausted, the
-switches, the budget stop, the spans, and triage - every one on a scripted backend and a fake tool world."""
+switches, the budget stop, the spans, triage, and the executor's view - every one on a scripted backend and a
+fake tool world."""
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import types
+from collections import defaultdict
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -16,6 +20,7 @@ from legacy_reader import store as ST
 from legacy_reader.analyst import chains as CH
 from legacy_reader.analyst import loop as L
 from legacy_reader.analyst import nodegate as G
+from legacy_reader.analyst import prompts as PR
 from legacy_reader.analyst import wire as W
 from legacy_reader.analyst.arms import Inputs, Switches
 from legacy_reader.analyst.session import Session
@@ -24,8 +29,9 @@ from legacy_reader.prospect import criteria as C
 from legacy_reader.runtime.spend import BudgetExhausted
 from legacy_reader.runtime.tracing import read_spans, trace
 
-from fake_loop_world import (CELL, COND, LoopBackend, LoopWorld, adjudicator_answer, bad_adjudicator, bad_node,
-                             loop_registry, node_answer, verifier_answer, vid)
+from fake_loop_world import (CELL, COND, CRITERIA, FAULT, FEATURES, SAMPLES, SED, LoopBackend, LoopWorld,
+                             adjudicator_answer, bad_adjudicator, bad_node, loop_registry, mid, node_answer,
+                             verifier_answer, vid, xid)
 
 CS = C.load()
 ALL_ON = Switches(drillholes=True, label_context=True, oof_scores=True, effort_features=True, criteria=True)
@@ -380,8 +386,11 @@ def test_loop_config_refuses_a_switch_outside_its_arms() -> None:
         config(skip_unmeasured="yes")
     with pytest.raises(ValueError, match="^executor_batch"):
         config(executor_batch=1)
+    with pytest.raises(ValueError, match="^segment_scoped"):
+        config(segment_scoped="on")
     assert config().models() == {"executor": "m-small", "verifier": "m-large", "adjudicator": "m-large"}
-    assert (config().skip_unmeasured, config().executor_batch) == (False, False), "both cost switches are arms, off by default"
+    assert (config().skip_unmeasured, config().executor_batch, config().segment_scoped) == (False, False, False), \
+        "the three cost switches are arms, off by default"
 
 
 # ---------------------------------------------------------------- the two cost switches
@@ -512,3 +521,236 @@ def test_the_adjudicator_gets_the_gates_feedback_and_a_second_attempt(tmp_path: 
     backend = LoopBackend(adjudicator=[bad_adjudicator(), bad_adjudicator(), bad_adjudicator()])
     row, _ = run(tmp_path / "again", backend)
     assert row["published"] is False and row["stages"]["adjudicator_attempts"] == 3 and row["problems"]
+
+
+# ---------------------------------------------------------------- the executor view
+
+#: sha256 of today's staged bundle (every `tool_*.json`, name and bytes, in staging order) and of the executor
+#: user prompts (by segment), for the fake world under the default config, recorded 2026-09-21 before
+#: `segment_scoped` existed. The switch off must never move them; re-record only for a deliberate change to
+#: the template, the executor prompt, the fake world or the criteria table.
+BUNDLE_TODAY = "0096bba59019ca98368636fa5cec8f207725dce6657962e6f506249534b717a0"
+PROMPTS_TODAY = "c8091c27e3753135cab533416b7a6f698697a161339afae122cdaa9a938ff86b"
+
+
+def bundle_hash(session: Session) -> str:
+    h = hashlib.sha256()
+    for p in sorted(session.stage.glob("tool_*.json")):
+        h.update(p.name.encode())
+        h.update(p.read_bytes())
+    return h.hexdigest()
+
+
+def executor_prompts(backend: LoopBackend) -> dict[str, list[str]]:
+    """Every executor user prompt by segment, in call order: the pool's order is not the plan's."""
+    out: dict[str, list[str]] = defaultdict(list)
+    for req, (task, seg) in zip(backend.requests, backend.calls):
+        if task == L.TASK_EXECUTE:
+            out[seg].append(req.user_prompt)
+    return dict(out)
+
+
+def prompts_hash(backend: LoopBackend) -> str:
+    h = hashlib.sha256()
+    for seg, prompts in sorted(executor_prompts(backend).items()):
+        for p in prompts:
+            h.update(seg.encode())
+            h.update(p.encode())
+            h.update(b"\0")
+    return h.hexdigest()
+
+
+def staged(session: Session, name: str) -> dict[str, Any]:
+    return json.loads((session.stage / name).read_text())
+
+
+def staged_by_segment(backend: LoopBackend, session: Session) -> dict[str, list[dict[str, Any]]]:
+    """Per segment, the files its first executor call was handed, read back from the stage."""
+    out: dict[str, list[dict[str, Any]]] = {}
+    for req, (task, seg) in zip(backend.requests, backend.calls):
+        if task == L.TASK_EXECUTE and seg not in out:
+            out[seg] = [staged(session, name) for _p, name in req.stage_files]
+    return out
+
+
+def allowed_in(prompt: str) -> list[str]:
+    """The ids the gate's second-attempt feedback lists."""
+    block = prompt.split("The only ids this node may cite:\n")[1].split("\n\n")[0]
+    return [line.strip() for line in block.splitlines()]
+
+
+def run_scored(tmp_path: Path, backend: LoopBackend, **over: Any) -> tuple[dict[str, Any], Session]:
+    """One cell on a scored session (blinded, so the private copies are kept) with the scores switched off, so
+    nothing reaches for the store."""
+    session = Session.open(CELL, "scored", fold=1, switches=replace(ALL_ON, oof_scores=False), blind=[], forbidden=set(),
+                           stage=tmp_path / "cell" / "stage", tools=loop_registry(LoopWorld()))
+    row = L.run_cell_v1(backend, session, None, INPUTS, session.switches, config(**over), CS, chain_id="ch-1",
+                        run_id="run-1", stage=session.stage)
+    return row, session
+
+
+def test_segment_scoped_off_stages_the_whole_tables_byte_for_byte_as_today(tmp_path: Path, weights_stub) -> None:
+    backend = LoopBackend()
+    row, session = run(tmp_path, backend, segment_scoped=False)
+    assert bundle_hash(session) == BUNDLE_TODAY, "the staged bundle moved with the switch off"
+    assert prompts_hash(backend) == PROMPTS_TODAY, "an executor prompt moved with the switch off"
+    assert all(r.system_prompt == PR.default_executor_system() for r in backend.requests if r.task == L.TASK_EXECUTE)
+    assert session.views == {} and session.scoped_rows_dropped == 0 and "scope" not in json.dumps(session.calls)
+    for files in staged_by_segment(backend, session).values():
+        for p in files:
+            if p["tool"] == "cell_features":
+                assert [r["feature"] for r in p["rows"]] == [f for f, *_ in FEATURES], "the whole table, every segment"
+            elif p["tool"] == "criteria_breakdown":
+                assert [r["criterion"] for r in p["rows"]] == list(CRITERIA)
+    assert row["published"] is True and config().segment_scoped is False
+
+
+def test_segment_scoped_stages_each_segment_exactly_its_own_rows_under_the_same_prompts(tmp_path: Path, weights_stub) -> None:
+    plain = LoopBackend()
+    _, whole = run(tmp_path / "off", plain)
+    backend = LoopBackend()
+    row, session = run(tmp_path, backend, segment_scoped=True)
+    assert row["published"] is True and backend.n_executor == 10 and row["stages"]["n_gate_rejections"] == 0
+    assert executor_prompts(backend) == executor_prompts(plain), "the prompts are the same; the files behind the names are not"
+    before, after = staged_by_segment(plain, whole), staged_by_segment(backend, session)
+    assert set(after) == set(SEGMENTS) and {c["scope"] for c in session.calls if "scope" in c} == set(SEGMENTS)
+    for seg, key in SEGMENTS.items():
+        files = after[seg]
+        assert [p["tool"] for p in files] == [p["tool"] for p in before[seg]]
+        for p, w in zip(files, before[seg]):
+            assert (p["note"], p["args"]) == (w["note"], w["args"]), "the tool's note and arguments are kept"
+            assert set(p["values"]) <= set(w["values"]) and all(r in w["rows"] for r in p["rows"])
+            cited = {v for r in p["rows"] for k, v in r.items() if k.endswith("_id")}
+            assert set(p["values"]) == cited, (seg, p["tool"], "only the values the kept rows cite")
+        by_tool = {p["tool"]: p for p in files}
+        if seg == "s09":
+            assert list(by_tool) == ["crosscheck"] and [r["pair"] for r in by_tool["crosscheck"]["rows"]] == ["conductor_fault"]
+            assert set(by_tool["crosscheck"]["values"]) == {xid("conductor_fault", "radius_m"), COND, FAULT,
+                                                            xid("conductor_fault", "crossings_n")}
+        elif seg == "s10":
+            assert [r["pair"] for r in by_tool["crosscheck"]["rows"]] == ["sediment_sampling"]
+            assert set(by_tool["crosscheck"]["values"]) == {SED, SAMPLES, xid("sediment_sampling", "min_samples")}
+            assert [r["feature"] for r in by_tool["cell_features"]["rows"]] == ["sed_u_max_ppm"]
+            assert [r["feature"] for r in by_tool["coverage"]["rows"]] == ["sed_u_max_ppm"]
+        else:
+            feature = CRITERIA[key][0]
+            assert [r["feature"] for r in by_tool["cell_features"]["rows"]] == [feature]
+            assert [r["criterion"] for r in by_tool["criteria_breakdown"]["rows"]] == [key]
+            assert [r["feature"] for r in by_tool["coverage"]["rows"]] == [feature]
+            if "nearby" in by_tool:
+                assert by_tool["nearby"] == next(p for p in before[seg] if p["tool"] == "nearby"), "its own call, whole"
+        view = session.views[seg]
+        assert set(view.values) == {v for p in files for v in p["values"]}
+        assert session.registry(seg) == (view.values, view.context) and session.allowed_ids(seg) == sorted(view.values)
+    assert session.allowed_ids("s01") == sorted([COND, mid("conductor_proximity"), "c:cov:d_conductor_m",
+                                                 f"c:nearby:{CELL}:em_conductors:count"])
+    assert session.allowed_ids("s07") == ["c:cov:water_u_max_ppm", f"c:nearby:{CELL}:lake_water_sgs:count"], \
+        "an unmeasured feature has no value to see"
+    # the harness's own whole table: one call, after every executor's file, in no executor's list
+    harness = [c for c in session.calls if c["tool"] == "cell_features" and "scope" not in c]
+    assert len(harness) == 1 and len(staged(session, harness[0]["file"])["rows"]) == len(FEATURES)
+    read = {n for r in backend.requests for _p, n in r.stage_files}
+    assert harness[0]["file"] not in read and harness[0]["file"] > max(read)
+    # the verifier and the adjudicator read the same chain as without the switch, over the whole registry
+    for task in (L.TASK_VERIFY, L.TASK_ADJUDICATE):
+        assert next(r.user_prompt for r in backend.requests if r.task == task) == \
+            next(r.user_prompt for r in plain.requests if r.task == task)
+    assert set(session.values) == set(whole.values) and session.refusals == {}
+    assert session.manifest_fields()["scoped_rows_dropped"] > 0 and row["stages"]["n_refusals_by_rule"]["switch"] == 0
+
+
+def test_segment_scoped_refuses_a_node_citing_an_id_its_segment_never_saw(tmp_path: Path, weights_stub) -> None:
+    borrowed = {**node_answer("conductor_proximity"), "value_ids": [COND, FAULT]}
+    backend = LoopBackend(executor={"s01": [borrowed]})
+    row, _ = run(tmp_path / "off", backend)
+    assert row["stages"]["n_gate_rejections"] == 0 and row["published"] is True, "today the whole session is the registry"
+
+    backend = LoopBackend(executor={"s01": [borrowed, borrowed, node_answer("conductor_proximity")]})
+    row, session = run(tmp_path, backend, segment_scoped=True)
+    reqs = backend.executor_requests("s01")
+    assert len(reqs) == 3 and "rejected by the mechanical gate" in reqs[1].user_prompt
+    assert f"- ids: cites {FAULT}, which no tool returned" in reqs[1].user_prompt, "the feedback names the id"
+    ids = allowed_in(reqs[1].user_prompt)
+    assert ids == session.allowed_ids("s01") and COND in ids and FAULT not in ids
+    assert "last attempt" in reqs[2].user_prompt
+    n01 = next(n for n in W.Chain.from_dict(row["chain"]).validate().nodes if n.segment_id == "s01")
+    assert (n01.attempt, n01.published, n01.value_ids) == (3, True, [COND])
+    assert row["stages"]["n_gate_rejections"] == 2 and row["published"] is True
+
+    # a cross-check may cite what the nodes it builds on cite, as its prompt tells it to, and nothing of a
+    # node it was not shown
+    own = {**node_answer("sediment_sampling"), "value_ids": [SED, SAMPLES, mid("lake_sediment_uranium")]}
+    stray = {**node_answer("conductor_fault"),
+             "value_ids": [COND, FAULT, xid("conductor_fault", "crossings_n"), vid("graphitic_host")]}
+    backend = LoopBackend(executor={"s10": [own], "s09": [stray, node_answer("conductor_fault")]})
+    row, _ = run(tmp_path / "cross", backend, segment_scoped=True)
+    assert len(backend.executor_requests("s10")) == 1, "n06's membership id came with the node s10 was shown"
+    s09 = backend.executor_requests("s09")
+    assert len(s09) == 2 and f"cites {vid('graphitic_host')}, which no tool returned" in s09[1].user_prompt
+    assert row["published"] is True and row["stages"]["n_gate_rejections"] == 1
+
+
+def test_the_scoped_view_of_a_criterion_segment_holds_no_other_criterions_row_and_nothing_it_did_not_hold_before(
+        tmp_path: Path, weights_stub) -> None:
+    """Effort features on, so the whole `cell_features` carries the hole and sample counts; the template never
+    calls `label_context`. A scoped view is a subset of the segment's whole view, holds no row of another
+    criterion and no effort or label value, and the private unscrubbed copy behind it is still the whole result."""
+    plain = LoopBackend()
+    _, whole = run_scored(tmp_path / "off", plain)
+    backend = LoopBackend()
+    row, session = run_scored(tmp_path, backend, segment_scoped=True)
+    assert row["published"] is True
+    before, after = staged_by_segment(plain, whole), staged_by_segment(backend, session)
+    effort = {vid("holes_n"), vid("sed_samples_n")}
+    assert effort <= {v for p in before["s01"] for v in p["values"]}, "before scoping the conductor executor read the hole count"
+    for seg, key in SEGMENTS.items():
+        held = {v for p in before[seg] for v in p["values"]}
+        view = set(session.views[seg].values)
+        assert view <= held and view == {v for p in after[seg] for v in p["values"]}, seg
+        assert not any(v.startswith(("c:near:", "c:score:", "c:pass:")) for v in view), seg
+        if seg in ("s09", "s10"):
+            continue
+        feature = CRITERIA[key][0]
+        for p in after[seg]:
+            for r in p["rows"]:
+                assert r.get("feature", feature) == feature and r.get("criterion", key) == key, (seg, p["tool"], r)
+        others = {vid(f) for k, (f, _m) in CRITERIA.items() if k != key} | {mid(k) for k in CRITERIA if k != key}
+        assert not view & (others | effort), seg
+    # the private transcript is the whole, unscrubbed result a dashboard cites from
+    shown = {c["file"]: c for c in session.calls}
+    checked = 0
+    for _p, name in backend.executor_requests("s01")[0].stage_files:
+        if shown[name]["tool"] != "cell_features":
+            continue
+        private = json.loads((session.stage / shown[name]["private_file"]).read_text())
+        assert [r["feature"] for r in staged(session, name)["rows"]] == ["d_conductor_m"]
+        assert [r["feature"] for r in private["rows"]] == [f for f, *_ in FEATURES] and vid("holes_n") in private["values"]
+        checked += 1
+    assert checked == 1
+    assert session.refusals == {"switch": 1}, "the effort note's scores; scoping refuses nothing"
+
+
+def test_segment_scoped_composes_with_the_batch_executor_and_skip_unmeasured(tmp_path: Path, weights_stub) -> None:
+    borrowed = {**node_answer("conductor_proximity"), "value_ids": [COND, FAULT]}
+    backend = LoopBackend(batch={"conductor_proximity": borrowed}, executor={"s01": [node_answer("conductor_proximity")]})
+    row, session = run(tmp_path, backend, segment_scoped=True, executor_batch=True, skip_unmeasured=True)
+    tasks = [t for t, _ in backend.calls]
+    assert tasks.count(L.TASK_EXECUTE_BATCH) == 1
+    assert sorted(seg for t, seg in backend.calls if t == L.TASK_EXECUTE) == ["s01", "s09", "s10"]
+    batch = backend.requests[tasks.index(L.TASK_EXECUTE_BATCH)]
+    files = {c["file"]: c for c in session.calls}
+    names = [n for _p, n in batch.stage_files]
+    assert names and all("scope" in files[n] for n in names), "the batch reads the union of the scoped views"
+    assert all(len(staged(session, n)["rows"]) == 1 for n in names if files[n]["tool"] in ("cell_features", "criteria_breakdown"))
+    assert "Segment s07" not in batch.user_prompt
+    s01 = backend.executor_requests("s01")[0]
+    assert f"cites {FAULT}, which no tool returned" in s01.user_prompt, "the batch node was gated against its own segment's view"
+    ids = allowed_in(s01.user_prompt)
+    assert ids == session.allowed_ids("s01") and FAULT not in ids
+    chain = W.Chain.from_dict(row["chain"]).validate()
+    by_seg = {n.segment_id: n for n in chain.nodes}
+    assert (by_seg["s07"].status, by_seg["s07"].model, by_seg["s07"].published) == ("unknown", "deterministic", True)
+    assert (by_seg["s01"].attempt, by_seg["s01"].published) == (2, True)
+    st = row["stages"]
+    assert st["n_skipped_unmeasured"] == 1 and st["n_batch_calls"] == 1 and st["n_gate_rejections"] == 1 and st["n_nodes"] == 10
+    assert row["published"] is True and chain.published

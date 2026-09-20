@@ -118,3 +118,32 @@ def test_check_plan_holds_a_model_planner_to_the_rules() -> None:
     # the same plan under a stricter arm is refused, so an arm cannot borrow another arm's plan
     assert any("switched off" in p for p in P.check_plan(P.template_plan(CS, ALL_ON), CS, OFF)) is False, \
         "the template calls nothing the headline arm turns off"
+
+
+def test_segment_scope_names_each_segments_own_rows_and_nothing_else() -> None:
+    plan = P.template_plan(CS, OFF, retrieval=True)
+    by_key = {c.key: c for c in CS.criteria}
+    for s in plan.segments:
+        scope = P.segment_scope(s, CS)
+        assert scope.key == s.segment_id
+        if s.kind == "criterion":
+            c = by_key[s.criterion]
+            assert (scope.features, scope.criteria, scope.pairs) == ({c.feature}, {c.key}, set())
+        elif s.kind == "crosscheck":
+            keys = {"conductor_fault": {"conductor_proximity", "fault_proximity"},
+                    "sediment_sampling": {"lake_sediment_uranium"}}[s.criterion]
+            assert scope.criteria == keys and scope.features == {by_key[k].feature for k in keys} and scope.pairs == {s.criterion}
+        else:
+            assert (scope.features, scope.criteria, scope.pairs) == (set(), set(), set()), "a retrieval's passages are its own call"
+    conductor = P.segment_scope(plan.segments[0], CS)
+    assert conductor.keeps("cell_features", {"feature": "d_conductor_m"}) and not conductor.keeps("cell_features", {"feature": "d_fault_m"})
+    assert conductor.keeps("criteria_breakdown", {"criterion": "conductor_proximity"}) and not conductor.keeps("crosscheck", {"pair": "conductor_fault"})
+    assert conductor.keeps("nearby", {"layer": "faults_250k"}) and conductor.keeps("retrieve", {"tier": "page"}), \
+        "a tool outside the tables is the segment's own call"
+    rows = [{"feature": "d_conductor_m", "value_id": "c:cell:x:d_conductor_m"},
+            {"feature": "d_fault_m", "value_id": "c:cell:x:d_fault_m", "thresholds": {"hi": {"value_id": "c:crit:x:fault_proximity:hi"}}}]
+    values = {"c:cell:x:d_conductor_m": {}, "c:cell:x:d_fault_m": {}, "c:crit:x:fault_proximity:hi": {}, "c:orphan": {}}
+    assert conductor.narrow("cell_features", rows, values) == (rows[:1], {"c:cell:x:d_conductor_m": {}})
+    assert conductor.narrow("nearby", rows, values) == (rows, values)
+    stray = W.Segment(segment_id="s99", kind="criterion", criterion="moon_phase", purpose="Establish the phase.")
+    assert P.segment_scope(stray, CS) == P.Scope("s99"), "a criterion the table lacks sees nothing but the notes"

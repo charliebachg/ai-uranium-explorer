@@ -11,7 +11,7 @@ from legacy_reader.analyst import arms as A
 
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
 V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter", "v1-anthropic-or",
-      "v1-skipunmeasured", "v1-batch"]
+      "v1-skipunmeasured", "v1-batch", "v1-scoped", "v1-scoped-batch"]
 ALL = V0 + V1
 
 
@@ -115,28 +115,46 @@ def test_the_v1_headline_is_a_cheap_executor_under_an_opus_verifier_with_v0s_swi
     ("v1-anthropic-or", {"model", "loop.executor_model", "loop.verifier_model", "loop.adjudicator_model", "loop.planner_model"}),
     ("v1-skipunmeasured", {"loop.skip_unmeasured"}),
     ("v1-batch", {"loop.executor_batch"}),
+    ("v1-scoped", {"loop.segment_scoped"}),
+    ("v1-scoped-batch", {"loop.executor_batch", "loop.segment_scoped"}),
 ])
 def test_each_v1_ablation_differs_from_the_v1_headline_in_exactly_the_stated_way(name: str, changed: set[str]) -> None:
     assert set(_diff(A.load_arm("v1"), A.load_arm(name))) == changed
 
 
-def test_the_two_cost_switches_are_off_in_the_headline_and_stated_in_every_v1_arm() -> None:
+def test_the_three_cost_switches_are_off_in_the_headline_and_stated_in_every_v1_arm() -> None:
     v1 = A.load_arm("v1")
-    assert v1.loop is not None and (v1.loop.skip_unmeasured, v1.loop.executor_batch) == (False, False)
+    assert v1.loop is not None and (v1.loop.skip_unmeasured, v1.loop.executor_batch, v1.loop.segment_scoped) == (False, False, False)
     cfg = v1.loop.config(v1.effort, v1.prompt_version)
-    assert (cfg.skip_unmeasured, cfg.executor_batch) == (False, False)
-    skip, batch = A.load_arm("v1-skipunmeasured"), A.load_arm("v1-batch")
-    assert skip.loop is not None and batch.loop is not None
+    assert (cfg.skip_unmeasured, cfg.executor_batch, cfg.segment_scoped) == (False, False, False)
+    skip, batch, scoped = A.load_arm("v1-skipunmeasured"), A.load_arm("v1-batch"), A.load_arm("v1-scoped")
+    assert skip.loop is not None and batch.loop is not None and scoped.loop is not None
     assert skip.loop.config(skip.effort, skip.prompt_version).skip_unmeasured is True
     assert batch.loop.config(batch.effort, batch.prompt_version).executor_batch is True
+    assert scoped.loop.config(scoped.effort, scoped.prompt_version).segment_scoped is True
+    both = A.load_arm("v1-scoped-batch")
+    assert both.loop is not None and (both.loop.segment_scoped, both.loop.executor_batch) == (True, True)
     raw = tomllib.loads((A.arms_dir() / "v1.toml").read_text())
-    for key in ("skip_unmeasured", "executor_batch"):
+    for key in ("skip_unmeasured", "executor_batch", "segment_scoped"):
         without = {**raw, "arm": {**raw["arm"], "loop": {k: v for k, v in raw["arm"]["loop"].items() if k != key}}}
         with pytest.raises(ValueError, match=key):
             A.parse_arm(without)
         typed = {**raw, "arm": {**raw["arm"], "loop": {**raw["arm"]["loop"], key: "false"}}}
         with pytest.raises(ValueError, match=key):
             A.parse_arm(typed)
+
+
+def test_the_scoped_view_moves_the_manifest_hash_and_nothing_else() -> None:
+    """The run manifest's config is the arm as a dict; two arms that differ in one switch hash apart."""
+    from legacy_reader.ids import sha256_json
+
+    v1, scoped, both = A.load_arm("v1"), A.load_arm("v1-scoped"), A.load_arm("v1-scoped-batch")
+    hashes = {sha256_json(a.as_dict()) for a in (v1, scoped, both)}
+    assert len(hashes) == 3
+    assert _diff(v1, scoped) == {"loop.segment_scoped": (False, True)}
+    assert _diff(scoped, both) == {"loop.executor_batch": (False, True)}
+    assert scoped.switches == v1.switches and scoped.inputs == v1.inputs, "the evidence rules are the headline's"
+    assert "high potential" not in scoped.notes and "drill target" not in scoped.notes
 
 
 def test_a_loop_table_on_a_v0_arm_and_a_v1_arm_without_one_are_refused(tmp_path) -> None:

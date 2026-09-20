@@ -23,6 +23,13 @@ scheme is `b:<bench_id>:…` and nothing that places the ground survives; a scor
 id and scrubs the names. Every refusal names its rule, so a harness counts refusals per rule, not per
 exception, and every span carries argument names and never their values, because a real cell id in a
 benchmark run's trace is a leak too.
+
+A call may carry a `Scope` (the `segment_scoped` arm): the staged file then holds only the rows the scope
+names and the values they cite, and the session keeps a `View` per scope key, the registry a node of that
+segment is gated against. The scope is applied after the leakage rules and the scrub, so it can never loosen
+them, and it drops rows, never refuses them: a segment not shown another criterion's row is the view working
+as designed, counted apart under `scoped_rows_dropped`. The private unscrubbed copy is the whole result
+whatever the scope, because a dashboard cites from it and the scope is the harness's business.
 """
 
 from __future__ import annotations
@@ -43,6 +50,7 @@ from ..prospect import tools as T
 from ..runtime.tracing import set_attrs, span
 from ..store import connect
 from .arms import Switches
+from .plan import Scope
 from .v0 import PLACE_NAMES
 
 #: deposits, camps and regions the handbook names: scrubbed from every blinded result along with the store's
@@ -100,6 +108,16 @@ def _swap(node: Any, old: str, new: str) -> Any:
 
 
 @dataclass
+class View:
+    """What was staged under one scope key: the registry and the context a node of that segment is gated
+    against. A value in the session's registry and in no view was staged to a role that reads the whole
+    (the harness's own calls, the adjudicator on the shallow path), never to that segment's executor."""
+
+    values: dict[str, dict[str, Any]] = field(default_factory=dict)
+    context: str = ""
+
+
+@dataclass
 class Session:
     """One purpose's run over one cell: what it asked for, what it got, what it may cite, and what it refused."""
 
@@ -131,6 +149,10 @@ class Session:
     refusals: dict[str, int] = field(default_factory=dict)
     #: effort rows removed because the arm's switch is off: a switch acting as designed, not a refusal
     effort_rows_dropped: int = 0
+    #: per scope key, what was staged under it: the registry a node of that segment may cite from
+    views: dict[str, View] = field(default_factory=dict)
+    #: table rows a scope left out of a staged file: the segment's view acting as designed, not a refusal
+    scoped_rows_dropped: int = 0
 
     @classmethod
     def open(cls, cell_id: str, purpose: Purpose, *, fold: int | None, switches: Switches,
@@ -190,9 +212,10 @@ class Session:
 
     # ---------------------------------------------------------------- the guarded dispatcher
 
-    def call(self, tool: str, args: dict[str, Any]) -> T.ToolResult:
+    def call(self, tool: str, args: dict[str, Any], scope: Scope | None = None) -> T.ToolResult:
         """One tool call, guarded: the switches, then the leakage rules, then the model-facing rewrite, then
-        the record. What comes back is exactly what was written to the stage and what the model may cite."""
+        the scope when there is one, then the record. What comes back is exactly what was written to the
+        stage and what the model may cite; under a scope, what that segment's model may cite."""
         fn = self.tools.get(tool)
         if fn is None:
             raise T.ToolError(f"no tool named {tool!r}; available: {', '.join(sorted(self.tools))}")
@@ -206,8 +229,13 @@ class Session:
                 set_attrs(rule=refusal.rule)
                 raise
             payload = self._model_facing(result, self._shown_args(args))
-            self._record(tool, payload, raw=result if self.blinded else None)
+            if scope is not None:
+                payload = self._scoped(scope, payload)
+            self._mark_expert(payload)
+            self._record(tool, payload, raw=result if self.blinded else None, scope=scope)
             set_attrs(n_values=len(payload["values"]), n_rows=len(payload["rows"]))
+            if scope is not None:
+                set_attrs(scope=scope.key)
         return T.ToolResult(tool, payload["args"], payload["rows"], payload["values"], payload["note"])
 
     def _real_args(self, args: dict[str, Any]) -> dict[str, Any]:
@@ -315,21 +343,41 @@ class Session:
                 # the cell-id pattern would otherwise cut the id out of every value it sits in
                 payload = _swap(P.scrub(_swap(payload, self.cell_id, _KEEP), names, keep=frozenset()), _KEEP, self.cell_id)
         payload["args"] = shown_args
+        return payload
+
+    def _scoped(self, scope: Scope, payload: dict[str, Any]) -> dict[str, Any]:
+        """The payload narrowed to the scope's rows and the values they cite, the note and the arguments
+        kept. After the leakage rules and the scrub, so a scope never loosens them; before the record, so
+        nothing the segment was not shown is citable under its key. The rows a scope leaves out are counted
+        apart from the refusals: a segment not shown another criterion's row is the view as designed."""
+        rows, values = scope.narrow(payload["tool"], payload["rows"], payload["values"])
+        self.scoped_rows_dropped += len(payload["rows"]) - len(rows)
+        return {**payload, "rows": rows, "values": values}
+
+    def _mark_expert(self, payload: dict[str, Any]) -> None:
+        """B19 on what is staged: every expert-tier value remembered by id and the row that cites it marked.
+        After the scope, so an expert value in a row no segment saw is not counted as one a model leaned on."""
         expert = {vid for vid, v in payload["values"].items()
                   if isinstance(v, dict) and (v.get("tier") == "expert" or v.get("expert") is True)}
         for row in payload["rows"]:
             if _cited(row) & expert:
                 row["expert"] = True
         self.expert_ids |= expert
-        return payload
 
-    def _record(self, tool: str, payload: dict[str, Any], raw: T.ToolResult | None = None) -> None:
+    def _record(self, tool: str, payload: dict[str, Any], raw: T.ToolResult | None = None,
+                scope: Scope | None = None) -> None:
         """The model-facing payload under `stage/`, and in a blinded session the unscrubbed result under
         `stage/private/`. Scrubbing drops file numbers and citations, which is right for what the model reads
         and wrong for what a geologist is later shown: the private copy is what a dashboard cites from, and it
-        is never staged to a model because nothing stages the `private` directory."""
+        is never staged to a model because nothing stages the `private` directory. Under a scope the payload
+        also joins that scope's view, and the call log names the scope; the staged file never does, because
+        the scope is the harness's business and nothing a model reads should say a row was left out."""
         self.values |= payload["values"]
         self.context += "\n" + memo.quotable(payload)
+        if scope is not None:
+            view = self.views.setdefault(scope.key, View())
+            view.values |= payload["values"]
+            view.context += "\n" + memo.quotable(payload)
         n = len(self.calls) + 1
         path = self.stage / f"tool_{n:02d}_{tool}.json"
         path.write_text(json.dumps(payload, indent=1))
@@ -340,17 +388,29 @@ class Session:
             private.parent.mkdir(parents=True, exist_ok=True)
             private.write_text(json.dumps(raw.as_json(), indent=1))
             entry["private_file"] = f"{PRIVATE_DIR}/{path.name}"
+        if scope is not None:
+            entry["scope"] = scope.key
         self.calls.append(entry)
 
     # ---------------------------------------------------------------- the gate and the manifest
 
-    def check_claims(self, claims: list[dict[str, Any]]) -> list[str]:
-        """The memo gate over this session's registry and context: no looser path exists."""
-        return memo.check_claims(claims, self.values, self.context)
+    def registry(self, scope: str | None = None) -> tuple[dict[str, dict[str, Any]], str]:
+        """What a claim is gated against: the session's whole registry and context, or under a scope key
+        the view staged under it. A key nothing was staged under sees nothing, which is the point: a node
+        may cite only what its own segment was shown."""
+        if scope is None:
+            return self.values, self.context
+        view = self.views.get(scope)
+        return (view.values, view.context) if view is not None else ({}, "")
 
-    def allowed_ids(self) -> list[str]:
+    def check_claims(self, claims: list[dict[str, Any]], scope: str | None = None) -> list[str]:
+        """The memo gate over this session's registry and context, or over one scope's view: no looser path
+        exists."""
+        return memo.check_claims(claims, *self.registry(scope))
+
+    def allowed_ids(self, scope: str | None = None) -> list[str]:
         """What a node may cite, sorted, for the gate's escalating feedback."""
-        return sorted(self.values)
+        return sorted(self.registry(scope)[0])
 
     def manifest_fields(self) -> dict[str, Any]:
         """What the run manifest records about this session; every rule is present so manifests share a shape."""
@@ -360,4 +420,5 @@ class Session:
             "n_values": len(self.values), "n_expert_ids": len(self.expert_ids), "n_calls": len(self.calls),
             "refusals": {rule: self.refusals.get(rule, 0) for rule in RULES},
             "effort_rows_dropped": self.effort_rows_dropped,
+            "scoped_rows_dropped": self.scoped_rows_dropped,
         }
