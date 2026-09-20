@@ -371,7 +371,9 @@ attempts. A **verifier** (Opus 5, the skeptic's brief) reads the whole chain and
 and their dependents are re-executed, up to K rounds (three by default). Two **deciders** always run: a weighted sum over node
 strengths and an adjudicator; a chain that never validates takes the majority over rounds or abstains. The
 chain, its verdicts and its decision are stored in the agent tier and shown on the evidence panel under the
-memos. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
+memos. Two switches, off by default and each an arm, cut the call count: `skip_unmeasured` lets the harness
+write the unknown node for a criterion whose feature has no value here, and `executor_batch` asks for every
+criterion's node in one call and gates them one by one. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
 over the frozen benchmark, blinded, beside v0 and the baselines.
 
 ## 7. The other three pages

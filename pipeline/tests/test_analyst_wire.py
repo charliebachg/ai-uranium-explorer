@@ -222,7 +222,23 @@ def test_the_model_schemas_cover_only_what_a_model_returns() -> None:
     tools = W.PLAN_SCHEMA["properties"]["segments"]["items"]["properties"]["tool_calls"]["items"]["properties"]["tool"]
     assert set(tools["enum"]) == set(TOOL_HELP) | {"nearby", "crosscheck"} == set(W.ALLOWED_TOOLS)
     assert len(W.ALLOWED_TOOLS) == len(set(W.ALLOWED_TOOLS))
-    assert "high potential" not in json.dumps([W.NODE_SCHEMA, W.VERIFIER_SCHEMA, W.PLAN_SCHEMA]).lower()
+    assert "high potential" not in json.dumps([W.NODE_SCHEMA, W.NODES_SCHEMA, W.VERIFIER_SCHEMA, W.PLAN_SCHEMA]).lower()
+
+
+def test_the_batch_schema_is_a_list_of_nodes_and_nothing_else() -> None:
+    import jsonschema
+
+    assert W.NODES_SCHEMA["required"] == ["nodes"] and W.NODES_SCHEMA["properties"]["nodes"]["items"] is W.NODE_SCHEMA
+    good = {"criterion": "conductor_proximity", "status": "met", "strength": 4, "value_ids": [COND],
+            "text": "The nearest mapped conductor is 820 m away."}
+    unknown = {**good, "criterion": "lake_water_uranium", "status": "unknown", "strength": 0, "value_ids": [],
+               "text": "No lake-water sample within reach.", "unknown_reason": "unmeasured here"}
+    jsonschema.validate({"nodes": [good, unknown]}, W.NODES_SCHEMA)
+    jsonschema.validate({"nodes": []}, W.NODES_SCHEMA)
+    for bad in ({}, {"nodes": good}, {"nodes": [good], "verdict": "x"}, {"nodes": [{**good, "strength": 6}]},
+                {"nodes": [{**good, "published": True}]}, {"nodes": [{k: v for k, v in good.items() if k != "text"}]}):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate(bad, W.NODES_SCHEMA)
 
 
 def test_a_node_from_the_model_takes_the_segment_identity_and_refuses_another_criterion() -> None:

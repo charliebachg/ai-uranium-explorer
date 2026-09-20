@@ -318,6 +318,7 @@ def run_arm(
             f"verifier/{W.SCHEMA_VERSION}": sha256_json(W.VERIFIER_SCHEMA),
             f"adjudicator/{W.SCHEMA_VERSION}": sha256_json(W.ADJUDICATOR_SCHEMA),
             f"plan/{W.SCHEMA_VERSION}": sha256_json(W.PLAN_SCHEMA),
+            f"nodes/{W.SCHEMA_VERSION}": sha256_json(W.NODES_SCHEMA),
         })
     else:
         system = V0.default_system_prompt()
@@ -499,7 +500,8 @@ def run_cells(
     _note(manifest, "schema_hashes", {f"node/{W.SCHEMA_VERSION}": sha256_json(W.NODE_SCHEMA),
                                       f"verifier/{W.SCHEMA_VERSION}": sha256_json(W.VERIFIER_SCHEMA),
                                       f"adjudicator/{W.SCHEMA_VERSION}": sha256_json(W.ADJUDICATOR_SCHEMA),
-                                      f"plan/{W.SCHEMA_VERSION}": sha256_json(W.PLAN_SCHEMA)})
+                                      f"plan/{W.SCHEMA_VERSION}": sha256_json(W.PLAN_SCHEMA),
+                                      f"nodes/{W.SCHEMA_VERSION}": sha256_json(W.NODES_SCHEMA)})
     run_id = str(manifest.run_id)
     manifest.write(rd)
     own_con = con is None

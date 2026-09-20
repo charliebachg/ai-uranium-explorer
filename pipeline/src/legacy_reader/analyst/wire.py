@@ -15,9 +15,10 @@ protocol is where the adaptation lives:
 * **`depends_on` is the chain.** A criterion node depends on nothing; a cross-check node names the criterion
   nodes it combines. When the verifier faults a node, the harness re-executes it and everything that depends
   on it, and this list is how it knows what that is.
-* **The schemas cover only what a model returns.** `NODE_SCHEMA`, `VERIFIER_SCHEMA`, `PLAN_SCHEMA` and
-  `ADJUDICATOR_SCHEMA` are handed to the backend; the harness fills the rest (ids, round, attempt, model,
-  cost) so a model can never claim to have been published.
+* **The schemas cover only what a model returns.** `NODE_SCHEMA` (and `NODES_SCHEMA`, a list of them for
+  the batch executor arm), `VERIFIER_SCHEMA`, `PLAN_SCHEMA` and `ADJUDICATOR_SCHEMA` are handed to the
+  backend; the harness fills the rest (ids, round, attempt, model, cost) so a model can never claim to have
+  been published.
 
 Validation is explicit: `validate()` raises `ValueError` naming the field, `check()` lists every structural
 problem, and `from_dict` validates on the way in. A chain stores only nodes that were published or finally
@@ -381,6 +382,15 @@ NODE_SCHEMA: dict[str, Any] = {
         "expert_ids": {"type": "array", "items": {"type": "string"}},
         "unknown_reason": {"type": "string"},
     },
+}
+
+#: the reply of the batch executor (`executor_batch`): one node per criterion it was asked for, in one call.
+#: The harness splits the list by `criterion` and gates every node as it gates a per-segment answer.
+NODES_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["nodes"],
+    "properties": {"nodes": {"type": "array", "items": NODE_SCHEMA}},
 }
 
 

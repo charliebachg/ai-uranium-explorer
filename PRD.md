@@ -425,6 +425,8 @@ replaces the six configurations formerly listed in §D.3.3.
 | Chain verifier | none / neutral / skeptic brief | STA-CoT's −29 without a verifier; the skeptic brief is today's panel |
 | Model pairing | cheap executor + strong verifier / strong both / reverse | the executor–verifier trade-off |
 | Executor context | independent / cumulative | STA-CoT's memory cache: whether later nodes may read earlier ones, the path an early error takes |
+| Unmeasured criteria | asked / settled by the harness (`skip_unmeasured`) | a quarter of executor calls answer a question the coverage row already answers; the harness writes the unknown node, gated like any other, for no call |
+| Executor batch | per segment / one call for every criterion, gated node by node (`executor_batch`) | the "single shot" arm: ten calls become one plus the retries of the nodes the gate refuses |
 | Decider | weighted sum / adjudicator / both | fitted weights vs judgement |
 | Rounds K | 1 / 3 | repair vs cost |
 | Self-consistency | n = 1 / 5 with vote | majority vote as a fallback vs as a default |
@@ -559,7 +561,7 @@ MineTRACE protocol, one day.
 |---|---|---|
 | **Langfuse** as the LLM observability layer (traces and sessions per cell, scores attached to traces such as gate rejections and benchmark labels, prompt versions, datasets), fed over OTLP from the same OpenTelemetry instrumentation; then Tempo or Jaeger and Prometheus for the platform side | its self-hosted stack (Postgres, ClickHouse, Redis, object store) is too heavy for the 9 GB development machine, and its datasets and scores duplicate what the benchmark harness and MLflow hold today | Langfuse Cloud or a machine that can host it; the MCP server has a second client, or a run is unattended overnight |
 | The retrieval leak run, blind-list off (B17): the builder writes a second passages set with the cell's own files included, and v0-retrieval runs once more against it | deferred 2026-09-20 to keep 4d.1 moving | Phase 5c, beside the staged arms |
-| Segment-scoped tool views: each executor sees only its criterion's rows rather than the whole feature and criteria tables the template stages for every segment | the first v1 run has to show whether the ten-fold repetition costs anything but tokens | the first v1 arm's cost per chain is on the table |
+| Segment-scoped tool views: each executor sees only its criterion's rows rather than the whole feature and criteria tables the template stages for every segment | the first v1 run has to show whether the ten-fold repetition costs anything but tokens; the `skip_unmeasured` and `executor_batch` arms (built 2026-09-21) cut the call count first | the first v1 arm's cost per chain is on the table |
 | The Eval page's per-stage columns (gate rejection rate, valid share, rounds, verifier and decider agreement) from `score.json` through the bench block and the web contract | the metrics exist in the run summaries and MLflow; the contract change waits for a run to show which columns carry information | the first v1 arm on the 114 cells |
 | Fitted decider weights per fold (`weights.fit_weights`) as an arm beside the criteria-weight decider | fitting needs node strengths from a finished v1 run on the open cells | a v1 run on the 114 cells |
 | A `v1-scores` arm with the out-of-fold scores switched on, so the verifier reads the effort null rather than its withheld note | v1 keeps v0's evidence rules so the two agents are compared on the same evidence | Phase 5c |

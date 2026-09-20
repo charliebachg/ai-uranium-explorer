@@ -106,6 +106,32 @@ def executor_user(segment: Segment, staged: list[str], card: bool, prior_nodes: 
     return _closed("\n".join(lines))
 
 
+def executor_batch_user(segments: list[Segment], staged: list[str], card: bool) -> str:
+    """Every criterion segment's ask in one prompt, the single-shot executor arm of PRD 8.5: the staged files
+    of all of them under `{STAGE_DIR}`, then each segment with its purpose, and one node asked for per listed
+    criterion under the same one-step system prompt. No prior nodes: a criterion depends on nothing, and the
+    batch is the first construction, before any node exists."""
+    keys = [s.criterion or s.kind for s in segments]
+    lines = [f"You are executing {len(segments)} criterion steps of this assessment at once, each as its own "
+             f"node under the rules above.", "", "Read these first:"]
+    if card:
+        lines.append(f"  {{STAGE_DIR}}/{V0.CARD_FILE}      the map card of the cell")
+    for name in staged:
+        lines.append(f"  {{STAGE_DIR}}/{name}      a staged tool result: rows, and the value ids you may cite")
+    if not staged and not card:
+        lines.append("  (nothing is staged: every criterion is unknown here)")
+    lines += ["", "The segments, one node each:"]
+    for s in segments:
+        what = f"{s.kind} {s.criterion}" if s.criterion else s.kind
+        lines += [f"Segment {s.segment_id}: {what}.", f"  Purpose: {s.purpose}"]
+    lines += ["", f"Then return JSON with one field, nodes: a list with exactly one node per criterion listed "
+              f"above ({', '.join(keys)}), each node's criterion set to the key it answers, and no node for "
+              f"anything else. Every number needs the value id it came from. Where the staged results say a "
+              f"feature is unmeasured, that node's status is unknown with strength 0. Do not name places, and "
+              f"do not try to work out where this is."]
+    return _closed("\n".join(lines))
+
+
 # ---------------------------------------------------------------- verifier (Stage 4)
 
 VERIFIER_BRIEF = f"""You are the skeptic verifying a chain of evidence nodes about one 2 km cell assessed for

@@ -16,6 +16,9 @@ COND, FAULT = "b:b01:cell:d_conductor_m", "b:b01:cell:d_fault_m"
 SEGMENT = W.Segment(segment_id="s01", kind="criterion", criterion="conductor_proximity",
                     purpose="Establish whether the conductor criterion holds here.",
                     tool_calls=[{"tool": "cell_features", "args": {"cell_id": "$cell"}}])
+FAULT_SEGMENT = W.Segment(segment_id="s03", kind="criterion", criterion="fault_proximity",
+                          purpose="Establish whether the fault criterion holds here.",
+                          tool_calls=[{"tool": "cell_features", "args": {"cell_id": "$cell"}}])
 CROSS = W.Segment(segment_id="s09", kind="crosscheck", criterion="conductor_fault",
                   purpose="Establish whether the conductor and the fault corridor coincide.",
                   tool_calls=[{"tool": "crosscheck", "args": {"cell_id": "$cell"}}], depends_on=["s01", "s03"])
@@ -37,6 +40,8 @@ def every_prompt() -> dict[str, str]:
         "executor_system": PR.executor_system(HANDBOOK.read_text(), CRITERIA_FILE.read_text()),
         "executor_user": PR.executor_user(SEGMENT, ["tool_01_cell_features.json"], card=True, prior_nodes=[]),
         "executor_user_cross": PR.executor_user(CROSS, ["tool_01_crosscheck.json"], card=False, prior_nodes=NODES),
+        "executor_batch_user": PR.executor_batch_user([SEGMENT, FAULT_SEGMENT],
+                                                      ["tool_01_cell_features.json", "tool_05_cell_features.json"], card=True),
         "verifier_system": PR.verifier_system(),
         "verifier_user": PR.verifier_user(CHAIN_TEXT, EFFORT),
         "adjudicator_system": PR.adjudicator_system(),
@@ -104,6 +109,22 @@ def test_the_executor_user_prompt_renders_prior_nodes_with_their_ids_only_when_g
     for n in NODES:
         assert n.line() in text and all(v in text for v in n.value_ids)
     assert "return one node as JSON for conductor_fault" in text
+
+
+def test_the_batch_prompt_names_every_criterion_once_and_asks_for_one_node_each() -> None:
+    text = every_prompt()["executor_batch_user"]
+    assert "Segment s01: criterion conductor_proximity." in text and "Segment s03: criterion fault_proximity." in text
+    assert "Purpose: Establish whether the conductor criterion holds here." in text
+    assert "Purpose: Establish whether the fault criterion holds here." in text
+    assert f"{{STAGE_DIR}}/{V0.CARD_FILE}" in text
+    assert "{STAGE_DIR}/tool_01_cell_features.json" in text and "{STAGE_DIR}/tool_05_cell_features.json" in text
+    assert "one node per criterion" in text and "(conductor_proximity, fault_proximity)" in text
+    assert "2 criterion steps" in text and "Prior nodes" not in text, "a batch of criteria builds on nothing"
+    bare = PR.executor_batch_user([SEGMENT], [], card=False)
+    assert V0.CARD_FILE not in bare and "nothing is staged" in bare
+    with pytest.raises(ValueError, match="Rook"):
+        PR.executor_batch_user([W.Segment(segment_id="s02", kind="criterion", criterion="graphitic_host",
+                                          purpose="Establish the host, as at Rook.", tool_calls=[])], [], card=False)
 
 
 def test_the_verifier_brief_is_the_skeptics_and_records_its_own_label() -> None:

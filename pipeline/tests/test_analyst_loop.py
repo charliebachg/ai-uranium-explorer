@@ -15,6 +15,7 @@ import pytest
 from legacy_reader import store as ST
 from legacy_reader.analyst import chains as CH
 from legacy_reader.analyst import loop as L
+from legacy_reader.analyst import nodegate as G
 from legacy_reader.analyst import wire as W
 from legacy_reader.analyst.arms import Inputs, Switches
 from legacy_reader.analyst.session import Session
@@ -24,7 +25,7 @@ from legacy_reader.runtime.spend import BudgetExhausted
 from legacy_reader.runtime.tracing import read_spans, trace
 
 from fake_loop_world import (CELL, COND, LoopBackend, LoopWorld, adjudicator_answer, bad_adjudicator, bad_node,
-                             loop_registry, node_answer, verifier_answer)
+                             loop_registry, node_answer, verifier_answer, vid)
 
 CS = C.load()
 ALL_ON = Switches(drillholes=True, label_context=True, oof_scores=True, effort_features=True, criteria=True)
@@ -375,7 +376,129 @@ def test_loop_config_refuses_a_switch_outside_its_arms() -> None:
         config(decider="coin")
     with pytest.raises(ValueError, match="^rounds"):
         config(rounds=0)
+    with pytest.raises(ValueError, match="^skip_unmeasured"):
+        config(skip_unmeasured="yes")
+    with pytest.raises(ValueError, match="^executor_batch"):
+        config(executor_batch=1)
     assert config().models() == {"executor": "m-small", "verifier": "m-large", "adjudicator": "m-large"}
+    assert (config().skip_unmeasured, config().executor_batch) == (False, False), "both cost switches are arms, off by default"
+
+
+# ---------------------------------------------------------------- the two cost switches
+
+
+def test_skip_unmeasured_settles_an_unmeasured_criterion_without_an_executor_call(tmp_path: Path, weights_stub) -> None:
+    world = LoopWorld(nearest={"water_u_max_ppm": 6200.0})
+    backend = LoopBackend()
+    row, session = run(tmp_path, backend, world=world, skip_unmeasured=True)
+    assert backend.executor_requests("s07") == [] and backend.n_executor == 9
+    assert {"feature_key": "water_u_max_ppm"} in world.received["coverage"], "the skipped segment's tools are still staged"
+    chain = W.Chain.from_dict(row["chain"]).validate()
+    n07 = next(n for n in chain.nodes if n.segment_id == "s07")
+    near = f"{vid('water_u_max_ppm')}:nearest_m"
+    assert (n07.node_id, n07.status, n07.strength, n07.published, n07.model) == ("n07", "unknown", 0, True, "deterministic")
+    assert (n07.round, n07.attempt, n07.cost_usd, n07.duration_s, n07.depends_on, n07.problems) == (0, 1, 0.0, 0.0, [], [])
+    assert n07.value_ids == [near], "the nearest observation is cited by id, never as a bare distance"
+    assert n07.text == f"unmeasured here: water_u_max_ppm has no value at this cell; nearest observation {near}"
+    assert n07.unknown_reason == "no value for water_u_max_ppm at this cell"
+    assert G.check_node(n07, session.values, session.context, CS, {CELL}, {"water_u_max_ppm"}) == []
+    st = row["stages"]
+    assert st["n_skipped_unmeasured"] == 1 and st["attempts_total"] == 9 and st["n_nodes"] == 10
+    assert st["n_gate_rejections"] == 0 and st["n_recorded_unknown"] == 0 and st["n_batch_calls"] == 0
+    assert row["published"] is True and chain.published and row["cost_usd"] == pytest.approx(11 * 0.05)
+    verify = next(r for r, (t, _) in zip(backend.requests, backend.calls) if t == L.TASK_VERIFY)
+    assert n07.line() in verify.user_prompt, "the verifier reads the harness's node like any other"
+
+    # nothing to cite when the grid knows no nearest observation; the text says so without a number
+    backend = LoopBackend()
+    row, _ = run(tmp_path / "bare", backend, skip_unmeasured=True)
+    n07 = next(n for n in W.Chain.from_dict(row["chain"]).validate().nodes if n.segment_id == "s07")
+    assert n07.value_ids == [] and n07.text == "unmeasured here: water_u_max_ppm has no value at this cell" and n07.published
+    assert backend.n_executor == 9 and row["stages"]["n_skipped_unmeasured"] == 1
+
+    # a cross-check is never settled this way, even when the criterion it conditions was
+    backend = LoopBackend()
+    row, _ = run(tmp_path / "cross", backend, world=LoopWorld(unmeasured={"water_u_max_ppm", "sed_u_max_ppm"}),
+                 skip_unmeasured=True)
+    assert backend.executor_requests("s06") == [] and len(backend.executor_requests("s10")) >= 1
+    assert row["stages"]["n_skipped_unmeasured"] == 2 and backend.n_executor >= 8
+    assert "n06 | s06 criterion lake_sediment_uranium | unknown" in backend.executor_requests("s10")[0].user_prompt
+
+    # a fully measured cell skips nothing
+    backend = LoopBackend()
+    row, _ = run(tmp_path / "full", backend, world=LoopWorld(unmeasured=set()), skip_unmeasured=True)
+    assert backend.n_executor == 10 and row["stages"]["n_skipped_unmeasured"] == 0
+
+
+def test_executor_batch_answers_every_criterion_in_one_call_and_retries_only_what_the_gate_refuses(tmp_path: Path, weights_stub) -> None:
+    backend = LoopBackend()
+    with trace("R1", "bench", run_dir=tmp_path / "R1"):
+        row, session = run(tmp_path, backend, executor_batch=True)
+    tasks = [t for t, _ in backend.calls]
+    assert tasks.count(L.TASK_EXECUTE_BATCH) == 1 and tasks.count(L.TASK_EXECUTE) == 2
+    assert tasks.count(L.TASK_VERIFY) == 1 and tasks.count(L.TASK_ADJUDICATE) == 1
+    assert sorted(seg for t, seg in backend.calls if t == L.TASK_EXECUTE) == ["s09", "s10"], "the cross-checks run per segment"
+    criteria = [sid for sid in sorted(SEGMENTS) if sid not in ("s09", "s10")]
+    batch = backend.requests[tasks.index(L.TASK_EXECUTE_BATCH)]
+    assert batch.schema == W.NODES_SCHEMA and batch.model == "m-small" and batch.effort == "low"
+    assert all(f"Segment {sid}: criterion {SEGMENTS[sid]}." in batch.user_prompt for sid in criteria)
+    assert "Segment s09" not in batch.user_prompt and "Prior nodes" not in batch.user_prompt
+    names = [name for _path, name in batch.stage_files]
+    assert names and len(names) == len(set(names)) and names == [c["file"] for c in session.calls[:len(names)]]
+    assert not any("crosscheck" in n for n in names) and all(f"{{STAGE_DIR}}/{n}" in batch.user_prompt for n in names)
+    st = row["stages"]
+    assert st["n_batch_calls"] == 1 and st["n_batch_extra"] == 0 and st["attempts_total"] == 10
+    assert st["n_gate_rejections"] == 0 and st["n_nodes"] == 10 and st["n_skipped_unmeasured"] == 0
+    chain = W.Chain.from_dict(row["chain"]).validate()
+    by_seg = {n.segment_id: n for n in chain.nodes}
+    for sid in criteria:
+        n = by_seg[sid]
+        assert (n.published, n.attempt, n.round, n.model, n.cost_usd) == (True, 1, 0, "m-small-resolved", 0.0), sid
+    assert by_seg["s09"].cost_usd == 0.05 and by_seg["s09"].depends_on == ["n01", "n03"]
+    assert "n01 | s01" in backend.executor_requests("s09")[0].user_prompt
+    assert row["published"] is True and chain.published
+    assert row["cost_usd"] == pytest.approx(5 * 0.05), "one batch call, two cross-checks, the verifier, the adjudicator"
+    gates = [sp for sp in read_spans(tmp_path / "R1") if sp["name"] == "stage:gate"]
+    assert len(gates) == st["attempts_total"] and sum(1 for sp in gates if sp["attrs"].get("batch")) == 8
+
+    # one batch node the gate refuses, one the reply leaves out, one it was never asked for
+    extra = {**node_answer("boulder_train"), "criterion": "em_bright_spot"}
+    backend = LoopBackend(batch={"conductor_proximity": bad_node(), "graphitic_host": None, "em_bright_spot": extra})
+    row, _ = run(tmp_path / "retry", backend, executor_batch=True)
+    assert [t for t, _ in backend.calls].count(L.TASK_EXECUTE_BATCH) == 1
+    assert sorted(seg for t, seg in backend.calls if t == L.TASK_EXECUTE) == ["s01", "s02", "s09", "s10"]
+    s01, s02 = backend.executor_requests("s01"), backend.executor_requests("s02")
+    assert len(s01) == 1 and len(s02) == 1, "only the refused criteria cost another call, one each"
+    assert s01[0].task == L.TASK_EXECUTE and s01[0].schema == W.NODE_SCHEMA
+    assert "rejected by the mechanical gate" in s01[0].user_prompt and "the number 2.4 is not backed" in s01[0].user_prompt
+    assert COND in s01[0].user_prompt, "attempt 2: the reason and the ids the node may cite"
+    assert "batch: the reply has no node for graphitic_host" in s02[0].user_prompt
+    st = row["stages"]
+    assert st["n_batch_calls"] == 1 and st["n_batch_extra"] == 1 and st["n_gate_rejections"] == 2 and st["attempts_total"] == 12
+    chain = W.Chain.from_dict(row["chain"]).validate()
+    by_seg = {n.segment_id: n for n in chain.nodes}
+    assert (by_seg["s01"].attempt, by_seg["s01"].published, by_seg["s01"].cost_usd) == (2, True, 0.05)
+    assert (by_seg["s02"].attempt, by_seg["s02"].published) == (2, True)
+    assert len(chain.nodes) == 10 and row["published"] is True and row["cost_usd"] == pytest.approx(7 * 0.05)
+
+    # a batch node refused on every retry is recorded unknown, as a per-segment node is
+    backend = LoopBackend(batch={"conductor_proximity": bad_node()}, executor={"s01": [bad_node(), bad_node()]})
+    row, _ = run(tmp_path / "exhausted", backend, executor_batch=True)
+    assert len(backend.executor_requests("s01")) == 2 and "last attempt" in backend.executor_requests("s01")[1].user_prompt
+    n01 = next(n for n in W.Chain.from_dict(row["chain"]).validate().nodes if n.segment_id == "s01")
+    assert (n01.status, n01.published, n01.attempt) == ("unknown", False, 3) and n01.text.startswith("gate:")
+    assert row["stages"]["n_recorded_unknown"] == 1 and row["stages"]["n_gate_rejections"] == 3 and row["published"] is False
+
+
+def test_the_batch_leaves_out_the_criteria_skip_unmeasured_settled(tmp_path: Path, weights_stub) -> None:
+    backend = LoopBackend()
+    row, _ = run(tmp_path, backend, executor_batch=True, skip_unmeasured=True)
+    batch = next(r for r in backend.requests if r.task == L.TASK_EXECUTE_BATCH)
+    assert "lake_water_uranium" not in batch.user_prompt and "Segment s07" not in batch.user_prompt
+    assert sum(1 for line in batch.user_prompt.splitlines() if line.startswith("Segment ")) == 7
+    st = row["stages"]
+    assert st["n_skipped_unmeasured"] == 1 and st["n_batch_calls"] == 1 and st["attempts_total"] == 9
+    assert backend.n_executor == 2 and row["published"] is True and row["cost_usd"] == pytest.approx(5 * 0.05)
 
 
 def test_the_adjudicator_gets_the_gates_feedback_and_a_second_attempt(tmp_path: Path, weights_stub) -> None:

@@ -36,3 +36,5 @@ executor_context = "independent"
 decider = "both"
 segment_workers = 4
 retrieval = false
+skip_unmeasured = false
+executor_batch = false

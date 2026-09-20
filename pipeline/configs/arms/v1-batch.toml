@@ -1,7 +1,7 @@
 # Analyst v1 arm: the staged loop (PRD §8.4). Every switch is stated; an arm differs from v1 in the one way
 # its notes line names.
 [arm]
-name = "v1-cheap"
+name = "v1-batch"
 agent = "v1"
 model = "claude-opus-5"
 effort = "medium"
@@ -9,7 +9,7 @@ prompt_version = "analyst/v1/v1"
 max_budget_usd_per_call = 1.50
 timeout_s = 600
 workers = 2
-notes = "A cheap vision executor on OpenRouter (GLM 5.3 Flash) under the Opus 5 verifier: the executor is the role the evidence says can be weak behind a strong verifier."
+notes = "One executor call over every criterion segment instead of one per segment: the single-shot executor arm of PRD 8.5, with the gate still run per node and only the refused criteria retried one at a time."
 
 [arm.inputs]
 card = true
@@ -24,7 +24,7 @@ effort_features = false
 criteria = true
 
 [arm.loop]
-executor_model = "z-ai/glm-5.3-flash"
+executor_model = "claude-sonnet-5"
 verifier_model = "claude-opus-5"
 adjudicator_model = "claude-opus-5"
 planner_model = "claude-opus-5"
@@ -37,4 +37,4 @@ decider = "both"
 segment_workers = 4
 retrieval = false
 skip_unmeasured = false
-executor_batch = false
+executor_batch = true

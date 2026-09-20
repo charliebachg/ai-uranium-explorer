@@ -62,6 +62,8 @@ class LoopSpec:
     decider: str            # both | weighted | adjudicator
     segment_workers: int
     retrieval: bool
+    skip_unmeasured: bool   # a criterion with no value here is settled unknown by the harness, no executor call
+    executor_batch: bool    # one executor call over every criterion instead of one per segment
 
     def config(self, effort: str, prompt_version: str) -> Any:
         """The loop's own configuration object; imported here so an arm file can be parsed without the loop."""
@@ -72,6 +74,7 @@ class LoopSpec:
                           effort=effort, planner=self.planner, verifier=self.verifier, rounds=self.rounds,
                           triage=self.triage, executor_context=self.executor_context, decider=self.decider,
                           segment_workers=self.segment_workers, retrieval=self.retrieval,
+                          skip_unmeasured=self.skip_unmeasured, executor_batch=self.executor_batch,
                           prompt_version=prompt_version)
 
 

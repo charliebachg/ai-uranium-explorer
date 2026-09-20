@@ -15,7 +15,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from legacy_reader.analyst.loop import TASK_ADJUDICATE, TASK_EXECUTE, TASK_PLAN, TASK_VERIFY
+from legacy_reader.analyst.loop import TASK_ADJUDICATE, TASK_EXECUTE, TASK_EXECUTE_BATCH, TASK_PLAN, TASK_VERIFY
 from legacy_reader.analyst.v0 import POSITIVE
 from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse
 from legacy_reader.prospect.tools import ToolResult
@@ -60,6 +60,9 @@ class LoopWorld:
 
     scores: dict[str, float | None] = field(default_factory=lambda: {"learned": 0.7, "effort": 0.8, "criteria": 0.65})
     unmeasured: set[str] = field(default_factory=lambda: {"water_u_max_ppm"})
+    #: metres to the nearest observation of an unmeasured feature, when the grid knows one (as the real tool
+    #: serves it, under its own value id)
+    nearest: dict[str, float] = field(default_factory=dict)
     thin: set[str] = field(default_factory=set)
     received: dict[str, list[dict[str, Any]]] = field(default_factory=lambda: defaultdict(list))
 
@@ -72,6 +75,11 @@ def loop_registry(world: LoopWorld) -> dict[str, Callable[..., ToolResult]]:
             row: dict[str, Any] = {"feature": feature, "is_effort": feature in EFFORT, "unit": unit}
             if feature in world.unmeasured:
                 row.update(value=None, observations=0)
+                if feature in world.nearest:
+                    nid = f"{vid(feature, cell_id)}:nearest_m"
+                    row["nearest_observation_id"] = nid
+                    out.values[nid] = stat(nid, world.nearest[feature], fmt="m1", unit="m",
+                                           note=f"distance from cell {cell_id} to the nearest {feature} observation")
             else:
                 v = vid(feature, cell_id)
                 row.update(value=value, observations=3, value_id=v)
@@ -210,18 +218,22 @@ def bad_adjudicator() -> dict[str, Any]:
 class LoopBackend:
     """Answers by role and, for the executor, by segment. `executor` maps a segment id to a queue of answers
     (or exceptions) consumed one per call, `verifier` and `adjudicator` are queues per call; the defaults
-    answer whatever is not scripted. `raise_on_executor_call` raises `error` on that executor call (1-based)."""
+    answer whatever is not scripted. `raise_on_executor_call` raises `error` on that executor call (1-based).
+    `batch` scripts the one batch-executor reply per criterion: a node in place of the default answer, None
+    to leave that criterion out, and a key the prompt never asked for is appended as an extra node."""
 
     family = "claude_cli"
     SEGMENT = re.compile(r"^Segment (s\d+): (\w+)(?: (\S+))?\.", re.M)
 
     def __init__(self, executor: dict[str, list[Any]] | None = None, verifier: list[Any] | None = None,
                  adjudicator: list[Any] | None = None, planner: dict[str, Any] | None = None,
-                 raise_on_executor_call: int | None = None, error: BaseException | None = None, cost: float = 0.05):
+                 raise_on_executor_call: int | None = None, error: BaseException | None = None, cost: float = 0.05,
+                 batch: dict[str, Any] | None = None):
         self.executor = {k: list(v) for k, v in (executor or {}).items()}
         self.verifier = list(verifier or [])
         self.adjudicator = list(adjudicator or [])
         self.planner = planner
+        self.batch = dict(batch or {})
         self.raise_on_executor_call, self.error = raise_on_executor_call, error
         self.cost = cost
         self.requests: list[ExtractionRequest] = []
@@ -242,6 +254,12 @@ class LoopBackend:
             out = queue.pop(0) if queue else node_answer(m.group(3) or m.group(2))
             if self.n_executor == self.raise_on_executor_call:
                 out = self.error
+        elif req.task == TASK_EXECUTE_BATCH:
+            asked = [crit or kind for _sid, kind, crit in self.SEGMENT.findall(req.user_prompt)]
+            assert asked, req.user_prompt[:120]
+            nodes = [self.batch[k] if k in self.batch else node_answer(k) for k in asked]
+            nodes += [v for k, v in self.batch.items() if k not in asked]
+            out = {"nodes": [n for n in nodes if n is not None]}
         elif req.task == TASK_VERIFY:
             out = self.verifier.pop(0) if self.verifier else verifier_answer()
         elif req.task == TASK_ADJUDICATE:

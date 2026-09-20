@@ -30,6 +30,13 @@ module decides, and why:
 * **The store is the last gate.** When the store refuses a chain the loop marked published, the chain is
   marked unpublished, the refusal joins its problems, and it is stored as the record of the refusal. The
   chain file under `chains/` is written whatever happens, so a budget stop leaves the partial chain behind.
+* **Two switches cut calls without loosening the gate.** Under `skip_unmeasured` the harness settles a
+  criterion whose feature the staged `cell_features` shows has no value here: the gate allows nothing but
+  unknown there, so the node is written deterministically (citing the nearest observation by id when the
+  tool gave one), and it still passes the gate like any other node. Under `executor_batch` the first
+  construction asks one executor call for every criterion, gates the reply node by node, and sends only the
+  refused criteria down the per-segment path at attempt 2. Both are arms to measure (PRD 8.5), off by
+  default, so every other arm runs exactly as before.
 """
 
 from __future__ import annotations
@@ -58,13 +65,17 @@ from .arms import Inputs, Switches
 from .plan import CELL, bind, check_plan, template_plan
 from .session import Session, SessionRefusal
 from .v0 import ABSTAIN, NEGATIVE, POSITIVE, VERDICTS
-from .wire import (ADJUDICATOR_SCHEMA, FEEDBACK_MAX, MAX_ATTEMPTS, NODE_SCHEMA, PLAN_SCHEMA, PLANNERS,
-                   SCHEMA_VERSION, VERIFIER_SCHEMA, Chain, Decision, Node, Plan, Segment, VerifierVerdict)
+from .wire import (ADJUDICATOR_SCHEMA, FEEDBACK_MAX, MAX_ATTEMPTS, NODE_SCHEMA, NODES_SCHEMA, PLAN_SCHEMA,
+                   PLANNERS, SCHEMA_VERSION, VERIFIER_SCHEMA, Chain, Decision, Node, Plan, Segment,
+                   VerifierVerdict)
 
 TASK_PLAN = "analyst_v1_plan"
 TASK_EXECUTE = "analyst_v1_execute"
+TASK_EXECUTE_BATCH = "analyst_v1_execute_batch"
 TASK_VERIFY = "analyst_v1_verify"
 TASK_ADJUDICATE = "analyst_v1_adjudicate"
+#: the `model` of a node the harness wrote itself, so the verifier and the store can tell it from a reading
+DETERMINISTIC = "deterministic"
 
 VERIFIERS = ("none", "skeptic")
 DECIDERS = ("both", "weighted", "adjudicator")
@@ -98,6 +109,10 @@ class LoopConfig:
     decider: str = "both"                    # both | weighted | adjudicator
     segment_workers: int = 4
     retrieval: bool = False
+    #: a criterion with no value in the staged `cell_features` is settled unknown by the harness, no call
+    skip_unmeasured: bool = False
+    #: one executor call over every criterion of the first construction instead of one per segment
+    executor_batch: bool = False
     prompt_version: str = PR.PROMPT_VERSION
 
     def __post_init__(self) -> None:
@@ -106,6 +121,9 @@ class LoopConfig:
                                      ("executor_context", self.executor_context, CONTEXTS)):
             if value not in allowed:
                 raise ValueError(f"{name}: {value!r} is not one of {allowed}")
+        for name, flag in (("skip_unmeasured", self.skip_unmeasured), ("executor_batch", self.executor_batch)):
+            if not isinstance(flag, bool):
+                raise ValueError(f"{name}: {flag!r} is not True or False")
         if self.rounds < 1:
             raise ValueError(f"rounds: {self.rounds} (the first construction is a round, so at least 1)")
         if self.segment_workers < 1:
@@ -133,6 +151,7 @@ class _Executed:
     calls: list[_Call]
     attempts: int
     rejections: int
+    skipped: bool = False   # settled by the harness under `skip_unmeasured`: no call and no attempt
 
 
 def _account(resp: ExtractionResponse) -> _Call:
@@ -324,9 +343,12 @@ class _Loop:
 
     def execute(self, segments: list[Segment], round: int, notes: dict[str, str]) -> None:
         """One round of Stage 2 with Stage 3 inside it. `segments` is the whole plan in round 0 and the
-        faulted closure after; `notes` is what a re-executed segment is told first. Segments run in a pool
-        once their dependencies have nodes; the nodes are stored as they finish, so a budget stop mid-round
-        leaves what was done, and are put in plan order when the round completes."""
+        faulted closure after; `notes` is what a re-executed segment is told first. What the harness can
+        settle without a worker is settled first: a criterion with no value here under `skip_unmeasured`,
+        and in round 0 under `executor_batch` every criterion the one batch call answered to the gate's
+        satisfaction. The rest run in a pool once their dependencies have nodes; the nodes are stored as they
+        finish, so a budget stop mid-round leaves what was done, and are put in plan order when the round
+        completes."""
         plan = self.chain.plan
         order = {s.segment_id: i for i, s in enumerate(plan.segments)}
         with span("stage:execute", kind="tool", round=round, n_segments=len(segments)):
@@ -340,9 +362,32 @@ class _Loop:
                 self.next_node += 1
             workers = 1 if self.cfg.executor_context == "cumulative" else self.cfg.segment_workers
             pending = sorted(segments, key=lambda s: order[s.segment_id])
-            running: dict[Future[_Executed], Segment] = {}
             start = len(self.chain.nodes)
             tally: Counter[str] = Counter()
+
+            def finish(seg: Segment, out: _Executed) -> None:
+                done[seg.segment_id] = out.node
+                self.chain.nodes.append(out.node)
+                self.calls += out.calls
+                tally.update(attempts_total=out.attempts, n_gate_rejections=out.rejections,
+                             n_recorded_unknown=int(not out.node.published), n_skipped_unmeasured=int(out.skipped))
+
+            settled: dict[str, _Executed] = {}
+            rejected: dict[str, list[str]] = {}
+            for s in pending:
+                feature = self._unmeasured_feature(s)
+                if feature is not None:
+                    settled[s.segment_id] = self._settle_unmeasured(s, ids[s.segment_id], round, feature)
+            if round == 0 and self.cfg.executor_batch:
+                asked = [s for s in pending if s.kind == "criterion" and s.segment_id not in settled]
+                if asked:
+                    passed, rejected = self._batch(asked, ids, round)
+                    settled.update(passed)
+            for s in pending:
+                if s.segment_id in settled:
+                    finish(s, settled[s.segment_id])
+            pending = [s for s in pending if s.segment_id not in settled]
+            running: dict[Future[_Executed], Segment] = {}
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 try:
                     while pending or running:
@@ -350,19 +395,14 @@ class _Loop:
                         for s in ready:
                             pending.remove(s)
                             fut = pool.submit(contextvars.copy_context().run, self._segment, s, ids[s.segment_id],
-                                              round, self._prior(s, done, order), notes.get(s.segment_id))
+                                              round, self._prior(s, done, order), notes.get(s.segment_id),
+                                              rejected.get(s.segment_id))
                             running[fut] = s
                         if not running:
                             raise RuntimeError(f"segments {[s.segment_id for s in pending]} wait on nodes that never come")
                         finished, _ = wait(list(running), return_when=FIRST_COMPLETED)
                         for fut in finished:
-                            seg = running.pop(fut)
-                            out = fut.result()
-                            done[seg.segment_id] = out.node
-                            self.chain.nodes.append(out.node)
-                            self.calls += out.calls
-                            tally.update(attempts_total=out.attempts, n_gate_rejections=out.rejections,
-                                         n_recorded_unknown=int(not out.node.published))
+                            finish(running.pop(fut), fut.result())
                 except BaseException:
                     for fut in running:
                         fut.cancel()
@@ -372,6 +412,85 @@ class _Loop:
             set_attrs(n_staged=sum(len(f) for f in self.files.values()),
                       n_refused=sum(len(r) for r in self.refused.values()),
                       n_published=sum(1 for n in self.chain.nodes[start:] if n.published), **tally)
+
+    def _unmeasured_feature(self, seg: Segment) -> str | None:
+        """Under `skip_unmeasured`, the feature a criterion segment would read when the staged `cell_features`
+        shows it has no value at this cell; None otherwise. A cross-check is never settled this way: what it
+        combines is a question about nodes, not about one feature's coverage."""
+        if not self.cfg.skip_unmeasured or seg.kind != "criterion":
+            return None
+        c = next((c for c in self.criteria.criteria if c.key == seg.criterion), None)
+        if c is None or c.feature not in self._coverage_unknown():
+            return None
+        return c.feature
+
+    def _settle_unmeasured(self, seg: Segment, node_id: str, round: int, feature: str) -> _Executed:
+        """The node for a criterion whose feature has no value here, written by the harness: unknown with
+        strength 0, citing the nearest observation's id when `cell_features` gave one, so the node can say
+        how far the nearest measurement is by id and never by a bare number. The gate's own rule allows
+        unknown exactly here, and the node still goes through the gate like any other; a node of the
+        harness's own that fails it is a bug, not a rejection, so that raises instead of retrying."""
+        row = next((r for r in self.served["cell_features"].rows if r.get("feature") == feature), {})
+        nearest = row.get("nearest_observation_id")
+        cited = [nearest] if isinstance(nearest, str) and nearest else []
+        text = f"unmeasured here: {feature} has no value at this cell"
+        if cited:
+            text += f"; nearest observation {cited[0]}"
+        node = Node(node_id=node_id, segment_id=seg.segment_id, kind=seg.kind, criterion=seg.criterion,
+                    status="unknown", strength=0, value_ids=cited, text=text,
+                    unknown_reason=f"no value for {feature} at this cell", round=round, attempt=1,
+                    model=DETERMINISTIC, published=True)
+        problems = G.check_node(node, self.session.values, self.session.context, self.criteria,
+                                {self.session.bench_id}, self._coverage_unknown())
+        if problems:
+            raise RuntimeError(f"the harness's unmeasured node for {seg.segment_id} failed the gate: {problems}")
+        return _Executed(node, [], 0, 0, skipped=True)
+
+    def _batch(self, asked: list[Segment], ids: dict[str, str], round: int) -> tuple[dict[str, _Executed],
+                                                                                    dict[str, list[str]]]:
+        """One executor call over every criterion segment at once, the single-shot executor arm of PRD 8.5,
+        gated node by node exactly as a per-segment answer is. Returns the segments whose node passed, and
+        for each the gate refused (or the reply left out) the gate's reasons, which the per-segment path
+        takes up at attempt 2 so only the refused criteria cost another call. The reply is split by
+        `criterion`: a node for a criterion not asked for, or a second node for one criterion, is ignored
+        and counted. The call is accounted once; its nodes carry no cost of their own, because a share per
+        node would be a number the harness made up. No prior nodes are shown whatever `executor_context`
+        says: the criteria depend on nothing and a batch has no earlier node to build on."""
+        files = list(dict.fromkeys(f for s in asked for f in self.files.get(s.segment_id, [])))
+        req = self._request(
+            TASK_EXECUTE_BATCH, PR.default_executor_system(),
+            PR.executor_batch_user(asked, files, card=bool(self.images)), NODES_SCHEMA, self.cfg.executor_model,
+            self.cfg.executor_effort or self.cfg.effort,
+            {"executor_batch": True, "segment_ids": [s.segment_id for s in asked], "round": round, "attempt": 1},
+            stage_files=tuple((self.session.stage / f, f) for f in files), images=self.images)
+        resp = self.backend.call(req)
+        self.calls.append(_account(resp))
+        self.counts["n_batch_calls"] += 1
+        wanted = {s.criterion for s in asked}
+        answers: dict[str, dict[str, Any]] = {}
+        items = dict(resp.structured or {}).get("nodes")
+        for item in items if isinstance(items, list) else []:
+            key = item.get("criterion") if isinstance(item, dict) else None
+            if key in wanted and key not in answers:
+                answers[key] = item
+            else:
+                self.counts["n_batch_extra"] += 1
+        meta = dict(model=resp.model_resolved or req.model, cost_usd=0.0, duration_s=0.0)
+        passed: dict[str, _Executed] = {}
+        refused: dict[str, list[str]] = {}
+        for s in asked:
+            payload = answers.get(s.criterion or "")
+            with span("stage:gate", kind="gate", round=round, attempt=1, batch=True):
+                if payload is None:
+                    problems = [f"batch: the reply has no node for {s.criterion}; return one node for it"]
+                else:
+                    node, problems = self._gate(payload, s, ids[s.segment_id], [], round, 1, meta)
+                    if not problems:
+                        passed[s.segment_id] = _Executed(replace(node, published=True), [], 1, 0)
+                set_attrs(n_problems=len(problems), published=not problems, problems=[p[:160] for p in problems[:3]])
+            if problems:
+                refused[s.segment_id] = problems
+        return passed, refused
 
     def _stage_tools(self, segments: list[Segment]) -> None:
         """Every segment's tool calls, in order, through the session; a refused call is remembered on the
@@ -394,18 +513,21 @@ class _Loop:
             return sorted(keep, key=lambda n: order[n.segment_id])
         return [done[d] for d in seg.depends_on]
 
-    def _segment(self, seg: Segment, node_id: str, round: int, prior: list[Node], note: str | None) -> _Executed:
-        """One segment to its stored node: the executor call, the gate, and the escalating retry. Runs in a
-        worker thread, so it touches nothing shared but the backend and the session's static registry."""
+    def _segment(self, seg: Segment, node_id: str, round: int, prior: list[Node], note: str | None,
+                 rejected: list[str] | None = None) -> _Executed:
+        """One segment to its stored node: the executor call, the gate, and the escalating retry. `rejected`
+        is the gate's word on this segment's node from the batch call when there was one: that call was
+        attempt 1, so the path starts at attempt 2 with its feedback. Runs in a worker thread, so it touches
+        nothing shared but the backend and the session's static registry."""
         files = self.files.get(seg.segment_id, [])
         depends_on = [n.node_id for n in prior if n.segment_id in seg.depends_on]
         base = PR.executor_user(seg, files, card=bool(self.images), prior_nodes=prior)
         if note:
             base = f"{note}\n\n{base}"
         calls: list[_Call] = []
-        problems: list[str] = []
+        problems: list[str] = list(rejected or [])
         node: Node | None = None
-        for attempt in range(1, MAX_ATTEMPTS + 1):
+        for attempt in range(2 if rejected else 1, MAX_ATTEMPTS + 1):
             user = base if attempt == 1 else f"{base}\n\n{G.feedback(problems, attempt, self.session.allowed_ids())}"
             req = self._request(
                 TASK_EXECUTE, PR.default_executor_system(), user, NODE_SCHEMA, self.cfg.executor_model,
@@ -415,8 +537,10 @@ class _Loop:
                 stage_files=tuple((self.session.stage / f, f) for f in files), images=self.images)
             resp = self.backend.call(req)
             calls.append(_account(resp))
+            meta = dict(model=resp.model_resolved or req.model, cost_usd=float(resp.cost_usd or 0.0),
+                        duration_s=float(resp.duration_s or 0.0))
             with span("stage:gate", kind="gate", round=round, attempt=attempt):
-                node, problems = self._gate(resp, seg, node_id, depends_on, round, attempt, req.model)
+                node, problems = self._gate(dict(resp.structured or {}), seg, node_id, depends_on, round, attempt, meta)
                 # the first reasons travel with the span, so a run's rejections can be read without the prompts
                 set_attrs(n_problems=len(problems), published=not problems, problems=[p[:160] for p in problems[:3]])
             if not problems:
@@ -424,17 +548,16 @@ class _Loop:
         assert node is not None
         return _Executed(G.record_unknown(node, problems), calls, MAX_ATTEMPTS, MAX_ATTEMPTS)
 
-    def _gate(self, resp: ExtractionResponse, seg: Segment, node_id: str, depends_on: list[str], round: int,
-              attempt: int, model: str) -> tuple[Node, list[str]]:
-        """Stage 3 on one answer: the node under the segment's identity and every problem with it. A model
-        that answered about another segment is refused by `from_model` before the rules run; that is a
-        rejection like any other, and the node it leaves is what the unknown record is made from. A place
-        name is refused here too, where the executor can fix it, because every later prompt builder would
-        refuse to render the node and nothing at that point can."""
-        meta = dict(model=resp.model_resolved or model, cost_usd=float(resp.cost_usd or 0.0),
-                    duration_s=float(resp.duration_s or 0.0))
+    def _gate(self, payload: dict[str, Any], seg: Segment, node_id: str, depends_on: list[str], round: int,
+              attempt: int, meta: dict[str, Any]) -> tuple[Node, list[str]]:
+        """Stage 3 on one answer (`payload`, the node as the model returned it; `meta`, the model, cost and
+        duration the harness attributes to it): the node under the segment's identity and every problem
+        with it. A model that answered about another segment is refused by `from_model` before the rules
+        run; that is a rejection like any other, and the node it leaves is what the unknown record is made
+        from. A place name is refused here too, where the executor can fix it, because every later prompt
+        builder would refuse to render the node and nothing at that point can."""
         try:
-            node = Node.from_model(dict(resp.structured or {}), node_id, seg, depends_on, round, attempt)
+            node = Node.from_model(payload, node_id, seg, depends_on, round, attempt)
         except ValueError as err:
             blank = Node(node_id=node_id, segment_id=seg.segment_id, kind=seg.kind, criterion=seg.criterion,
                          status="unknown", strength=0, depends_on=list(depends_on), round=round, attempt=attempt)
@@ -748,6 +871,8 @@ class _Loop:
             "n_recorded_unknown": c["n_recorded_unknown"], "rounds": self.chain.rounds(), "valid": self.valid,
             "n_faulty_total": c["n_faulty_total"], "n_faulty_unresolved": c["n_faulty_unresolved"],
             "n_reexecuted": c["n_reexecuted"], "n_refusals_by_rule": self.session.manifest_fields()["refusals"],
+            "n_skipped_unmeasured": c["n_skipped_unmeasured"], "n_batch_calls": c["n_batch_calls"],
+            "n_batch_extra": c["n_batch_extra"],
             "verifier_agreement": None if label is None else label == d.final_verdict,
             "decider_agreement": None if d.weighted_score is None
             else (d.weighted_score >= THRESHOLD) == (d.final_verdict == POSITIVE),

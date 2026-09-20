@@ -273,7 +273,7 @@ def test_a_v1_arm_runs_the_loop_over_the_open_cells_and_scores_with_stage_metric
     m = FakeManifest.started[-1]
     assert m.models == {"executor": "claude-sonnet-5", "verifier": "claude-opus-5", "adjudicator": "claude-opus-5"}
     assert set(m.prompt_hashes) == {"executor_system", "verifier_system", "adjudicator_system", "planner_system"}
-    assert {k.split("/")[0] for k in m.schema_hashes} == {"node", "verifier", "adjudicator", "plan"}
+    assert {k.split("/")[0] for k in m.schema_hashes} == {"node", "verifier", "adjudicator", "plan", "nodes"}
     assert "store_sha" in m.config
     # scored, with the per-stage metrics beside the label metrics
     sc = s["score"]
