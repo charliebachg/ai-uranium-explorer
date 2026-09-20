@@ -994,7 +994,8 @@ deterministic with a `ttlMs`, so clients and prompt caches can hold it.
 | `label_context` | read | `session_id`, `cell_id`, `radius_km` | nearest deposit and occurrence with distances | the evaluated cell's own label masked in scored sessions (B30) |
 | `nearby` | read | `session_id`, `cell_id`, `layer`, `radius_m` | counts and nearest features from one evidence layer | new; the analyst's box maker, deterministic |
 | `coverage` | read | `session_id`, `feature_key?` | share of the grid covered, thin flag | exists today |
-| `crosscheck` | read | `session_id`, `hole_id` or `cell_id` | provincial matches, offsets, datum signatures | from `derived.crosscheck` |
+| `crosscheck` | read | `session_id`, `cell_id` | the conjunctions the handbook names, computed: conductor with fault (minimum separation, crossings), lake-sediment anomaly with sampling density | new; the analyst's spatial-relationship explorer (§8.4), deterministic |
+| `hole_crosscheck` | read | `session_id`, `hole_id` or `cell_id` | provincial matches, offsets, datum signatures | from the extraction crosscheck; renamed 2026-09-20 so the two tools cannot be confused |
 | `retrieve` | read | `session_id`, `query`, `cell_id?`, `k`, `radius_km` | passages with file, page, tier, `source` (text layer or OCR) | blind-list enforced in scored sessions (B17) |
 | `check_claims` | read | `session_id`, `claims[]` | problems list, resolved ids | the gate as a callable, so a stock client can self-check before answering |
 | `abstain` | action | `session_id`, `reason` (not_measured, outside_grid, no_value, out_of_scope), `detail` | `abstain_id` | refusal becomes measurable (GeoBenchX) |
