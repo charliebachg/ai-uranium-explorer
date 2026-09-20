@@ -84,6 +84,21 @@ def _flat(score: dict[str, Any]) -> dict[str, float]:
     return {k: float(v) for k, v in score.items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
 
 
+def _claim(base: str) -> tuple[str, Path]:
+    """The run id and its directory, created atomically; a taken directory means a sibling run started in
+    the same second, and this run takes the next suffix. Goes through this module's `run_dir` so a test can
+    redirect every run."""
+    for n in range(1, 1000):
+        run_id = base if n == 1 else f"{base}-{n}"
+        path = run_dir(run_id)
+        try:
+            path.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            continue
+        return run_id, path
+    raise RuntimeError(f"could not claim a run directory under {base}")
+
+
 def run_arm(
     version: str, arm: ArmConfig | str, backend_factory: Factory, budget_usd: float | None,
     log: Callable[[str], None] = print, cells: list[str] | None = None, workers: int | None = None,
@@ -108,14 +123,15 @@ def run_arm(
     manifest = Manifest.start(kind=KIND, config=arm.as_dict(), models={"analyst": arm.model}, seed=seed,
                               budget_usd=budget_usd,
                               bench={"bench_id": version, "manifest_sha256": bench.manifest_sha256})
+    # the directory is claimed before anything is written: two arms launched in the same second used to be
+    # given one run id and interleaved their rows; the second now gets a -2 suffix on its id and directory
+    manifest.run_id, rd = _claim(str(manifest.run_id))
     system = V0.default_system_prompt()
     _note(manifest, "prompt_hashes", {arm.prompt_version: sha256_json(system)})
     _note(manifest, "schema_hashes", {V0.SCHEMA_VERSION: sha256_json(V0.ANSWER_SCHEMA)})
     if arm.switches.oof_scores:
         _extend(manifest, "scores_seen", [{"model_version": m, "fold_kind": SC.FOLD_KIND} for m in SC.BASELINE_MODELS])
     run_id = str(manifest.run_id)
-    rd = run_dir(run_id)
-    rd.mkdir(parents=True, exist_ok=True)
     manifest.write(rd)
 
     carried: dict[str, dict[str, Any]] = {}

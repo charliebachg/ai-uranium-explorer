@@ -21,3 +21,19 @@ def new_run_id(kind: str) -> str:
 def run_dir(run_id: str) -> Path:
     """Where a run's files go. Not created here: the run creates it when it first writes."""
     return PATHS.runs / run_id
+
+
+def claim_run_dir(kind: str) -> tuple[str, Path]:
+    """A fresh run id whose directory is created atomically, so two runs started in the same second never
+    share one: the second gets a -2 suffix, the third -3. Two benchmark arms launched together did share a
+    directory once, interleaving their per-cell rows; this is what stops it."""
+    base = new_run_id(kind)
+    for n in range(1, 1000):
+        run_id = base if n == 1 else f"{base}-{n}"
+        path = run_dir(run_id)
+        try:
+            path.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            continue
+        return run_id, path
+    raise RuntimeError(f"could not claim a run directory under {base}")

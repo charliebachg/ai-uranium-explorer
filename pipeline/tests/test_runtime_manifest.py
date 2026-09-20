@@ -72,3 +72,15 @@ def test_run_ids_and_directories() -> None:
     rid = new_run_id("bench")
     assert rid.endswith("-bench") and rid[8] == "T" and rid[15] == "Z"
     assert run_dir(rid) == PATHS.runs / rid
+
+
+def test_two_runs_claimed_in_the_same_second_get_two_directories(tmp_path, monkeypatch) -> None:
+    from legacy_reader.runtime import runs as R
+
+    monkeypatch.setattr(R, "run_dir", lambda run_id: tmp_path / run_id)
+    monkeypatch.setattr(R, "new_run_id", lambda kind: f"20260920T000000Z-{kind}")
+    a, pa = R.claim_run_dir("bench-v0-text")
+    b, pb = R.claim_run_dir("bench-v0-text")
+    c, pc = R.claim_run_dir("bench-v0-features")
+    assert a != b and pa != pb and pa.is_dir() and pb.is_dir()
+    assert b.endswith("-2") and c == "20260920T000000Z-bench-v0-features"
