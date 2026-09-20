@@ -51,6 +51,9 @@ IMAGE_TOKENS = 1600
 REASONING_BUDGET = {"low": 2000, "medium": 4000, "high": 8000, "xhigh": 12000, "max": 16000}
 #: the answer itself needs this much room beyond the thinking
 ANSWER_TOKENS = 3000
+#: the budget a reply cut mid-thought is retried with: some endpoints refuse to disable reasoning outright
+#: ("Reasoning is mandatory for this endpoint"), so the retry thinks a little rather than not at all
+MIN_BUDGET = 512
 #: what a call is priced at when neither the reply nor the models endpoint says: high on purpose
 FALLBACK_PRICE = Price(per_mtok_in=2.0, per_mtok_out=8.0)
 #: a rate limit or a provider hiccup is waited out this many times before it is the caller's problem, with
@@ -172,11 +175,11 @@ class OpenRouterBackend:
         return REASONING_BUDGET.get(req.effort, REASONING_BUDGET["medium"])
 
     def _max_tokens(self, req: ExtractionRequest, thinking: bool) -> int:
-        """Completion room: the reasoning budget plus the answer's own room, or the answer's alone when thinking
-        is off. An explicit OPENROUTER_MAX_OUTPUT_TOKENS overrides both."""
+        """Completion room: the reasoning budget plus the answer's own room, or the minimal budget plus that
+        room on the retry. An explicit OPENROUTER_MAX_OUTPUT_TOKENS overrides both."""
         if self.max_output_tokens:
             return self.max_output_tokens
-        return (self._budget(req) if thinking else 0) + ANSWER_TOKENS
+        return (self._budget(req) if thinking else MIN_BUDGET) + ANSWER_TOKENS
 
     def _worst_case_usd(self, req: ExtractionRequest, messages: list[dict[str, Any]]) -> float:
         tokens_in = int(_text_chars(messages) / 3.5) + IMAGE_TOKENS * len(req.images)
@@ -185,11 +188,11 @@ class OpenRouterBackend:
     def _payload(self, req: ExtractionRequest, messages: list[dict[str, Any]], structured: bool,
                  thinking: bool = True) -> dict[str, Any]:
         """`thinking` on: the reasoning budget for the request's effort as a hard cap, with the answer's room
-        on top. Off: no reasoning at all, the fallback for a reply that was cut mid-thought even so."""
+        on top. Off: the minimal budget, the fallback for a reply that was cut mid-thought even so."""
         payload: dict[str, Any] = {
             "model": req.model, "messages": messages, "max_tokens": self._max_tokens(req, thinking),
             "usage": {"include": True},   # the provider's own dollar figure comes back in the usage block
-            "reasoning": {"max_tokens": self._budget(req)} if thinking else {"enabled": False},
+            "reasoning": {"max_tokens": self._budget(req) if thinking else MIN_BUDGET},
         }
         if structured:
             payload["response_format"] = {"type": "json_schema", "json_schema": {
@@ -257,7 +260,7 @@ class OpenRouterBackend:
             choice = (body.get("choices") or [{}])[0]
             text = ((choice.get("message") or {}).get("content")) or ""
             if choice.get("finish_reason") == "length" and not text.strip():
-                # the thinking ate the allowance despite the budget: ask again with no thinking at all
+                # the thinking ate the allowance despite the budget: ask again with the minimal budget
                 last = SchemaInvalidError("the reply hit its length limit while reasoning and carried no answer")
                 if attempt == 3 or not thinking:
                     raise last
