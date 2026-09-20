@@ -3,6 +3,51 @@
 Measured results that changed what the project claims. Each entry names the run that produced it, so every
 number here walks back to a stored metric. Newest first.
 
+## F8 · The staged loop on a cheap stack: the gates hold, the cost falls a hundredfold, and the verifier is where the capacity is missed (2026-09-21)
+
+**The question.** Can the staged loop run off the Claude subscription, on cheap models through OpenRouter,
+at many cells in parallel, and what does that buy? The arm `v1-openrouter`: GLM 5.3 Flash as the executor
+(it reads the card; $0.09 in, $0.30 out per million tokens), Qwen 3.8 Flash as verifier and adjudicator
+($0.15, $0.47), medium effort, K = 3, the template plan, thirty cells in parallel, the same 130 open cells
+and the same gates as every other arm. Final run `20260920T181356Z-bench` (MLflow `4cbd562b`) resumed from
+`20260920T180317Z-bench`; the single closed-book call on Qwen 3.8 Flash (`v0-qwen38`) is in F6's addendum.
+
+| Same 114 labelled cells | F1 | PR-AUC | Abstain | Chains validated | Cost |
+|---|---|---|---|---|---|
+| v1-openrouter, GLM executes, Qwen verifies | 0.286 | 0.556 on the 21 published | 82% | 63 of 130 | about $0.05 a cell |
+| v1, Sonnet executes, Opus verifies (35 cells before the stop) | 0.480 | 0.716 [0.39, 0.95] | 45% | 31 of 35 | $1.37 a cell |
+| v0, Opus single call | 0.531 | 0.523 [0.42, 0.65] | 24% | | $0.14 a cell |
+| v0-qwen38, Qwen single call | 0.444 | 0.496 [0.37, 0.67] | 46% | | $0.005 a cell |
+
+**Where the cheap chains die.** All 130 cells answered on the final pass. The node gate refused 9% of
+executor attempts (Sonnet: 5 to 10%). 67 chains were never validated: the Qwen verifier refuses GLM's nodes
+on substance (single bedrock observations read as host, thin coverage read as measurement, the withheld
+effort null not acknowledged) and the nodes GLM re-executes on that feedback do not satisfy it, so after three
+rounds the chain abstains. Ten more chains validated but the adjudicator's claims failed the gate on all three
+attempts (bare feature names where the id belongs). 53 published. The Opus verifier validated 87% of Sonnet's
+chains on the enabled cells and 89% on the benchmark cells it reached; Qwen validates 48% of GLM's. The loop
+cannot tell from inside whether the cheap verifier is over-strict or the cheap executor's repairs are poor;
+either way the pairing is where the capacity is missed, which is STA-CoT's finding again from the other side.
+
+**What it took to run at thirty in parallel.** Five things, each found by a failed run and fixed in code:
+the reasoning these models do is billed as completion tokens and unbounded it ate the allowance and returned
+nothing (a verifier call took twelve minutes at low and at medium effort alike, so the effort is now sent as
+a hard `reasoning.max_tokens` budget, which took the same call to 35 seconds); the Z.ai endpoint refuses to
+disable reasoning and ignores the budget, so a cut reply is retried with a low effort hint and a wide
+completion room; OpenRouter takes an effort or a budget, never both; a reply with a second object after the
+first is read as the first; and forty workers parsing the same map layer on their first call took the
+runner to 6.9 GB, so the layers are preloaded once. The final pass ran 130 cells in about 35 minutes with no
+failure; the whole day of attempts cost about $15.
+
+**What it decides.** The gates and the harness carry a hundredfold cheaper stack without change: every number
+still resolves or the node is refused, a chain no round validates still abstains, and a run of 130 cells
+costs six dollars. The verdict quality does not survive the swap of the *verifier*: F1 0.29 against 0.48, and
+82% abstention, is the verifier refusing what the executor gives it. The next arm is the one the pairing
+grid says: the cheap executor under a strong verifier, with the verifier on Opus through OpenRouter's own
+Anthropic listing ($5 and $25 per million tokens, about $0.12 a call), which keeps the run off the
+subscription limit and puts the capacity where it pays. The single-call number for the cheap model (F6
+addendum) stays the floor to beat.
+
 ## F7 · Analyst v1 on the enabled cells: the loop runs end to end, and the verifier finds the data's faults before ours (2026-09-20)
 
 **The question.** Does the staged loop (PRD §8.4) run over real cells, store what it decides, and earn its
