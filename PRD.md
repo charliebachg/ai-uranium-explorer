@@ -360,22 +360,34 @@ mark unmeasurable.
 
 **Stage 2 — Execute.** One call per segment on the cheap model. The executor may only call tools and must
 return a **node** in the fixed protocol: criterion, status ∈ {met, not met, unknown}, strength 0–5, the value
-ids that support it, one sentence. This is MineAgent's communication protocol, and the component their
-ablation shows carries the gain (Pos.F1 32.5 without it, 61.2 with). `nearby(cell, layer, radius)` is our box
-maker; `crosscheck` is our spatial-relationship explorer; both are deterministic.
+ids that support it, one sentence, and `depends_on`: the nodes it builds on (a criterion node depends on
+nothing; a cross-check node names the criterion nodes it combines). This is MineAgent's communication protocol,
+and the component their ablation shows carries the gain (Pos.F1 32.5 without it, 61.2 with). `nearby(cell,
+layer, radius)` is our box maker; `crosscheck` is our spatial-relationship explorer; both are deterministic.
+A criterion executor sees only its segment and the tools; a cross-check executor sees the nodes it names.
+Whether an executor also sees the whole chain so far (STA-CoT's memory cache, the "Previous Analysis" its
+executor prompt receives) is a switch, `executor_context = independent | cumulative`, because that is the
+path an early error takes into later nodes in their own case study (a step 5 built on a wrong step 2).
 
 **Stage 3 — Mechanical verify.** The gate on every node: every number resolves to an id returned in this
 run, the id carries the cell in question or a declared neighbour, polarity matches (a "not met" node cannot
 cite evidence the handbook lists as favourable without saying so), unknown is used only where coverage says
-unmeasured, and no arithmetic appears. A rejected node goes back to Stage 2 with the reason. Free, so it runs
-every time.
+unmeasured, and no arithmetic appears. A rejected node goes back to Stage 2 with feedback that escalates the
+way STA-CoT's rule controller does (its Appendix C.2): the first time, the reason; the second time, the reason
+and the ids the node may cite; the last time, explicit instructions and permission to return unknown. A node
+that fails the last time is recorded as unknown with the gate's reason, never dropped. Free, so it runs every
+time.
 
 **Stage 4 — Chain verify.** One call per chain on the strong model, with the skeptic's brief: does the
 verdict follow from the nodes, do any nodes contradict, is the effort null acknowledged, is a folklore
 criterion carrying weight, is proximity to a known deposit doing the work. Returns isValid, the faulty node
-ids and corrective feedback; faulty nodes are re-executed and the chain re-verified, up to K rounds. STA-CoT's
-finding that the verifier is where capacity pays (strong verifier + weak executor beats the reverse) is why
-the executor is the cheap model and the verifier the expensive one, and why that pairing is a configuration.
+ids and corrective feedback; the faulty nodes and every node that depends on them are re-executed and the
+chain re-verified, up to K rounds. The verifier also returns its own candidate label, as STA-CoT's does (their
+verifier emits the candidate answer beside isValid and the feedback); ours is recorded, not acted on, so the
+agreement between the verifier's label and the deciders' is a per-stage metric. STA-CoT's finding that the
+verifier is where capacity pays is why the executor is the cheap model and the verifier the expensive one, and
+why that pairing is a configuration: on MineBench (Avg.F1) a weak executor under a strong verifier scores
+73.72, the reverse 48.80, both strong 80.75, both weak 35.48 (their Figure 3).
 
 **Stage 5 — Decide.** Two deciders, always both, compared:
 (a) a **weighted sum** over node strengths with weights fitted on training folds only — MineAgent's decision
@@ -383,7 +395,12 @@ module and MineTRACE's fitted expert weights, and the fitted-weights criteria ar
 (b) a **model adjudicator** reading the nodes and the effort null, producing the three-level verdict
 (evidence against / insufficient / supports a closer look), the unknown-vs-absent list and the one observation
 that would change the reading. For the benchmark's binary question, (a) supplies a calibrated score and (b)
-supplies a label. If K rounds were exhausted, the label is the majority over rounds.
+supplies a label. If K rounds were exhausted, the label is the majority over the K rounds' candidate labels,
+STA-CoT's fallback vote (their Algorithm 2): a vote over the rounds of one repair trajectory, not over
+independent samples, which is the separate self-consistency switch in §8.5. A chain that never validates and
+has no majority publishes *insufficient evidence* with the verifier's last feedback as the reason, counted as
+an abstention with its denominator. It is never a hard failure: by their Algorithm 2 such a chain returns
+"Failed", which is where the −31.6 Pos.F1 without the vote (35.05 against 66.67, their Table 3) comes from.
 
 **Stage 6 — Publish.** The chain, the verdict and its inputs go through the gate once more as a whole and
 land in the `agent` tier with the run manifest. Nothing here is a source of numbers.
@@ -407,6 +424,7 @@ replaces the six configurations formerly listed in §D.3.3.
 | Mechanical gate | off / on | the free layer; the only arm allowed to publish is "on" |
 | Chain verifier | none / neutral / skeptic brief | STA-CoT's −29 without a verifier; the skeptic brief is today's panel |
 | Model pairing | cheap executor + strong verifier / strong both / reverse | the executor–verifier trade-off |
+| Executor context | independent / cumulative | STA-CoT's memory cache: whether later nodes may read earlier ones, the path an early error takes |
 | Decider | weighted sum / adjudicator / both | fitted weights vs judgement |
 | Rounds K | 1 / 3 | repair vs cost |
 | Self-consistency | n = 1 / 5 with vote | majority vote as a fallback vs as a default |
