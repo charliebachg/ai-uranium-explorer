@@ -155,7 +155,8 @@ def test_pack_text_is_compact_and_stable(store: Path) -> None:
         con.close()
     text = P.pack_text(pack)
     assert text == P.pack_text(json.loads(json.dumps(pack)))
-    assert text.startswith("bench cell b-0001\nfeatures:")
+    assert text.startswith("bench cell b-0001\nevery number has an id")
+    assert "features: id | value | unit | observations [count id] | status" in text
     assert "b:b-0001:cell:d_conductor_m |" in text and "criteria:" in text and "coverage:" in text
     assert "lake_water_uranium | unknown | -" in text
     assert "0000_0000" not in text and "holes_n" not in text

@@ -277,24 +277,32 @@ def oof_result(cell_id: str, con: Any = None, oof: pd.DataFrame | None = None) -
 
 def pack_text(pack: dict[str, Any]) -> str:
     """A compact, stable rendering for a prompt: one line per feature, the criteria table, the coverage flags."""
-    lines = [f"bench cell {pack['bench_id']}"]
+    lines = [f"bench cell {pack['bench_id']}",
+             "every number has an id: a value's id is its row's first column; a count or share carries its id in "
+             "square brackets right after it. Cite the id of every number you state."]
     tools = pack.get("tools", {})
     feats = sorted(tools.get("cell_features", {}).get("rows", []), key=lambda r: str(r.get("feature")))
+
+    def count(r: dict[str, Any]) -> str:
+        n = r.get("observations", 0)
+        oid = r.get("observations_id")
+        return f"{n} [{oid}]" if oid else str(n)
+
     if feats:
-        lines.append("features: id | value | unit | observations | status")
+        lines.append("features: id | value | unit | observations [count id] | status")
         for r in feats:
             if r.get("value") is None and r.get("text"):
                 # a mapped class rather than a number (surficial environment): known, quoted as text
-                lines.append(f"  {r.get('value_id') or r.get('feature')} | {r['text']} | - | {r.get('observations', 0)} | known (text)")
+                lines.append(f"  {r.get('value_id') or r.get('feature')} | {r['text']} | - | {count(r)} | known (text)")
                 continue
             if r.get("value") is None:
                 status = "unknown"
                 near = r.get("nearest_observation_id")
                 if near:
                     status += f" (nearest observation id {near})"
-                lines.append(f"  {r.get('value_id') or r.get('feature')} | - | - | {r.get('observations', 0)} | {status}")
+                lines.append(f"  {r.get('value_id') or r.get('feature')} | - | - | {count(r)} | {status}")
             else:
-                lines.append(f"  {r['value_id']} | {r['value']} | {r.get('unit') or '-'} | {r.get('observations', 0)} | known")
+                lines.append(f"  {r['value_id']} | {r['value']} | {r.get('unit') or '-'} | {count(r)} | known")
     crit = sorted(tools.get("criteria_breakdown", {}).get("rows", []),
                   key=lambda r: (-float(r.get("weight", 0)), str(r.get("criterion"))))
     if crit:
@@ -305,9 +313,10 @@ def pack_text(pack: dict[str, Any]) -> str:
                          f"{r.get('membership_id') or '-'}")
     cov = sorted(tools.get("coverage", {}).get("rows", []), key=lambda r: str(r.get("feature")))
     if cov:
-        lines.append("coverage: feature | share of grid | thin")
+        lines.append("coverage: feature | share of grid [share id] | thin")
         for r in cov:
-            lines.append(f"  {r.get('feature')} | {r.get('coverage')} | {'thin' if r.get('thin') else '-'}")
+            share = f"{r.get('coverage')} [{r['coverage_id']}]" if r.get("coverage_id") else str(r.get("coverage"))
+            lines.append(f"  {r.get('feature')} | {share} | {'thin' if r.get('thin') else '-'}")
     scores = tools.get("cell_scores", {}).get("rows", [])
     if scores:
         lines.append("out-of-fold scores: model | score | id")

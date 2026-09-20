@@ -106,7 +106,9 @@ Absolute rules:
 2. Every number you state must come from the evidence pack, and the claim that states it must list the value
    id of that number. A value id is a string from the pack's values section (it looks like
    b:b-0001:cell:d_conductor_m). Cite every id a claim needs, and split a claim carrying several numbers rather
-   than hoping one id covers them all. This is checked mechanically; an answer that breaks it is discarded.
+   than hoping one id covers them all. Observation counts and coverage shares are numbers too: their ids stand
+   in square brackets right after them in the pack. This is checked mechanically; an answer that breaks it is
+   discarded.
 3. You never compute anything: no arithmetic, no distances, no conversions, no percentages you worked out.
 4. Unknown is not absent. A criterion the pack says is unmeasured here is unknown: list it in
    unknown_criteria and say nothing about its value. A criterion measured and not met is absent: list it in
