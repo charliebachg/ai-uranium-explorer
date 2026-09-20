@@ -350,7 +350,7 @@ def test_a_model_plan_that_fails_its_check_falls_back_to_the_template_and_says_w
 
 
 def test_a_rejected_adjudicator_answer_abstains_with_the_first_problem_as_the_reason(tmp_path: Path, weights_stub) -> None:
-    row, _ = run(tmp_path, LoopBackend(adjudicator=[bad_adjudicator()]))
+    row, _ = run(tmp_path, LoopBackend(adjudicator=[bad_adjudicator()] * 3))   # every attempt refused
     assert row["published"] is False and row["problems"] and "2.4" in row["problems"][0]
     d = W.Chain.from_dict(row["chain"]).validate().decision
     assert d is not None and d.final_verdict == ABSTAIN and d.abstained_reason == f"adjudicator rejected: {row['problems'][0]}"
@@ -376,3 +376,16 @@ def test_loop_config_refuses_a_switch_outside_its_arms() -> None:
     with pytest.raises(ValueError, match="^rounds"):
         config(rounds=0)
     assert config().models() == {"executor": "m-small", "verifier": "m-large", "adjudicator": "m-large"}
+
+
+def test_the_adjudicator_gets_the_gates_feedback_and_a_second_attempt(tmp_path: Path, weights_stub) -> None:
+    """Opus never needed it; a cheap adjudicator cited a feature name where the id belongs and lost the chain
+    on one strike. The retry carries the gate's reasons and, on the second attempt, the ids it may cite."""
+    backend = LoopBackend(adjudicator=[bad_adjudicator(), adjudicator_answer()])
+    row, _ = run(tmp_path, backend)
+    prompts = [r.user_prompt for r in backend.requests if r.task == L.TASK_ADJUDICATE]
+    assert len(prompts) == 2 and "rejected by the mechanical gate" in prompts[1] and COND in prompts[1]
+    assert row["published"] is True and row["problems"] == [] and row["stages"]["adjudicator_attempts"] == 2
+    backend = LoopBackend(adjudicator=[bad_adjudicator(), bad_adjudicator(), bad_adjudicator()])
+    row, _ = run(tmp_path / "again", backend)
+    assert row["published"] is False and row["stages"]["adjudicator_attempts"] == 3 and row["problems"]

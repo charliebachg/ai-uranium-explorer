@@ -184,6 +184,7 @@ class _Loop:
         self.adjudicator: ExtractionResponse | None = None
         self.decision_row: dict[str, Any] | None = None
         self.decision_published = False
+        self.adjudicator_attempts = 0
         self.effort: str | None = None               # the effort note, built once: a refusal is not asked twice
 
     # ---------------------------------------------------------------- shared
@@ -599,24 +600,36 @@ class _Loop:
                 lines.append(f"  {{STAGE_DIR}}/{V0.CARD_FILE}      the map card of the cell")
             lines += [f"  {{STAGE_DIR}}/{f}      a staged tool result: rows, and the value ids you may cite" for f in names]
             user = "\n".join(lines) + "\n\n" + user
-        req = self._request(TASK_ADJUDICATE, PR.adjudicator_system(), user, ADJUDICATOR_SCHEMA,
-                            self.cfg.adjudicator_model, self.cfg.effort,
-                            {"role": "adjudicator", "shallow": shallow, "rounds": self.chain.rounds()},
-                            stage_files=files, images=self.images if shallow else ())
-        resp = self.backend.call(req)
-        self.calls.append(_account(resp))
-        self.adjudicator = resp
-        answer = dict(resp.structured or {})
-        self.answer = answer
-        self.problems = V0.gate(answer, {"values": self.session.values}, context=self.session.context)
+        # The same three attempts with the gate's escalating feedback the executor gets: Opus never needed
+        # them, a cheap adjudicator cites a feature name where the id belongs and lost nine chains in 39 to
+        # it. The gate is not loosened; the answer is asked for again with what it did wrong.
+        base = user
+        cost = duration = 0.0
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            user = base if attempt == 1 else f"{base}\n\n{G.feedback(self.problems, attempt, self.session.allowed_ids())}"
+            req = self._request(TASK_ADJUDICATE, PR.adjudicator_system(), user, ADJUDICATOR_SCHEMA,
+                                self.cfg.adjudicator_model, self.cfg.effort,
+                                {"role": "adjudicator", "shallow": shallow, "rounds": self.chain.rounds(), "attempt": attempt},
+                                stage_files=files, images=self.images if shallow else ())
+            resp = self.backend.call(req)
+            self.calls.append(_account(resp))
+            cost += float(resp.cost_usd or 0.0)
+            duration += float(resp.duration_s or 0.0)
+            self.adjudicator = resp
+            answer = dict(resp.structured or {})
+            self.answer = answer
+            self.problems = V0.gate(answer, {"values": self.session.values}, context=self.session.context)
+            self.adjudicator_attempts = attempt
+            if not self.problems:
+                break
         cited = sorted({v for c in answer.get("claims") or [] if isinstance(c, dict)
                         for v in (c.get("value_ids") or []) if isinstance(v, str)})
         self.decision_row = {
             "adjudicator_json": answer, "claims_json": list(answer.get("claims") or []),
             "values_json": {v: self.session.values[v] for v in cited if v in self.session.values},
             "published": not self.problems, "problems_json": list(self.problems),
-            "model": resp.model_resolved or req.model, "cost_usd": float(resp.cost_usd or 0.0),
-            "duration_s": float(resp.duration_s or 0.0), "created_at": _now(),
+            "model": resp.model_resolved or req.model, "cost_usd": cost,
+            "duration_s": duration, "created_at": _now(),
         }
         return answer
 
@@ -731,6 +744,7 @@ class _Loop:
         return {
             "n_segments": len(self.chain.plan.segments), "n_nodes": len(self.chain.nodes),
             "attempts_total": c["attempts_total"], "n_gate_rejections": c["n_gate_rejections"],
+            "adjudicator_attempts": self.adjudicator_attempts,
             "n_recorded_unknown": c["n_recorded_unknown"], "rounds": self.chain.rounds(), "valid": self.valid,
             "n_faulty_total": c["n_faulty_total"], "n_faulty_unresolved": c["n_faulty_unresolved"],
             "n_reexecuted": c["n_reexecuted"], "n_refusals_by_rule": self.session.manifest_fields()["refusals"],
