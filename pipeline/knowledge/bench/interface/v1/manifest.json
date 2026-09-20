@@ -1,0 +1,182 @@
+{
+ "analyst": {
+  "blind_lists": 163,
+  "cells_drawable": 130,
+  "cells_sha256": "2a5c3b717f4ceeeee25cccbab824971261becf8bf6d13842fc16b5281c23bc4e",
+  "dir": "pipeline/data/bench/v2",
+  "manifest_sha256": "b50f71014eaf216a1acfea2386cfdec6302c7f8c9b1bce5d046c489528ab294c",
+  "oof_source": "oof_scores.csv",
+  "split": "open",
+  "version": "v2"
+ },
+ "built_at": "2026-09-20T20:42:33+00:00",
+ "content_sha256": "fcc006c9ffc12fd20bd4eb5d110c14d3063906ace188a8a28e18b5d55f09820d",
+ "counts": {
+  "tier1": {
+   "answerable": 255,
+   "items": 299,
+   "kinds": {
+    "coverage_share": 12,
+    "coverage_thin": 6,
+    "criteria_not_met": 20,
+    "criteria_unknown": 20,
+    "criterion_state": 16,
+    "crosscheck_crossings": 12,
+    "feature_value": 20,
+    "holes_count": 16,
+    "nearby_count": 20,
+    "nearby_nearest": 16,
+    "nearest_conductor_m": 16,
+    "nearest_deposit_km": 16,
+    "nearest_occurrence_km": 20,
+    "no_value": 12,
+    "not_measured": 16,
+    "observations": 12,
+    "out_of_scope": 8,
+    "outside_grid": 8,
+    "score": 21,
+    "thin_sampling": 12
+   },
+   "reasons": {
+    "no_value": 12,
+    "not_measured": 16,
+    "out_of_scope": 8,
+    "outside_grid": 8
+   },
+   "strata": {
+    "deposit": 70,
+    "grid": 18,
+    "negative": 69,
+    "none": 8,
+    "occurrence": 69,
+    "probe": 65
+   },
+   "unanswerable": 44
+  },
+  "tier3": {
+   "behaviours": {
+    "abstain": 1,
+    "cite_id": 13,
+    "correct_premise": 74,
+    "decline_grade": 6,
+    "refuse_citation": 8,
+    "unknown_not_absent": 8
+   },
+   "families": {
+    "citation": 8,
+    "data": 8,
+    "gate": 62,
+    "premise": 18,
+    "request": 6,
+    "tool": 8
+   },
+   "items": 110,
+   "sources": {
+    "absence_as_absent": 8,
+    "decimal_shift": 8,
+    "digit_slip": 8,
+    "false_precision": 6,
+    "filename_as_id": 8,
+    "folklore_as_fact": 8,
+    "grade_request": 6,
+    "hand_conversion": 6,
+    "invented": 8,
+    "negated_premise": 10,
+    "obs_count_no_id": 8,
+    "transposed": 8,
+    "uncited": 6,
+    "wrong_cell": 12
+   },
+   "strata": {
+    "deposit": 30,
+    "negative": 25,
+    "occurrence": 30,
+    "probe": 25
+   }
+  }
+ },
+ "files": {
+  "tier1.jsonl": "769627a4afa5594a922c5b4d5e3a15558cdc309273276f7c9b3d9c9e74428a6d",
+  "tier3.jsonl": "5a6a4cc633ee9c368ea393985278f934d042be800b4440ce6427e60399c1438f"
+ },
+ "git_commit": "3ee0a80cc8a84a7e00fa9df8a668c1fcc73542f1",
+ "manifest_version": "bench-interface-manifest/v1",
+ "seed": 20260921,
+ "session_rules": [
+  "B17",
+  "B18",
+  "B30"
+ ],
+ "shortfalls": {
+  "tier1": {
+   "nearest_deposit_km": 4
+  },
+  "tier3": {}
+ },
+ "spec": {
+  "analyst_version": "v2",
+  "seed": 20260921,
+  "split": "open",
+  "tier1": {
+   "kinds": {
+    "coverage_share": 12,
+    "coverage_thin": 6,
+    "criteria_not_met": 20,
+    "criteria_unknown": 20,
+    "criterion_state": 16,
+    "crosscheck_crossings": 12,
+    "feature_value": 20,
+    "holes_count": 16,
+    "nearby_count": 20,
+    "nearby_nearest": 16,
+    "nearest_conductor_m": 16,
+    "nearest_deposit_km": 20,
+    "nearest_occurrence_km": 20,
+    "no_value": 12,
+    "not_measured": 16,
+    "observations": 12,
+    "out_of_scope": 8,
+    "outside_grid": 8,
+    "score": 21,
+    "thin_sampling": 12
+   },
+   "label_radius_km": 25.0,
+   "nearby_layers": [
+    "em_conductors",
+    "faults_250k",
+    "radioactive_boulders",
+    "lake_sediment_gsc",
+    "lake_sediment_sgs"
+   ],
+   "nearby_radius_m": 5000.0
+  },
+  "tier3": {
+   "sources": {
+    "absence_as_absent": 8,
+    "decimal_shift": 8,
+    "digit_slip": 8,
+    "false_precision": 6,
+    "filename_as_id": 8,
+    "folklore_as_fact": 8,
+    "grade_request": 6,
+    "hand_conversion": 6,
+    "invented": 8,
+    "negated_premise": 10,
+    "obs_count_no_id": 8,
+    "transposed": 8,
+    "uncited": 6,
+    "wrong_cell": 12
+   }
+  },
+  "version": "v1"
+ },
+ "status": "built, not run: no agent has been scored on these tiers",
+ "store_sha256": "3eff0a46031c10a0f4fba11850f341619041d4baac38db92398180f82cd28b36",
+ "switches": {
+  "effort_features": true,
+  "label_context": true,
+  "oof_scores": true
+ },
+ "tool_version": "prospect/tools/v1",
+ "version": "v1"
+}

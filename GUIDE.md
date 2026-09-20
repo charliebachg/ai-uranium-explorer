@@ -313,6 +313,17 @@ while the other two did. That is why §5.6 has a criteria row at all.
 Same tools, same evidence record, same gate. A conversation is bound to one cell; selecting another starts a
 fresh one rather than carrying stale context.
 
+The chat is scored on its own track of the benchmark (PRD §D.3.1, role 2), not on AUC: whether what it says
+is what the store says, and whether it declines when the store cannot answer. Two of its three tiers need no
+model to build and `lr bench interface build` writes them under `knowledge/bench/interface/`: tier 1 asks
+about 300 questions the tools answer exactly (a distance, a count, a share, a score, which criteria are
+unknown), each with its gold as value ids, plus 44 questions whose right answer is a refusal with a reason
+(not measured here, outside the grid, a value the store lacks, out of scope); tier 3 asks about 110 questions
+built from failures actually observed, the gate suite's corruptions among them, each naming its source. Both
+draw their cells from the frozen analyst benchmark under the session's leakage rules, `lr bench interface
+audit` regenerates every item from the store and compares, and neither has been run against an agent yet.
+Tier 2, the grounded-reasoning tier, needs a rubric and a rater and is not built.
+
 ### 6.4 The fabrication gate — and how it is measured
 
 **The rule:** every number in an answer must resolve to a value the tools returned *and that the claim cites*,

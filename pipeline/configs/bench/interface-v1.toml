@@ -1,0 +1,61 @@
+# UraniumBench v1, interface track: the two mechanical tiers (PRD §D.3.1 role 2, §9.5). Change a number here
+# and the next build is a different benchmark; the version string is part of the output path, so keep it in
+# step with the filename (interface-<version>.toml).
+
+version = "v1"
+seed = 20260921
+
+# the analyst benchmark whose frozen cells, folds, blind-lists and out-of-fold scores this draws on, and
+# which of its splits: the held-out cells stay sealed here too
+analyst_version = "v2"
+split = "open"
+
+[tier1]
+# the radius `nearby` questions ask about, and the radius `label_context` is asked with
+nearby_radius_m = 5000
+label_radius_km = 25
+# the evidence layers a count or a nearest-feature question may name (drillhole collars are asked through
+# holes_count, never as a layer)
+nearby_layers = ["em_conductors", "faults_250k", "radioactive_boulders", "lake_sediment_gsc", "lake_sediment_sgs"]
+
+[tier1.kinds]
+# answerable: items per kind, spread evenly over the four strata (deposit, occurrence, negative, probe)
+nearest_deposit_km = 20
+nearest_occurrence_km = 20
+criteria_unknown = 20
+criteria_not_met = 20
+criterion_state = 16
+coverage_share = 12
+coverage_thin = 6
+nearby_count = 20
+nearby_nearest = 16
+nearest_conductor_m = 16
+score = 21
+holes_count = 16
+feature_value = 20
+observations = 12
+crosscheck_crossings = 12
+thin_sampling = 12
+# unanswerable: the gold is abstention with a reason from the fixed set
+not_measured = 16
+outside_grid = 8
+no_value = 12
+out_of_scope = 8
+
+[tier3.sources]
+# per observed failure source: how many items are asked for. A source that yields fewer is reported as a
+# shortfall in the manifest and never padded: the tier grows only from failures actually observed.
+digit_slip = 8
+decimal_shift = 8
+transposed = 8
+false_precision = 6
+hand_conversion = 6
+invented = 8
+uncited = 6
+wrong_cell = 12
+obs_count_no_id = 8
+filename_as_id = 8
+negated_premise = 10
+folklore_as_fact = 8
+grade_request = 6
+absence_as_absent = 8

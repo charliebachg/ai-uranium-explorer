@@ -878,15 +878,21 @@ on faithfulness, abstention and rating, in three tiers over *our* data:
    items, where the gold is abstention: GeoBenchX is the only geoscience benchmark that publishes a
    correct-refusal rate (0.17 to 0.90 across eight models on 79 unsolvable tasks) and nothing in mineral
    exploration does, so this tier yields a refusal rate *and* a false-refusal rate with a denominator.
+   *Status 2026-09-21: built, not run. 299 items (255 answerable, 44 unanswerable) over the analyst
+   benchmark's 130 open cells, gold as value ids from the same tools under the session rules;
+   `lr bench interface build`, hashed manifest, audit clean.*
 2. **Grounded reasoning** (~100 items): questions whose answer is a judgement over evidence — "is this score
    explained by drilling", "what is unknown versus not met", "what single observation would change the
    reading". Gold is a rubric written from the handbook; most required elements are mechanically checkable
    (the answer must cite the effort and learned scores by id, must name the unknown criteria), and only the
-   judgement itself needs a rater.
+   judgement itself needs a rater. *Status 2026-09-21: not built; needs the rubric and the rater.*
 3. **Adversarial** (~100 items): questions engineered from failures actually observed — a real number from a
    neighbouring cell (4 of 40 escaped the gate), an observation count with no citable id, a filename cited as
    an id, a negated premise, a folklore criterion phrased as fact, a request for a grade. Gold is the expected
-   behaviour. The tier grows only from production failures, never from imagination.
+   behaviour. The tier grows only from production failures, never from imagination. *Status 2026-09-21:
+   built, not run. 110 items from 14 observed sources (the gate suite's eight corruptions, the tool's
+   uncited count, the file-as-id citation, the negated premise, the folklore criterion, the grade request,
+   and §9.6's absence-of-mapping fault), each naming its source and reference; no source fell short.*
 
 *Role 1 — extractor (backlog, shared with §C).* The pipeline already reads images — scanned assessment pages
 through a VLM, Sentinel-2 and DEM chips into features, the bedrock map into the graphitic-host criterion — so
@@ -1088,7 +1094,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | **5c · Arms on the subset** | 1 to 2 weeks; started 2026-09-21 with v1-openrouter (full), v0-qwen38 (full) and v1-anthropic-or (76 of 130, resumable) | §8.5 at matched compute on the frozen subset: v0; staged with the template planner; staged with the model planner; staged without the verifier; executor and verifier pairing as a switch; per-stage metrics from traces; the other switches stay in §9.6 | The arms table with intervals on the Eval page; the number of cells per arm decided against usage at this point (about 15 calls a cell) |
 | **5d · Human adjudication and decision** | 1 week | §D.3.4: one geologist-day on the top two arms, MineTRACE protocol, chance-corrected agreement, the held-out 20% opened; the written finding | The table decides the shipped configuration; the finding names the number that decided it |
 | **4a · MCP server** | 1 week | §E.3 design v1: the tool catalogue, resources, prompts, `open_session` handles, gate middleware, API-key scopes; `run_analyst` as a Task once 4d exists | A stock client gets a gated answer; the §E.3 contract tests pass |
-| **4c · Interface agent** | 1 week | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff; tiers 1 and 3 generated | Tier 1 pass rate, refusal and false-refusal rates with a denominator; the 30 rating questions drafted |
+| **4c · Interface agent** | 1 week; tiers 1 and 3 built 2026-09-21, not run (interface v1, content `fcc006c9ffc1`, on analyst v2's 130 open cells at store `3eff0a46031c`: tier 1 299 items, 255 answerable over 16 kinds and 44 unanswerable with a reason, 4 short on nearest-deposit for the probe cells; tier 3 110 items over 14 observed failure sources, no shortfall; `knowledge/bench/interface/v1/`) | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff; tiers 1 and 3 generated (`lr bench interface build`, `audit`, `show`: done, no agent scored on them yet) | Tier 1 pass rate, refusal and false-refusal rates with a denominator; the 30 rating questions drafted |
 | **4b · Extractor agent** | 1 week | §8.2: the reading loop as an agent with second-family agreement and a review queue; image input on the OpenAI backend; 30 hand-keyed gold pages | Precision and recall against the gold pages |
 | **5e · Multimodal arm** | after §B.2 chips | §8.4 with the chip and map tile attached; §D.3.1 MineBench-for-uranium numbers | Backlog until chips and their effort mask exist (B15) |
 

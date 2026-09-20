@@ -69,6 +69,7 @@ data only. It proposes no drill targets and makes no geological judgement.
 
     # the analyst benchmark and the staged analyst (PRD §8.4, §9.4)
     uv run lr bench build --version v2       # the frozen benchmark (v2: the same 163 cells as v1 on the corrected store); `lr bench audit` re-hashes and scans it
+    uv run lr bench interface build --version v1   # the interface track's mechanical tiers (PRD §D.3.1 role 2): tier 1 exact answers and abstentions, tier 3 observed failures; gold by code, no model; `audit` regenerates every item from the store, `show` prints the counts
     uv run lr arm run --arm v0 --version v2  # one arm over the open cells: cached, budgeted, traced, scored; arms live in configs/arms/
     uv run lr arm run --arm v1               # the staged loop: template plan, executor per criterion, gate, verifier, both deciders
     uv run lr arm chain --enabled --arm v1   # chains for the enabled cells into the agent tier, shown on the dashboard's evidence panel
