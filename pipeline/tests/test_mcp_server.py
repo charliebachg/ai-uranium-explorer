@@ -19,14 +19,14 @@ import pytest
 from mcp import Client
 from mcp.shared.exceptions import MCPError
 
-from legacy_reader import store as ST
-from legacy_reader.api import jobs as J
-from legacy_reader.mcp import TOOL_VERSION
-from legacy_reader.mcp import contract as C
-from legacy_reader.mcp import server as SV
-from legacy_reader.mcp.handlers import NOT_AVAILABLE, WITHHELD
-from legacy_reader.runtime.manifest import Manifest
-from legacy_reader.runtime.tracing import read_spans
+from uranium_explorer import store as ST
+from uranium_explorer.api import jobs as J
+from uranium_explorer.mcp import TOOL_VERSION
+from uranium_explorer.mcp import contract as C
+from uranium_explorer.mcp import server as SV
+from uranium_explorer.mcp.handlers import NOT_AVAILABLE, WITHHELD
+from uranium_explorer.runtime.manifest import Manifest
+from uranium_explorer.runtime.tracing import read_spans
 
 from fake_session_world import BLIND_FILE, FAR_FILE, SERVED_SCORE
 from mcp_world import (CELL, CX_FILE, CX_HOLE, FOLD, OTHER, FakeWorld, crosscheck_fixture, make_server,
@@ -45,15 +45,15 @@ def world() -> FakeWorld:
     return FakeWorld()
 
 
-def run(lr: SV.LrServer, scenario: Scenario) -> None:
+def run(ue: SV.UeServer, scenario: Scenario) -> None:
     """One client session against the server, then the server closed so every manifest is finished."""
 
     async def main() -> None:
         try:
-            async with Client(lr.server) as client:
+            async with Client(ue.server) as client:
                 await scenario(client)
         finally:
-            lr.close()
+            ue.close()
 
     anyio.run(main)
 
@@ -159,8 +159,8 @@ def test_a_scored_session_refuses_a_blind_listed_file_and_serves_only_out_of_fol
         assert world.received["cell_scores"] == [], "the served table was never asked for (B18)"
         other = await client.call_tool("cell_features", {"session_id": sid, "cell_id": OTHER})
         assert other.is_error and "own cell only" in other.content[0].text
-    lr = make_server(tmp_path, world)
-    run(lr, scenario)
+    ue = make_server(tmp_path, world)
+    run(ue, scenario)
     manifest = Manifest.read(next(iter(tmp_path.glob("runs/*"))))
     assert manifest.finished_at and manifest.blind_list_sha256 and manifest.config["session"]["refusals"]["B17"] >= 1
     assert manifest.config["session"]["refusals"]["B18"] >= 1 and manifest.scores_seen
@@ -309,8 +309,8 @@ def test_run_analyst_is_a_job_and_job_status_reads_it_back_with_its_cost_as_a_va
         r = await client.call_tool("run_analyst", {"session_id": sid})
         assert r.is_error and "dashboard session" in r.content[0].text
 
-    lr = make_server(tmp_path, world, jobs=runner)
-    run(lr, scenario)
+    ue = make_server(tmp_path, world, jobs=runner)
+    run(ue, scenario)
     run(make_server(tmp_path, world, jobs=runner), blinded)
     runner.close()
 
@@ -332,8 +332,8 @@ def test_a_job_refusal_reaches_the_client_as_a_tool_result(store: Path, world: F
 
 def test_a_handle_is_opaque_bound_to_its_key_and_expires(store: Path, world: FakeWorld, tmp_path: Path) -> None:
     now = [dt.datetime(2026, 9, 21, 12, 0, tzinfo=dt.UTC)]
-    env_a = {"LR_MCP_KEYS": "alpha-key:read;beta-key:read,record", "LR_MCP_KEY": "alpha-key"}
-    lr = make_server(tmp_path, world, environ=env_a, clock=lambda: now[0])
+    env_a = {"UE_MCP_KEYS": "alpha-key:read;beta-key:read,record", "UE_MCP_KEY": "alpha-key"}
+    ue = make_server(tmp_path, world, environ=env_a, clock=lambda: now[0])
     handle: list[str] = []
 
     async def as_alpha(client: Client) -> None:
@@ -355,16 +355,16 @@ def test_a_handle_is_opaque_bound_to_its_key_and_expires(store: Path, world: Fak
         now[0] += dt.timedelta(hours=5)
         r = await client.call_tool("cell_features", {"session_id": handle[0]})
         assert r.is_error and "expired" in r.content[0].text
-        assert len(lr.store) == 0, "an expired handle is swept and its manifest finished"
+        assert len(ue.store) == 0, "an expired handle is swept and its manifest finished"
 
     async def main() -> None:
-        async with Client(lr.server) as client:
+        async with Client(ue.server) as client:
             await as_alpha(client)
-        lr.environ = {**env_a, "LR_MCP_KEY": "beta-key"}
-        async with Client(lr.server) as client:
+        ue.environ = {**env_a, "UE_MCP_KEY": "beta-key"}
+        async with Client(ue.server) as client:
             await as_beta(client)
-        lr.environ = env_a
-        async with Client(lr.server) as client:
+        ue.environ = env_a
+        async with Client(ue.server) as client:
             await as_alpha_later(client)
 
     anyio.run(main)
@@ -374,7 +374,7 @@ def test_a_handle_is_opaque_bound_to_its_key_and_expires(store: Path, world: Fak
 
 
 def test_scopes_filter_tools_list_and_refuse_a_call_outside_them(store: Path, world: FakeWorld, tmp_path: Path) -> None:
-    env = {"LR_MCP_KEYS": "reader:read;writer:read,record;runner:read,record,run"}
+    env = {"UE_MCP_KEYS": "reader:read;writer:read,record;runner:read,record,run"}
 
     async def as_reader(client: Client) -> None:
         names = [t.name for t in (await client.list_tools(cache_mode="bypass")).tools]
@@ -390,12 +390,12 @@ def test_scopes_filter_tools_list_and_refuse_a_call_outside_them(store: Path, wo
     async def as_nobody(client: Client) -> None:
         with pytest.raises(MCPError) as err:
             await client.list_tools(cache_mode="bypass")
-        assert "LR_MCP_KEY" in str(err.value) and "reader" not in str(err.value)
+        assert "UE_MCP_KEY" in str(err.value) and "reader" not in str(err.value)
         r = await client.call_tool("open_session", {"cell_id": CELL, "purpose": "dashboard"})
-        assert r.is_error and "LR_MCP_KEY" in r.content[0].text, "a tool call gets a result, not a protocol error"
+        assert r.is_error and "UE_MCP_KEY" in r.content[0].text, "a tool call gets a result, not a protocol error"
 
     for key, scenario in (("reader", as_reader), ("runner", as_runner), ("no-such-key", as_nobody)):
-        run(make_server(tmp_path, world, environ={**env, "LR_MCP_KEY": key}), scenario)
+        run(make_server(tmp_path, world, environ={**env, "UE_MCP_KEY": key}), scenario)
 
 
 def test_without_a_register_a_local_caller_has_every_scope(store: Path, world: FakeWorld, tmp_path: Path) -> None:
@@ -409,7 +409,7 @@ def test_without_a_register_a_local_caller_has_every_scope(store: Path, world: F
 
 
 def test_record_insight_writes_the_expert_tier_and_mints_expert_ids(store: Path, world: FakeWorld, tmp_path: Path) -> None:
-    lr = make_server(tmp_path, world, insight_store=lambda: ST.connect(store))
+    ue = make_server(tmp_path, world, insight_store=lambda: ST.connect(store))
 
     async def scenario(client: Client) -> None:
         sid, _ = await opened(client, "dashboard")
@@ -429,7 +429,7 @@ def test_record_insight_writes_the_expert_tier_and_mints_expert_ids(store: Path,
         on_other = await client.call_tool("record_insight", {"session_id": sid, "cell_id": OTHER, "text": "x", "author": "a"})
         assert on_other.is_error and "own cell" in on_other.content[0].text
 
-    run(lr, scenario)
+    run(ue, scenario)
     con = duckdb.connect(str(store), read_only=True)
     try:
         rows = con.execute("select expert_id, cell_id, author, value_ids_json, values_json, session_id, run_id, tier "
@@ -473,7 +473,7 @@ def test_hole_crosscheck_serves_the_crosscheck_files_of_a_cell(store: Path, worl
         far = await client.call_tool("hole_crosscheck", {"session_id": sid, "radius_km": 0.5, "cell_id": OTHER})
         assert not far.is_error and far.structured_content["rows"] == [] and "No crosschecked file" in far.content[0].text
         none = await client.call_tool("hole_crosscheck", {"session_id": sid, "file_num": "99Z99-0000"})
-        assert none.is_error and "lr crosscheck" in none.content[0].text
+        assert none.is_error and "ue crosscheck" in none.content[0].text
         cite = {"text": "the collar sits 36.2 m from the geods record", "value_ids": [f"d:{CX_FILE}:off_ab12cd34"]}
         assert (await client.call_tool("check_claims", {"session_id": sid, "claims": [cite]})).structured_content["ok"]
         bsid, _ = await opened(client, "scored")
@@ -521,7 +521,7 @@ def test_the_public_safe_build_withholds_report_text_and_the_hole_crosscheck(sto
         assert "Cluff Lake" not in r.content[0].text
         h = await client.call_tool("hole_crosscheck", {"session_id": sid})
         assert h.is_error and "public-safe" in h.content[0].text
-        inv = json.loads((await client.read_resource("lr://reading/inventory")).contents[0].text)
+        inv = json.loads((await client.read_resource("ue://reading/inventory")).contents[0].text)
         assert {s["key"]: s["licence"]["redistributable"] for s in inv["sources"]}["geods_holes"] is False
 
     run(make_server(tmp_path, world, public_safe=True), scenario)
@@ -532,20 +532,20 @@ def test_resources_and_prompts_are_served_and_a_prompt_needs_its_handle(store: P
         names = [r.name for r in (await client.list_resources()).resources]
         assert names == ["handbook", "criteria", "readiness_gate", "reading_inventory"]
         templates = [t.uri_template for t in (await client.list_resource_templates()).resource_templates]
-        assert templates == ["lr://cell/{id}/evidence", "lr://cell/{id}/chains", "lr://run/{id}/manifest"]
-        handbook = (await client.read_resource("lr://handbook")).contents[0]
+        assert templates == ["ue://cell/{id}/evidence", "ue://cell/{id}/chains", "ue://run/{id}/manifest"]
+        handbook = (await client.read_resource("ue://handbook")).contents[0]
         assert handbook.mime_type == "text/markdown" and len(handbook.text) > 1000
-        criteria = (await client.read_resource("lr://criteria")).contents[0]
+        criteria = (await client.read_resource("ue://criteria")).contents[0]
         assert criteria.mime_type == "application/toml" and "[[criteria]]" in criteria.text or "criteria" in criteria.text
-        chains = json.loads((await client.read_resource(f"lr://cell/{CELL}/chains")).contents[0].text)
+        chains = json.loads((await client.read_resource(f"ue://cell/{CELL}/chains")).contents[0].text)
         assert chains["cell_id"] == CELL and chains["chains"] == []
         with pytest.raises(MCPError) as err:
-            await client.read_resource("lr://cell/not-a-cell/chains")
+            await client.read_resource("ue://cell/not-a-cell/chains")
         assert "0123_0045" in str(err.value)
         with pytest.raises(MCPError):
-            await client.read_resource("lr://run/no-such-run/manifest")
+            await client.read_resource("ue://run/no-such-run/manifest")
         sid, doc = await opened(client, "scored")
-        manifest = json.loads((await client.read_resource(f"lr://run/{doc['run_id']}/manifest")).contents[0].text)
+        manifest = json.loads((await client.read_resource(f"ue://run/{doc['run_id']}/manifest")).contents[0].text)
         assert manifest["config"]["session_id"] == sid and manifest["config"]["tool_contract"] == TOOL_VERSION
         prompts = [p.name for p in (await client.list_prompts()).prompts]
         assert prompts == ["proponent", "skeptic", "adjudicator", "analyst.executor", "analyst.verifier", "interface.router"]

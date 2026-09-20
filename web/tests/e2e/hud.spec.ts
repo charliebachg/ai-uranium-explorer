@@ -5,7 +5,7 @@ const MAP = "/?intro=0&motion=0&c=-105.6,57.9,7.4,0,0";
 async function mapReady(page: Page) {
   await page.waitForFunction(
     () => {
-      const m = (window as unknown as { __lr?: { map?: { isSourceLoaded: (s: string) => boolean } } }).__lr
+      const m = (window as unknown as { __ue?: { map?: { isSourceLoaded: (s: string) => boolean } } }).__ue
         ?.map;
       try {
         return !!m && m.isSourceLoaded("compilation");
@@ -20,8 +20,8 @@ async function mapReady(page: Page) {
 
 const drawnCollars = (page: Page) =>
   page.evaluate(() => {
-    const m = (window as unknown as { __lr: { map: { queryRenderedFeatures: (o: unknown) => unknown[] } } })
-      .__lr.map;
+    const m = (window as unknown as { __ue: { map: { queryRenderedFeatures: (o: unknown) => unknown[] } } })
+      .__ue.map;
     return m.queryRenderedFeatures({ layers: ["compilation-dot"] }).length;
   });
 
@@ -115,9 +115,9 @@ test("command palette finds a report and toggles a layer", async ({ page }) => {
   const geodsVisible = await page.evaluate(() => {
     const m = (
       window as unknown as {
-        __lr: { map: { getLayoutProperty: (l: string, p: string) => string | undefined } };
+        __ue: { map: { getLayoutProperty: (l: string, p: string) => string | undefined } };
       }
-    ).__lr.map;
+    ).__ue.map;
     return m.getLayoutProperty("geods-dot", "visibility");
   });
   expect(geodsVisible).toBe("none");

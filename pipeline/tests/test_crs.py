@@ -3,12 +3,12 @@ import math
 
 import pytest
 
-from legacy_reader import crs
-from legacy_reader.paths import PATHS
+from uranium_explorer import crs
+from uranium_explorer.paths import PATHS
 
 GRID = PATHS.grids / crs.GRID_NAME
 needs_grid = pytest.mark.skipif(not GRID.is_file() or not PATHS.grids_lock.is_file(),
-                                reason="run `lr crs fetch-grid` first")
+                                reason="run `ue crs fetch-grid` first")
 
 
 def test_missing_grid_raises(tmp_path):

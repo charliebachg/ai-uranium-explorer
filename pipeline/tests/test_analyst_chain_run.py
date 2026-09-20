@@ -8,13 +8,13 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.analyst import arms as A
-from legacy_reader.analyst import chains as CH
-from legacy_reader.analyst import run as RUN
-from legacy_reader.analyst import score as SC
-from legacy_reader.analyst.session import Session
-from legacy_reader.runtime.spend import BudgetExhausted
-from legacy_reader.store import connect
+from uranium_explorer.analyst import arms as A
+from uranium_explorer.analyst import chains as CH
+from uranium_explorer.analyst import run as RUN
+from uranium_explorer.analyst import score as SC
+from uranium_explorer.analyst.session import Session
+from uranium_explorer.runtime.spend import BudgetExhausted
+from uranium_explorer.store import connect
 
 from fake_bench import FakeManifest, install_runtime
 from fake_loop_world import CELL as WORLD_CELL, LoopBackend, LoopWorld, bad_node, loop_registry

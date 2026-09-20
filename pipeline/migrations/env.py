@@ -1,4 +1,4 @@
-"""Alembic environment: raw-SQL migrations, no ORM models. The URL is set by `lr store migrate`."""
+"""Alembic environment: raw-SQL migrations, no ORM models. The URL is set by `ue store migrate`."""
 from __future__ import annotations
 
 from alembic import context

@@ -22,20 +22,20 @@ any of it. Every score on the map is retrospective. See §8.
 ## 2. Running it
 
     cd pipeline && uv sync
-    uv run lr store seed pull <url>                # a fresh clone only: fetch the seed pack from the URL the team publishes it at (s3:// or https://), every file's sha256 checked
-    uv run lr store seed unpack data/seed/latest   # ...and rebuild the analytics store from it, every table's hash verified again
-    uv run lr prospect serve          # localhost:8787 — the evidence record and the live chat
+    uv run ue store seed pull <url>                # a fresh clone only: fetch the seed pack from the URL the team publishes it at (s3:// or https://), every file's sha256 checked
+    uv run ue store seed unpack data/seed/latest   # ...and rebuild the analytics store from it, every table's hash verified again
+    uv run ue prospect serve          # localhost:8787 — the evidence record and the live chat
     cd ../web && npm install && npm run dev    # http://localhost:5173
 
-Or, with Docker, `docker compose up -d --build` from `legacy-reader/`: the app unpacks the seed pack itself on
-first start when `pipeline/data/lr.duckdb` is missing, and serves the built site and the API on :8787.
+Or, with Docker, `docker compose up -d --build` from `ai-uranium-explorer/`: the app unpacks the seed pack itself on
+first start when `pipeline/data/ue.duckdb` is missing, and serves the built site and the API on :8787.
 
 The map, the scores, the layers and the guided walkthrough are **static files** and work with nothing running.
-Only the evidence panel and the live chat need `lr prospect serve`; when it is down both panels say so and name
+Only the evidence panel and the live chat need `ue prospect serve`; when it is down both panels say so and name
 the command, rather than erroring.
 
-For the chat on OpenAI, put a key in `legacy-reader/.env` (gitignored) and restart the service — it defaults to
-`--backend openai`. Check `uv run lr openai models` first (free) and `uv run lr openai budget` any time; spend
+For the chat on OpenAI, put a key in `ai-uranium-explorer/.env` (gitignored) and restart the service — it defaults to
+`--backend openai`. Check `uv run ue openai models` first (free) and `uv run ue openai budget` any time; spend
 is capped cumulatively on disk, default $2.00. With an OpenRouter key, `--backend auto` runs the interface
 agent on its cheap default model (§6.3).
 
@@ -249,7 +249,7 @@ density alone. When we asked, the answer was: most of it.
 ### 5.5 The colour exception
 
 Everywhere else on this map, colour encodes a data source or an extraction status. Score cells break that, so
-the exception is **declared and tested**: the layer carries `metadata["lr:score"]`, the honesty check in
+the exception is **declared and tested**: the layer carries `metadata["ue:score"]`, the honesty check in
 `composeStyle.ts` allows only score fields on such a layer, and refuses both an undeclared layer that colours
 by a computed key and a declared layer that colours by anything else. The banner changes and a legend appears.
 
@@ -323,7 +323,7 @@ while the other two did. That is why §5.6 has a criteria row at all.
 Same tools, same evidence record, same gate. A conversation is bound to one cell; selecting another starts a
 fresh one rather than carrying stale context.
 
-Since Phase 4c the agent behind the panel is the **interface agent** (PRD §8.3, `legacy_reader.interface`).
+Since Phase 4c the agent behind the panel is the **interface agent** (PRD §8.3, `uranium_explorer.interface`).
 It adds no signal: it finds, explains, records and invokes, on a cheap model, because the value ids and the
 gate carry the correctness rather than the model. Every turn goes:
 
@@ -354,25 +354,25 @@ machine with no key register), returns its `expert_id`, and from then on any cla
 cite the values minted from it, labelled as the geologist's statement rather than a measurement (B19).
 **Run analyst** hands the cell, its out-of-fold score ids, the expert ids recorded in the conversation and the
 reason to the job runner (`api.jobs`), only on an enabled cell and within a per-session budget (PRD §9.4;
-`LR_ANALYST_JOB_BUDGET_USD`, `LR_ANALYST_SESSION_BUDGET_USD`), and returns a job id; the panel shows a job
+`UE_ANALYST_JOB_BUDGET_USD`, `UE_ANALYST_SESSION_BUDGET_USD`), and returns a job id; the panel shows a job
 card that polls it, and the turn that finds it finished reports the verdict with the diff against the cell's
 stored chain without the insight (node statuses and the verdict, computed, never reasoned).
 
 The panel says all of this out loud: the route line under each answer names the kind and the plan's tools, a
 refusal shows its reason and its id, an insight its expert id and the values minted from it, and the stream
 carries `route`, `abstain`, `insight` and `job` events beside the tool calls. The model defaults to
-`z-ai/glm-5.3-flash` through OpenRouter (`LR_INTERFACE_MODEL` overrides it) under `lr prospect serve --backend
-auto`; `lr interface ask --cell … -q … --budget-usd 0.50` runs turns from the terminal under a hard ceiling,
+`z-ai/glm-5.3-flash` through OpenRouter (`UE_INTERFACE_MODEL` overrides it) under `ue prospect serve --backend
+auto`; `ue interface ask --cell … -q … --budget-usd 0.50` runs turns from the terminal under a hard ceiling,
 with an insight written only to the store named by `--insight-store`.
 
 The chat is scored on its own track of the benchmark (PRD §D.3.1, role 2), not on AUC: whether what it says
 is what the store says, and whether it declines when the store cannot answer. Two of its three tiers need no
-model to build and `lr bench interface build` writes them under `knowledge/bench/interface/`: tier 1 asks
+model to build and `ue bench interface build` writes them under `knowledge/bench/interface/`: tier 1 asks
 about 300 questions the tools answer exactly (a distance, a count, a share, a score, which criteria are
 unknown), each with its gold as value ids, plus 44 questions whose right answer is a refusal with a reason
 (not measured here, outside the grid, a value the store lacks, out of scope); tier 3 asks about 110 questions
 built from failures actually observed, the gate suite's corruptions among them, each naming its source. Both
-draw their cells from the frozen analyst benchmark under the session's leakage rules, `lr bench interface
+draw their cells from the frozen analyst benchmark under the session's leakage rules, `ue bench interface
 audit` regenerates every item from the store and compares, and neither has been run against an agent yet.
 Tier 2, the grounded-reasoning tier, needs a rubric and a rater and is not built.
 
@@ -382,7 +382,7 @@ Tier 2, the grounded-reasoning tier, needs a rubric and a rater and is not built
 or appear verbatim in text a tool returned.
 
 Asserting that is easy; the honest problem was that the gate had rejected four things and **all four were false
-positives** — a check that has only ever been wrong when it fired is an untested check. So `lr prospect
+positives** — a check that has only ever been wrong when it fired is an untested check. So `ue prospect
 gate-eval` puts real claims and deliberately corrupted ones to it — digit slipped, decimal moved, precision
 invented, conversion done by hand, a real number cited to the wrong value, a number cited to nothing — with no
 model in the loop, so it is deterministic and free.
@@ -431,8 +431,8 @@ with a parent, a duration, its attributes (the run id, the cell, the tool, how m
 cache key, cost and latency of a model call, the session id) and whether it failed. The file is the record:
 `data/runs/<run id>/spans.jsonl`, one line per span as it closes, beside the run's manifest and call log,
 and it survives any backend. The same spans are mirrored to MLflow Tracing beside the
-experiment runs, and, when `LR_OTLP_ENDPOINT` is set, exported over OTLP/HTTP to whatever backend answers
-there (Jaeger, Grafana Tempo, a hosted one with `LR_OTLP_HEADERS` for its auth header) with the same ids and
+experiment runs, and, when `UE_OTLP_ENDPOINT` is set, exported over OTLP/HTTP to whatever backend answers
+there (Jaeger, Grafana Tempo, a hosted one with `UE_OTLP_HEADERS` for its auth header) with the same ids and
 attributes, so the backend is a configuration and not a code change. Both are best-effort: batched, flushed at
 the end of the run, never in the way of a model call, and a backend that is down costs one warning.
 
@@ -454,7 +454,7 @@ memos. Three switches, off by default and each an arm, cut the cost: `skip_unmea
 write the unknown node for a criterion whose feature has no value here, `executor_batch` asks for every
 criterion's node in one call and gates them one by one, and `segment_scoped` (`v1-scoped`, `v1-scoped-batch`)
 stages each executor only its own criterion's rows of the feature, criteria, coverage and cross-check tables
-instead of the whole tables, with the gate holding its node to what it saw. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
+instead of the whole tables, with the gate holding its node to what it saw. `ue arm chain --enabled` computes them for the enabled cells; `ue arm run --arm v1` runs the same loop
 over the frozen benchmark, blinded, beside v0 and the baselines. The Eval page's benchmark table carries a
 second group of columns for the staged arms, per chain and from the run's own rows: the chains counted, the
 node gate's refusals over executor attempts, the share of chains a verifier round validated, the share the
@@ -483,8 +483,8 @@ expert-tier ids), `run_analyst` (the staged analyst over the session's cell as a
 runner: it returns a job id at once, and `job_status` reads the row back with the stages reached and, when
 done, the chain id, the verdict and the cost as a value with an id; on a server without the runner it says so).
 Resources hold data:
-`lr://handbook`, `lr://criteria`, `lr://cell/{id}/evidence`, `lr://cell/{id}/chains`, `lr://run/{id}/manifest`,
-`lr://readiness/gate`, `lr://reading/inventory`. Prompts are the six roles (`proponent`, `skeptic`,
+`ue://handbook`, `ue://criteria`, `ue://cell/{id}/evidence`, `ue://cell/{id}/chains`, `ue://run/{id}/manifest`,
+`ue://readiness/gate`, `ue://reading/inventory`. Prompts are the six roles (`proponent`, `skeptic`,
 `adjudicator`, `analyst.executor`, `analyst.verifier`, `interface.router`), each built from the text the
 in-house loops use and taking `cell_id` and `session_id`. The server never asks a client's model for anything.
 
@@ -494,19 +494,19 @@ span per call carrying the arguments' hash (never their values), the result ids,
 the run id, mirrored to MLflow Tracing when that is on and exported over OTLP when an endpoint is set (6.6).
 Handles expire after four hours and are bound to the key that opened them.
 
-**Connecting.** `lr mcp serve --stdio` is what a client launches; put this in `.mcp.json` (Claude Code) or
+**Connecting.** `ue mcp serve --stdio` is what a client launches; put this in `.mcp.json` (Claude Code) or
 `.cursor/mcp.json` (Cursor) at the project root:
 
-    {"mcpServers": {"legacy-reader": {"command": "uv", "args": ["run", "--directory", "pipeline", "lr", "mcp", "serve", "--stdio"]}}}
+    {"mcpServers": {"ai-uranium-explorer": {"command": "uv", "args": ["run", "--directory", "pipeline", "ue", "mcp", "serve", "--stdio"]}}}
 
-`lr prospect serve` mounts the same server on the API at `http://127.0.0.1:8787/mcp` (streamable HTTP), and
-`lr mcp serve --http` serves it alone on `:8788/mcp`. Local only by default: with no key register a stdio
+`ue prospect serve` mounts the same server on the API at `http://127.0.0.1:8787/mcp` (streamable HTTP), and
+`ue mcp serve --http` serves it alone on `:8788/mcp`. Local only by default: with no key register a stdio
 client and a loopback HTTP client hold every scope and any other address gets nothing.
 
-**Keys and scopes.** `LR_MCP_KEYS=<key>:<scope>[,<scope>];<key>:...` in the server's environment turns the
-register on; a key is any string without `:`, `;`, `,` or white space, and `lr mcp key --scopes read,record`
+**Keys and scopes.** `UE_MCP_KEYS=<key>:<scope>[,<scope>];<key>:...` in the server's environment turns the
+register on; a key is any string without `:`, `;`, `,` or white space, and `ue mcp key --scopes read,record`
 mints one. An HTTP client sends `Authorization: Bearer <key>`; a stdio client (which owns the process it
-launched) names its key in `LR_MCP_KEY`. A key never appears in a log, a span or a manifest: a session is
+launched) names its key in `UE_MCP_KEY`. A key never appears in a log, a span or a manifest: a session is
 recorded under the first eight hex characters of the key's hash.
 
 | Scope | What it opens |
@@ -516,7 +516,7 @@ recorded under the first eight hex characters of the key's hash.
 | `run` | `run_analyst`: starts an analyst job (6.9) and returns its id; `job_status` is a read |
 
 `tools/list` shows a key only the tools its scopes carry, in a fixed order with a `ttlMs`, so a client can
-cache it. `--public-safe` (or `LR_MCP_PUBLIC=1`) is the build for anyone outside the team: a passage's text is
+cache it. `--public-safe` (or `UE_MCP_PUBLIC=1`) is the build for anyone outside the team: a passage's text is
 withheld (its citation, page and ids stay), `hole_crosscheck` is not served, and a `nearby` layer the
 inventory marks non-redistributable is refused. Contract tests (`tests/test_mcp_*.py`) run the whole thing
 through the SDK's in-memory client with no network and no model; the few that need the live store skip
@@ -524,8 +524,8 @@ without it.
 
 ### 6.9 Keys, roles and background jobs
 
-**One register.** `LR_MCP_KEYS` is the key register for the MCP server and the API alike; the API speaks in
-roles, and a role is a set of the MCP scopes, so a key minted with `lr mcp key --scopes read,record` is a
+**One register.** `UE_MCP_KEYS` is the key register for the MCP server and the API alike; the API speaks in
+roles, and a role is a set of the MCP scopes, so a key minted with `ue mcp key --scopes read,record` is a
 geologist on the API without any second register.
 
 | Role | Scopes | What it opens |
@@ -549,19 +549,19 @@ of threads inside the API process, because DuckDB allows one read-write connecti
 process holds it; a worker beside the API could not publish a chain.
 
 The first kind is `analyst`: the staged loop of 6.7 over one **enabled** cell (any other cell is refused with
-§9.4's reason: no analyst reading exists for it), through the same `run_cells` that `lr arm chain` runs, so the
+§9.4's reason: no analyst reading exists for it), through the same `run_cells` that `ue arm chain` runs, so the
 chain lands in the agent tier and the evidence panel lists it. Arm `v1-openrouter` through the router by
 default (a vendor/model id to OpenRouter, a claude id to the CLI); `budget_usd` 0.50 by default and 2.00 at
 most, refused when under the arm's per-call ceiling (no call could then be made); a per-process budget across
-jobs (`LR_JOB_SESSION_BUDGET_USD`, default 5) that a submission may not take the total past. The result names
+jobs (`UE_JOB_SESSION_BUDGET_USD`, default 5) that a submission may not take the total past. The result names
 the chain id, the verdict, whether the store published it and the cost. In the chat, "run the analyst" is an
 intent the router recognises and turns into this job; the jobs strip polls it and the evidence tab refreshes
 when it finishes. Over MCP the same runner sits behind `run_analyst` and `job_status`.
 
 ### 6.10 The extractor as an agent — a second reader, and a queue for what they disagree on
 
-The batch reader (`lr extract`) reads one page image per call under a fixed schema; the assembler locates
-every quote on the page and the twenty validators flag what does not add up. `lr extract agent` runs the same
+The batch reader (`ue extract`) reads one page image per call under a fixed schema; the assembler locates
+every quote on the page and the twenty validators flag what does not add up. `ue extract agent` runs the same
 pieces as the loop PRD §8.2 asks for, one page at a time through five typed stages, each written to the run
 directory as it finishes so a stopped run resumes where it was:
 
@@ -581,7 +581,7 @@ directory as it finishes so a stopped run resumes where it was:
    per page and per field type) is in the run summary.
 5. **file** — the marks into `read.agreement` and the queue rows into `read.review_item`, beside the values
    and never rewriting them; a fresh reading also lands in the batch reader's results and the file's
-   assembled document, which is what `lr store rebuild` files under `read`.
+   assembled document, which is what `ue store rebuild` files under `read`.
 
 The budget is checked before every live call (`--budget-usd` is a hard stop; a usage limit or an exhausted
 budget leaves the page marked stopped and the rest pending), every stage is a span under the run's trace, and
@@ -599,18 +599,18 @@ Flash as the second family, $0.03) agreed on 93% of the 553 values either reader
 values both found; the 37 queue rows are mostly rows one reader saw and the other did not, and one page
 where the second reader took every sample number for a hole identifier.
 
-**Gold.** Tier 4 scores the reading against pages a person keyed by hand. `lr gold key <file> <page>` writes
+**Gold.** Tier 4 scores the reading against pages a person keyed by hand. `ue gold key <file> <page>` writes
 the empty skeleton under `gold/pages/` in the schema's own vocabulary, every value null; it counts for
 nothing until a person sets `status` to `keyed` and their name in `keyed_by`, and nothing in it is ever
 prefilled from a model, because a gold set that started as model output would score the model against
-itself. `lr gold score --run <id>` reports precision and recall per field type with the denominators beside
+itself. `ue gold score --run <id>` reports precision and recall per field type with the denominators beside
 every rate. No page has been keyed yet, so the score today reports zero gold pages and no number.
 
 ## 7. The other three pages
 
 - **Data** — how much of the grid each feature actually covers, every source with its licence and verification
   date, the five-column readiness gate (present, licensed, covers, servable, versioned: one row per layer, label
-  and enabled-cell file, as `lr prospect gate` last scored it), and four recorded gaps (the magnetic grid is
+  and enabled-cell file, as `ue prospect gate` last scored it), and four recorded gaps (the magnetic grid is
   now *published, not yet pulled*).
 - **Eval** — what the reading run did, what the checks caught, the fold tests from §5.6, the Phase 0 re-test,
   the model search with its registry decision and model card, the dated hindcast, the analyst benchmark with

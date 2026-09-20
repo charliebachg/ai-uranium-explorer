@@ -122,7 +122,7 @@ export function ReviewPage() {
           <div className="text-[13px] text-ink-3">
             Nothing open{file ? ` in ${file}` : ""}. Run{" "}
             <code className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-ink-2">
-              lr extract agent
+              ue extract agent
             </code>{" "}
             over read pages to compare a second family with the first.
           </div>

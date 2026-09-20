@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import export_tiles as X
+from uranium_explorer import export_tiles as X
 
 
 def fc(n: int = 3) -> dict:

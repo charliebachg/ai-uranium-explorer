@@ -12,9 +12,9 @@ import json
 
 import pytest
 
-from legacy_reader.prospect import recorded as R
-from legacy_reader.prospect import serve as S
-from legacy_reader.prospect import tools as T
+from uranium_explorer.prospect import recorded as R
+from uranium_explorer.prospect import serve as S
+from uranium_explorer.prospect import tools as T
 
 
 def val(vid: str, value, fmt: str = "m1", unit: str | None = None) -> dict:

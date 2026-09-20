@@ -391,7 +391,7 @@ function RouteLine({ route }: { route: ChatRoute }) {
  */
 function Dots() {
   return (
-    <span className="lr-dots inline-flex gap-[3px]" aria-hidden="true">
+    <span className="ue-dots inline-flex gap-[3px]" aria-hidden="true">
       <span className="size-1 rounded-full bg-ink-3" />
       <span className="size-1 rounded-full bg-ink-3" />
       <span className="size-1 rounded-full bg-ink-3" />

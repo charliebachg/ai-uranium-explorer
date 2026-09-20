@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from legacy_reader.ocr import write_words
-from legacy_reader.prospect import corpus as C
+from uranium_explorer.ocr import write_words
+from uranium_explorer.prospect import corpus as C
 
 
 def _words(page: int, lines: list[str], engine: str = "vision") -> list[dict]:

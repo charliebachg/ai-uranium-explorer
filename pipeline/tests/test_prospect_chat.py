@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.prospect import chat as C
-from legacy_reader.prospect import tools as T
+from uranium_explorer.prospect import chat as C
+from uranium_explorer.prospect import tools as T
 
 
 def val(vid: str, value, fmt: str = "m1", unit: str | None = None) -> dict:

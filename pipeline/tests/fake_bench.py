@@ -16,9 +16,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable
 
-from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse
-from legacy_reader.ids import sha256_file
-from legacy_reader.runtime.spend import BudgetExhausted, RunBudget  # noqa: F401  (re-exported for the tests)
+from uranium_explorer.backends.base import ExtractionRequest, ExtractionResponse
+from uranium_explorer.ids import sha256_file
+from uranium_explorer.runtime.spend import BudgetExhausted, RunBudget  # noqa: F401  (re-exported for the tests)
 
 VERSION = "vtest"
 
@@ -215,9 +215,9 @@ class FakeManifest:
 def install_runtime(monkeypatch, tmp_path: Path) -> SimpleNamespace:
     """Point the harness at the fake manifest, a temporary runs directory and the temporary benchmark root,
     and record MLflow runs instead of logging them. The budget and its exception are the real ones."""
-    from legacy_reader.analyst import frozen as F
-    from legacy_reader.analyst import run as RUN
-    from legacy_reader.prospect import tracking as TR
+    from uranium_explorer.analyst import frozen as F
+    from uranium_explorer.analyst import run as RUN
+    from uranium_explorer.prospect import tracking as TR
 
     FakeManifest.started = []
     FakeManifest.counter = itertools.count(1)

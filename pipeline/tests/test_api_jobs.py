@@ -14,11 +14,11 @@ from typing import Any
 
 import pytest
 
-from legacy_reader.analyst import arms as A
-from legacy_reader.analyst import chains as CH
-from legacy_reader.analyst.session import Session
-from legacy_reader.api import jobs as J
-from legacy_reader.store import connect, tier_audit
+from uranium_explorer.analyst import arms as A
+from uranium_explorer.analyst import chains as CH
+from uranium_explorer.analyst.session import Session
+from uranium_explorer.api import jobs as J
+from uranium_explorer.store import connect, tier_audit
 
 from fake_bench import install_runtime
 from fake_loop_world import CELL as WORLD_CELL, LoopBackend, LoopWorld, loop_registry
@@ -189,7 +189,7 @@ def analyst_runner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """A runner whose only kind is the analyst over the fake loop world, on a temporary store in the serving
     process's one-connection mode (the chain run writes while the row is rewritten)."""
     rt = install_runtime(monkeypatch, tmp_path)
-    monkeypatch.setenv("LR_STORE_RW", "1")
+    monkeypatch.setenv("UE_STORE_RW", "1")
     db = tmp_path / "chains.duckdb"
     connect(db).close()
     # a cent a call: the default arm's per-call ceiling ($0.30) plus thirteen calls fit the default budget
@@ -240,7 +240,7 @@ def test_an_analyst_job_publishes_the_chain_the_way_lr_arm_chain_does_and_report
         and "stage:verify" in stages and "stage:decide" in stages, stages
     assert "stage:gate" not in stages, "a gate attempt is not a stage a reader waits for"
     assert any(e["event"] == "log" and f"chains: arm {J.DEFAULT_ARM}" in e["text"] for e in done["progress"])
-    # the chain is in the agent tier under the job's run, exactly as `lr arm chain` would have put it
+    # the chain is in the agent tier under the job's run, exactly as `ue arm chain` would have put it
     stored = CH.chains_for_cell(connect(db, read_only=True), WORLD_CELL)
     assert [c["chain_id"] for c in stored] == [res["chain_id"]] and stored[0]["published"] is True
     assert stored[0]["arm"] == J.DEFAULT_ARM and stored[0]["purpose"] == "dashboard"
@@ -300,10 +300,10 @@ def _job_columns(sql: str) -> list[tuple[str, str]]:
 def test_migration_0006_declares_agent_job_and_requested_by_as_schema_sql_does(monkeypatch: pytest.MonkeyPatch) -> None:
     import importlib.util
 
-    from legacy_reader.store import SCHEMA_SQL
-    from legacy_reader.store import pg as PG
+    from uranium_explorer.store import SCHEMA_SQL
+    from uranium_explorer.store import pg as PG
 
-    spec = importlib.util.spec_from_file_location("lr_migration_0006", MIGRATION)
+    spec = importlib.util.spec_from_file_location("ue_migration_0006", MIGRATION)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert mod.revision == "0006" and mod.down_revision == "0005"

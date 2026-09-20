@@ -1,5 +1,5 @@
 """The MCP server over the live analytics store, read-only: the real tools on real cells through a stock
-client. Gated on LR_REAL_DATA=1 like the other real-data test, and skipped cleanly when the store is absent
+client. Gated on UE_REAL_DATA=1 like the other real-data test, and skipped cleanly when the store is absent
 or held by another process. Nothing here writes: `record_insight` is not called, and a session's run
 directory goes under the test's temporary path."""
 
@@ -14,23 +14,23 @@ import duckdb
 import pytest
 from mcp import Client
 
-from legacy_reader import store as ST
-from legacy_reader.mcp import contract as C
-from legacy_reader.mcp import holes as HOLES
-from legacy_reader.mcp import server as SV
+from uranium_explorer import store as ST
+from uranium_explorer.mcp import contract as C
+from uranium_explorer.mcp import holes as HOLES
+from uranium_explorer.mcp import server as SV
 
 from mcp_world import numbers_outside_vals
 
 pytestmark = pytest.mark.real_data
 
-#: the dashboard's default cell (`lr prospect record-chat`), an enabled cell with files read
+#: the dashboard's default cell (`ue prospect record-chat`), an enabled cell with files read
 CELL = "0201_0072"
 
 
 @pytest.fixture
 def live() -> Path:
-    if os.environ.get("LR_REAL_DATA") != "1":
-        pytest.skip("LR_REAL_DATA=1 to run against the live store")
+    if os.environ.get("UE_REAL_DATA") != "1":
+        pytest.skip("UE_REAL_DATA=1 to run against the live store")
     db = ST.db_path()
     if not db.is_file():
         pytest.skip(f"no live store at {db}")
@@ -47,14 +47,14 @@ def live() -> Path:
 
 
 def run(tmp_path: Path, scenario: Callable[[Client], Awaitable[None]]) -> None:
-    lr = SV.build(environ={}, runs_dir=tmp_path / "runs")
+    ue = SV.build(environ={}, runs_dir=tmp_path / "runs")
 
     async def main() -> None:
         try:
-            async with Client(lr.server) as client:
+            async with Client(ue.server) as client:
                 await scenario(client)
         finally:
-            lr.close()
+            ue.close()
 
     anyio.run(main)
 

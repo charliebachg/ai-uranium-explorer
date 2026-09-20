@@ -3,7 +3,7 @@ import { z } from "zod";
 import { dataUrl } from "./loader";
 
 /**
- * Vector tiles built by `lr export-tiles`: one PMTiles archive per evidence source, no feature dropped at any
+ * Vector tiles built by `ue export-tiles`: one PMTiles archive per evidence source, no feature dropped at any
  * zoom, the layer inside named after the map's source id. The manifest hashes each archive beside the GeoJSON
  * it came from. When the manifest is absent (a fresh clone, or a static build without tippecanoe) the map
  * falls back to fetching the GeoJSON itself, so nothing here is required for the app to work.

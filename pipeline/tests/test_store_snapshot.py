@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.store import connect
-from legacy_reader.store import snapshot as SN
+from uranium_explorer.store import connect
+from uranium_explorer.store import snapshot as SN
 
 
 @pytest.fixture
@@ -96,8 +96,8 @@ def test_lineage_on_the_real_store_names_every_break_or_none() -> None:
 def test_a_snapshot_records_feature_quantiles_and_drift_compares_them(store: Path) -> None:
     con = connect(store)
     ins = ("insert into derived.cell_feature (cell_id, feature_key, value, n_obs, nearest_m, from_tier, op, tool, computed_at) values ")
-    con.execute(ins + "('a', 'd_fault_m', 100, 1, 100, 'native', 'distance', 'lr', 't'), ('b', 'd_fault_m', 200, 1, 200, 'native', 'distance', 'lr', 't'), "
-                "('c', 'd_fault_m', 300, 1, 300, 'native', 'distance', 'lr', 't'), ('a', 'flat', 1, 1, null, 'native', 'count', 'lr', 't')")
+    con.execute(ins + "('a', 'd_fault_m', 100, 1, 100, 'native', 'distance', 'ue', 't'), ('b', 'd_fault_m', 200, 1, 200, 'native', 'distance', 'ue', 't'), "
+                "('c', 'd_fault_m', 300, 1, 300, 'native', 'distance', 'ue', 't'), ('a', 'flat', 1, 1, null, 'native', 'count', 'ue', 't')")
     con.close()
     m = SN.take(log=lambda *a: None, path=store)
     assert m["features"]["d_fault_m"]["n"] == 3 and m["features"]["d_fault_m"]["q"][2] == 200.0
@@ -107,7 +107,7 @@ def test_a_snapshot_records_feature_quantiles_and_drift_compares_them(store: Pat
     # the median moves by more than a quarter of the interquartile range, and a feature appears
     con = connect(store)
     con.execute("update derived.cell_feature set value = value + 80 where feature_key = 'd_fault_m'")
-    con.execute(ins + "('a', 'new_one', 5, 1, null, 'native', 'count', 'lr', 't')")
+    con.execute(ins + "('a', 'new_one', 5, 1, null, 'native', 'count', 'ue', 't')")
     con.close()
     out = SN.drift(m["store_sha256"][:12], path=store, log=lambda *a: None)
     assert set(out["drifted"]) == {"d_fault_m", "new_one"}

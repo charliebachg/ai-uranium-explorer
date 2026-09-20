@@ -12,7 +12,7 @@ import { DEFAULT_CAMERA, useStore } from "@/state/store";
  */
 
 const GLOBE_START = { center: [-96, 46] as [number, number], zoom: 2.2, bearing: 0, pitch: 0 };
-const SEEN_KEY = "lr:intro-seen";
+const SEEN_KEY = "ue:intro-seen";
 
 export function reducedMotion(): boolean {
   if (typeof window === "undefined") return true;

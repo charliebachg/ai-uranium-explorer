@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.analyst import prompts as PR
-from legacy_reader.analyst import v0 as V0
-from legacy_reader.analyst import wire as W
-from legacy_reader.analyst.v0 import VERDICTS, place_names_in
-from legacy_reader.prospect.memo import CRITERIA_FILE, HANDBOOK
-from legacy_reader.prospect.tools import TOOL_HELP
+from uranium_explorer.analyst import prompts as PR
+from uranium_explorer.analyst import v0 as V0
+from uranium_explorer.analyst import wire as W
+from uranium_explorer.analyst.v0 import VERDICTS, place_names_in
+from uranium_explorer.prospect.memo import CRITERIA_FILE, HANDBOOK
+from uranium_explorer.prospect.tools import TOOL_HELP
 
 COND, FAULT = "b:b01:cell:d_conductor_m", "b:b01:cell:d_fault_m"
 SEGMENT = W.Segment(segment_id="s01", kind="criterion", criterion="conductor_proximity",

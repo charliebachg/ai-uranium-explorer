@@ -7,9 +7,9 @@ import dataclasses
 import numpy as np
 import pandas as pd
 
-from legacy_reader.bench import sample as SM
-from legacy_reader.bench import spec as S
-from legacy_reader.prospect import headline as H
+from uranium_explorer.bench import sample as SM
+from uranium_explorer.bench import spec as S
+from uranium_explorer.prospect import headline as H
 from bench_store import bench_frame
 
 

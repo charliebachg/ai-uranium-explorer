@@ -16,8 +16,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from legacy_reader.prospect.tools import ToolResult
-from legacy_reader.values import stat
+from uranium_explorer.prospect.tools import ToolResult
+from uranium_explorer.values import stat
 
 #: the cell the tests open sessions on: a deposit in the synthetic store, with file 64L05-0060 placed on it
 CELL = "0000_0000"

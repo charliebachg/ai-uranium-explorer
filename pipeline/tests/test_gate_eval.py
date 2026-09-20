@@ -1,6 +1,6 @@
 """The gate is the load-bearing claim of this project, so it gets an adversarial suite of its own.
 
-These tests are the regression for what `lr prospect gate-eval` measured: the context allowance used to be a
+These tests are the regression for what `ue prospect gate-eval` measured: the context allowance used to be a
 substring test over the whole tool payload, which let a real number be cited to the wrong value and pass. They
 also pin the four cases the allowance was added for in the first place, so tightening it cannot quietly
 reintroduce the false positives it was meant to remove.
@@ -12,8 +12,8 @@ import random
 
 import pytest
 
-from legacy_reader.prospect.gate_eval import CORRUPTIONS, Case, Pool, _forms, _say, cases_for
-from legacy_reader.prospect.memo import check_claims, quotable
+from uranium_explorer.prospect.gate_eval import CORRUPTIONS, Case, Pool, _forms, _say, cases_for
+from uranium_explorer.prospect.memo import check_claims, quotable
 
 VALUES = {
     "d_conductor": {"id": "d_conductor", "kind": "stat", "value": 1500.0, "fmt": "m1", "unit": "m",
@@ -140,9 +140,9 @@ def test_every_number_a_tool_shows_the_model_is_citable(tool: str) -> None:
     back. The rule is not "most numbers are values" — it is that showing a number and refusing to let it be
     cited is a bug in the tool, not in the model.
     """
-    from legacy_reader.prospect import tools as T
-    from legacy_reader.prospect.memo import BARE_OK, _formatted
-    from legacy_reader.store import connect
+    from uranium_explorer.prospect import tools as T
+    from uranium_explorer.prospect.memo import BARE_OK, _formatted
+    from uranium_explorer.store import connect
 
     con = connect(read_only=True)
     try:

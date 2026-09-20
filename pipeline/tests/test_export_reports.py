@@ -6,13 +6,13 @@ import json
 
 import pytest
 
-from legacy_reader import contract_check, export_reports
-from legacy_reader.assemble import assemble_file
-from legacy_reader.crosscheck import build_provincial_lith, crosscheck_file
-from legacy_reader.ocr import read_words
-from legacy_reader.position import stage_position, transform_hole
-from legacy_reader.validators import apply_findings, build_context, run_validators
-from legacy_reader.validators.checks import geometric_row_counts
+from uranium_explorer import contract_check, export_reports
+from uranium_explorer.assemble import assemble_file
+from uranium_explorer.crosscheck import build_provincial_lith, crosscheck_file
+from uranium_explorer.ocr import read_words
+from uranium_explorer.position import stage_position, transform_hole
+from uranium_explorer.validators import apply_findings, build_context, run_validators
+from uranium_explorer.validators.checks import geometric_row_counts
 
 from fake_page import FILE_NUM, PAGE_NO, PDF_SHA, extract_row
 
@@ -28,7 +28,7 @@ VALUE_ID_KEYS = {
 def pipeline_doc():
     """One real page through assemble -> validate -> crs -> crosscheck, all in memory."""
     if not [w for w in read_words(PDF_SHA) if w["page_no"] == PAGE_NO]:
-        pytest.skip("OCR words missing; run `lr ocr`")
+        pytest.skip("OCR words missing; run `ue ocr`")
     row = extract_row()
     doc = assemble_file(FILE_NUM, [row], {row["page_id"]: {"width_px": 1700, "height_px": 2200}},
                         log=lambda *a: None)
@@ -36,7 +36,7 @@ def pipeline_doc():
     ctx["geometric_rows"] = geometric_row_counts(doc)
     apply_findings(doc, run_validators(doc, ctx))
 
-    from legacy_reader import crs
+    from uranium_explorer import crs
 
     try:
         tr = crs.Nad27ToNad83()
@@ -48,7 +48,7 @@ def pipeline_doc():
         if h.get("lonlat"):
             h["lon_vid"] = f"d:{FILE_NUM}:test_lon"
             h["lat_vid"] = f"d:{FILE_NUM}:test_lat"
-            from legacy_reader.values import derived
+            from uranium_explorer.values import derived
 
             positions["values"][h["lon_vid"]] = derived(h["lon_vid"], h["lonlat"][0], "ratio3",
                                                         "provincial_position", [], unit="deg")

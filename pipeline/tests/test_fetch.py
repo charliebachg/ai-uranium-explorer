@@ -8,7 +8,7 @@ import json
 import httpx
 import pytest
 
-from legacy_reader.fetch import FetchError, Fetcher, FetchItem, documents_by_file, fetch_parallel, plan_paths
+from uranium_explorer.fetch import FetchError, Fetcher, FetchItem, documents_by_file, fetch_parallel, plan_paths
 
 BODY = bytes(range(256)) * 400  # 102,400 bytes
 MD5 = hashlib.md5(BODY).hexdigest()

@@ -19,5 +19,5 @@ export function maplibreVendor(): Plugin {
       copyFileSync(resolve(dist, f), resolve(target, f));
     }
   };
-  return { name: "legacy-reader:maplibre-vendor", configResolved: copy };
+  return { name: "ai-uranium-explorer:maplibre-vendor", configResolved: copy };
 }

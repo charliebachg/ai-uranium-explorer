@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.analyst import arms as A
-from legacy_reader.analyst import v0 as V0
-from legacy_reader.prospect.memo import CRITERIA_FILE, HANDBOOK
+from uranium_explorer.analyst import arms as A
+from uranium_explorer.analyst import v0 as V0
+from uranium_explorer.prospect.memo import CRITERIA_FILE, HANDBOOK
 
 from fake_bench import AnalystBackend, bad_answer, good_answer, ids_for, make_pack
 

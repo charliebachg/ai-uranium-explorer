@@ -1,6 +1,6 @@
 """Auth and roles on the API (PRD §A.2), and the job routes over HTTP.
 
-One key register for the API and the MCP server: a fake `LR_MCP_KEYS` here, never a real key. The chat backend
+One key register for the API and the MCP server: a fake `UE_MCP_KEYS` here, never a real key. The chat backend
 is the scripted fake of `test_api`, the tools are stubbed, and the job kind is a fake that finishes at once,
 so nothing here calls a model or touches the live store."""
 
@@ -13,14 +13,14 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from legacy_reader.api import app as A
-from legacy_reader.api import auth as AUTH
-from legacy_reader.api import jobs as J
-from legacy_reader.api import persist
-from legacy_reader.mcp.auth import Keyring, Principal, parse_keys
-from legacy_reader.prospect import serve as S
-from legacy_reader.prospect import tools as T
-from legacy_reader.values import stat
+from uranium_explorer.api import app as A
+from uranium_explorer.api import auth as AUTH
+from uranium_explorer.api import jobs as J
+from uranium_explorer.api import persist
+from uranium_explorer.mcp.auth import Keyring, Principal, parse_keys
+from uranium_explorer.prospect import serve as S
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.values import stat
 
 from test_api import LOOPBACK, FakeBackend
 
@@ -61,7 +61,7 @@ def stubs(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [])
     monkeypatch.setattr(S, "evidence", lambda cell_id: {"cell_id": cell_id, "parts": {}, "values": {}, "memos": []})
     # the serving process runs in one connection mode; a job worker writes while a request reads
-    monkeypatch.setenv("LR_STORE_RW", "1")
+    monkeypatch.setenv("UE_STORE_RW", "1")
 
 
 def make_client(tmp_path: Path, register: str | None, *, client: tuple[str, int] = LOOPBACK,
@@ -103,7 +103,7 @@ def test_without_a_register_a_loopback_client_is_local_with_every_role_and_anoth
     assert r.status_code == 200 and persist.load_conversation(r.json()["conversation_id"], local.db_path)["requested_by"] == "local"
     remote = make_client(tmp_path / "remote", None, client=("10.0.0.7", 4000))
     r = remote.get("/api/whoami")
-    assert r.status_code == 401 and "LR_MCP_KEYS is not configured" in r.json()["detail"] and "10.0.0.7" in r.json()["detail"]
+    assert r.status_code == 401 and "UE_MCP_KEYS is not configured" in r.json()["detail"] and "10.0.0.7" in r.json()["detail"]
     assert remote.post("/api/chat", json={"cell_id": CELL, "question": "q"}).status_code == 401
     assert remote.get("/api/health").status_code == 200, "health and the reads of the record need no principal"
     assert remote.get(f"/api/cell/{CELL}").status_code == 200

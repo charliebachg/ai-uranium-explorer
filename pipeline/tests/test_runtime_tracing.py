@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse
-from legacy_reader.backends.cache import CachedBackend
-from legacy_reader.prospect import tools as T
-from legacy_reader.runtime import tracing as TRC
-from legacy_reader.runtime.tracing import current_trace_id, read_spans, set_attrs, span, trace
+from uranium_explorer.backends.base import ExtractionRequest, ExtractionResponse
+from uranium_explorer.backends.cache import CachedBackend
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.runtime import tracing as TRC
+from uranium_explorer.runtime.tracing import current_trace_id, read_spans, set_attrs, span, trace
 
 
 def by_name(run_dir: Path) -> dict[str, dict]:
@@ -134,10 +134,10 @@ def test_a_tool_call_is_a_tool_span_with_its_name_argument_keys_and_value_count(
 
 def test_spans_are_mirrored_to_mlflow_tracing_when_it_is_there(tmp_path: Path, monkeypatch) -> None:
     mlflow = pytest.importorskip("mlflow")
-    from legacy_reader.prospect import tracking as TR
+    from uranium_explorer.prospect import tracking as TR
 
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "1")
-    monkeypatch.setenv("LR_MLFLOW_URI", f"sqlite:///{tmp_path / 'mlflow.db'}")
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "1")
+    monkeypatch.setenv("UE_MLFLOW_URI", f"sqlite:///{tmp_path / 'mlflow.db'}")
     monkeypatch.setattr(TR, "artifact_dir", lambda: tmp_path / "mlruns")
     monkeypatch.setattr(TRC, "_mlflow_warned", False)
     with trace("R6", "memo", run_dir=tmp_path / "R6", cell_id="0123_0045") as tr:
@@ -162,18 +162,18 @@ def test_spans_are_mirrored_to_mlflow_tracing_when_it_is_there(tmp_path: Path, m
 
 
 def test_the_mirror_is_off_when_asked_and_a_broken_mirror_never_raises(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "0")
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "0")
     with trace("R7", "chat", run_dir=tmp_path / "R7") as tr:
         assert tr.mlflow is None
     assert by_name(tmp_path / "R7")["R7"]["status"] == "ok"
 
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "1")
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "1")
     monkeypatch.setattr(TRC, "_mlflow_warned", False)
 
     def broken():
         raise RuntimeError("no tracker today")
 
-    monkeypatch.setattr("legacy_reader.prospect.tracking._mlflow", broken)
+    monkeypatch.setattr("uranium_explorer.prospect.tracking._mlflow", broken)
     logged: list[str] = []
     with trace("R8", "chat", run_dir=tmp_path / "R8", log=logged.append) as tr:
         assert tr.mlflow is None

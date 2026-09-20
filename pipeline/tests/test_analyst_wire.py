@@ -8,10 +8,10 @@ import re
 
 import pytest
 
-from legacy_reader.analyst import wire as W
-from legacy_reader.analyst.v0 import ABSTAIN, POSITIVE, VERDICTS
-from legacy_reader.prospect.memo import BARE_OK, numbers_in
-from legacy_reader.prospect.tools import TOOL_HELP
+from uranium_explorer.analyst import wire as W
+from uranium_explorer.analyst.v0 import ABSTAIN, POSITIVE, VERDICTS
+from uranium_explorer.prospect.memo import BARE_OK, numbers_in
+from uranium_explorer.prospect.tools import TOOL_HELP
 
 COND, FAULT, CRIT = "b:b01:cell:d_conductor_m", "b:b01:cell:d_fault_m", "b:b01:crit:conductor_proximity"
 
@@ -303,7 +303,7 @@ def test_parse_id_reads_both_schemes_and_the_grid_wide_kinds() -> None:
 def test_a_verifier_verdict_with_prose_over_the_limit_is_clipped_not_refused() -> None:
     """A provider that ignores a schema's maxLength once returned 672 characters of feedback and the whole
     chain was voided for it; the prose is guidance, so it is cut and the verdict stands."""
-    from legacy_reader.analyst.wire import FEEDBACK_MAX, RATIONALE_MAX, VerifierVerdict
+    from uranium_explorer.analyst.wire import FEEDBACK_MAX, RATIONALE_MAX, VerifierVerdict
 
     v = VerifierVerdict.from_model({"valid": False, "faulty": [{"node_id": "n02", "reason": "cover"}], "feedback": "x" * 900,
                                     "candidate_label": "insufficient", "candidate_probability": 0.3, "rationale": "y" * 500}, round=0)

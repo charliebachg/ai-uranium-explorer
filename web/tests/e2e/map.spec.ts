@@ -17,9 +17,9 @@ test("map loads real provincial data, hover and selection work", async ({ page }
     () => {
       const m = (
         window as unknown as {
-          __lr?: { map?: { isSourceLoaded: (s: string) => boolean; loaded: () => boolean } };
+          __ue?: { map?: { isSourceLoaded: (s: string) => boolean; loaded: () => boolean } };
         }
-      ).__lr?.map;
+      ).__ue?.map;
       try {
         return !!m && m.isSourceLoaded("compilation") && m.isSourceLoaded("basin");
       } catch {
@@ -34,7 +34,7 @@ test("map loads real provincial data, hover and selection work", async ({ page }
 
   // hover the densest visible compilation collar near the centre of the viewport
   const target = await page.evaluate(() => {
-    const m = (window as unknown as { __lr: { map: any } }).__lr.map;
+    const m = (window as unknown as { __ue: { map: any } }).__ue.map;
     const feats = m.queryRenderedFeatures({ layers: ["compilation-dot"] });
     const w = m.getCanvas().clientWidth;
     const h = m.getCanvas().clientHeight;

@@ -11,14 +11,14 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from legacy_reader.bench.interface import build as B
-from legacy_reader.bench.interface import items as I
-from legacy_reader.bench.interface import spec as S
-from legacy_reader.bench.interface import tier1, tier3
-from legacy_reader.bench.interface.reader import NO_SUCH_CELL, StoreReader
-from legacy_reader.bench.spec import SpecError
-from legacy_reader.prospect.tools import ToolResult
-from legacy_reader.values import stat
+from uranium_explorer.bench.interface import build as B
+from uranium_explorer.bench.interface import items as I
+from uranium_explorer.bench.interface import spec as S
+from uranium_explorer.bench.interface import tier1, tier3
+from uranium_explorer.bench.interface.reader import NO_SUCH_CELL, StoreReader
+from uranium_explorer.bench.spec import SpecError
+from uranium_explorer.prospect.tools import ToolResult
+from uranium_explorer.values import stat
 from fake_bench import CELLS, make_bench
 
 SPEC = """
@@ -515,7 +515,7 @@ def test_store_reader_applies_the_mask_and_serves_the_fold_out_of_fold(world) ->
 
 
 def test_shipped_v1_audits_clean_against_the_store() -> None:
-    from legacy_reader.store import db_path
+    from uranium_explorer.store import db_path
 
     if not db_path().is_file():
         pytest.skip("no store to audit against")

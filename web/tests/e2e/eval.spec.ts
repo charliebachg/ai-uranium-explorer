@@ -49,7 +49,7 @@ test("the analyst benchmark table is on the page when the export carries it", as
   await page.goto("/eval");
   const evalPage = page.locator('[data-strict="eval"]');
   await expect(evalPage.locator('[data-testid="hindcast-table"]')).toBeVisible();
-  // the block is absent, not empty, until `lr bench table` has run and the export has been rebuilt; the
+  // the block is absent, not empty, until `ue bench table` has run and the export has been rebuilt; the
   // committed export may predate it, so the table is asserted only when the data carries it
   const carried = await page.evaluate(async () => {
     const res = await fetch("/data/prospect/readiness.json");

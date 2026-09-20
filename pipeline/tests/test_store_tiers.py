@@ -6,7 +6,7 @@ import duckdb
 import pandas as pd
 import pytest
 
-from legacy_reader.store import (
+from uranium_explorer.store import (
     TIER_BY_SCHEMA,
     TierError,
     apply_schema,

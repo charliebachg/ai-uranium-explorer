@@ -1,6 +1,6 @@
 """worktext parsing, on the real strings from the provincial layers."""
 
-from legacy_reader.worktext import first_year, join_work_fields, parse_work_text
+from uranium_explorer.worktext import first_year, join_work_fields, parse_work_text
 
 MAW02110 = ("Drilling: 27 DH (# SB-10 to SB-16, SP-03 to SP-12, LS-87 to LS-96), 5339.3 m. Analysis: 623 "
             "lithogeochemical assay, 1691 spectral clay analysis, 49 core samples studied for resistivity and "

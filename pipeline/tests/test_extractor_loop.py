@@ -13,14 +13,14 @@ from typing import Any
 
 import pytest
 
-from legacy_reader import assemble as ASM
-from legacy_reader import extract as ex
-from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse
-from legacy_reader.extractor import loop as L
-from legacy_reader.extractor import queue as Q
-from legacy_reader.extractor.states import Stage, read_states
-from legacy_reader.runtime.spend import BudgetExhausted
-from legacy_reader.store import connect
+from uranium_explorer import assemble as ASM
+from uranium_explorer import extract as ex
+from uranium_explorer.backends.base import ExtractionRequest, ExtractionResponse
+from uranium_explorer.extractor import loop as L
+from uranium_explorer.extractor import queue as Q
+from uranium_explorer.extractor.states import Stage, read_states
+from uranium_explorer.runtime.spend import BudgetExhausted
+from uranium_explorer.store import connect
 
 from fake_page import FILE_NUM, PAGE_ID, PAGE_NO, PDF_SHA, extract_row, page_result
 
@@ -216,8 +216,8 @@ def test_filing_the_same_comparison_twice_adds_nothing(world: dict[str, Any], tm
 
 
 def test_a_page_already_read_is_carried_in_and_the_reader_is_never_called(world: dict[str, Any], tmp_path: Path) -> None:
-    from legacy_reader.prompts import prompt_version
-    from legacy_reader import wire
+    from uranium_explorer.prompts import prompt_version
+    from uranium_explorer import wire
 
     prior = extract_row()
     prior.update(prompt_version=prompt_version(), schema_version=wire.SCHEMA_VERSION, run_id="earlier-opus-run",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from legacy_reader.prospect import criteria as C
+from uranium_explorer.prospect import criteria as C
 
 REAL = C.load()
 

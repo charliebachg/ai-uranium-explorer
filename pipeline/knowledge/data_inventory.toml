@@ -234,7 +234,7 @@ caveats = [
   "Report 02 records that the magnetic signature is contested: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign.",
 ]
 
-# ---------------------------------------------------------------- already pulled by `lr index pull`
+# ---------------------------------------------------------------- already pulled by `ue index pull`
 
 [[source]]
 key = "compilation"

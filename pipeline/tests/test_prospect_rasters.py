@@ -9,7 +9,7 @@ import pytest
 from affine import Affine
 from rasterio.crs import CRS
 
-from legacy_reader.prospect import rasters as R
+from uranium_explorer.prospect import rasters as R
 
 EPSG = 2957
 

@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from legacy_reader.ids import sha256_file
-from legacy_reader.paths import PATHS
+from uranium_explorer.ids import sha256_file
+from uranium_explorer.paths import PATHS
 
 
 @pytest.fixture(autouse=True)
@@ -20,13 +20,13 @@ def prospect_sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleN
     The snapshot module's store path and snapshot directory, and the tracking module's output directory, point
     into the test's temporary directory; `make_store()` creates an empty store at that path for a test that
     wants a snapshot to name."""
-    from legacy_reader.prospect import tracking as TR
-    from legacy_reader.runtime import spend as SP
-    from legacy_reader.store import connect, write_meta
-    from legacy_reader.store import snapshot as SN
+    from uranium_explorer.prospect import tracking as TR
+    from uranium_explorer.runtime import spend as SP
+    from uranium_explorer.store import connect, write_meta
+    from uranium_explorer.store import snapshot as SN
 
     root = tmp_path / "sandbox"
-    db, snaps, out = root / "lr.duckdb", root / "snapshots", root / "out"
+    db, snaps, out = root / "ue.duckdb", root / "snapshots", root / "out"
     snaps.mkdir(parents=True)
     monkeypatch.setattr(SN, "db_path", lambda: db)
     monkeypatch.setattr(SN, "snapshots_dir", lambda: snaps)
@@ -35,8 +35,8 @@ def prospect_sandbox(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleN
     # the spend ledger and its ceilings are the sandbox's, and no test mirrors spans to the real MLflow store
     monkeypatch.setattr(SP, "ledger_path", lambda: root / "spend.jsonl")
     monkeypatch.setattr(SP, "legacy_ledger_path", lambda: root / "openai_spend.jsonl")
-    monkeypatch.delenv("LR_MAX_SPEND_USD", raising=False)
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "0")
+    monkeypatch.delenv("UE_MAX_SPEND_USD", raising=False)
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "0")
 
     def make_store() -> Path:
         con = connect(db)
@@ -71,7 +71,7 @@ def probe_pdfs() -> dict[str, Path]:
 
 @pytest.fixture(scope="session")
 def probes(probe_pdfs: dict[str, Path]) -> dict[str, dict]:
-    from legacy_reader.pdfprobe import probe_pdf
+    from uranium_explorer.pdfprobe import probe_pdf
 
     return {n: probe_pdf(p, sha256_file(p)) for n, p in probe_pdfs.items()}
 
@@ -79,7 +79,7 @@ def probes(probe_pdfs: dict[str, Path]) -> dict[str, dict]:
 @pytest.fixture(scope="session")
 def rendered(tmp_path_factory, probe_pdfs, probes) -> dict[tuple[str, int], dict]:
     """A few pages of each probe PDF, rendered at 200 dpi into a session temp directory."""
-    from legacy_reader.render import render_pdf
+    from uranium_explorer.render import render_pdf
 
     root = tmp_path_factory.mktemp("pages")
     wanted = {"drilllog": (1, 6), "modern": (1, 3), "wollaston": (3,)}
@@ -97,7 +97,7 @@ def rendered(tmp_path_factory, probe_pdfs, probes) -> dict[tuple[str, int], dict
 
 @pytest.fixture(scope="session")
 def ocred(tmp_path_factory, rendered) -> dict[tuple[str, int], dict]:
-    from legacy_reader.ocr import cache_path_for, ocr_image, vision_available
+    from uranium_explorer.ocr import cache_path_for, ocr_image, vision_available
 
     if not vision_available():
         pytest.skip("Apple Vision (ocrmac) not available")

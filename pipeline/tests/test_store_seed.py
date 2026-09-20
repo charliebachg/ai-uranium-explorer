@@ -1,7 +1,7 @@
 """The seed pack: a store becomes Parquet and comes back the same; the public pack holds only what the inventory
 says may be redistributed; a tampered file or manifest is refused; the same store always packs to the same
 manifest. The real-data regression at the end runs the quick model search against the live store and is
-gated on LR_REAL_DATA=1, because it takes a minute and the suite must stay fast."""
+gated on UE_REAL_DATA=1, because it takes a minute and the suite must stay fast."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from pathlib import Path
 import duckdb
 import pytest
 
-from legacy_reader.store import connect, db_path, tier_audit, write_meta
-from legacy_reader.store import seed as SEED
+from uranium_explorer.store import connect, db_path, tier_audit, write_meta
+from uranium_explorer.store import seed as SEED
 
 LAYER = ("insert into native.layer (layer_key, title, service_url, layer_id, where_clause, out_sr, record_count, "
          "payload_sha256, licence, licence_url, redistributable, retrieved_at, bears_on, role, notes) values ")
@@ -67,7 +67,7 @@ def store(tmp_path: Path) -> Path:
                 "duration_s, created_at, published) values ('m1', '0001_0001', 'skeptic', 'insufficient', 'test', 'v1', 'r1', "
                 "null, 0.0, 0.0, 't', true)")
     con.execute("insert into agent.memo_claim values ('m1', 1, 'claim', '[\"v1\"]', 'agent')")
-    # what `lr store rebuild` does for the stage tables schema.sql does not declare: a plain table with a tier column
+    # what `ue store rebuild` does for the stage tables schema.sql does not declare: a plain table with a tier column
     con.execute("create table read.page as select '74H0001' as file_num, 'p1' as page_id, 'd' as pdf_sha256, 3 as page, "
                 "'table' as page_kind, 'read' as tier")
     # a v1 leftover outside the four tiers: not part of the store contract, never packed
@@ -178,11 +178,11 @@ def test_pack_then_unpack_round_trip_keeps_every_row_and_the_tiers(store: Path, 
     assert set(m["excluded"]) == {"main.pages"} and "shape" not in m["excluded"]["main.pages"]
     before.pop("main.pages")
     assert set(m["tables"]) == set(before), "the private pack carries every table the store contract covers"
-    rebuilt = tmp_path / "rebuilt" / "lr.duckdb"
+    rebuilt = tmp_path / "rebuilt" / "ue.duckdb"
     side = SEED.unpack(Path(m["dir"]), into=rebuilt, log=lambda *a: None)
     assert _counts(rebuilt) == before
     assert side["pack_sha256"] == m["pack_sha256"] and side["source_store_sha256"] == m["store_sha256"]
-    assert json.loads(rebuilt.with_name("lr.duckdb.seed.json").read_text())["tables"] == before
+    assert json.loads(rebuilt.with_name("ue.duckdb.seed.json").read_text())["tables"] == before
     con = duckdb.connect(str(rebuilt), read_only=True)
     try:
         assert tier_audit(con) == []
@@ -225,7 +225,7 @@ def test_a_tampered_parquet_is_refused_and_leaves_no_store(store: Path, tmp_path
     f.write_bytes(bytes(raw))
     with pytest.raises(SEED.SeedError, match="derived.cell: sha256"):
         SEED.verify(Path(m["dir"]), log=lambda *a: None)
-    target = tmp_path / "x" / "lr.duckdb"
+    target = tmp_path / "x" / "ue.duckdb"
     with pytest.raises(SEED.SeedError):
         SEED.unpack(Path(m["dir"]), into=target, log=lambda *a: None)
     assert not target.exists() and not list(target.parent.glob("*")) if target.parent.exists() else True
@@ -264,15 +264,15 @@ def test_unpack_refuses_to_overwrite_a_store(store: Path, tmp_path: Path) -> Non
 
 def test_ensure_unpacks_only_when_the_store_is_missing(store: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
-    target = tmp_path / "fresh" / "lr.duckdb"
-    monkeypatch.setenv("LR_SEED_DIR", str(tmp_path / "seed" / "latest"))
+    target = tmp_path / "fresh" / "ue.duckdb"
+    monkeypatch.setenv("UE_SEED_DIR", str(tmp_path / "seed" / "latest"))
     assert SEED.seed_dir() == tmp_path / "seed" / "latest"
     assert SEED.ensure(into=target, log=lambda *a: None) == "unpacked" and target.is_file()
     assert SEED.ensure(into=target, log=lambda *a: None) == "present"
-    monkeypatch.setenv("LR_SEED_DIR", str(tmp_path / "nowhere"))
+    monkeypatch.setenv("UE_SEED_DIR", str(tmp_path / "nowhere"))
     assert SEED.ensure(into=tmp_path / "other.duckdb", log=lambda *a: None) == "no-seed"
     assert not (tmp_path / "other.duckdb").exists()
-    monkeypatch.delenv("LR_SEED_DIR")
+    monkeypatch.delenv("UE_SEED_DIR")
     assert SEED.seed_dir() == SEED.seed_root() / "latest"
 
 
@@ -284,7 +284,7 @@ def s3(monkeypatch: pytest.MonkeyPatch):
     """A fake S3 in this process (moto): no network, no endpoint, the standard AWS names set to test values."""
     from moto import mock_aws
 
-    for name in ("LR_S3_ENDPOINT", "LR_S3_KEY", "LR_S3_SECRET", "AWS_PROFILE", "AWS_SESSION_TOKEN"):
+    for name in ("UE_S3_ENDPOINT", "UE_S3_KEY", "UE_S3_SECRET", "AWS_PROFILE", "AWS_SESSION_TOKEN"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "testing")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "testing")
@@ -435,20 +435,20 @@ def test_ensure_pulls_from_the_seed_url_when_nothing_is_on_disk(store: Path, tmp
     SEED.push(Path(m["dir"]), "s3://seeds/latest", log=lambda *a: None)
     root = tmp_path / "clone-seed"
     monkeypatch.setattr(SEED, "seed_root", lambda: root)
-    monkeypatch.setenv("LR_SEED_DIR", str(root / "latest"))
-    target = tmp_path / "clone" / "lr.duckdb"
-    monkeypatch.delenv("LR_SEED_URL", raising=False)
+    monkeypatch.setenv("UE_SEED_DIR", str(root / "latest"))
+    target = tmp_path / "clone" / "ue.duckdb"
+    monkeypatch.delenv("UE_SEED_URL", raising=False)
     assert SEED.ensure(into=target, log=lambda *a: None) == "no-seed" and not target.exists()
-    monkeypatch.setenv("LR_SEED_URL", "s3://seeds/nothing-published-yet")
+    monkeypatch.setenv("UE_SEED_URL", "s3://seeds/nothing-published-yet")
     assert SEED.ensure(into=target, log=lambda *a: None) == "no-seed" and not target.exists(), "an empty prefix is no seed, not a fault"
     assert not (root / "latest").exists()
-    monkeypatch.setenv("LR_SEED_URL", "s3://seeds/latest")
+    monkeypatch.setenv("UE_SEED_URL", "s3://seeds/latest")
     logged: list[str] = []
     assert SEED.ensure(into=target, log=logged.append) == "pulled" and target.is_file()
     assert (root / "latest").resolve() == (root / m["pack_sha256"][:16]).resolve(), "the pulled pack is the local pack from now on"
     assert _counts(target)["derived.cell"] == 2
     assert SEED.ensure(into=target, log=lambda *a: None) == "present"
-    assert SEED.ensure(into=tmp_path / "second" / "lr.duckdb", log=lambda *a: None) == "unpacked", "the pack on disk serves the next store"
+    assert SEED.ensure(into=tmp_path / "second" / "ue.duckdb", log=lambda *a: None) == "unpacked", "the pack on disk serves the next store"
     assert not any("testing" in line for line in logged), "no credential in a log line"
 
 
@@ -457,15 +457,15 @@ def test_ensure_pulls_from_the_seed_url_when_nothing_is_on_disk(store: Path, tmp
 
 @pytest.mark.real_data
 def test_the_quick_model_search_has_not_regressed_beyond_the_interval() -> None:
-    """`lr prospect modelsearch --quick` against the store, read-only, compared with the last full search's stored
+    """`ue prospect modelsearch --quick` against the store, read-only, compared with the last full search's stored
     metrics: an arm has regressed when the stored interval's low end sits above the quick run's whole interval
-    (the promotion rule's "intervals apart", pointed the other way). About a minute; LR_REAL_DATA=1 enables it,
-    and CI unpacks the seed pack first (`lr store seed unpack`)."""
-    if os.environ.get("LR_REAL_DATA") != "1":
-        pytest.skip("LR_REAL_DATA=1 to run the quick model search against the live store")
+    (the promotion rule's "intervals apart", pointed the other way). About a minute; UE_REAL_DATA=1 enables it,
+    and CI unpacks the seed pack first (`ue store seed unpack`)."""
+    if os.environ.get("UE_REAL_DATA") != "1":
+        pytest.skip("UE_REAL_DATA=1 to run the quick model search against the live store")
     db = db_path()
     if not db.is_file():
-        pytest.skip(f"no store at {db}; `lr store seed unpack <pack>` first")
+        pytest.skip(f"no store at {db}; `ue store seed unpack <pack>` first")
     con = connect(db, read_only=True)
     try:
         stored = {k: (v, note) for k, v, note in con.execute(
@@ -474,7 +474,7 @@ def test_the_quick_model_search_has_not_regressed_beyond_the_interval() -> None:
         con.close()
     if not stored:
         pytest.skip("no search.* metrics in the store to compare against; run the full model search first")
-    from legacy_reader.prospect import modelsearch as MS
+    from uranium_explorer.prospect import modelsearch as MS
 
     out = MS.run(quick=True, log=lambda *a: None, write=False, track=False)
     compared, regressed = [], []

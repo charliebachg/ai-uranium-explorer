@@ -7,9 +7,9 @@ import json
 import pytest
 from PIL import Image
 
-from legacy_reader import render
-from legacy_reader.pdfprobe import classify_page, large_format, probe_cached
-from legacy_reader.render import HeldOutError, guard_not_heldout, page_id, read_pages, render_pdf, write_pages
+from uranium_explorer import render
+from uranium_explorer.pdfprobe import classify_page, large_format, probe_cached
+from uranium_explorer.render import HeldOutError, guard_not_heldout, page_id, read_pages, render_pdf, write_pages
 
 
 def test_text_layer_kinds(probes):
@@ -55,7 +55,7 @@ def test_large_format(w_in, h_in, dpi, expected):
 
 
 def test_render_dpi_follows_the_scan_resolution():
-    from legacy_reader.pdfprobe import render_dpi_for_page
+    from uranium_explorer.pdfprobe import render_dpi_for_page
 
     assert render_dpi_for_page(300) == 200        # never above the base dpi
     assert render_dpi_for_page(200) == 200
@@ -72,7 +72,7 @@ def test_classify_page_rules():
 
 
 def test_probe_cache_is_reused(tmp_path, probe_pdfs):
-    from legacy_reader.ids import sha256_file
+    from uranium_explorer.ids import sha256_file
 
     pdf = probe_pdfs["modern"]
     sha = sha256_file(pdf)

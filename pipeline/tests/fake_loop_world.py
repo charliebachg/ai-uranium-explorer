@@ -15,11 +15,11 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from legacy_reader.analyst.loop import TASK_ADJUDICATE, TASK_EXECUTE, TASK_EXECUTE_BATCH, TASK_PLAN, TASK_VERIFY
-from legacy_reader.analyst.v0 import POSITIVE
-from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse
-from legacy_reader.prospect.tools import ToolResult
-from legacy_reader.values import stat
+from uranium_explorer.analyst.loop import TASK_ADJUDICATE, TASK_EXECUTE, TASK_EXECUTE_BATCH, TASK_PLAN, TASK_VERIFY
+from uranium_explorer.analyst.v0 import POSITIVE
+from uranium_explorer.backends.base import ExtractionRequest, ExtractionResponse
+from uranium_explorer.prospect.tools import ToolResult
+from uranium_explorer.values import stat
 
 CELL = "0000_0000"
 #: (feature, value, unit, fmt): every counted criterion's feature, then the two effort counts

@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from legacy_reader.analyst import weights as W
-from legacy_reader.analyst.wire import Node
-from legacy_reader.prospect import criteria as C
+from uranium_explorer.analyst import weights as W
+from uranium_explorer.analyst.wire import Node
+from uranium_explorer.prospect import criteria as C
 
 # the counted criteria of the real table, with their weights; folklore is named here only to prove it is absent
 CS = C.load()

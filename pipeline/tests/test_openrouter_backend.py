@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-from legacy_reader.backends import cache as C
-from legacy_reader.backends import openrouter as OR
-from legacy_reader.backends.base import BackendConfigError, ExtractionRequest, SchemaInvalidError, TransientBackendError
-from legacy_reader.backends.router import RoutedBackend
-from legacy_reader.runtime import spend as S
+from uranium_explorer.backends import cache as C
+from uranium_explorer.backends import openrouter as OR
+from uranium_explorer.backends.base import BackendConfigError, ExtractionRequest, SchemaInvalidError, TransientBackendError
+from uranium_explorer.backends.router import RoutedBackend
+from uranium_explorer.runtime import spend as S
 
 SCHEMA = {"type": "object", "properties": {"status": {"type": "string"}}, "required": ["status"]}
 
@@ -168,7 +168,7 @@ class CliLike:
         self.calls: list[str] = []
 
     def call(self, req: ExtractionRequest) -> Any:
-        from legacy_reader.backends.base import ExtractionResponse
+        from uranium_explorer.backends.base import ExtractionResponse
 
         self.calls.append(req.model)
         return ExtractionResponse(structured={"status": "met"}, envelope={}, backend="cli", backend_version="0",

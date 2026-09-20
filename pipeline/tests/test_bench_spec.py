@@ -6,7 +6,7 @@ import tomllib
 
 import pytest
 
-from legacy_reader.bench import spec as S
+from uranium_explorer.bench import spec as S
 
 
 def test_v1_loads_with_the_agreed_numbers() -> None:

@@ -216,7 +216,7 @@ the first ten against a 44% base rate, and effort reaches 90%.
 
 **What the gate found in us.** The retrieval arm's first pass had 24 refusals; 19 were report text the
 model quoted verbatim ("2310m", "2018:") that the gate's number scanner did not read as numbers. The scanner
-now reads a number glued to its unit or ending a label on both sides of the check, `lr arm regate`
+now reads a number glued to its unit or ending a label on both sides of the check, `ue arm regate`
 re-judged every stored answer of every arm with no model call (the four other arms did not change by one
 row), and the fabrication suite went from 224 to 228 of 232 refused with still 0 of 128 honest claims
 refused. Eight refusals remain in the retrieval arm, mostly depths quoted from hole labels.
@@ -309,7 +309,7 @@ analyst's evidence for every enabled cell now has a deep tier to quote from.
 and effort wins them (F1). This one asks what a company would: run in year C, where would each model have
 ranked the ground where the deposits found *after* C turned out to be?
 
-**What was run.** `lr prospect hindcast`, MLflow run `f0d9d16d1b37`; re-run pinned to store snapshot `f18b5ad059d0` as run `5f44e924ed0a`, every row reproduced exactly. Sixteen dated discoveries in
+**What was run.** `ue prospect hindcast`, MLflow run `f0d9d16d1b37`; re-run pinned to store snapshot `f18b5ad059d0` as run `5f44e924ed0a`, every row reproduced exactly. Sixteen dated discoveries in
 `knowledge/discoveries.toml`, each cited to a public document with a confidence; medium and high used. At each
 cutoff the labels keep only deposits dated at or before it (undated and later deposits masked from training,
 occurrences left unlabelled), and every cell first drilled after the cutoff has its hole count set to zero.
@@ -352,7 +352,7 @@ cannot find ground nobody drilled. Both tables belong on the Eval page side by s
 
 ## F3 · The model search: no geology candidate beats the effort null, and the conductor is the feature that matters (2026-09-19)
 
-**What was run.** `lr prospect modelsearch`, 23 arms, every one an MLflow run (re-run 2026-09-19 pinned to store snapshot `49cd5dac1147`; every number below reproduced exactly, the fits are seeded): six candidates under spatial and
+**What was run.** `ue prospect modelsearch`, 23 arms, every one an MLflow run (re-run 2026-09-19 pinned to store snapshot `49cd5dac1147`; every number below reproduced exactly, the fits are seeded): six candidates under spatial and
 camp folds, six single-group ablations, geology plus effort, and 20 and 50 km blocks; matched background and
 thinned positives for training, out-of-fold scoring on the same 10,183 cells, bootstrap intervals.
 
@@ -406,7 +406,7 @@ geology (PR-AUC 0.347 against 0.133). The literature review found a mechanism th
 treating every unlabelled cell as a negative shrinks the positive area asymmetrically and hurts the geology
 model most (Zhang, Coutts, Parsa, Cumani, Thompson; *Natural Resources Research*, July 2025).
 
-**What was run.** `lr prospect headline`, run `2026-09-19T11:56:38+00:00`, on the 10,183 cells where every
+**What was run.** `ue prospect headline`, run `2026-09-19T11:56:38+00:00`, on the 10,183 cells where every
 feature of both models is present: 546 positives (60 deposit cells, 486 occurrence cells). Every combination
 of {learned, effort} × {all positives, deposits only} × {naive, matched background, thinned positives, both}
 × {random, spatial 30 km blocks, leave-one-camp-out}, scored out of fold on the same cells. The corrections

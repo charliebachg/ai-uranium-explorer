@@ -2,7 +2,7 @@ import createClient from "openapi-fetch";
 import type { paths } from "./schema";
 
 /**
- * Where the service is. In development it is `lr prospect serve` on localhost; in the container image the API
+ * Where the service is. In development it is `ue prospect serve` on localhost; in the container image the API
  * serves the built site itself, so the build sets VITE_SERVICE_ROOT to "" and calls go to the same origin. A
  * static site with no service is a state every caller shows, not an error.
  */
@@ -16,7 +16,7 @@ export const SERVICE_ROOT: string = import.meta.env.VITE_SERVICE_ROOT ?? "http:/
  * be missing or refuse (a private window, blocked site data), so every access is guarded and a failure reads
  * as "no key".
  */
-export const KEY_STORAGE = "lr.apiKey";
+export const KEY_STORAGE = "ue.apiKey";
 export const KEY_HEADER = "X-Api-Key";
 
 export function readKey(): string | null {
@@ -53,7 +53,7 @@ export function authHeaders(key: string | null = readKey()): Record<string, stri
 }
 
 /**
- * A client typed from the service's own OpenAPI document (`lr api-spec` → openapi-typescript). Route paths,
+ * A client typed from the service's own OpenAPI document (`ue api-spec` → openapi-typescript). Route paths,
  * parameters and response shapes are checked at compile time; the zod contract in data/contract.ts still
  * validates every response at run time, because a type is a promise and a parse is a check.
  */

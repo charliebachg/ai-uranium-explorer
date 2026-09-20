@@ -1,5 +1,5 @@
 [project]
-name = "legacy-reader"
+name = "ai-uranium-explorer"
 version = "0.1.0"
 description = "Reads public Saskatchewan uranium assessment reports into drillhole tables with provenance, and measures how often the reading is wrong."
 requires-python = ">=3.13,<3.14"
@@ -29,7 +29,7 @@ dependencies = [
   "alembic==1.18.4",
   "psycopg[binary]==3.3.3",
   "mcp==2.2.0",
-  "opentelemetry-exporter-otlp-proto-http==1.44.0",   # the same 1.44.0 as the SDK MLflow brought in; imported only when LR_OTLP_ENDPOINT is set
+  "opentelemetry-exporter-otlp-proto-http==1.44.0",   # the same 1.44.0 as the SDK MLflow brought in; imported only when UE_OTLP_ENDPOINT is set
   "boto3==1.43.98",   # the seed pack over S3 (the compose MinIO locally, any S3 elsewhere)
 ]
 
@@ -41,19 +41,19 @@ mlflow = ["mlflow==3.16.1"]
 dev = ["pytest==9.1.1", "moto==5.2.3"]   # moto: the S3 seed transport is tested against a fake bucket, no network
 
 [project.scripts]
-lr = "legacy_reader.cli:app"
+ue = "uranium_explorer.cli:app"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/legacy_reader"]
+packages = ["src/uranium_explorer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
   "network: needs internet (grid download, live endpoints)",
   "backend: calls the real claude CLI",
-  "real_data: runs against the live analytics store (data/lr.duckdb, or the unpacked seed); LR_REAL_DATA=1 to enable",
+  "real_data: runs against the live analytics store (data/ue.duckdb, or the unpacked seed); UE_REAL_DATA=1 to enable",
 ]

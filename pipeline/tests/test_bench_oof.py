@@ -8,9 +8,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from legacy_reader import store as ST
-from legacy_reader.bench import oof as O
-from legacy_reader.prospect import modelsearch as MS
+from uranium_explorer import store as ST
+from uranium_explorer.bench import oof as O
+from uranium_explorer.prospect import modelsearch as MS
 from bench_store import bench_frame, fake_fit, make_bench_store
 
 

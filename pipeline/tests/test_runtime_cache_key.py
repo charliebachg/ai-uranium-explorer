@@ -5,12 +5,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from legacy_reader import wire
-from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse, hash_schema, hash_text
-from legacy_reader.backends.cache import RECORD_VERSION, CachedBackend, build_record, record_path, write_atomic
-from legacy_reader.extract import carry_from_result, context_hash
-from legacy_reader.prompts import prompt_version, system_prompt, user_prompt
-from legacy_reader.runtime import rekey as RK
+from uranium_explorer import wire
+from uranium_explorer.backends.base import ExtractionRequest, ExtractionResponse, hash_schema, hash_text
+from uranium_explorer.backends.cache import RECORD_VERSION, CachedBackend, build_record, record_path, write_atomic
+from uranium_explorer.extract import carry_from_result, context_hash
+from uranium_explorer.prompts import prompt_version, system_prompt, user_prompt
+from uranium_explorer.runtime import rekey as RK
 
 SCHEMA = {"type": "object", "additionalProperties": False, "properties": {"a": {"type": "string"}}, "required": ["a"]}
 

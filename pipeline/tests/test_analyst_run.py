@@ -7,10 +7,10 @@ import json
 
 import pytest
 
-from legacy_reader.analyst import arms as A
-from legacy_reader.analyst import run as RUN
-from legacy_reader.analyst import score as SC
-from legacy_reader.backends.base import TransientBackendError, UsageLimitReached
+from uranium_explorer.analyst import arms as A
+from uranium_explorer.analyst import run as RUN
+from uranium_explorer.analyst import score as SC
+from uranium_explorer.backends.base import TransientBackendError, UsageLimitReached
 
 from fake_bench import (LABELLED, OPEN, AnalystBackend, BudgetExhausted, FakeManifest, bad_answer, install_runtime,
                         make_bench)
@@ -134,7 +134,7 @@ def test_an_arm_the_benchmark_was_not_built_for_is_refused(world) -> None:
 
 def test_the_real_manifest_runs_the_harness_too(world, monkeypatch) -> None:
     """The fake mirrors `runtime.manifest.Manifest`; this proves the mirror is faithful."""
-    from legacy_reader.runtime.manifest import Manifest
+    from uranium_explorer.runtime.manifest import Manifest
 
     rt, bench = world
     monkeypatch.setattr(RUN, "Manifest", Manifest)
@@ -223,8 +223,8 @@ def test_regate_rejudges_stored_answers_with_the_current_gate(tmp_path, monkeypa
 import pandas as pd
 from dataclasses import replace
 
-from legacy_reader.analyst import frozen as F
-from legacy_reader.analyst.session import Session
+from uranium_explorer.analyst import frozen as F
+from uranium_explorer.analyst.session import Session
 from fake_loop_world import CELL as LOOP_CELL, LoopBackend, LoopWorld, loop_registry
 
 
@@ -334,7 +334,7 @@ def test_the_default_factory_opens_a_benchmark_session_from_the_cells_file(world
 def test_a_scoped_v1_run_records_the_switch_on_its_manifest_and_stages_each_segment_its_own_rows(world) -> None:
     """`segment_scoped` is a loop switch like the other two: in the arm file, on the manifest, in its hash;
     the scoped files hash into the cache key like any staged file, so a scoped run never replays a whole one."""
-    from legacy_reader.ids import sha256_json
+    from uranium_explorer.ids import sha256_json
     from fake_loop_world import FEATURES
 
     rt, bench = world

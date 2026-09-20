@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.prospect import inventory
+from uranium_explorer.prospect import inventory
 
 
 @pytest.fixture(scope="module")

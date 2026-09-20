@@ -8,8 +8,8 @@ import pandas as pd
 import pytest
 from shapely.geometry import LineString, Point, Polygon, box
 
-from legacy_reader.prospect import features as F
-from legacy_reader.prospect.inventory import load as load_inventory
+from uranium_explorer.prospect import features as F
+from uranium_explorer.prospect.inventory import load as load_inventory
 
 EPSG = 2957
 

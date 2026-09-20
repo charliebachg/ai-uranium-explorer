@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import store as ST
-from legacy_reader.bench import blind as B
-from legacy_reader.bench import spec as S
-from legacy_reader.prospect import retrieve as R
-from legacy_reader.prospect import tools as T
+from uranium_explorer import store as ST
+from uranium_explorer.bench import blind as B
+from uranium_explorer.bench import spec as S
+from uranium_explorer.prospect import retrieve as R
+from uranium_explorer.prospect import tools as T
 from bench_store import FILES, bench_frame, make_bench_store
 
 

@@ -10,11 +10,11 @@ from typing import Any, Callable
 
 import pytest
 
-from legacy_reader import store as ST
-from legacy_reader.mcp import holes as HOLES
-from legacy_reader.mcp.server import LrServer
-from legacy_reader.prospect.tools import ToolResult
-from legacy_reader.values import stat
+from uranium_explorer import store as ST
+from uranium_explorer.mcp import holes as HOLES
+from uranium_explorer.mcp.server import UeServer
+from uranium_explorer.prospect.tools import ToolResult
+from uranium_explorer.values import stat
 
 from bench_store import bench_frame, make_bench_store
 from fake_session_world import CELL, FakeWorld, fake_registry
@@ -128,16 +128,16 @@ def crosscheck_fixture(root: Path, monkeypatch: pytest.MonkeyPatch, lonlat: tupl
 
 
 def make_server(tmp_path: Path, world: FakeWorld, *, environ: dict[str, str] | None = None,
-                public_safe: bool = False, clock: Any = None, insight_store: Any = None, jobs: Any = None) -> LrServer:
+                public_safe: bool = False, clock: Any = None, insight_store: Any = None, jobs: Any = None) -> UeServer:
     """A server over the fakes, its runs under the test's directory, with no key register unless given,
     `record_insight` writing through `insight_store` (a temporary store's connection) when a test needs it,
     and `run_analyst` submitting to `jobs` (a runner over a fake kind) when a test hands one in."""
-    from legacy_reader.mcp.handlers import Handlers
-    from legacy_reader.mcp.sessions import SessionStore
+    from uranium_explorer.mcp.handlers import Handlers
+    from uranium_explorer.mcp.sessions import SessionStore
 
     store = SessionStore(runs_dir=tmp_path / "runs", tools=registry(world), **({"clock": clock} if clock else {}))
     handlers = Handlers(store, public_safe=public_safe, insight_store=insight_store, jobs=jobs)
-    return LrServer(environ=environ if environ is not None else {}, public_safe=public_safe,
+    return UeServer(environ=environ if environ is not None else {}, public_safe=public_safe,
                     runs_dir=tmp_path / "runs", store=store, handlers=handlers)
 
 

@@ -8,9 +8,9 @@ import json
 import numpy as np
 import pytest
 
-from legacy_reader.analyst import frozen as F
-from legacy_reader.analyst import score as SC
-from legacy_reader.store import connect
+from uranium_explorer.analyst import frozen as F
+from uranium_explorer.analyst import score as SC
+from uranium_explorer.store import connect
 
 from fake_bench import LABELLED, install_runtime, make_bench
 

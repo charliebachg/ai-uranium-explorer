@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader import textlayer
-from legacy_reader.ocr import (cache_path_for, choose_rotation, needs_rotation_check, reading_quality,
+from uranium_explorer import textlayer
+from uranium_explorer.ocr import (cache_path_for, choose_rotation, needs_rotation_check, reading_quality,
                                vision_available)
-from legacy_reader.textlayer import agreement, pdftotext_words, rotate_box, token_kind, trusted
+from uranium_explorer.textlayer import agreement, pdftotext_words, rotate_box, token_kind, trusted
 
 needs_vision = pytest.mark.skipif(not vision_available(), reason="Apple Vision (ocrmac) not available")
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.validators import (
+from uranium_explorer.validators import (
     REGISTRY,
     SHADOW_MODE_IDS,
     apply_findings,

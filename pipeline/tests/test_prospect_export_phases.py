@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from legacy_reader.contract_check import Errors, _ref, check_registry
-from legacy_reader.prospect import export as X
-from legacy_reader.values import registry
+from uranium_explorer.contract_check import Errors, _ref, check_registry
+from uranium_explorer.prospect import export as X
+from uranium_explorer.values import registry
 
 
 def _write(d: Path, name: str, payload: dict) -> None:
@@ -125,7 +125,7 @@ def test_the_readiness_gate_block_carries_every_column_with_its_note(tmp_path: P
 
 
 def test_a_green_gate_with_a_failing_column_is_refused_by_the_contract() -> None:
-    from legacy_reader.contract_check import check_readiness
+    from uranium_explorer.contract_check import check_readiness
 
     doc = {"schema_version": "1.0.0", "grid": {}, "totals": {}, "caveats": ["x"], "features": [], "sources": [], "gaps": [],
            "values": {}, "readiness_gate": {"green": True, "rows": [
@@ -223,13 +223,13 @@ def test_bench_rows_carry_every_metric_as_a_value_and_name_their_run(tmp_path: P
                     *(vid for cell in r.get("strata", {}).values() for vid in cell.values())]:
             _ref(e, "row", vid, known, nullable=True)
     assert list(e) == []
-    from legacy_reader.contract_check import check_readiness
+    from uranium_explorer.contract_check import check_readiness
 
     assert [err for err in check_readiness(_readiness_with(b, vals)) if ".bench" in err] == []
 
 
 def test_the_contract_refuses_an_arm_without_a_run_and_an_unbacked_number(tmp_path: Path) -> None:
-    from legacy_reader.contract_check import check_readiness
+    from uranium_explorer.contract_check import check_readiness
 
     _bench_table(tmp_path, "v1", [{**ARM, "run_id": None, "mlflow_run_id": None}, BASELINE])
     vals: list[dict] = []

@@ -7,7 +7,7 @@ import { BenchSection } from "@/features/eval/PhaseSections";
 
 /**
  * The analyst benchmark table with the staged loop's per-stage columns, rendered against a block shaped as
- * `lr prospect export` writes one. `<V>` throws on an unbacked id under vitest, so a render that completes is
+ * `ue prospect export` writes one. `<V>` throws on an unbacked id under vitest, so a render that completes is
  * itself the assertion that every stage number the table prints resolves to a registered value.
  */
 

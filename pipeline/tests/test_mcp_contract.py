@@ -8,11 +8,11 @@ import json
 import pytest
 from jsonschema import Draft202012Validator
 
-from legacy_reader.mcp import TOOL_VERSION
-from legacy_reader.mcp import contract as C
-from legacy_reader.mcp.auth import SCOPES
-from legacy_reader.prospect.tools import REGISTRY
-from legacy_reader.values import stat
+from uranium_explorer.mcp import TOOL_VERSION
+from uranium_explorer.mcp import contract as C
+from uranium_explorer.mcp.auth import SCOPES
+from uranium_explorer.prospect.tools import REGISTRY
+from uranium_explorer.values import stat
 
 from mcp_world import numbers_outside_vals
 

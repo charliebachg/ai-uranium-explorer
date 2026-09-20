@@ -72,7 +72,7 @@ export type Lineage = z.infer<typeof Lineage>;
 export const Derivation = z.object({
   op: z.string(), // e.g. ft_to_m, identity, geodesic_offset, ntv2_shift, count, recall, clopper_pearson_upper95
   inputs: z.array(ValueId),
-  tool: z.string(), // e.g. "pyproj 3.8.0 / PROJ 9.8.1", "legacy_reader 0.1.0"
+  tool: z.string(), // e.g. "pyproj 3.8.0 / PROJ 9.8.1", "uranium_explorer 0.1.0"
   params: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -492,7 +492,7 @@ export const RunSummary = z.object({
   schema_version: z.literal("1.0.0"),
   generated_at: z.string(),
   pipeline_version: z.string(),
-  /** null until a gold set has been labelled and `lr score` has written a scorecard. */
+  /** null until a gold set has been labelled and `ue score` has written a scorecard. */
   gold: z.null(),
   caveats: z.array(z.string()),
   run: z.object({
@@ -609,7 +609,7 @@ export const MetricRow = z.object({
 });
 export type MetricRow = z.infer<typeof MetricRow>;
 
-/** One metric of one configuration of the Phase 0 re-test (`lr prospect headline`), with its tracker run. */
+/** One metric of one configuration of the Phase 0 re-test (`ue prospect headline`), with its tracker run. */
 export const HeadlineRow = z.object({
   config: z.string(),
   feature_set: z.enum(["learned", "effort"]),
@@ -625,7 +625,7 @@ export const HeadlineRow = z.object({
 });
 export type HeadlineRow = z.infer<typeof HeadlineRow>;
 
-/** One metric of one arm of the model search (`lr prospect modelsearch`); `run_id` is that arm's MLflow run. */
+/** One metric of one arm of the model search (`ue prospect modelsearch`); `run_id` is that arm's MLflow run. */
 export const SearchRow = z.object({
   arm: z.string(),
   name: z.string(),
@@ -754,7 +754,7 @@ export const BenchStage = z.enum([
 export type BenchStage = z.infer<typeof BenchStage>;
 
 /**
- * One row of the analyst benchmark table (`lr bench table`): one arm or one baseline scored on the same open
+ * One row of the analyst benchmark table (`ue bench table`): one arm or one baseline scored on the same open
  * cells of the frozen benchmark. Every number is a value id under `c:bench:<version>:<row>:<metric>`; an
  * interval's bounds are `.lo` and `.hi` of the metric's id, and a stage column sits under `:stage:<key>`. A
  * baseline is arithmetic on the fitted scores, so it names no run.
@@ -798,7 +798,7 @@ export type BenchBlock = z.infer<typeof BenchBlock>;
 /** One column of the five-column readiness gate: ok or not, and the gate's own note saying why. */
 export const GateCell = z.object({ ok: z.boolean(), note: z.string() });
 
-/** The data readiness gate (`lr prospect gate`): one row per dataset the focused tasks depend on. */
+/** The data readiness gate (`ue prospect gate`): one row per dataset the focused tasks depend on. */
 export const ReadinessGate = z.object({
   generated_at: z.string(),
   store_sha256: z.string().nullable(),
@@ -843,7 +843,7 @@ export const Readiness = z.object({
   }),
   thin_coverage_threshold: z.number(),
   metrics: z.object({ run_id: z.string().nullable(), rows: z.array(MetricRow) }).optional(),
-  /** The five-column readiness gate, as last run; absent until `lr prospect gate` has run. */
+  /** The five-column readiness gate, as last run; absent until `ue prospect gate` has run. */
   readiness_gate: ReadinessGate.optional(),
   /** Phase 0: the effort-against-geology re-test with corrections, intervals and the MineTRACE protocol. */
   headline: HeadlineBlock.optional(),
@@ -851,9 +851,9 @@ export const Readiness = z.object({
   search: SearchBlock.optional(),
   /** Phase 3: the dated hindcast, later discoveries ranked by models frozen at a cutoff. */
   hindcast: HindcastBlock.optional(),
-  /** The analyst benchmark: every arm and baseline on the frozen benchmark's open cells (`lr bench table`). */
+  /** The analyst benchmark: every arm and baseline on the frozen benchmark's open cells (`ue bench table`). */
   bench: BenchBlock.optional(),
-  /** What the fabrication gate scored on the adversarial suite: `lr prospect gate-eval`. */
+  /** What the fabrication gate scored on the adversarial suite: `ue prospect gate-eval`. */
   gate: z
     .object({
       run_id: z.string(),

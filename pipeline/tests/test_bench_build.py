@@ -9,10 +9,10 @@ from pathlib import Path
 import pytest
 from shapely.geometry import LineString, Point, box, mapping
 
-from legacy_reader import store as ST
-from legacy_reader.bench import build as B
-from legacy_reader.bench import spec as S
-from legacy_reader.prospect import retrieve as R
+from uranium_explorer import store as ST
+from uranium_explorer.bench import build as B
+from uranium_explorer.bench import spec as S
+from uranium_explorer.prospect import retrieve as R
 from bench_store import bench_frame, fake_fit, make_bench_store
 
 SPEC = """
@@ -173,7 +173,7 @@ def test_leaks_is_pure_and_precise() -> None:
 
 
 def test_a_changed_spec_rebuilds_every_file(world, monkeypatch) -> None:
-    import legacy_reader.bench.build as BB
+    import uranium_explorer.bench.build as BB
 
     root = world["root"]
     BB.build("t1", log=lambda *a: None, root=root, fit=fake_fit)

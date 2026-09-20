@@ -116,7 +116,7 @@ body,
 }
 
 /* Three dots that say the agent is still working. The blanket reduced-motion rule below stops them. */
-@keyframes lr-blink {
+@keyframes ue-blink {
   0%,
   80%,
   100% {
@@ -127,13 +127,13 @@ body,
   }
 }
 
-.lr-dots span {
-  animation: lr-blink 1.4s infinite both;
+.ue-dots span {
+  animation: ue-blink 1.4s infinite both;
 }
-.lr-dots span:nth-child(2) {
+.ue-dots span:nth-child(2) {
   animation-delay: 0.18s;
 }
-.lr-dots span:nth-child(3) {
+.ue-dots span:nth-child(3) {
   animation-delay: 0.36s;
 }
 
@@ -145,14 +145,14 @@ body,
     transition-duration: 1ms !important;
   }
   /* a dot frozen at 18% opacity reads as broken, so hold them lit instead */
-  .lr-dots span {
+  .ue-dots span {
     animation: none;
     opacity: 0.7;
   }
 }
 
 /* Selected hole: a ring that pulses three times, then rests (motion explains the selection, then gets out of the way) */
-.lr-select-ring {
+.ue-select-ring {
   width: 30px;
   height: 30px;
   border-radius: 9999px;
@@ -162,16 +162,16 @@ body,
     inset 0 0 8px rgb(230 240 255 / 0.15);
   pointer-events: none;
 }
-.lr-select-ring::after {
+.ue-select-ring::after {
   content: "";
   position: absolute;
   inset: -1.5px;
   border-radius: 9999px;
   border: 1.5px solid var(--color-st-pass);
-  animation: lr-pulse 2.4s var(--ease-out-expo) 3;
+  animation: ue-pulse 2.4s var(--ease-out-expo) 3;
   opacity: 0;
 }
-@keyframes lr-pulse {
+@keyframes ue-pulse {
   0% {
     transform: scale(1);
     opacity: 0.8;
@@ -182,22 +182,22 @@ body,
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lr-select-ring::after {
+  .ue-select-ring::after {
     animation: none;
   }
 }
 
 /* Compact attribution stays collapsed until the user opens it (maplibre re-opens it whenever sources change) */
-.maplibregl-ctrl-attrib.maplibregl-compact:not(.lr-user-open) {
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.ue-user-open) {
   padding: 0 !important;
   min-height: 24px;
 }
-.maplibregl-ctrl-attrib.maplibregl-compact:not(.lr-user-open) .maplibregl-ctrl-attrib-inner {
+.maplibregl-ctrl-attrib.maplibregl-compact:not(.ue-user-open) .maplibregl-ctrl-attrib-inner {
   display: none;
 }
 
 /* Walkthrough: the card stays put and its contents fade in, so stepping reads as one panel changing, not a new one */
-@keyframes lr-step-in {
+@keyframes ue-step-in {
   from {
     opacity: 0;
     transform: translateY(6px);

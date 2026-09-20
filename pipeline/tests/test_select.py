@@ -7,8 +7,8 @@ import random
 
 import pytest
 
-from legacy_reader import select
-from legacy_reader.select import ERAS, choose_phase1, classify_listing, company_key, datum_signal, era_for_year
+from uranium_explorer import select
+from uranium_explorer.select import ERAS, choose_phase1, classify_listing, company_key, datum_signal, era_for_year
 
 
 def candidate(n: int, era: str, company: str, score: float, zone12: bool = False, mb: float = 10.0) -> dict:

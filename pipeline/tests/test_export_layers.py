@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import export_layers as E
+from uranium_explorer import export_layers as E
 
 
 def line(*coords: tuple[float, float]) -> dict:

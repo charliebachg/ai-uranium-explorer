@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.prospect import gate as G
+from uranium_explorer.prospect import gate as G
 
 SK = "Government of Saskatchewan Standard Unrestricted Use Data Licence v2.0"
 
@@ -156,7 +156,7 @@ def test_licence_stated_rejects_the_ways_a_licence_is_not_stated() -> None:
 
 
 def test_layer_exports_finds_context_files_tiles_and_hand_written_exports(tmp_path: Path) -> None:
-    from legacy_reader.export_layers import EXPORTS
+    from uranium_explorer.export_layers import EXPORTS
 
     (tmp_path / "context").mkdir()
     (tmp_path / "context" / "em_conductors.geojson").write_text("{}")
@@ -172,7 +172,7 @@ def test_layer_exports_finds_context_files_tiles_and_hand_written_exports(tmp_pa
 
 
 def test_resolve_source_by_key_collection_or_pull_url() -> None:
-    from legacy_reader.prospect.inventory import Licence, Source
+    from uranium_explorer.prospect.inventory import Licence, Source
 
     lic = Licence("sk", SK, "", "terms", True)
     mk = lambda key, url, collection=None: Source(
@@ -201,10 +201,10 @@ def test_the_table_prints_one_mark_line_and_one_note_line_per_row() -> None:
 
 def test_check_runs_against_the_real_store_and_writes_gate_json(tmp_path: Path, prospect_sandbox) -> None:
     """Read-only over the analytics store; the hash and snapshots come from the sandbox, never the real file."""
-    from legacy_reader.store import db_path
+    from uranium_explorer.store import db_path
 
     if not db_path().is_file():
-        pytest.skip("no analytics store at data/lr.duckdb")
+        pytest.skip("no analytics store at data/ue.duckdb")
     prospect_sandbox.make_store()
     lines: list[str] = []
     out = G.check(log=lines.append, out_path=tmp_path / "gate.json")

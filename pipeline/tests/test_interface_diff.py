@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from legacy_reader.analyst import chains as CH
-from legacy_reader.interface import diff as D
-from legacy_reader.store import connect
+from uranium_explorer.analyst import chains as CH
+from uranium_explorer.interface import diff as D
+from uranium_explorer.store import connect
 
 CELL = "0201_0072"
 

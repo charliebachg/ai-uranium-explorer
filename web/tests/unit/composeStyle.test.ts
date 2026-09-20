@@ -81,14 +81,14 @@ describe("the score colour exception", () => {
   it("lets the declared score layer colour by a score, and the real style stays clean", () => {
     expect(honestyViolations(style())).toEqual([]);
     const cell = style().layers.find((l) => l.id === "prospect-cell");
-    expect((cell?.metadata as Record<string, unknown>)["lr:score"]).toBe(true);
+    expect((cell?.metadata as Record<string, unknown>)["ue:score"]).toBe(true);
   });
 
   it("refuses a layer that colours by a computed key without declaring itself", () => {
     const sneaky = style();
     const layer = sneaky.layers.find((l) => l.id === "prospect-cell") as Record<string, unknown>;
-    layer.metadata = { "lr:group": "prospect" };
-    expect(honestyViolations(sneaky).join(" ")).toContain('without declaring metadata["lr:score"]');
+    layer.metadata = { "ue:group": "prospect" };
+    expect(honestyViolations(sneaky).join(" ")).toContain('without declaring metadata["ue:score"]');
   });
 
   it("refuses a declared score layer that colours by something that is not a score", () => {

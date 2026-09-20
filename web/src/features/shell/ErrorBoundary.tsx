@@ -9,7 +9,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error: E
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("[legacy-reader]", error, info.componentStack);
+    console.error("[ai-uranium-explorer]", error, info.componentStack);
   }
 
   render() {

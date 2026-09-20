@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.locate import (
+from uranium_explorer.locate import (
     PageLocator,
     bare,
     digit_agreement,
@@ -18,7 +18,7 @@ from legacy_reader.locate import (
     norm,
     squash,
 )
-from legacy_reader.ocr import read_words
+from uranium_explorer.ocr import read_words
 
 from fake_page import PAGE_NO, PDF_SHA
 
@@ -27,7 +27,7 @@ from fake_page import PAGE_NO, PDF_SHA
 def locator() -> PageLocator:
     words = [w for w in read_words(PDF_SHA) if w["page_no"] == PAGE_NO and w["engine"] == "livetext"]
     if not words:
-        pytest.skip(f"no OCR words for {PDF_SHA[:12]} page {PAGE_NO}; run `lr ocr`")
+        pytest.skip(f"no OCR words for {PDF_SHA[:12]} page {PAGE_NO}; run `ue ocr`")
     return PageLocator(words)
 
 

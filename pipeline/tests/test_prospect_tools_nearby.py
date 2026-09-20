@@ -14,9 +14,9 @@ import pytest
 from pyproj import Transformer
 from shapely.geometry import LineString, Point, box, mapping
 
-from legacy_reader import index as IX
-from legacy_reader import store as ST
-from legacy_reader.prospect import tools as T
+from uranium_explorer import index as IX
+from uranium_explorer import store as ST
+from uranium_explorer.prospect import tools as T
 from bench_store import NOW, bench_frame, make_bench_store
 
 CELL, FAR = "0000_0000", "0000_0001"

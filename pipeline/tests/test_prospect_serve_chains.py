@@ -10,11 +10,11 @@ from typing import Any
 import pytest
 from test_store_chains import _chain, _decision, _node, _verdict
 
-from legacy_reader.analyst import chains as C
-from legacy_reader.prospect import serve as S
-from legacy_reader.prospect import tools as T
-from legacy_reader.store import connect
-from legacy_reader.values import stat
+from uranium_explorer.analyst import chains as C
+from uranium_explorer.prospect import serve as S
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.store import connect
+from uranium_explorer.values import stat
 
 CELL = "0201_0072"
 CONDUCTOR = f"c:cell:{CELL}:d_conductor_m"

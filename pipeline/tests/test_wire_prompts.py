@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from legacy_reader import wire
-from legacy_reader.prompts import (
+from uranium_explorer import wire
+from uranium_explorer.prompts import (
     CarryItem,
     assert_clean,
     prompt_version,
@@ -90,8 +90,8 @@ def test_parse_rejects_a_missing_row_count():
 def test_prompt_version_is_stable_and_covers_both_templates():
     assert prompt_version() == prompt_version()
     assert len(prompt_version()) == 12
-    from legacy_reader.ids import sha256_bytes, short
-    from legacy_reader.prompts import SYSTEM_TEMPLATE, USER_TEMPLATE, prompts_dir
+    from uranium_explorer.ids import sha256_bytes, short
+    from uranium_explorer.prompts import SYSTEM_TEMPLATE, USER_TEMPLATE, prompts_dir
 
     expected = short(sha256_bytes(((prompts_dir() / SYSTEM_TEMPLATE).read_text()
                                    + (prompts_dir() / USER_TEMPLATE).read_text()).encode()))

@@ -9,8 +9,8 @@ import pytest
 from PIL import Image
 from shapely.geometry import box, mapping
 
-from legacy_reader.bench import card as C
-from legacy_reader.bench import spec as S
+from uranium_explorer.bench import card as C
+from uranium_explorer.bench import spec as S
 
 
 def spec(**card) -> S.BenchSpec:

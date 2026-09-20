@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from legacy_reader.interface.sensitivity import sensitivity
-from legacy_reader.prospect import tools as T
-from legacy_reader.prospect.memo import check_claims
+from uranium_explorer.interface.sensitivity import sensitivity
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.prospect.memo import check_claims
 
 CELL = "0100_0100"
 

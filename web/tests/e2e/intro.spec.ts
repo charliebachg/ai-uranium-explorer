@@ -13,7 +13,7 @@ test("intro holds the globe, then flies in and settles on backed counters", asyn
   // the camera waits on the globe, well outside the province
   await page.waitForFunction(
     () => {
-      const m = (window as unknown as { __lr?: { map?: { getZoom: () => number } } }).__lr?.map;
+      const m = (window as unknown as { __ue?: { map?: { getZoom: () => number } } }).__ue?.map;
       return !!m && m.getZoom() < 3;
     },
     undefined,
@@ -37,7 +37,7 @@ test("intro holds the globe, then flies in and settles on backed counters", asyn
 
   await page.waitForFunction(
     () => {
-      const m = (window as unknown as { __lr?: { map?: { getZoom: () => number } } }).__lr?.map;
+      const m = (window as unknown as { __ue?: { map?: { getZoom: () => number } } }).__ue?.map;
       return !!m && m.getZoom() > 5;
     },
     undefined,

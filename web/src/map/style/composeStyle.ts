@@ -53,7 +53,7 @@ export function composeStyle({
         ({
           ...l,
           layout: { ...("layout" in l ? l.layout : {}), visibility: on ? "visible" : "none" },
-          metadata: { ...((l as { metadata?: object }).metadata ?? {}), "lr:group": g.id },
+          metadata: { ...((l as { metadata?: object }).metadata ?? {}), "ue:group": g.id },
         }) as LayerSpecification,
     );
     bySlot.set(g.slot, [...(bySlot.get(g.slot) ?? []), ...layers]);
@@ -100,7 +100,7 @@ export function composeStyle({
  * paints ground by score is read as a map of where to drill, whatever the caption says.
  *
  * There is exactly one exception, and it is declared rather than assumed: a layer carrying
- * `metadata["lr:score"]` may colour by the score fields, because showing the three scores side by side is the
+ * `metadata["ue:score"]` may colour by the score fields, because showing the three scores side by side is the
  * argument the demo is making. The exception is written into this check, not into a silence: a layer that
  * colours by a computed key without declaring itself is a violation, and a layer that declares itself but
  * colours by something other than a score field is a violation too.
@@ -119,7 +119,7 @@ export function honestyViolations(style: StyleSpecification): string[] {
   for (const l of style.layers) {
     if (l.type === "heatmap") problems.push(`${l.id}: heatmap layers are not allowed`);
     const meta = (l.metadata ?? {}) as Record<string, unknown>;
-    const declaresScore = meta["lr:score"] === true;
+    const declaresScore = meta["ue:score"] === true;
     const paint = ("paint" in l ? l.paint : undefined) as Record<string, unknown> | undefined;
     for (const [prop, val] of Object.entries(paint ?? {})) {
       if (!colorProps.test(prop)) continue;
@@ -132,7 +132,7 @@ export function honestyViolations(style: StyleSpecification): string[] {
         }
         problems.push(
           field === null
-            ? `${l.id}.${prop}: colour driven by a computed field without declaring metadata["lr:score"]`
+            ? `${l.id}.${prop}: colour driven by a computed field without declaring metadata["ue:score"]`
             : allowedColorInputs.has(field)
               ? ""
               : `${l.id}.${prop}: colour driven by data field "${field}"`,
@@ -141,7 +141,7 @@ export function honestyViolations(style: StyleSpecification): string[] {
     }
     const layout = ("layout" in l ? l.layout : undefined) as Record<string, unknown> | undefined;
     const tf = layout?.["text-field"];
-    if (tf !== undefined && (l.metadata as Record<string, unknown> | undefined)?.["lr:group"]) {
+    if (tf !== undefined && (l.metadata as Record<string, unknown> | undefined)?.["ue:group"]) {
       walk(tf, (field) => {
         if (field && /^(y|len|td|az|dip|inc|value|grade|shift|offset)$/.test(field))
           problems.push(`${l.id}: numeric field "${field}" rendered as canvas text (use a <V> marker)`);

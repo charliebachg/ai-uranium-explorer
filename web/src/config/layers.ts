@@ -215,7 +215,7 @@ export function layerGroups(
           // extraction status. Here it means a score, which is exactly the thing that invites being read as
           // prospectivity — so the layer declares itself, the honesty check allows only these fields on a
           // layer that does, and the banner above the map says what the colour is.
-          metadata: { "lr:score": true },
+          metadata: { "ue:score": true },
           paint: {
             "circle-radius": CELL_RADIUS,
             "circle-color": [

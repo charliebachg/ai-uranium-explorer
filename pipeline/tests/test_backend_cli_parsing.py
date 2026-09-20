@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.backends import claude_cli as cc
-from legacy_reader.backends.base import ExtractionRequest, SchemaInvalidError, TransientBackendError
+from uranium_explorer.backends import claude_cli as cc
+from uranium_explorer.backends.base import ExtractionRequest, SchemaInvalidError, TransientBackendError
 
 FIXTURE = Path(__file__).parent / "fixtures" / "replay" / "probe_drilllog_p1.json"
 

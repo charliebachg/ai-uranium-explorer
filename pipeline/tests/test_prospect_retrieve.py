@@ -6,8 +6,8 @@ import duckdb
 import pandas as pd
 import pytest
 
-from legacy_reader.prospect import retrieve as R
-from legacy_reader.store import append_frame, apply_schema
+from uranium_explorer.prospect import retrieve as R
+from uranium_explorer.store import append_frame, apply_schema
 
 PAGES = [
     # near the query point, and about what is asked

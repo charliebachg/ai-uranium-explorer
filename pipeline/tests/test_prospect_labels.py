@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from shapely.geometry import Point, box
 
-from legacy_reader.prospect import labels as L
+from uranium_explorer.prospect import labels as L
 
 EPSG = 2957
 

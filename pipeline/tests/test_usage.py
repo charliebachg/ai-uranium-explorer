@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from legacy_reader.usage import format_report, summarise_run
+from uranium_explorer.usage import format_report, summarise_run
 
 
 def run_dir(tmp_path: Path, model_second: str = "claude-opus-5") -> Path:

@@ -152,7 +152,7 @@ test("with the service down the cells still draw and both panels say why", async
 
   // the exported row still says what the map drew, and the service-backed panels explain themselves
   await expect(page.getByTestId("map-scores")).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator('[data-testid="service-offline"]').first()).toContainText("lr prospect serve");
+  await expect(page.locator('[data-testid="service-offline"]').first()).toContainText("ue prospect serve");
 
   expect(await unbackedDigits(page)).toEqual([]);
   expect(errors).toEqual([]);

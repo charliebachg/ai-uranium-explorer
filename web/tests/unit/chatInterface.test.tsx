@@ -31,7 +31,7 @@ const jobRows: Record<string, unknown>[] = [];
 
 vi.mock("@/features/prospect/service", async () => ({
   SERVICE_ROOT: "http://test",
-  SERVICE_COMMAND: "lr prospect serve",
+  SERVICE_COMMAND: "ue prospect serve",
   health: async () => true,
   candidates: async () => [],
   evidence: async () => null,

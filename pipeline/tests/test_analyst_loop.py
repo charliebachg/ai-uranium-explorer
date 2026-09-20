@@ -16,18 +16,18 @@ from typing import Any
 
 import pytest
 
-from legacy_reader import store as ST
-from legacy_reader.analyst import chains as CH
-from legacy_reader.analyst import loop as L
-from legacy_reader.analyst import nodegate as G
-from legacy_reader.analyst import prompts as PR
-from legacy_reader.analyst import wire as W
-from legacy_reader.analyst.arms import Inputs, Switches
-from legacy_reader.analyst.session import Session
-from legacy_reader.analyst.v0 import ABSTAIN, NEGATIVE, POSITIVE
-from legacy_reader.prospect import criteria as C
-from legacy_reader.runtime.spend import BudgetExhausted
-from legacy_reader.runtime.tracing import read_spans, trace
+from uranium_explorer import store as ST
+from uranium_explorer.analyst import chains as CH
+from uranium_explorer.analyst import loop as L
+from uranium_explorer.analyst import nodegate as G
+from uranium_explorer.analyst import prompts as PR
+from uranium_explorer.analyst import wire as W
+from uranium_explorer.analyst.arms import Inputs, Switches
+from uranium_explorer.analyst.session import Session
+from uranium_explorer.analyst.v0 import ABSTAIN, NEGATIVE, POSITIVE
+from uranium_explorer.prospect import criteria as C
+from uranium_explorer.runtime.spend import BudgetExhausted
+from uranium_explorer.runtime.tracing import read_spans, trace
 
 from fake_loop_world import (CELL, COND, CRITERIA, FAULT, FEATURES, SAMPLES, SED, LoopBackend, LoopWorld,
                              adjudicator_answer, bad_adjudicator, bad_node, loop_registry, mid, node_answer,
@@ -46,10 +46,10 @@ SEGMENTS = {"s01": "conductor_proximity", "s02": "graphitic_host", "s03": "fault
 @pytest.fixture
 def weights_stub(monkeypatch: pytest.MonkeyPatch) -> types.ModuleType:
     """The weights module as an interface: a version and a fixed score, so nothing here depends on the fit."""
-    stub = types.ModuleType("legacy_reader.analyst.weights")
+    stub = types.ModuleType("uranium_explorer.analyst.weights")
     stub.criteria_weights = lambda criteria: SimpleNamespace(version="stub/v1")  # type: ignore[attr-defined]
     stub.score = lambda nodes, weights: 0.7  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "legacy_reader.analyst.weights", stub)
+    monkeypatch.setitem(sys.modules, "uranium_explorer.analyst.weights", stub)
     return stub
 
 

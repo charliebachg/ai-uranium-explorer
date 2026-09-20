@@ -17,14 +17,14 @@ import { registerValues } from "@/data/registry";
 import { registerCandidateScores, registerCriterionWeights, registerKnownShares } from "./cellValues";
 
 /**
- * The local agent service (`lr prospect serve`). The published site is static files; a conversation is not, so
+ * The local agent service (`ue prospect serve`). The published site is static files; a conversation is not, so
  * the evidence record and the chat come from a process on localhost that may simply not be running. Every call
  * here reports that as a state rather than an error, and every response is validated against the contract and
  * its value registry registered before anything is drawn.
  */
 
 export { SERVICE_ROOT };
-export const SERVICE_COMMAND = "lr prospect serve";
+export const SERVICE_COMMAND = "ue prospect serve";
 
 const HEALTH_TIMEOUT_MS = 2500;
 const READ_TIMEOUT_MS = 15_000;

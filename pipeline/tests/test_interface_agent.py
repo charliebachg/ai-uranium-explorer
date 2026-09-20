@@ -13,13 +13,13 @@ from typing import Any
 
 import pytest
 
-from legacy_reader.interface import actions as A
-from legacy_reader.interface import agent as G
-from legacy_reader.interface import router as R
-from legacy_reader.interface.conversation import Conversation
-from legacy_reader.prospect import tools as T
-from legacy_reader.store import connect
-from legacy_reader.values import stat
+from uranium_explorer.interface import actions as A
+from uranium_explorer.interface import agent as G
+from uranium_explorer.interface import router as R
+from uranium_explorer.interface.conversation import Conversation
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.store import connect
+from uranium_explorer.values import stat
 
 CELL = "0201_0072"          # enabled
 OTHER = "0001_0001"         # not enabled
@@ -306,7 +306,7 @@ def test_the_author_is_the_callers_label(tmp_path: Path, world: dict) -> None:
 
 def test_invoking_on_a_cell_that_is_not_enabled_is_refused_with_the_reason(tmp_path: Path, world: dict,
                                                                               monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.api import jobs as J
+    from uranium_explorer.api import jobs as J
 
     submitted: list[Any] = []
     monkeypatch.setattr(J, "submit_analyst", lambda *a, **k: submitted.append((a, k)) or "j1")
@@ -319,7 +319,7 @@ def test_invoking_on_a_cell_that_is_not_enabled_is_refused_with_the_reason(tmp_p
 
 def test_invoking_on_an_enabled_cell_submits_with_the_experts_and_reports_when_done(
         tmp_path: Path, world: dict, monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.api import jobs as J
+    from uranium_explorer.api import jobs as J
 
     submitted: list[Any] = []
     state = {"status": "running"}
@@ -370,7 +370,7 @@ def test_invoking_on_an_enabled_cell_submits_with_the_experts_and_reports_when_d
 
 
 def test_a_session_budget_bounds_the_invocations(tmp_path: Path, world: dict, monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.api import jobs as J
+    from uranium_explorer.api import jobs as J
 
     monkeypatch.setattr(J, "submit_analyst", lambda *a, **k: "j")
     monkeypatch.setattr(A, "oof_score_ids", lambda cell: [])
@@ -383,7 +383,7 @@ def test_a_session_budget_bounds_the_invocations(tmp_path: Path, world: dict, mo
 
 
 def test_the_runners_own_refusal_is_the_reason(tmp_path: Path, world: dict, monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.api import jobs as J
+    from uranium_explorer.api import jobs as J
 
     def refuse(*a: Any, **k: Any) -> str:
         raise J.JobRefused("the session budget leaves nothing")
@@ -397,7 +397,7 @@ def test_the_runners_own_refusal_is_the_reason(tmp_path: Path, world: dict, monk
 
 
 def test_prospect_chat_is_a_shim_over_the_agent(tmp_path: Path, world: dict) -> None:
-    from legacy_reader.prospect import chat as C
+    from uranium_explorer.prospect import chat as C
 
     assert C.Conversation is Conversation and C.MAX_STEPS == 5
     conv = C.Conversation(cell_id=CELL)

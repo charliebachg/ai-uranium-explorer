@@ -9,10 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.analyst import score as SC
-from legacy_reader.contract_check import Errors, check_bench, check_registry, check_readiness
-from legacy_reader.prospect import export as X
-from legacy_reader.values import registry
+from uranium_explorer.analyst import score as SC
+from uranium_explorer.contract_check import Errors, check_bench, check_registry, check_readiness
+from uranium_explorer.prospect import export as X
+from uranium_explorer.values import registry
 
 from test_analyst_score import cell_row, write_run
 from test_prospect_export_phases import ARM, BASELINE, _bench_table, _readiness_with

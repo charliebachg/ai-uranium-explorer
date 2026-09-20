@@ -11,11 +11,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from legacy_reader.api import app as A
-from legacy_reader.api import persist
-from legacy_reader.prospect import serve as S
-from legacy_reader.prospect import tools as T
-from legacy_reader.values import stat
+from uranium_explorer.api import app as A
+from uranium_explorer.api import persist
+from uranium_explorer.prospect import serve as S
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.values import stat
 
 LOOPBACK = ("127.0.0.1", 50000)
 
@@ -167,7 +167,7 @@ def test_the_openapi_document_types_every_response(client: TestClient) -> None:
 
 def test_evidence_assembles_memos_and_claims_from_the_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Exercises serve.evidence itself, which the stubbed routes above bypass: it lost its json import once."""
-    from legacy_reader.store import connect
+    from uranium_explorer.store import connect
 
     db = tmp_path / "s.duckdb"
     con = connect(db)
@@ -202,7 +202,7 @@ def test_the_built_site_is_served_from_the_same_process_behind_the_api(tmp_path:
 
 
 def test_the_evidence_cache_serves_a_record_once_per_store_version() -> None:
-    from legacy_reader.api.reads import EvidenceCache
+    from uranium_explorer.api.reads import EvidenceCache
 
     calls = []
     stamp = {"v": 1.0}
@@ -215,7 +215,7 @@ def test_the_evidence_cache_serves_a_record_once_per_store_version() -> None:
 
 
 def test_candidates_fall_back_to_duckdb_when_postgis_fails_and_retry_later(monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.api import reads
+    from uranium_explorer.api import reads
 
     def pg_down(limit, model, dsn):
         raise ConnectionError("refused")
@@ -232,7 +232,7 @@ def test_candidates_fall_back_to_duckdb_when_postgis_fails_and_retry_later(monke
 def test_ten_readers_of_one_cold_cell_cost_one_computation() -> None:
     import threading
 
-    from legacy_reader.api.reads import EvidenceCache
+    from uranium_explorer.api.reads import EvidenceCache
 
     calls = []
     started = threading.Event()
@@ -252,10 +252,10 @@ def test_ten_readers_of_one_cold_cell_cost_one_computation() -> None:
 
 
 def test_in_one_mode_a_read_only_request_gets_a_writable_connection_and_the_schema_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader import store
+    from uranium_explorer import store
 
     db = tmp_path / "one.duckdb"
-    monkeypatch.setenv("LR_STORE_RW", "1")
+    monkeypatch.setenv("UE_STORE_RW", "1")
     applied = []
     real = store.apply_schema
     monkeypatch.setattr(store, "apply_schema", lambda con: applied.append(1) or real(con))
@@ -266,7 +266,7 @@ def test_in_one_mode_a_read_only_request_gets_a_writable_connection_and_the_sche
     b.execute("insert into t values (1)")
     b.close()
     assert len(applied) == 1, "the schema is applied once per path per process in one mode"
-    monkeypatch.delenv("LR_STORE_RW")
+    monkeypatch.delenv("UE_STORE_RW")
     c = store.connect(db, read_only=True)
     with pytest.raises(Exception):
         c.execute("insert into t values (2)")

@@ -15,13 +15,13 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from legacy_reader import store as ST
-from legacy_reader.analyst import session as S
-from legacy_reader.analyst.arms import Switches
-from legacy_reader.bench.blind import blind_list
-from legacy_reader.ids import sha256_json
-from legacy_reader.prospect import tools as T
-from legacy_reader.runtime.tracing import read_spans, trace
+from uranium_explorer import store as ST
+from uranium_explorer.analyst import session as S
+from uranium_explorer.analyst.arms import Switches
+from uranium_explorer.bench.blind import blind_list
+from uranium_explorer.ids import sha256_json
+from uranium_explorer.prospect import tools as T
+from uranium_explorer.runtime.tracing import read_spans, trace
 
 from bench_store import bench_frame, make_bench_store
 from fake_session_world import BENCH, BLIND_FILE, CELL, FAR_FILE, SERVED_SCORE, FakeWorld, fake_registry
@@ -345,7 +345,7 @@ def test_the_default_registry_is_the_live_one(store: Path, tmp_path: Path) -> No
 def test_a_blinded_result_loses_the_literature_evidence_and_every_place_name(store: Path, world: FakeWorld, tmp_path: Path) -> None:
     """The frozen packs kept `evidence` because their renderer never printed it; the executor reads the raw
     file, so a blinded session drops the field and scrubs the handbook's own place names everywhere else."""
-    from legacy_reader.prospect.tools import ToolResult
+    from uranium_explorer.prospect.tools import ToolResult
 
     def criteria_breakdown(cell_id: str) -> ToolResult:
         out = ToolResult("criteria_breakdown", {"cell_id": cell_id})

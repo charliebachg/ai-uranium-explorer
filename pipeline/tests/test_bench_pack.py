@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import store as ST
-from legacy_reader.bench import pack as P
-from legacy_reader.bench import spec as S
-from legacy_reader.prospect import retrieve as R
+from uranium_explorer import store as ST
+from uranium_explorer.bench import pack as P
+from uranium_explorer.bench import spec as S
+from uranium_explorer.prospect import retrieve as R
 from bench_store import make_bench_store
 
 CELL = "0001_0053"
@@ -170,7 +170,7 @@ def test_pack_text_is_compact_and_stable(store: Path) -> None:
 
 
 def test_pack_text_quotes_a_text_valued_feature_as_known() -> None:
-    from legacy_reader.bench.pack import pack_text
+    from uranium_explorer.bench.pack import pack_text
 
     pack = {"bench_id": "b-0009", "tools": {"cell_features": {"rows": [
         {"feature": "surficial_class", "value": None, "text": "Glaciofluvial hummocky", "observations": 2},

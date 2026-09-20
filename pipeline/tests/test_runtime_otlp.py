@@ -11,10 +11,10 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import __version__
-from legacy_reader.runtime import otlp as OTLP
-from legacy_reader.runtime import tracing as TRC
-from legacy_reader.runtime.tracing import read_spans, set_attrs, span, trace
+from uranium_explorer import __version__
+from uranium_explorer.runtime import otlp as OTLP
+from uranium_explorer.runtime import tracing as TRC
+from uranium_explorer.runtime.tracing import read_spans, set_attrs, span, trace
 
 
 @pytest.fixture
@@ -22,8 +22,8 @@ def memory(monkeypatch: pytest.MonkeyPatch):
     """The SDK's in-memory exporter installed in place of OTLP for the test, and dropped after it."""
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "0")
-    monkeypatch.delenv("LR_OTLP_ENDPOINT", raising=False)
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "0")
+    monkeypatch.delenv("UE_OTLP_ENDPOINT", raising=False)
     exporter = InMemorySpanExporter()
     OTLP.install(exporter, log=lambda *a: None)
     yield exporter
@@ -55,7 +55,7 @@ def test_a_traced_run_reaches_the_exporter_with_the_files_ids_parents_and_attrib
         assert f"{s.context.span_id:016x}" == file[name]["span_id"], f"{name}: the file's span id is the backend's"
         parent = f"{s.parent.span_id:016x}" if s.parent is not None else None
         assert parent == file[name]["parent_id"], f"{name}: same parent as the file"
-        assert s.resource.attributes["service.name"] == "legacy-reader"
+        assert s.resource.attributes["service.name"] == "ai-uranium-explorer"
         assert s.resource.attributes["service.version"] == __version__
         assert s.attributes["run_id"] == "R1" and s.attributes["kind"] == file[name]["kind"]
         assert s.start_time <= s.end_time
@@ -90,8 +90,8 @@ def test_a_worker_thread_span_is_exported_under_the_run(tmp_path: Path, memory) 
 
 
 def test_with_no_endpoint_the_sdk_is_never_touched(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("LR_OTLP_ENDPOINT", raising=False)
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "0")
+    monkeypatch.delenv("UE_OTLP_ENDPOINT", raising=False)
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "0")
     OTLP.reset()
 
     def never(*a, **k):
@@ -107,35 +107,35 @@ def test_with_no_endpoint_the_sdk_is_never_touched(tmp_path: Path, monkeypatch: 
     # in a fresh process: a traced run imports no opentelemetry module at all (the mirror off, so MLflow's own
     # use of the SDK does not confound it)
     code = ("import sys, pathlib\n"
-            "from legacy_reader.runtime.tracing import trace, span\n"
+            "from uranium_explorer.runtime.tracing import trace, span\n"
             f"with trace('R', 'chat', run_dir=pathlib.Path({str(tmp_path / 'sub')!r})):\n"
             "    with span('tool:x'): pass\n"
             "print(sorted(m for m in sys.modules if m.startswith('opentelemetry')))\n")
-    env = {k: v for k, v in os.environ.items() if k not in ("LR_OTLP_ENDPOINT", "LR_OTLP_HEADERS")}
-    env["LR_TRACING_MLFLOW"] = "0"
+    env = {k: v for k, v in os.environ.items() if k not in ("UE_OTLP_ENDPOINT", "UE_OTLP_HEADERS")}
+    env["UE_TRACING_MLFLOW"] = "0"
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, env=env, timeout=120)
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == "[]", out.stdout
 
 
 def test_the_endpoint_and_headers_come_from_the_environment_and_the_header_values_stay_out_of_logs(monkeypatch) -> None:
-    monkeypatch.delenv("LR_OTLP_ENDPOINT", raising=False)
+    monkeypatch.delenv("UE_OTLP_ENDPOINT", raising=False)
     assert OTLP.endpoint() is None
-    monkeypatch.setenv("LR_OTLP_ENDPOINT", "http://tempo:4318")
+    monkeypatch.setenv("UE_OTLP_ENDPOINT", "http://tempo:4318")
     assert OTLP.endpoint() == "http://tempo:4318/v1/traces", "a bare host gets the OTLP/HTTP traces path"
-    monkeypatch.setenv("LR_OTLP_ENDPOINT", "https://otlp.example.com/v1/traces")
+    monkeypatch.setenv("UE_OTLP_ENDPOINT", "https://otlp.example.com/v1/traces")
     assert OTLP.endpoint() == "https://otlp.example.com/v1/traces", "a full URL is used as given"
-    monkeypatch.setenv("LR_OTLP_HEADERS", "Authorization=Basic%20abc==, x-scope-orgid=lr ,broken")
-    assert OTLP.headers() == {"Authorization": "Basic abc==", "x-scope-orgid": "lr"}
-    monkeypatch.delenv("LR_OTLP_HEADERS")
+    monkeypatch.setenv("UE_OTLP_HEADERS", "Authorization=Basic%20abc==, x-scope-orgid=ue ,broken")
+    assert OTLP.headers() == {"Authorization": "Basic abc==", "x-scope-orgid": "ue"}
+    monkeypatch.delenv("UE_OTLP_HEADERS")
     assert OTLP.headers() == {}
 
 
 def test_a_failing_exporter_warns_once_and_never_raises(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from opentelemetry.sdk.trace.export import SpanExporter
 
-    monkeypatch.setenv("LR_TRACING_MLFLOW", "0")
-    monkeypatch.delenv("LR_OTLP_ENDPOINT", raising=False)
+    monkeypatch.setenv("UE_TRACING_MLFLOW", "0")
+    monkeypatch.delenv("UE_OTLP_ENDPOINT", raising=False)
 
     class Broken(SpanExporter):
         calls = 0

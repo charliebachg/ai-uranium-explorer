@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from legacy_reader.prospect import models as M
+from uranium_explorer.prospect import models as M
 
 
 def frame(n: int = 400, seed: int = 0) -> pd.DataFrame:

@@ -2,9 +2,9 @@ import json
 
 import pytest
 
-from legacy_reader import nts
-from legacy_reader.filenum import display_file_num, norm_file_num, nts_from_file_num, parse_file_nums
-from legacy_reader.paths import PATHS
+from uranium_explorer import nts
+from uranium_explorer.filenum import display_file_num, norm_file_num, nts_from_file_num, parse_file_nums
+from uranium_explorer.paths import PATHS
 
 
 @pytest.mark.parametrize("raw,expected", [

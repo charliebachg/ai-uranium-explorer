@@ -80,7 +80,7 @@ function Mark() {
   return (
     <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
       <defs>
-        <linearGradient id="lr-mark" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id="ue-mark" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#e6f0ff" />
           <stop offset="1" stopColor="#3987e5" />
         </linearGradient>
@@ -89,7 +89,7 @@ function Mark() {
       <path
         d="M8 7v12h10"
         fill="none"
-        stroke="url(#lr-mark)"
+        stroke="url(#ue-mark)"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"

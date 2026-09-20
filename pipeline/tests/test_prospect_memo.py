@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.prospect import memo as M
-from legacy_reader.prospect import tools as T
+from uranium_explorer.prospect import memo as M
+from uranium_explorer.prospect import tools as T
 
 
 def val(vid: str, value, fmt: str = "m1", unit: str | None = None) -> dict:
@@ -310,7 +310,7 @@ def test_a_conversion_is_only_offered_for_units_that_have_one():
 
 
 def test_a_number_glued_to_its_unit_in_quoted_text_is_the_same_number() -> None:
-    from legacy_reader.prospect.memo import check_claims, numbers_in
+    from uranium_explorer.prospect.memo import check_claims, numbers_in
 
     assert numbers_in("9 holes totalling 2310m in 2013-2014 and 838m; hole PLS12-023 on sheet 74H09") == ["9", "2310", "838"]
     assert numbers_in("2018: drilling resumed. 111.4: sandstone; id c:cell:0201_0072:d_fault_m") == ["2018", "111.4"]
@@ -324,7 +324,7 @@ def test_a_number_glued_to_its_unit_in_quoted_text_is_the_same_number() -> None:
 def test_a_map_scale_yields_no_number_and_a_claim_quoting_it_needs_no_id() -> None:
     """1:250,000 once scanned as "000" after the colon stopped the match at 250,000; a chain was withheld for
     it. No token starts inside a comma group, and the colon and the comma group are not a claim's numbers."""
-    from legacy_reader.prospect.memo import check_claims, numbers_in
+    from uranium_explorer.prospect.memo import check_claims, numbers_in
 
     assert numbers_in("Mapped at 1:250,000 scale, so a line's position carries map-scale error") == []
     assert numbers_in("The 1:250,000 polygon at 0 m names a pelitic unit") == ["0"]

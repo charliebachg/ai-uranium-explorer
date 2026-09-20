@@ -5,11 +5,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from legacy_reader.ids import sha256_file
-from legacy_reader.runtime.manifest import Manifest
-from legacy_reader.runtime.runs import new_run_id, run_dir
-from legacy_reader.runtime.spend import RunBudget
-from legacy_reader.store import snapshot as SN
+from uranium_explorer.ids import sha256_file
+from uranium_explorer.runtime.manifest import Manifest
+from uranium_explorer.runtime.runs import new_run_id, run_dir
+from uranium_explorer.runtime.spend import RunBudget
+from uranium_explorer.store import snapshot as SN
 
 
 def test_a_manifest_round_trips_through_its_file(tmp_path: Path) -> None:
@@ -67,7 +67,7 @@ def test_read_tolerates_keys_it_does_not_know(tmp_path: Path) -> None:
 
 
 def test_run_ids_and_directories() -> None:
-    from legacy_reader.paths import PATHS
+    from uranium_explorer.paths import PATHS
 
     rid = new_run_id("bench")
     assert rid.endswith("-bench") and rid[8] == "T" and rid[15] == "Z"
@@ -75,7 +75,7 @@ def test_run_ids_and_directories() -> None:
 
 
 def test_two_runs_claimed_in_the_same_second_get_two_directories(tmp_path, monkeypatch) -> None:
-    from legacy_reader.runtime import runs as R
+    from uranium_explorer.runtime import runs as R
 
     monkeypatch.setattr(R, "run_dir", lambda run_id: tmp_path / run_id)
     monkeypatch.setattr(R, "new_run_id", lambda kind: f"20260920T000000Z-{kind}")

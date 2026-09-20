@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from legacy_reader.assay_sheets import find_header, map_columns, parse_number, read_certificate, read_sheet, stage_assay_sheets
+from uranium_explorer.assay_sheets import find_header, map_columns, parse_number, read_certificate, read_sheet, stage_assay_sheets
 
 
 def fission_like() -> pd.DataFrame:

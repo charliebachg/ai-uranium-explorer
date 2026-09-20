@@ -138,7 +138,7 @@ export function Tour() {
         </div>
 
         {/* keyed: each step's line fades in, while the card itself stays where it is */}
-        <div key={current.id} className="animate-[lr-step-in_320ms_var(--ease-out-expo)] px-4 py-3">
+        <div key={current.id} className="animate-[ue-step-in_320ms_var(--ease-out-expo)] px-4 py-3">
           <p className="text-[13.5px] text-ink leading-relaxed">
             <Say say={typeof current.say === "function" ? current.say(targets ?? EMPTY) : current.say} />
           </p>

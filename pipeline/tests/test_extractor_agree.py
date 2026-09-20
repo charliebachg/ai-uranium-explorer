@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.extractor import agree as AG
-from legacy_reader.locate import PageLocator
+from uranium_explorer.extractor import agree as AG
+from uranium_explorer.locate import PageLocator
 
 from fake_page import page_result
 

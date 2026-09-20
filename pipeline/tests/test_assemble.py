@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.assemble import assemble_file
-from legacy_reader.extract import carry_from_result
-from legacy_reader.normalise import (
+from uranium_explorer.assemble import assemble_file
+from uranium_explorer.extract import carry_from_result
+from uranium_explorer.normalise import (
     FT_TO_M,
     basis,
     depth_unit,
@@ -16,7 +16,7 @@ from legacy_reader.normalise import (
     species,
     to_metres,
 )
-from legacy_reader.ocr import read_words
+from uranium_explorer.ocr import read_words
 
 from fake_page import ASSAY_ROWS, FILE_NUM, LITH_ROWS, PAGE_ID, PAGE_NO, PDF_SHA, extract_row, page_result
 
@@ -24,7 +24,7 @@ from fake_page import ASSAY_ROWS, FILE_NUM, LITH_ROWS, PAGE_ID, PAGE_NO, PDF_SHA
 @pytest.fixture(scope="module")
 def ocr_present() -> bool:
     if not [w for w in read_words(PDF_SHA) if w["page_no"] == PAGE_NO]:
-        pytest.skip("OCR words missing; run `lr ocr`")
+        pytest.skip("OCR words missing; run `ue ocr`")
     return True
 
 

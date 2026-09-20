@@ -8,11 +8,11 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from legacy_reader.api import app as A
-from legacy_reader.extractor import agree as AG
-from legacy_reader.extractor import queue as Q
-from legacy_reader.prospect import serve as S
-from legacy_reader.store import connect
+from uranium_explorer.api import app as A
+from uranium_explorer.extractor import agree as AG
+from uranium_explorer.extractor import queue as Q
+from uranium_explorer.prospect import serve as S
+from uranium_explorer.store import connect
 
 
 def cand(field: str, value: str, vid: str | None = None, bbox=None) -> AG.Candidate:
@@ -41,7 +41,7 @@ def seed(db: Path) -> list[dict]:
 @pytest.fixture
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [])
-    monkeypatch.setenv("LR_MCP_KEYS", "geo-key:read,record;viewer-key:read")
+    monkeypatch.setenv("UE_MCP_KEYS", "geo-key:read,record;viewer-key:read")
     db = tmp_path / "t.duckdb"
     app = A.create_app(lambda: None, model="fake", effort="low", backend_name="fake", db_path=db)
     c = TestClient(app)
@@ -115,7 +115,7 @@ def test_the_original_rows_are_never_rewritten(client: TestClient) -> None:
 
 def test_with_no_register_a_local_caller_is_the_local_principal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [])
-    monkeypatch.delenv("LR_MCP_KEYS", raising=False)
+    monkeypatch.delenv("UE_MCP_KEYS", raising=False)
     db = tmp_path / "t.duckdb"
     app = A.create_app(lambda: None, model="fake", effort="low", backend_name="fake", db_path=db)
     c = TestClient(app, client=("127.0.0.1", 50000))   # a browser on the same machine, not "testclient"

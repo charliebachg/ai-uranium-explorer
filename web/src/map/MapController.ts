@@ -105,7 +105,7 @@ export class MapController {
     // compact attribution stays collapsed until the (i) button is used; licences also live in the dialog
     container.addEventListener("click", (e) => {
       const btn = (e.target as HTMLElement).closest(".maplibregl-ctrl-attrib-button");
-      btn?.closest(".maplibregl-ctrl-attrib")?.classList.toggle("lr-user-open");
+      btn?.closest(".maplibregl-ctrl-attrib")?.classList.toggle("ue-user-open");
     });
 
     // tiles, when the archives exist: the groups are rebuilt on tile sources and the style re-applied once
@@ -487,7 +487,7 @@ export class MapController {
     }
     if (at) {
       const el = document.createElement("div");
-      el.className = "lr-select-ring";
+      el.className = "ue-select-ring";
       this.selectionMarker = new maplibregl.Marker({ element: el, anchor: "center" })
         .setLngLat(at)
         .addTo(this.map);

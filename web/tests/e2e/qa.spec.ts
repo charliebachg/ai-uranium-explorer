@@ -15,9 +15,9 @@ for (const [name, url] of VIEWS) {
       () => {
         const m = (
           window as unknown as {
-            __lr?: { map?: { loaded: () => boolean; isSourceLoaded: (s: string) => boolean } };
+            __ue?: { map?: { loaded: () => boolean; isSourceLoaded: (s: string) => boolean } };
           }
-        ).__lr?.map;
+        ).__ue?.map;
         try {
           return !!m && m.isSourceLoaded("compilation");
         } catch {
@@ -43,7 +43,7 @@ test("qa-datum-field", async ({ page }) => {
   await page.goto("/?c=-105.5,58.1,7.6,0,0&b=ink&L=rel,basin,cmp,dsf");
   await page.waitForFunction(
     () => {
-      const m = (window as unknown as { __lr?: { map?: { isSourceLoaded: (s: string) => boolean } } }).__lr
+      const m = (window as unknown as { __ue?: { map?: { isSourceLoaded: (s: string) => boolean } } }).__ue
         ?.map;
       try {
         return !!m && m.isSourceLoaded("compilation");
@@ -56,7 +56,7 @@ test("qa-datum-field", async ({ page }) => {
   );
   await page.waitForTimeout(3500);
   const arrows = await page.evaluate(() => {
-    const m = (window as unknown as { __lr: { map: { querySourceFeatures: (s: string) => unknown[] } } }).__lr
+    const m = (window as unknown as { __ue: { map: { querySourceFeatures: (s: string) => unknown[] } } }).__ue
       .map;
     return m.querySourceFeatures("datum-arrows").length;
   });

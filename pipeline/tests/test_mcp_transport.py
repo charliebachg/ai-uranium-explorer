@@ -23,13 +23,13 @@ from mcp.client.streamable_http import streamable_http_client
 from mcp.shared.exceptions import MCPError
 from typer.testing import CliRunner
 
-from legacy_reader import paths as LP
-from legacy_reader.api import app as A
-from legacy_reader.mcp import TOOL_VERSION
-from legacy_reader.mcp import contract as C
-from legacy_reader.mcp import server as SV
-from legacy_reader.mcp import transport as TR
-from legacy_reader.mcp.cli import mcp_app
+from uranium_explorer import paths as LP
+from uranium_explorer.api import app as A
+from uranium_explorer.mcp import TOOL_VERSION
+from uranium_explorer.mcp import contract as C
+from uranium_explorer.mcp import server as SV
+from uranium_explorer.mcp import transport as TR
+from uranium_explorer.mcp.cli import mcp_app
 
 from mcp_world import CELL, numbers_outside_vals, synthetic_store
 from test_api import FakeBackend
@@ -45,8 +45,8 @@ def store(prospect_sandbox, monkeypatch: pytest.MonkeyPatch) -> Path:
 @pytest.fixture
 def app(store: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
     """The API app with the MCP route mounted, its runs under the test's directory and no key register."""
-    monkeypatch.delenv("LR_MCP_KEYS", raising=False)
-    monkeypatch.delenv("LR_MCP_KEY", raising=False)
+    monkeypatch.delenv("UE_MCP_KEYS", raising=False)
+    monkeypatch.delenv("UE_MCP_KEY", raising=False)
     monkeypatch.setattr(SV, "PATHS", LP.Paths(tmp_path))
     return A.create_app(lambda: FakeBackend(), model="fake-model", effort="low", backend_name="fake", db_path=tmp_path / "t.duckdb")
 
@@ -98,7 +98,7 @@ def test_the_api_serves_the_contract_at_mcp_to_a_loopback_client(app: Any, tmp_p
 
 
 def test_with_a_register_the_route_needs_a_bearer_key(store: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("LR_MCP_KEYS", "reader-key:read;runner-key:read,record,run")
+    monkeypatch.setenv("UE_MCP_KEYS", "reader-key:read;runner-key:read,record,run")
     monkeypatch.setattr(SV, "PATHS", LP.Paths(tmp_path))
     app = A.create_app(lambda: FakeBackend(), model="fake-model", effort="low", backend_name="fake", db_path=tmp_path / "t.duckdb")
 
@@ -122,8 +122,8 @@ def test_with_a_register_the_route_needs_a_bearer_key(store: Path, tmp_path: Pat
 
 
 def test_the_standalone_http_app_serves_the_same_route(store: Path, tmp_path: Path) -> None:
-    lr = SV.build(environ={}, runs_dir=tmp_path / "runs")
-    app = TR.http_app(lr)
+    ue = SV.build(environ={}, runs_dir=tmp_path / "runs")
+    app = TR.http_app(ue)
     over_http(app, gated_round_trip)
 
 
@@ -132,18 +132,18 @@ def test_stdio_serves_a_client_that_launched_the_process(store: Path, tmp_path: 
         import sys
         from pathlib import Path
         db, tmp = Path(sys.argv[1]), Path(sys.argv[2])
-        from legacy_reader import store as ST
-        from legacy_reader.store import snapshot as SN
+        from uranium_explorer import store as ST
+        from uranium_explorer.store import snapshot as SN
         ST.db_path = lambda: db
         SN.db_path = lambda: db
         SN.snapshots_dir = lambda: tmp / "snapshots"
-        from legacy_reader.mcp.server import build
-        from legacy_reader.mcp.transport import serve_stdio
+        from uranium_explorer.mcp.server import build
+        from uranium_explorer.mcp.transport import serve_stdio
         print("a stray print before serving must not reach the wire either")
         serve_stdio(build(environ={}, runs_dir=tmp / "runs"))
     """)
     params = StdioServerParameters(command=sys.executable, args=["-c", child, str(store), str(tmp_path)],
-                                   env={"LR_TRACING_MLFLOW": "0", "PATH": "/usr/bin:/bin"})
+                                   env={"UE_TRACING_MLFLOW": "0", "PATH": "/usr/bin:/bin"})
 
     async def main() -> None:
         async with Client(params) as client:
@@ -164,7 +164,7 @@ def test_the_cli_names_the_catalogue_and_mints_a_key_but_serves_one_transport_at
     listed = json.loads(runner.invoke(mcp_app, ["tools", "--json"]).output)
     assert [t["name"] for t in listed] == list(C.CATALOGUE) and listed[1]["annotations"]["readOnlyHint"] is True
     key = runner.invoke(mcp_app, ["key", "--scopes", "read,record"])
-    assert key.exit_code == 0 and "LR_MCP_KEYS=" in key.output and ":read,record" in key.output
+    assert key.exit_code == 0 and "UE_MCP_KEYS=" in key.output and ":read,record" in key.output
     assert runner.invoke(mcp_app, ["key", "--scopes", "admin"]).exit_code != 0
     both = runner.invoke(mcp_app, ["serve", "--stdio", "--http"])
     assert both.exit_code != 0 and "one transport" in both.output

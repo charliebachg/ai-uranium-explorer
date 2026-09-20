@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from legacy_reader import extract as ex
-from legacy_reader.backends.base import (
+from uranium_explorer import extract as ex
+from uranium_explorer.backends.base import (
     BackendConfigError,
     ExtractionRequest,
     ExtractionResponse,
@@ -15,7 +15,7 @@ from legacy_reader.backends.base import (
     TransientBackendError,
     UsageLimitReached,
 )
-from legacy_reader.backends.cache import CachedBackend
+from uranium_explorer.backends.cache import CachedBackend
 
 from fake_page import PDF_SHA, page_result
 
@@ -165,7 +165,7 @@ def test_a_schema_invalid_answer_is_retried_once(tmp_path):
     assert seen[5] == 2, "the invalid answer is dropped from the cache so the retry really re-asks"
     assert summary["done"] == 1
     # the unusable answer left a failure record and the usable one replaced it in the cache
-    from legacy_reader.backends.cache import failure_path
+    from uranium_explorer.backends.cache import failure_path
     assert failure_path(req.cache_key("claude_cli"), tmp_path / "cache").is_file()
     assert backend.cached(req).structured["tables"]
 

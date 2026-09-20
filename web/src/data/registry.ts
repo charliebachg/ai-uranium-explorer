@@ -90,6 +90,6 @@ export function registerBulkFeature(
 
 /** Test and debug hook: exposes the registry for the no-unbacked-numbers browser test. */
 export function exposeRegistryForTests(): void {
-  const w = window as unknown as { __lr?: Record<string, unknown> };
-  w.__lr = { ...(w.__lr ?? {}), resolve: (id: string) => values.get(id) ?? null, size: () => values.size };
+  const w = window as unknown as { __ue?: Record<string, unknown> };
+  w.__ue = { ...(w.__ue ?? {}), resolve: (id: string) => values.get(id) ?? null, size: () => values.size };
 }

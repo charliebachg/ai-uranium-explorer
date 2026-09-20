@@ -14,8 +14,8 @@ export function MapView() {
     if (!ref.current) return;
     const ctl = new MapController(ref.current);
     current = ctl;
-    const w = window as unknown as { __lr?: Record<string, unknown> };
-    w.__lr = { ...(w.__lr ?? {}), map: ctl.map };
+    const w = window as unknown as { __ue?: Record<string, unknown> };
+    w.__ue = { ...(w.__ue ?? {}), map: ctl.map };
     return () => {
       ctl.destroy();
       if (current === ctl) current = null;

@@ -7,17 +7,17 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.backends import spend as shim
-from legacy_reader.backends.base import ExtractionRequest, ExtractionResponse
-from legacy_reader.backends import cache as C
-from legacy_reader.backends.cache import CachedBackend
-from legacy_reader.runtime import spend as S
-from legacy_reader.runtime.spend import BudgetExhausted, RunBudget
+from uranium_explorer.backends import spend as shim
+from uranium_explorer.backends.base import ExtractionRequest, ExtractionResponse
+from uranium_explorer.backends import cache as C
+from uranium_explorer.backends.cache import CachedBackend
+from uranium_explorer.runtime import spend as S
+from uranium_explorer.runtime.spend import BudgetExhausted, RunBudget
 
 
 @pytest.fixture
 def caps(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("LR_MAX_SPEND_USD", "1.00")
+    monkeypatch.setenv("UE_MAX_SPEND_USD", "1.00")
     monkeypatch.setenv("OPENAI_MAX_SPEND_USD", "0.50")
 
 
@@ -47,7 +47,7 @@ def test_the_caps_come_from_the_environment_with_stated_defaults(monkeypatch) ->
     monkeypatch.delenv("OPENAI_MAX_SPEND_USD", raising=False)
     assert S.cap_usd() == 300.0 and S.cap_usd("openai") == 2.00
     assert S.cap_usd("claude_cli") == 300.0, "a family without a ceiling of its own is bounded by the total"
-    monkeypatch.setenv("LR_MAX_SPEND_USD", "12.5")
+    monkeypatch.setenv("UE_MAX_SPEND_USD", "12.5")
     assert S.cap_usd() == 12.5 == S.cap_usd("claude_cli")
 
 
@@ -66,7 +66,7 @@ def test_check_refuses_when_the_run_budget_would_be_crossed(caps) -> None:
 
 def test_check_refuses_when_the_total_ceiling_would_be_crossed(caps) -> None:
     S.record("claude_cli", "m", 0.9)
-    with pytest.raises(BudgetExhausted, match="LR_MAX_SPEND_USD"):
+    with pytest.raises(BudgetExhausted, match="UE_MAX_SPEND_USD"):
         S.check("claude_cli", 0.2)
     S.check("claude_cli", 0.1)
 
@@ -168,7 +168,7 @@ def test_an_exhausted_run_budget_refuses_before_the_backend_is_called(tmp_path, 
 def test_the_cumulative_ceiling_applies_to_the_cli_family_too(tmp_path, caps) -> None:
     S.record("claude_cli", "m", 0.95)
     inner = ScriptedBackend()
-    with pytest.raises(BudgetExhausted, match="LR_MAX_SPEND_USD"):
+    with pytest.raises(BudgetExhausted, match="UE_MAX_SPEND_USD"):
         CachedBackend(inner, root=tmp_path / "cache", estimate_usd=0.1).call(request(tmp_path))
     assert inner.calls == 0
 

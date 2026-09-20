@@ -5,7 +5,7 @@ Revises: None
 """
 from alembic import op
 
-from legacy_reader.store.pg import geometry_ddl, postgres_ddl, postgres_views
+from uranium_explorer.store.pg import geometry_ddl, postgres_ddl, postgres_views
 
 revision = "0001"
 down_revision = None

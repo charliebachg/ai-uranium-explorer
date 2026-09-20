@@ -55,7 +55,7 @@ describe("withTiles", () => {
     const prospect = groups.find((g) => g.id === "prospect");
     expect(prospect?.sources.cells).toMatchObject({ type: "vector" });
     const scored = prospect?.layers.find(
-      (l) => (l as { metadata?: Record<string, unknown> }).metadata?.["lr:score"],
+      (l) => (l as { metadata?: Record<string, unknown> }).metadata?.["ue:score"],
     );
     expect(scored).toBeDefined();
     expect((scored as { "source-layer"?: string })["source-layer"]).toBe("cells");

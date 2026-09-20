@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.analyst import nodegate as G
-from legacy_reader.analyst import wire as W
-from legacy_reader.prospect import criteria as C
-from legacy_reader.values import stat
+from uranium_explorer.analyst import nodegate as G
+from uranium_explorer.analyst import wire as W
+from uranium_explorer.prospect import criteria as C
+from uranium_explorer.values import stat
 
 CS = C.load()
 CELL = "b01"

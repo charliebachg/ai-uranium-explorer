@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from legacy_reader.store import TierError, connect, insert_frame
+from uranium_explorer.store import TierError, connect, insert_frame
 
 
 def _layer_frame(**over) -> pd.DataFrame:

@@ -6,7 +6,7 @@ import { formatVal, unitOf } from "@/lib/format";
 /**
  * <V id> is the only way the app prints a stored number. It renders the value (as printed for extracted values),
  * marks the element with data-vid, and fails loudly for unknown ids: throws in dev, renders an UNBACKED chip in
- * a build (and counts it on window.__lr.unbacked so the browser test catches it).
+ * a build (and counts it on window.__ue.unbacked so the browser test catches it).
  */
 
 type Props = {
@@ -18,9 +18,9 @@ type Props = {
 };
 
 function noteUnbacked(id: string) {
-  const w = window as unknown as { __lr?: { unbacked?: string[] } };
-  w.__lr = w.__lr ?? {};
-  w.__lr.unbacked = [...(w.__lr.unbacked ?? []), id];
+  const w = window as unknown as { __ue?: { unbacked?: string[] } };
+  w.__ue = w.__ue ?? {};
+  w.__ue.unbacked = [...(w.__ue.unbacked ?? []), id];
 }
 
 export function V({ id, unit = true, className, onSelect, emptyText = "not printed" }: Props) {

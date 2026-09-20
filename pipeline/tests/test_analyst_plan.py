@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import json
 
-from legacy_reader.analyst import plan as P
-from legacy_reader.analyst import wire as W
-from legacy_reader.analyst.arms import Switches, load_arm
-from legacy_reader.analyst.v0 import place_names_in
-from legacy_reader.prospect import criteria as C
-from legacy_reader.prospect.models import EFFORT_FEATURES
+from uranium_explorer.analyst import plan as P
+from uranium_explorer.analyst import wire as W
+from uranium_explorer.analyst.arms import Switches, load_arm
+from uranium_explorer.analyst.v0 import place_names_in
+from uranium_explorer.prospect import criteria as C
+from uranium_explorer.prospect.models import EFFORT_FEATURES
 
 CS = C.load()
 OFF = load_arm("v0").switches

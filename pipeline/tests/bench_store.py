@@ -10,8 +10,8 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import box
 
-from legacy_reader.prospect import models as M
-from legacy_reader.store import append_frame, connect, write_meta
+from uranium_explorer.prospect import models as M
+from uranium_explorer.store import append_frame, connect, write_meta
 
 GRID_ID = "testgrid"
 NOW = "2026-09-20T00:00:00+00:00"

@@ -61,7 +61,7 @@ export function App() {
           </PageShell>
         </Route>
         <Route>
-          <LegacyReader />
+          <UraniumExplorer />
         </Route>
       </Switch>
       {/* the walkthrough and the palette follow the visitor across every view */}
@@ -123,7 +123,7 @@ function PageShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function LegacyReader() {
+function UraniumExplorer() {
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [error, setError] = useState<string | null>(null);
 

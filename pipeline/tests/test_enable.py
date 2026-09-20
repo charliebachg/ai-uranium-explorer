@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import extract, select
-from legacy_reader.select import enabled_files, fetch_items, probe_entry, register_enabled, selected_files
+from uranium_explorer import extract, select
+from uranium_explorer.select import enabled_files, fetch_items, probe_entry, register_enabled, selected_files
 
 
 def listing(name: str = "MAW509_report.pdf", size_mb: float = 3.0, extra: list[dict] | None = None) -> list[dict]:
@@ -88,7 +88,7 @@ def test_the_opus_config_on_disk_is_opus_only_with_one_worker() -> None:
 
 def test_render_skips_an_enabled_file_that_is_not_fetched_yet(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The original selection must be complete on disk; an enabled file may still be downloading."""
-    from legacy_reader import fetch, render
+    from uranium_explorer import fetch, render
 
     sel = selection()
     register_enabled(sel, "MAW00509", listing(), "why", heldout=set(), now="t")

@@ -7,7 +7,7 @@ from dataclasses import asdict
 
 import pytest
 
-from legacy_reader.analyst import arms as A
+from uranium_explorer.analyst import arms as A
 
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
 V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter", "v1-anthropic-or",
@@ -146,7 +146,7 @@ def test_the_three_cost_switches_are_off_in_the_headline_and_stated_in_every_v1_
 
 def test_the_scoped_view_moves_the_manifest_hash_and_nothing_else() -> None:
     """The run manifest's config is the arm as a dict; two arms that differ in one switch hash apart."""
-    from legacy_reader.ids import sha256_json
+    from uranium_explorer.ids import sha256_json
 
     v1, scoped, both = A.load_arm("v1"), A.load_arm("v1-scoped"), A.load_arm("v1-scoped-batch")
     hashes = {sha256_json(a.as_dict()) for a in (v1, scoped, both)}

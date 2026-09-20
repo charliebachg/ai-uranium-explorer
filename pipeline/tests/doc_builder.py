@@ -74,7 +74,7 @@ class Doc:
     def interval(self, hole: dict[str, Any], group: str, frm: float, to: float, *, unit: str = "ft",
                  unit_printed: str | None = "ft", width: float | None = None,
                  grades: list[dict[str, Any]] | None = None, row: int = 0) -> dict[str, Any]:
-        from legacy_reader.normalise import to_metres
+        from uranium_explorer.normalise import to_metres
 
         f_vid = self.value("from_depth", f"{frm}", frm, unit=unit_printed, unit_norm=unit,
                            hole_id=hole["hole_id"], row=row,

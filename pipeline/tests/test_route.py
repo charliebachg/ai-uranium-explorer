@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader.route import (STRONG, classify, continuation_chains, datum_signals, depth_pairs, group_rows,
+from uranium_explorer.route import (STRONG, classify, continuation_chains, datum_signals, depth_pairs, group_rows,
                                  numeric_columns, page_features, route_page)
 
 def _route(ocred, name: str, page_no: int) -> dict:

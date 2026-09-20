@@ -9,15 +9,15 @@ from __future__ import annotations
 
 import pytest
 
-from legacy_reader import crs
-from legacy_reader.crosscheck import (
+from uranium_explorer import crs
+from uranium_explorer.crosscheck import (
     NEAREST_CANDIDATE_M,
     _shift_signature,
     build_provincial_lith,
     crosscheck_file,
     name_match_kind,
 )
-from legacy_reader.position import parse_datum, transform_hole
+from uranium_explorer.position import parse_datum, transform_hole
 
 from doc_builder import Doc
 

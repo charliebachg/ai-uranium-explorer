@@ -1,7 +1,7 @@
 """The serving schema is derived from the analytics schema, not written twice.
 
 The translation tests need no database. The round trip (migrate, sync, audit) runs only when a Postgres is
-reachable at LR_PG_DSN, which is the compose stack on a developer machine and nothing on CI."""
+reachable at UE_PG_DSN, which is the compose stack on a developer machine and nothing on CI."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ import os
 
 import pytest
 
-from legacy_reader.store import SCHEMA_SQL
-from legacy_reader.store import pg as PG
+from uranium_explorer.store import SCHEMA_SQL
+from uranium_explorer.store import pg as PG
 
 
 def test_every_table_and_every_tier_check_survives_the_translation() -> None:
@@ -44,7 +44,7 @@ def test_the_geometry_lives_only_in_postgres() -> None:
 
 
 def _pg_reachable() -> bool:
-    if not os.environ.get("LR_PG_DSN") and not os.environ.get("LR_PG_TEST"):
+    if not os.environ.get("UE_PG_DSN") and not os.environ.get("UE_PG_TEST"):
         return False
     try:
         PG.connect_pg().close()
@@ -53,7 +53,7 @@ def _pg_reachable() -> bool:
         return False
 
 
-@pytest.mark.skipif(not _pg_reachable(), reason="no Postgres at LR_PG_DSN (set LR_PG_TEST=1 with the compose stack up)")
+@pytest.mark.skipif(not _pg_reachable(), reason="no Postgres at UE_PG_DSN (set UE_PG_TEST=1 with the compose stack up)")
 def test_round_trip_migrate_sync_audit() -> None:
     PG.migrate()
     counts = PG.sync(log=lambda *a: None)

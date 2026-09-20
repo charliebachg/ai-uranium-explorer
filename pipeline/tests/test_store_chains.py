@@ -10,9 +10,9 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from legacy_reader.analyst import chains as C
-from legacy_reader.store import SCHEMA_SQL, TierError, connect, insert_frame, tier_audit
-from legacy_reader.store import pg as PG
+from uranium_explorer.analyst import chains as C
+from uranium_explorer.store import SCHEMA_SQL, TierError, connect, insert_frame, tier_audit
+from uranium_explorer.store import pg as PG
 
 TABLES = ("chain", "chain_node", "chain_verdict", "chain_decision")
 MIGRATION = Path(__file__).resolve().parents[1] / "migrations" / "versions" / "0004_agent_chain.py"
@@ -229,7 +229,7 @@ def _columns(sql: str) -> dict[str, list[tuple[str, str]]]:
 
 
 def test_migration_0004_creates_the_same_tables_and_columns_as_schema_sql(monkeypatch) -> None:
-    spec = importlib.util.spec_from_file_location("lr_migration_0004", MIGRATION)
+    spec = importlib.util.spec_from_file_location("ue_migration_0004", MIGRATION)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     assert mod.revision == "0004" and mod.down_revision == "0003"

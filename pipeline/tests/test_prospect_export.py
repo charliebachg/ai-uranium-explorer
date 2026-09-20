@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from legacy_reader.contract_check import check_readiness
-from legacy_reader.paths import PATHS
+from uranium_explorer.contract_check import check_readiness
+from uranium_explorer.paths import PATHS
 
 READINESS = PATHS.web_data / "prospect" / "readiness.json"
 
@@ -15,7 +15,7 @@ READINESS = PATHS.web_data / "prospect" / "readiness.json"
 @pytest.fixture(scope="module")
 def doc():
     if not READINESS.is_file():
-        pytest.skip("no prospect export yet; run `lr prospect export`")
+        pytest.skip("no prospect export yet; run `ue prospect export`")
     return json.loads(READINESS.read_text())
 
 

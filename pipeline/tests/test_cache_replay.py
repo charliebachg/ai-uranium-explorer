@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.backends.base import (
+from uranium_explorer.backends.base import (
     ExtractionRequest,
     ExtractionResponse,
     ReplayMiss,
     TransientBackendError,
 )
-from legacy_reader.backends.cache import CachedBackend, failure_path, record_path
-from legacy_reader.backends.replay import ReplayBackend
+from uranium_explorer.backends.cache import CachedBackend, failure_path, record_path
+from uranium_explorer.backends.replay import ReplayBackend
 
 SCHEMA = {"type": "object", "additionalProperties": False, "properties": {}, "required": []}
 
@@ -128,7 +128,7 @@ def test_replay_is_strict(tmp_path):
 
 
 def test_replay_reads_the_checked_in_probe_fixture():
-    from legacy_reader.backends.replay import fixtures_dir
+    from uranium_explorer.backends.replay import fixtures_dir
 
     fixture = fixtures_dir() / "probe_drilllog_p1.json"
     rec = json.loads(fixture.read_text())
@@ -150,8 +150,8 @@ def test_replay_never_spawns_a_process(tmp_path, monkeypatch):
 
 
 def test_replay_pack_bundles_a_runs_envelopes(tmp_path, monkeypatch):
-    """`lr replay pack --run <id>` turns a real run into fixtures the test suite can replay forever."""
-    from legacy_reader.backends import replay as replay_mod
+    """`ue replay pack --run <id>` turns a real run into fixtures the test suite can replay forever."""
+    from uranium_explorer.backends import replay as replay_mod
 
     cache_root = tmp_path / "cache"
     req = make_request(tmp_path)
@@ -163,7 +163,7 @@ def test_replay_pack_bundles_a_runs_envelopes(tmp_path, monkeypatch):
         json.dumps({"status": "ok", "cache_key": resp.cache_key, "file_num": "74H09-0039", "page_no": 4})
         + "\n"
         + json.dumps({"status": "failed", "cache_key": "deadbeef", "file_num": "x", "page_no": 1}) + "\n")
-    monkeypatch.setattr("legacy_reader.extract.run_dir", lambda run_id: tmp_path / "runs" / run_id)
+    monkeypatch.setattr("uranium_explorer.extract.run_dir", lambda run_id: tmp_path / "runs" / run_id)
 
     dest = tmp_path / "fixtures"
     written = replay_mod.pack_run("R1", dest=dest, cache_root=cache_root)

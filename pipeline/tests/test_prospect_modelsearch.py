@@ -8,11 +8,11 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from legacy_reader.prospect import headline as H
-from legacy_reader.prospect import modelsearch as MS
-from legacy_reader.prospect import models as M
-from legacy_reader.prospect import tracking as TR
-from legacy_reader.store import snapshot as SN
+from uranium_explorer.prospect import headline as H
+from uranium_explorer.prospect import modelsearch as MS
+from uranium_explorer.prospect import models as M
+from uranium_explorer.prospect import tracking as TR
+from uranium_explorer.store import snapshot as SN
 from test_prospect_headline import frame
 
 

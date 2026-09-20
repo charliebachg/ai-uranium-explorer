@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader import wire
-from legacy_reader.extractor import gold as G
+from uranium_explorer import wire
+from uranium_explorer.extractor import gold as G
 
 from fake_page import FILE_NUM, PAGE_ID, PAGE_NO, PDF_SHA, page_result
 

@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from legacy_reader.backends import openai_api as O
-from legacy_reader.backends import spend as S
-from legacy_reader.backends.base import ExtractionRequest, SchemaInvalidError
+from uranium_explorer.backends import openai_api as O
+from uranium_explorer.backends import spend as S
+from uranium_explorer.backends.base import ExtractionRequest, SchemaInvalidError
 
 
 @pytest.fixture
@@ -146,7 +146,7 @@ def test_the_two_backends_never_share_a_cache_entry() -> None:
 
 
 def test_a_missing_key_is_a_configuration_error_not_a_crash(monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.backends.base import BackendConfigError
+    from uranium_explorer.backends.base import BackendConfigError
 
     monkeypatch.setenv("OPENAI_API_KEY", "")
     monkeypatch.setattr(O, "load_dotenv", lambda *a, **k: {})
@@ -227,17 +227,17 @@ def test_streaming_still_charges_the_ledger_and_respects_the_ceiling(
 def test_a_streamed_error_status_is_reported_not_parsed(
     ledger: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from legacy_reader.backends.base import BackendConfigError
+    from uranium_explorer.backends.base import BackendConfigError
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-not-a-real-key")
     monkeypatch.setattr(O.httpx, "stream", lambda *a, **k: FakeStream([], status=404))
-    with pytest.raises(BackendConfigError, match="lr openai models"):
+    with pytest.raises(BackendConfigError, match="ue openai models"):
         O.OpenAIBackend().call(request(), on_delta=lambda _p: None)
 
 
 def test_a_backend_that_cannot_stream_is_called_the_way_it_expects() -> None:
     """Asked, not caught: a TypeError raised inside a call must not be mistaken for 'cannot stream'."""
-    from legacy_reader.backends.cache import streams
+    from uranium_explorer.backends.cache import streams
 
     class Streaming:
         def call(self, req, on_delta=None): ...
@@ -251,7 +251,7 @@ def test_a_backend_that_cannot_stream_is_called_the_way_it_expects() -> None:
 
 def test_a_reply_with_a_second_object_or_a_remark_after_the_first_is_read_as_the_first() -> None:
     """A reasoning model followed its answer with a second object; `Extra data` failed a cell for it."""
-    from legacy_reader.backends.openai_api import _parse
+    from uranium_explorer.backends.openai_api import _parse
 
     assert _parse('{"status": "met", "n": 1}\n{"status": "again"}') == {"status": "met", "n": 1}
     assert _parse('{"status": "met"} -- that is my answer') == {"status": "met"}
@@ -312,7 +312,7 @@ def test_a_request_without_images_keeps_the_plain_string_message(tmp_path: Path)
 
 
 def test_an_image_for_a_model_that_cannot_see_is_refused_before_anything_is_sent(ledger: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from legacy_reader.backends.base import BackendConfigError
+    from uranium_explorer.backends.base import BackendConfigError
 
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test-not-a-real-key")
     monkeypatch.delenv("OPENAI_VISION_MODELS", raising=False)
