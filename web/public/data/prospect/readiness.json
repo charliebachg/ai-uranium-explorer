@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-20T09:31:36+00:00",
+ "generated_at": "2026-09-20T19:43:08+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -181,7 +181,23 @@
    "covered_cells": "c:covn:graphitic_host",
    "median_obs": "c:obs:graphitic_host",
    "median_value": "c:med:graphitic_host",
-   "notes": "Null where the 1:250,000 map has no polygon: unmapped is not the same as absent.",
+   "notes": "Null where the 1:250,000 map has no polygon, and null inside the basin outline unless the map names a host there: the sandstone cover says nothing about the basement. Unmapped and covered are not the same as absent.",
+   "sources": [
+    "bedrock_250k"
+   ]
+  },
+  {
+   "feature_key": "graphitic_host_surface",
+   "title": "A graphitic or pelitic host is mapped at the surface",
+   "bears_on": "pathway",
+   "is_effort": false,
+   "unit": null,
+   "thin": false,
+   "coverage": "c:cov:graphitic_host_surface",
+   "covered_cells": "c:covn:graphitic_host_surface",
+   "median_obs": "c:obs:graphitic_host_surface",
+   "median_value": "c:med:graphitic_host_surface",
+   "notes": "The same map read as a statement about the surface: 0 under the sandstone cover is true of the surface and says nothing about the basement. The learned model, which fits on complete cases, reads this one so that covered cells stay in its frame.",
    "sources": [
     "bedrock_250k"
    ]
@@ -293,7 +309,7 @@
    "covered_cells": "c:covn:boulder_max_cps",
    "median_obs": "c:obs:boulder_max_cps",
    "median_value": "c:med:boulder_max_cps",
-   "notes": "A boulder train points up-ice: at Patterson Lake the discovery hole sat 3.8 km up-ice of the boulders, so this is a vector, not a location.",
+   "notes": "A boulder train points up-ice: at Patterson Lake the discovery hole sat 3.8 km up-ice of the boulders, so this is a vector, not a location. A record at exactly 0 cps is a filled-in blank, not a reading, and is left out of the statistic.",
    "sources": [
     "radioactive_boulders"
    ]
@@ -412,7 +428,7 @@
   }
  ],
  "metrics": {
-  "run_id": "2026-09-18T08:04:01+00:00",
+  "run_id": "2026-09-20T19:42:34+00:00",
   "rows": [
    {
     "model": "criteria",
@@ -654,9 +670,9 @@
   ]
  },
  "readiness_gate": {
-  "generated_at": "2026-09-20T00:46:31+00:00",
-  "store_sha256": "073bd46408b79776bb560584f06f926c64b55722a14dc60d349035a32a53867d",
-  "snapshot": "073bd46408b7",
+  "generated_at": "2026-09-20T19:43:07+00:00",
+  "store_sha256": "3eff0a46031c10a0f4fba11850f341619041d4baac38db92398180f82cd28b36",
+  "snapshot": "3eff0a46031c",
   "green": true,
   "rows": [
    {
@@ -673,7 +689,7 @@
     },
     "covers": {
      "ok": true,
-     "note": "1 feature(s); max 93% (graphitic_host)"
+     "note": "2 feature(s); max 93% (graphitic_host)"
     },
     "servable": {
      "ok": true,
@@ -681,7 +697,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 8f1d6ab6936a; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 8f1d6ab6936a; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -706,7 +722,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 69ed3b7d74ab; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 69ed3b7d74ab; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -731,7 +747,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "32 of 32 scenes carry a STAC id; snapshot 073bd46408b7"
+     "note": "32 of 32 scenes carry a STAC id; snapshot 3eff0a46031c"
     }
    },
    {
@@ -756,7 +772,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 6223223ad096; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 6223223ad096; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -781,7 +797,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload e22cee6b8f85; in the pull log; snapshot 073bd46408b7"
+     "note": "payload e22cee6b8f85; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -806,7 +822,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 52dc81035521; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 52dc81035521; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -831,7 +847,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload aa1b72226df7; in the pull log; snapshot 073bd46408b7"
+     "note": "payload aa1b72226df7; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -856,7 +872,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload e31860c48dd7; in the pull log; snapshot 073bd46408b7"
+     "note": "payload e31860c48dd7; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -873,7 +889,7 @@
     },
     "covers": {
      "ok": true,
-     "note": "2 feature(s); max 100% (boulder_samples_n); thin: boulder_max_cps 9%"
+     "note": "2 feature(s); max 100% (boulder_samples_n); thin: boulder_max_cps 8%"
     },
     "servable": {
      "ok": true,
@@ -881,7 +897,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload ccc36dc53045; in the pull log; snapshot 073bd46408b7"
+     "note": "payload ccc36dc53045; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -906,7 +922,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "24 of 24 scenes carry a STAC id; snapshot 073bd46408b7"
+     "note": "24 of 24 scenes carry a STAC id; snapshot 3eff0a46031c"
     }
    },
    {
@@ -931,7 +947,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload bcfb59ced93d; in the pull log; snapshot 073bd46408b7"
+     "note": "payload bcfb59ced93d; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -956,7 +972,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 0e86795a9648; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 0e86795a9648; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -981,7 +997,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 936518cd5177; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 936518cd5177; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -1006,7 +1022,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 775a50e63c01; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 775a50e63c01; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -1031,7 +1047,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "payload 5a4a08d54302; in the pull log; snapshot 073bd46408b7"
+     "note": "payload 5a4a08d54302; in the pull log; snapshot 3eff0a46031c"
     }
    },
    {
@@ -1056,7 +1072,7 @@
     },
     "versioned": {
      "ok": true,
-     "note": "928 record(s) walk back to a read.pdf hash; snapshot 073bd46408b7"
+     "note": "928 record(s) walk back to a read.pdf hash; snapshot 3eff0a46031c"
     }
    },
    {
@@ -5835,7 +5851,7 @@
  "bench": {
   "version": "v1",
   "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
-  "computed_at": "2026-09-20T09:31:34+00:00",
+  "computed_at": "2026-09-20T19:27:00+00:00",
   "rows": [
    {
     "name": "v0-features",
@@ -5917,6 +5933,89 @@
       "n": "c:bench:v1:v0-features:negative:n",
       "accuracy": "c:bench:v1:v0-features:negative:accuracy",
       "abstain_rate": "c:bench:v1:v0-features:negative:abstain_rate"
+     }
+    }
+   },
+   {
+    "name": "v0-qwen38",
+    "kind": "arm",
+    "model": "qwen/qwen3.8-flash",
+    "effort": "medium",
+    "n": "c:bench:v1:v0-qwen38:n",
+    "n_pos": "c:bench:v1:v0-qwen38:n_pos",
+    "n_neg": "c:bench:v1:v0-qwen38:n_neg",
+    "run_id": "20260920T160038Z-bench",
+    "mlflow_run_id": "69c1da1892844aba803611dad5d97f52",
+    "metrics": {
+     "f1": "c:bench:v1:v0-qwen38:f1",
+     "precision": "c:bench:v1:v0-qwen38:precision",
+     "recall": "c:bench:v1:v0-qwen38:recall",
+     "pr_auc": "c:bench:v1:v0-qwen38:pr_auc",
+     "roc_auc": "c:bench:v1:v0-qwen38:roc_auc",
+     "pr_auc_all": "c:bench:v1:v0-qwen38:pr_auc_all",
+     "roc_auc_all": "c:bench:v1:v0-qwen38:roc_auc_all",
+     "ece": "c:bench:v1:v0-qwen38:ece",
+     "abstain_rate": "c:bench:v1:v0-qwen38:abstain_rate"
+    },
+    "ci": {
+     "f1": [
+      "c:bench:v1:v0-qwen38:f1.lo",
+      "c:bench:v1:v0-qwen38:f1.hi"
+     ],
+     "precision": [
+      "c:bench:v1:v0-qwen38:precision.lo",
+      "c:bench:v1:v0-qwen38:precision.hi"
+     ],
+     "recall": [
+      "c:bench:v1:v0-qwen38:recall.lo",
+      "c:bench:v1:v0-qwen38:recall.hi"
+     ],
+     "pr_auc": [
+      "c:bench:v1:v0-qwen38:pr_auc.lo",
+      "c:bench:v1:v0-qwen38:pr_auc.hi"
+     ],
+     "roc_auc": [
+      "c:bench:v1:v0-qwen38:roc_auc.lo",
+      "c:bench:v1:v0-qwen38:roc_auc.hi"
+     ],
+     "pr_auc_all": [
+      "c:bench:v1:v0-qwen38:pr_auc_all.lo",
+      "c:bench:v1:v0-qwen38:pr_auc_all.hi"
+     ],
+     "roc_auc_all": [
+      "c:bench:v1:v0-qwen38:roc_auc_all.lo",
+      "c:bench:v1:v0-qwen38:roc_auc_all.hi"
+     ],
+     "ece": [
+      "c:bench:v1:v0-qwen38:ece.lo",
+      "c:bench:v1:v0-qwen38:ece.hi"
+     ],
+     "abstain_rate": [
+      "c:bench:v1:v0-qwen38:abstain_rate.lo",
+      "c:bench:v1:v0-qwen38:abstain_rate.hi"
+     ]
+    },
+    "extra": {
+     "gate_rejection_rate": "c:bench:v1:v0-qwen38:gate_rejection_rate",
+     "probe_abstain_rate": "c:bench:v1:v0-qwen38:probe_abstain_rate",
+     "cost_usd_per_cell": "c:bench:v1:v0-qwen38:cost_usd_per_cell",
+     "latency_s_per_cell": "c:bench:v1:v0-qwen38:latency_s_per_cell"
+    },
+    "strata": {
+     "deposit": {
+      "n": "c:bench:v1:v0-qwen38:deposit:n",
+      "accuracy": "c:bench:v1:v0-qwen38:deposit:accuracy",
+      "abstain_rate": "c:bench:v1:v0-qwen38:deposit:abstain_rate"
+     },
+     "occurrence": {
+      "n": "c:bench:v1:v0-qwen38:occurrence:n",
+      "accuracy": "c:bench:v1:v0-qwen38:occurrence:accuracy",
+      "abstain_rate": "c:bench:v1:v0-qwen38:occurrence:abstain_rate"
+     },
+     "negative": {
+      "n": "c:bench:v1:v0-qwen38:negative:n",
+      "accuracy": "c:bench:v1:v0-qwen38:negative:accuracy",
+      "abstain_rate": "c:bench:v1:v0-qwen38:negative:abstain_rate"
      }
     }
    },
@@ -6249,6 +6348,172 @@
       "n": "c:bench:v1:v0:negative:n",
       "accuracy": "c:bench:v1:v0:negative:accuracy",
       "abstain_rate": "c:bench:v1:v0:negative:abstain_rate"
+     }
+    }
+   },
+   {
+    "name": "v1-anthropic-or",
+    "kind": "arm",
+    "model": "anthropic/claude-opus-5",
+    "effort": "medium",
+    "n": "c:bench:v1:v1-anthropic-or:n",
+    "n_pos": "c:bench:v1:v1-anthropic-or:n_pos",
+    "n_neg": "c:bench:v1:v1-anthropic-or:n_neg",
+    "run_id": "20260920T190845Z-bench",
+    "mlflow_run_id": "f98e3ffc7f1a4ab2b1ca9b21624ed133",
+    "metrics": {
+     "f1": "c:bench:v1:v1-anthropic-or:f1",
+     "precision": "c:bench:v1:v1-anthropic-or:precision",
+     "recall": "c:bench:v1:v1-anthropic-or:recall",
+     "pr_auc": "c:bench:v1:v1-anthropic-or:pr_auc",
+     "roc_auc": "c:bench:v1:v1-anthropic-or:roc_auc",
+     "pr_auc_all": "c:bench:v1:v1-anthropic-or:pr_auc_all",
+     "roc_auc_all": "c:bench:v1:v1-anthropic-or:roc_auc_all",
+     "ece": "c:bench:v1:v1-anthropic-or:ece",
+     "abstain_rate": "c:bench:v1:v1-anthropic-or:abstain_rate"
+    },
+    "ci": {
+     "f1": [
+      "c:bench:v1:v1-anthropic-or:f1.lo",
+      "c:bench:v1:v1-anthropic-or:f1.hi"
+     ],
+     "precision": [
+      "c:bench:v1:v1-anthropic-or:precision.lo",
+      "c:bench:v1:v1-anthropic-or:precision.hi"
+     ],
+     "recall": [
+      "c:bench:v1:v1-anthropic-or:recall.lo",
+      "c:bench:v1:v1-anthropic-or:recall.hi"
+     ],
+     "pr_auc": [
+      "c:bench:v1:v1-anthropic-or:pr_auc.lo",
+      "c:bench:v1:v1-anthropic-or:pr_auc.hi"
+     ],
+     "roc_auc": [
+      "c:bench:v1:v1-anthropic-or:roc_auc.lo",
+      "c:bench:v1:v1-anthropic-or:roc_auc.hi"
+     ],
+     "pr_auc_all": [
+      "c:bench:v1:v1-anthropic-or:pr_auc_all.lo",
+      "c:bench:v1:v1-anthropic-or:pr_auc_all.hi"
+     ],
+     "roc_auc_all": [
+      "c:bench:v1:v1-anthropic-or:roc_auc_all.lo",
+      "c:bench:v1:v1-anthropic-or:roc_auc_all.hi"
+     ],
+     "ece": [
+      "c:bench:v1:v1-anthropic-or:ece.lo",
+      "c:bench:v1:v1-anthropic-or:ece.hi"
+     ],
+     "abstain_rate": [
+      "c:bench:v1:v1-anthropic-or:abstain_rate.lo",
+      "c:bench:v1:v1-anthropic-or:abstain_rate.hi"
+     ]
+    },
+    "extra": {
+     "gate_rejection_rate": "c:bench:v1:v1-anthropic-or:gate_rejection_rate",
+     "probe_abstain_rate": "c:bench:v1:v1-anthropic-or:probe_abstain_rate",
+     "cost_usd_per_cell": "c:bench:v1:v1-anthropic-or:cost_usd_per_cell",
+     "latency_s_per_cell": "c:bench:v1:v1-anthropic-or:latency_s_per_cell"
+    },
+    "strata": {
+     "deposit": {
+      "n": "c:bench:v1:v1-anthropic-or:deposit:n",
+      "accuracy": "c:bench:v1:v1-anthropic-or:deposit:accuracy",
+      "abstain_rate": "c:bench:v1:v1-anthropic-or:deposit:abstain_rate"
+     },
+     "occurrence": {
+      "n": "c:bench:v1:v1-anthropic-or:occurrence:n",
+      "accuracy": "c:bench:v1:v1-anthropic-or:occurrence:accuracy",
+      "abstain_rate": "c:bench:v1:v1-anthropic-or:occurrence:abstain_rate"
+     },
+     "negative": {
+      "n": "c:bench:v1:v1-anthropic-or:negative:n",
+      "accuracy": "c:bench:v1:v1-anthropic-or:negative:accuracy",
+      "abstain_rate": "c:bench:v1:v1-anthropic-or:negative:abstain_rate"
+     }
+    }
+   },
+   {
+    "name": "v1-openrouter",
+    "kind": "arm",
+    "model": "qwen/qwen3.8-flash",
+    "effort": "medium",
+    "n": "c:bench:v1:v1-openrouter:n",
+    "n_pos": "c:bench:v1:v1-openrouter:n_pos",
+    "n_neg": "c:bench:v1:v1-openrouter:n_neg",
+    "run_id": "20260920T181356Z-bench",
+    "mlflow_run_id": "4cbd562ba78e4bb989d94ddb4484ccc4",
+    "metrics": {
+     "f1": "c:bench:v1:v1-openrouter:f1",
+     "precision": "c:bench:v1:v1-openrouter:precision",
+     "recall": "c:bench:v1:v1-openrouter:recall",
+     "pr_auc": "c:bench:v1:v1-openrouter:pr_auc",
+     "roc_auc": "c:bench:v1:v1-openrouter:roc_auc",
+     "pr_auc_all": "c:bench:v1:v1-openrouter:pr_auc_all",
+     "roc_auc_all": "c:bench:v1:v1-openrouter:roc_auc_all",
+     "ece": "c:bench:v1:v1-openrouter:ece",
+     "abstain_rate": "c:bench:v1:v1-openrouter:abstain_rate"
+    },
+    "ci": {
+     "f1": [
+      "c:bench:v1:v1-openrouter:f1.lo",
+      "c:bench:v1:v1-openrouter:f1.hi"
+     ],
+     "precision": [
+      "c:bench:v1:v1-openrouter:precision.lo",
+      "c:bench:v1:v1-openrouter:precision.hi"
+     ],
+     "recall": [
+      "c:bench:v1:v1-openrouter:recall.lo",
+      "c:bench:v1:v1-openrouter:recall.hi"
+     ],
+     "pr_auc": [
+      "c:bench:v1:v1-openrouter:pr_auc.lo",
+      "c:bench:v1:v1-openrouter:pr_auc.hi"
+     ],
+     "roc_auc": [
+      "c:bench:v1:v1-openrouter:roc_auc.lo",
+      "c:bench:v1:v1-openrouter:roc_auc.hi"
+     ],
+     "pr_auc_all": [
+      "c:bench:v1:v1-openrouter:pr_auc_all.lo",
+      "c:bench:v1:v1-openrouter:pr_auc_all.hi"
+     ],
+     "roc_auc_all": [
+      "c:bench:v1:v1-openrouter:roc_auc_all.lo",
+      "c:bench:v1:v1-openrouter:roc_auc_all.hi"
+     ],
+     "ece": [
+      "c:bench:v1:v1-openrouter:ece.lo",
+      "c:bench:v1:v1-openrouter:ece.hi"
+     ],
+     "abstain_rate": [
+      "c:bench:v1:v1-openrouter:abstain_rate.lo",
+      "c:bench:v1:v1-openrouter:abstain_rate.hi"
+     ]
+    },
+    "extra": {
+     "gate_rejection_rate": "c:bench:v1:v1-openrouter:gate_rejection_rate",
+     "probe_abstain_rate": "c:bench:v1:v1-openrouter:probe_abstain_rate",
+     "cost_usd_per_cell": "c:bench:v1:v1-openrouter:cost_usd_per_cell",
+     "latency_s_per_cell": "c:bench:v1:v1-openrouter:latency_s_per_cell"
+    },
+    "strata": {
+     "deposit": {
+      "n": "c:bench:v1:v1-openrouter:deposit:n",
+      "accuracy": "c:bench:v1:v1-openrouter:deposit:accuracy",
+      "abstain_rate": "c:bench:v1:v1-openrouter:deposit:abstain_rate"
+     },
+     "occurrence": {
+      "n": "c:bench:v1:v1-openrouter:occurrence:n",
+      "accuracy": "c:bench:v1:v1-openrouter:occurrence:accuracy",
+      "abstain_rate": "c:bench:v1:v1-openrouter:occurrence:abstain_rate"
+     },
+     "negative": {
+      "n": "c:bench:v1:v1-openrouter:negative:n",
+      "accuracy": "c:bench:v1:v1-openrouter:negative:accuracy",
+      "abstain_rate": "c:bench:v1:v1-openrouter:negative:abstain_rate"
      }
     }
    },
@@ -7555,10 +7820,46 @@
    "id": "c:med:graphitic_host",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0,
+   "value": 1.0,
    "unit_as_printed": null,
    "fmt": "m2",
    "note": "median graphitic_host across cells that have a value"
+  },
+  "c:cov:graphitic_host_surface": {
+   "id": "c:cov:graphitic_host_surface",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.933,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of cells with an observation behind graphitic_host_surface"
+  },
+  "c:covn:graphitic_host_surface": {
+   "id": "c:covn:graphitic_host_surface",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 28491,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "cells with an observation behind graphitic_host_surface"
+  },
+  "c:obs:graphitic_host_surface": {
+   "id": "c:obs:graphitic_host_surface",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "note": "typical number of observations behind one graphitic_host_surface value"
+  },
+  "c:med:graphitic_host_surface": {
+   "id": "c:med:graphitic_host_surface",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "median graphitic_host_surface across cells that have a value"
   },
   "c:cov:surficial_class": {
    "id": "c:cov:surficial_class",
@@ -7771,7 +8072,7 @@
    "id": "c:cov:boulder_max_cps",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.088,
+   "value": 0.081,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "share of cells with an observation behind boulder_max_cps"
@@ -7780,7 +8081,7 @@
    "id": "c:covn:boulder_max_cps",
    "kind": "stat",
    "as_printed": null,
-   "value": 2692,
+   "value": 2486,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "cells with an observation behind boulder_max_cps"
@@ -7789,7 +8090,7 @@
    "id": "c:obs:boulder_max_cps",
    "kind": "stat",
    "as_printed": null,
-   "value": 8.0,
+   "value": 7.0,
    "unit_as_printed": null,
    "fmt": "m1",
    "note": "typical number of observations behind one boulder_max_cps value"
@@ -7798,7 +8099,7 @@
    "id": "c:med:boulder_max_cps",
    "kind": "stat",
    "as_printed": null,
-   "value": 1600.0,
+   "value": 2000.0,
    "unit_as_printed": null,
    "fmt": "m2",
    "note": "median boulder_max_cps across cells that have a value"
@@ -8059,7 +8360,7 @@
    "id": "c:grid:geo_features",
    "kind": "stat",
    "as_printed": null,
-   "value": 18,
+   "value": 19,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "geological features built per cell"
@@ -8086,7 +8387,7 @@
    "id": "c:m:criteria.none.capture_top10",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1447,
+   "value": 0.1429,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "capture_top10 for the criteria model under none folds, 546 positives in 10183 scored cells"
@@ -8095,7 +8396,7 @@
    "id": "c:m:criteria.none.pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0694,
+   "value": 0.0619,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc for the criteria model under none folds, 546 positives in 10183 scored cells"
@@ -8104,7 +8405,7 @@
    "id": "c:m:criteria.none.roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5469,
+   "value": 0.5173,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc for the criteria model under none folds, 546 positives in 10183 scored cells"
@@ -15301,6 +15602,394 @@
    "fmt": "ratio3",
    "note": "abstain_rate over the negative cells; arm v0-features (claude-opus-5) on 114 open cells of benchmark v1"
   },
+  "c:bench:v1:v0-qwen38:n": {
+   "id": "c:bench:v1:v0-qwen38:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:n_pos": {
+   "id": "c:bench:v1:v0-qwen38:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:n_neg": {
+   "id": "c:bench:v1:v0-qwen38:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:f1": {
+   "id": "c:bench:v1:v0-qwen38:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4444,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:f1.lo": {
+   "id": "c:bench:v1:v0-qwen38:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3332,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:f1.hi": {
+   "id": "c:bench:v1:v0-qwen38:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5455,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:precision": {
+   "id": "c:bench:v1:v0-qwen38:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4138,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:precision.lo": {
+   "id": "c:bench:v1:v0-qwen38:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3214,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:precision.hi": {
+   "id": "c:bench:v1:v0-qwen38:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5079,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:recall": {
+   "id": "c:bench:v1:v0-qwen38:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.48,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:recall.lo": {
+   "id": "c:bench:v1:v0-qwen38:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.34,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:recall.hi": {
+   "id": "c:bench:v1:v0-qwen38:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.62,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:pr_auc": {
+   "id": "c:bench:v1:v0-qwen38:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.496,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:pr_auc.lo": {
+   "id": "c:bench:v1:v0-qwen38:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3664,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:pr_auc.hi": {
+   "id": "c:bench:v1:v0-qwen38:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.669,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:roc_auc": {
+   "id": "c:bench:v1:v0-qwen38:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5648,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:roc_auc.lo": {
+   "id": "c:bench:v1:v0-qwen38:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4262,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:roc_auc.hi": {
+   "id": "c:bench:v1:v0-qwen38:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7106,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:pr_auc_all": {
+   "id": "c:bench:v1:v0-qwen38:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4804,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:pr_auc_all.lo": {
+   "id": "c:bench:v1:v0-qwen38:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4241,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:pr_auc_all.hi": {
+   "id": "c:bench:v1:v0-qwen38:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5811,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:roc_auc_all": {
+   "id": "c:bench:v1:v0-qwen38:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5459,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:roc_auc_all.lo": {
+   "id": "c:bench:v1:v0-qwen38:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4542,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:roc_auc_all.hi": {
+   "id": "c:bench:v1:v0-qwen38:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6505,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:ece": {
+   "id": "c:bench:v1:v0-qwen38:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0926,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:ece.lo": {
+   "id": "c:bench:v1:v0-qwen38:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0586,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:ece.hi": {
+   "id": "c:bench:v1:v0-qwen38:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1868,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:abstain_rate": {
+   "id": "c:bench:v1:v0-qwen38:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4649,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:abstain_rate.lo": {
+   "id": "c:bench:v1:v0-qwen38:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3772,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:abstain_rate.hi": {
+   "id": "c:bench:v1:v0-qwen38:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5614,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:gate_rejection_rate": {
+   "id": "c:bench:v1:v0-qwen38:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2016,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "gate_rejection_rate; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:probe_abstain_rate": {
+   "id": "c:bench:v1:v0-qwen38:probe_abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.625,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "probe_abstain_rate; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:cost_usd_per_cell": {
+   "id": "c:bench:v1:v0-qwen38:cost_usd_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0054,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "cost_usd_per_cell; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:latency_s_per_cell": {
+   "id": "c:bench:v1:v0-qwen38:latency_s_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 407.1447,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "s",
+   "note": "latency_s_per_cell; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:deposit:n": {
+   "id": "c:bench:v1:v0-qwen38:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:deposit:accuracy": {
+   "id": "c:bench:v1:v0-qwen38:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4444,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:deposit:abstain_rate": {
+   "id": "c:bench:v1:v0-qwen38:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:occurrence:n": {
+   "id": "c:bench:v1:v0-qwen38:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:occurrence:accuracy": {
+   "id": "c:bench:v1:v0-qwen38:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:occurrence:abstain_rate": {
+   "id": "c:bench:v1:v0-qwen38:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4688,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:negative:n": {
+   "id": "c:bench:v1:v0-qwen38:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:negative:accuracy": {
+   "id": "c:bench:v1:v0-qwen38:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0156,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v0-qwen38:negative:abstain_rate": {
+   "id": "c:bench:v1:v0-qwen38:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4531,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; arm v0-qwen38 (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
   "c:bench:v1:v0-retrieval:n": {
    "id": "c:bench:v1:v0-retrieval:n",
    "kind": "stat",
@@ -16852,6 +17541,782 @@
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "abstain_rate over the negative cells; arm v0 (claude-opus-5) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:n": {
+   "id": "c:bench:v1:v1-anthropic-or:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 67,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:n_pos": {
+   "id": "c:bench:v1:v1-anthropic-or:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 28,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:n_neg": {
+   "id": "c:bench:v1:v1-anthropic-or:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 39,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:f1": {
+   "id": "c:bench:v1:v1-anthropic-or:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.36,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:f1.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1817,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:f1.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5098,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:precision": {
+   "id": "c:bench:v1:v1-anthropic-or:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4091,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:precision.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2273,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:precision.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5833,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:recall": {
+   "id": "c:bench:v1:v1-anthropic-or:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3214,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:recall.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1429,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:recall.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:pr_auc": {
+   "id": "c:bench:v1:v1-anthropic-or:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5393,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:pr_auc.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3575,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:pr_auc.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8477,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:roc_auc": {
+   "id": "c:bench:v1:v1-anthropic-or:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6121,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:roc_auc.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3769,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:roc_auc.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8523,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:pr_auc_all": {
+   "id": "c:bench:v1:v1-anthropic-or:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4727,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:pr_auc_all.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4112,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:pr_auc_all.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6013,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:roc_auc_all": {
+   "id": "c:bench:v1:v1-anthropic-or:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5655,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:roc_auc_all.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4505,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:roc_auc_all.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6777,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:ece": {
+   "id": "c:bench:v1:v1-anthropic-or:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.116,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:ece.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0881,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:ece.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2047,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:abstain_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6119,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:abstain_rate.lo": {
+   "id": "c:bench:v1:v1-anthropic-or:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4925,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:abstain_rate.hi": {
+   "id": "c:bench:v1:v1-anthropic-or:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7313,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:gate_rejection_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3026,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "gate_rejection_rate; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:probe_abstain_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:probe_abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6667,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "probe_abstain_rate; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:cost_usd_per_cell": {
+   "id": "c:bench:v1:v1-anthropic-or:cost_usd_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.1691,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "cost_usd_per_cell; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:latency_s_per_cell": {
+   "id": "c:bench:v1:v1-anthropic-or:latency_s_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 252.0373,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "s",
+   "note": "latency_s_per_cell; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:deposit:n": {
+   "id": "c:bench:v1:v1-anthropic-or:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 9,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:deposit:accuracy": {
+   "id": "c:bench:v1:v1-anthropic-or:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2222,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:deposit:abstain_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7778,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:occurrence:n": {
+   "id": "c:bench:v1:v1-anthropic-or:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 19,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:occurrence:accuracy": {
+   "id": "c:bench:v1:v1-anthropic-or:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3684,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:occurrence:abstain_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5263,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:negative:n": {
+   "id": "c:bench:v1:v1-anthropic-or:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 39,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:negative:accuracy": {
+   "id": "c:bench:v1:v1-anthropic-or:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0513,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-anthropic-or:negative:abstain_rate": {
+   "id": "c:bench:v1:v1-anthropic-or:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6154,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:n": {
+   "id": "c:bench:v1:v1-openrouter:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:n_pos": {
+   "id": "c:bench:v1:v1-openrouter:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:n_neg": {
+   "id": "c:bench:v1:v1-openrouter:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:f1": {
+   "id": "c:bench:v1:v1-openrouter:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2857,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:f1.lo": {
+   "id": "c:bench:v1:v1-openrouter:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1332,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:f1.hi": {
+   "id": "c:bench:v1:v1-openrouter:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4286,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:precision": {
+   "id": "c:bench:v1:v1-openrouter:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:precision.lo": {
+   "id": "c:bench:v1:v1-openrouter:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2857,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:precision.hi": {
+   "id": "c:bench:v1:v1-openrouter:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7143,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:recall": {
+   "id": "c:bench:v1:v1-openrouter:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:recall.lo": {
+   "id": "c:bench:v1:v1-openrouter:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.08,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:recall.hi": {
+   "id": "c:bench:v1:v1-openrouter:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.32,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:pr_auc": {
+   "id": "c:bench:v1:v1-openrouter:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5562,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:pr_auc.lo": {
+   "id": "c:bench:v1:v1-openrouter:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2989,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:pr_auc.hi": {
+   "id": "c:bench:v1:v1-openrouter:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8373,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:roc_auc": {
+   "id": "c:bench:v1:v1-openrouter:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4818,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:roc_auc.lo": {
+   "id": "c:bench:v1:v1-openrouter:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2121,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:roc_auc.hi": {
+   "id": "c:bench:v1:v1-openrouter:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7699,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:pr_auc_all": {
+   "id": "c:bench:v1:v1-openrouter:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4559,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:pr_auc_all.lo": {
+   "id": "c:bench:v1:v1-openrouter:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4175,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:pr_auc_all.hi": {
+   "id": "c:bench:v1:v1-openrouter:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5231,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:roc_auc_all": {
+   "id": "c:bench:v1:v1-openrouter:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4845,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:roc_auc_all.lo": {
+   "id": "c:bench:v1:v1-openrouter:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4184,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:roc_auc_all.hi": {
+   "id": "c:bench:v1:v1-openrouter:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5553,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:ece": {
+   "id": "c:bench:v1:v1-openrouter:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0912,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:ece.lo": {
+   "id": "c:bench:v1:v1-openrouter:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0745,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:ece.hi": {
+   "id": "c:bench:v1:v1-openrouter:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1264,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:abstain_rate": {
+   "id": "c:bench:v1:v1-openrouter:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8158,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:abstain_rate.lo": {
+   "id": "c:bench:v1:v1-openrouter:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7456,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:abstain_rate.hi": {
+   "id": "c:bench:v1:v1-openrouter:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.886,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:gate_rejection_rate": {
+   "id": "c:bench:v1:v1-openrouter:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5923,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "gate_rejection_rate; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:probe_abstain_rate": {
+   "id": "c:bench:v1:v1-openrouter:probe_abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6875,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "probe_abstain_rate; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:cost_usd_per_cell": {
+   "id": "c:bench:v1:v1-openrouter:cost_usd_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.049,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "cost_usd_per_cell; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:latency_s_per_cell": {
+   "id": "c:bench:v1:v1-openrouter:latency_s_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 645.1094,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "s",
+   "note": "latency_s_per_cell; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:deposit:n": {
+   "id": "c:bench:v1:v1-openrouter:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:deposit:accuracy": {
+   "id": "c:bench:v1:v1-openrouter:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2778,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:deposit:abstain_rate": {
+   "id": "c:bench:v1:v1-openrouter:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7222,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:occurrence:n": {
+   "id": "c:bench:v1:v1-openrouter:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:occurrence:accuracy": {
+   "id": "c:bench:v1:v1-openrouter:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1562,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:occurrence:abstain_rate": {
+   "id": "c:bench:v1:v1-openrouter:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8438,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:negative:n": {
+   "id": "c:bench:v1:v1-openrouter:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:negative:accuracy": {
+   "id": "c:bench:v1:v1-openrouter:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0156,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:v1-openrouter:negative:abstain_rate": {
+   "id": "c:bench:v1:v1-openrouter:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8281,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
   },
   "c:bench:v1:random_expected:n": {
    "id": "c:bench:v1:random_expected:n",
@@ -18699,5 +20164,5 @@
    "note": "abstain_rate over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
   }
  },
- "build_id": "718368bd7f3c"
+ "build_id": "358bf69f3717"
 }
