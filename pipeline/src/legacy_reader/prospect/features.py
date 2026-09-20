@@ -128,16 +128,23 @@ def point_stat(
     radius_m: float,
     stat: str = "max",
     extra_field: str | None = None,
+    zero_is_null: bool = False,
 ) -> pd.DataFrame:
     """A statistic over points within `radius_m` of the cell centre, with the sample count beside it.
 
     A cell with no sample in range gets a null value and n_obs 0: the sampling frame here is lakes, so "no
-    anomaly" and "never sampled" are different facts and must stay different.
+    anomaly" and "never sampled" are different facts and must stay different. `zero_is_null` reads a value
+    of exactly 0 as a missing measurement: the radioactive-boulder layer carries 2,127 records at 0.0 cps
+    among 6,591, a filled-in blank, and the staged analyst's verifier refused a node that read it as a
+    measured absence (FINDINGS F7). A record so dropped still counts for the effort features, which count
+    records, not readings.
     """
     pts = _layer(layer_key)
     if value_field not in pts.columns:
         raise RuntimeError(f"{layer_key}: no field {value_field!r} (have {sorted(pts.columns)[:12]})")
     pts = pts[pts[value_field].notna()]
+    if zero_is_null:
+        pts = pts[pd.to_numeric(pts[value_field], errors="coerce").fillna(0) != 0]
     pts = pts[~pts.geometry.is_empty & pts.geometry.notna()]
     out = pd.DataFrame({"cell_id": cells["cell_id"], "value": np.nan, "n_obs": 0, "nearest_m": np.nan})
     if pts.empty:
@@ -300,15 +307,24 @@ def polygon_class(cells: gpd.GeoDataFrame, layer_key: str, field_name: str) -> p
 
 
 def graphitic_host(cells: gpd.GeoDataFrame) -> pd.DataFrame:
-    """1 where the mapped bedrock names a graphitic or pelitic host, 0 where mapped otherwise, null if unmapped.
+    """1 where the mapped bedrock names a graphitic or pelitic host; 0 where it is mapped as something else
+    outside the basin; null if unmapped, and null inside the basin unless the map names a host there.
 
     With no public magnetic grid, the mapped lithology is the only route to the element the magnetic low is a
     proxy for: "pelitic-psammopelitic gneiss, the host of graphitic conductors" (research report 02, 1.1.2).
+    Inside the basin outline the 1:250,000 map shows the Athabasca sandstone, which is the cover, not the
+    basement the criterion asks about, so a non-host polygon there says nothing: unknown, not absent. The
+    verifier of the staged analyst refused that reading on six of the first fifteen cells it saw (FINDINGS F7),
+    and before this rule the criteria score counted it against 18,619 covered cells. A host unit mapped inside
+    the outline (a basement window or the rim) still counts as 1.
     """
     cls = polygon_class(cells, "bedrock_250k", "LITHOLOGY")
     text = cls["value_text"].fillna("").str.lower()
-    hit = text.apply(lambda t: any(w in t for w in GRAPHITIC_WORDS))
-    value = np.where(cls["n_obs"] > 0, hit.astype(float), np.nan)
+    hit = text.apply(lambda t: any(w in t for w in GRAPHITIC_WORDS)).to_numpy()
+    mapped = (cls["n_obs"] > 0).to_numpy()
+    covered = cells["in_basin"].fillna(False).astype(bool).to_numpy() if "in_basin" in cells.columns \
+        else np.zeros(len(cells), dtype=bool)
+    value = np.where(hit & mapped, 1.0, np.where(mapped & ~covered, 0.0, np.nan))
     return pd.DataFrame({"cell_id": cls["cell_id"], "value": value, "n_obs": cls["n_obs"],
                          "nearest_m": np.nan})
 
@@ -350,7 +366,9 @@ SPECS: tuple[FeatureSpec, ...] = (
                 ("em_conductors",), unit="km/km2"),
     FeatureSpec("graphitic_host", "Mapped bedrock names a graphitic or pelitic host", "pathway",
                 "graphitic_host", ("bedrock_250k",),
-                notes="Null where the 1:250,000 map has no polygon: unmapped is not the same as absent."),
+                notes="Null where the 1:250,000 map has no polygon, and null inside the basin outline unless the "
+                      "map names a host there: the sandstone cover says nothing about the basement. Unmapped "
+                      "and covered are not the same as absent."),
     # ---- trap
     FeatureSpec("d_fault_m", "Distance to nearest mapped fault or lineament", "trap", "distance_to_lines",
                 ("faults_250k",), unit="m",
@@ -379,9 +397,10 @@ SPECS: tuple[FeatureSpec, ...] = (
     # ---- dispersal
     FeatureSpec("boulder_max_cps", "Highest radioactive-boulder count rate within 5 km", "dispersal",
                 "point_stat", ("radioactive_boulders",), unit="cps",
-                params={"value_field": "CPS", "radius_m": 5000, "stat": "max"},
+                params={"value_field": "CPS", "radius_m": 5000, "stat": "max", "zero_is_null": True},
                 notes="A boulder train points up-ice: at Patterson Lake the discovery hole sat 3.8 km up-ice "
-                      "of the boulders, so this is a vector, not a location."),
+                      "of the boulders, so this is a vector, not a location. A record at exactly 0 cps is a "
+                      "filled-in blank, not a reading, and is left out of the statistic."),
     # ---- effort: the null model's whole world
     FeatureSpec("holes_n", "Provincial drillhole collars within 2 km", "effort", "point_stat",
                 ("compilation",), is_effort=True, is_count=True,

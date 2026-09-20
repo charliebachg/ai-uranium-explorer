@@ -195,6 +195,41 @@ def test_graphitic_host_separates_unmapped_from_mapped_and_absent(patch_layer):
     assert np.isnan(out["value"].iloc[2])  # unmapped: not the same as absent
 
 
+def test_graphitic_host_is_unknown_under_basin_cover_unless_a_host_is_mapped_there(patch_layer):
+    """Inside the basin outline the 1:250k map shows the sandstone cover; a non-host polygon there says
+    nothing about the basement (F7's verifier objection), while a host mapped inside still counts."""
+    c = cells(4)
+    c["in_basin"] = [True, True, False, True]
+    patch_layer["bedrock_250k"] = gpd.GeoDataFrame(
+        {"LITHOLOGY": ["conglomeratic quartz arenite", "graphitic metapelite", "quartz arenite"]},
+        geometry=[box(0, 0, 2000, 2000), box(2000, 0, 4000, 2000), box(4000, 0, 6000, 2000)],
+        crs=f"EPSG:{EPSG}",
+    )
+    out = F.graphitic_host(c)
+    assert np.isnan(out["value"].iloc[0]) and out["n_obs"].iloc[0] == 1, "covered and not a host: unknown, still mapped"
+    assert out["value"].iloc[1] == 1.0, "a host mapped inside the outline counts"
+    assert out["value"].iloc[2] == 0.0, "outside the basin a non-host polygon is absent"
+    assert np.isnan(out["value"].iloc[3]), "unmapped stays unknown"
+
+
+def test_point_stat_can_read_an_exact_zero_as_a_missing_reading(patch_layer):
+    """2,127 of the 6,591 boulder records carry 0.0 cps: a filled-in blank, which once read as a measured
+    absence. With `zero_is_null` the zero is left out of the value and the count of readings."""
+    c = cells(1)
+    patch_layer["pts"] = gpd.GeoDataFrame(
+        {"CPS": [0.0, 0.0, 650.0]},
+        geometry=[Point(900, 1000), Point(1100, 1000), Point(1000, 1200)],
+        crs=f"EPSG:{EPSG}",
+    )
+    plain = F.point_stat(c, "pts", "CPS", 5000, "max")
+    assert plain["value"].iloc[0] == 650.0 and plain["n_obs"].iloc[0] == 3
+    strict = F.point_stat(c, "pts", "CPS", 5000, "max", zero_is_null=True)
+    assert strict["value"].iloc[0] == 650.0 and strict["n_obs"].iloc[0] == 1
+    patch_layer["pts"] = gpd.GeoDataFrame({"CPS": [0.0]}, geometry=[Point(1000, 1000)], crs=f"EPSG:{EPSG}")
+    only_zero = F.point_stat(c, "pts", "CPS", 5000, "max", zero_is_null=True)
+    assert np.isnan(only_zero["value"].iloc[0]) and only_zero["n_obs"].iloc[0] == 0, "a zero alone is no reading"
+
+
 def test_polygon_overlap_count_measures_survey_effort(patch_layer):
     c = cells(2)
     patch_layer["surveys"] = gpd.GeoDataFrame(
