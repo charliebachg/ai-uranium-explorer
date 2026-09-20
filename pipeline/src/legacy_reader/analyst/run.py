@@ -130,6 +130,47 @@ def _store_sha() -> str | None:
         return None
 
 
+def open_dashboard_session(cell_id: str, arm: ArmConfig, stage: Path, shared: dict[str, Any]) -> Any:
+    """A dashboard session over a real cell: nothing blinded, the label kept, the store's own connection when
+    the run holds one (a chain run writes to the store, and DuckDB will not open the same file read-only
+    beside that)."""
+    return Session.open(cell_id, "dashboard", fold=None, switches=arm.switches, stage=stage,
+                        con=shared.get("con"))
+
+
+def render_cards(cell_ids: list[str], out_dir: Path, spec_version: str = "v1",
+                 log: Callable[[str], None] = print, con: Any = None) -> dict[str, Path]:
+    """The map card of each real cell, drawn exactly as the benchmark builder draws them (same spec, same
+    layers, same window), so a chain over a dashboard cell reads the picture a benchmark cell would."""
+    from shapely import wkb
+
+    from ..bench.card import card_layers, png_bytes, render_card
+    from ..bench.spec import load_spec
+    from ..store import connect
+
+    spec = load_spec(spec_version)
+    layers = card_layers(spec)
+    own = con is None
+    con = con or connect(read_only=True)
+    try:
+        marks = ",".join("?" * len(cell_ids))
+        geoms = {cid: wkb.loads(bytes(g)) for cid, g in con.execute(
+            f"select cell_id, geom_wkb from derived.cell where cell_id in ({marks})", list(cell_ids)).fetchall()}
+    finally:
+        if own:
+            con.close()
+    out: dict[str, Path] = {}
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for cid in cell_ids:
+        if cid not in geoms:
+            log(f"  no such cell {cid}: no card")
+            continue
+        path = out_dir / f"{cid}.png"
+        path.write_bytes(png_bytes(render_card(cid, spec, layers, geoms[cid], drillholes=spec.card.drillholes)))
+        out[cid] = path
+    return out
+
+
 def _claim(base: str) -> tuple[str, Path]:
     """The run id and its directory, created atomically; a taken directory means a sibling run started in
     the same second, and this run takes the next suffix. Goes through this module's `run_dir` so a test can
@@ -382,4 +423,132 @@ def run_arm(
     pointer = SC.out_dir(version) / "arms" / f"{arm.name}.json"
     pointer.parent.mkdir(parents=True, exist_ok=True)
     pointer.write_text(json.dumps(TR.jsonable(summary), indent=1) + "\n")
+    return summary
+
+
+# ---------------------------------------------------------------- real cells, for the dashboard
+
+CHAIN_KIND = "chain"
+
+
+def run_cells(
+    cell_ids: list[str], arm: ArmConfig | str, backend_factory: Factory, budget_usd: float | None,
+    log: Callable[[str], None] = print, workers: int = 1, track: bool = True, cache_root: Path | None = None,
+    session_factory: Callable[[str, ArmConfig, Path, dict[str, Any]], Any] = open_dashboard_session,
+    cards: Callable[..., dict[str, Path]] = render_cards, con: Any = None, seed: int = 0,
+) -> dict[str, Any]:
+    """The staged loop over real cells for the dashboard (PRD §9.4): nothing blinded, the chains stored in
+    the agent tier as they publish, the rows and the per-stage metrics beside them in the run directory.
+
+    The store is written to, so the run holds one read-write connection and hands each worker a cursor of
+    it; the process must be in one-connection mode (`LR_STORE_RW=1`, as `lr prospect serve` runs) because
+    the tools open their own read-only handles and DuckDB refuses both kinds on one file."""
+    from ..store import connect
+
+    arm = load_arm(arm) if isinstance(arm, str) else arm
+    if arm.agent != "v1" or arm.loop is None:
+        raise ValueError(f"arm {arm.name} is not a v1 arm; only the staged loop stores chains")
+    cfg = arm.loop.config(arm.effort, arm.prompt_version)
+    criteria = load_criteria()
+    started = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    manifest = Manifest.start(kind=CHAIN_KIND, config={**arm.as_dict(), "store_sha": _store_sha(), "cells": list(cell_ids)},
+                              models=cfg.models(), seed=seed, budget_usd=budget_usd, bench=None)
+    manifest.run_id, rd = _claim(str(manifest.run_id))
+    _note(manifest, "prompt_hashes", PR.prompt_hashes())
+    _note(manifest, "schema_hashes", {f"node/{W.SCHEMA_VERSION}": sha256_json(W.NODE_SCHEMA),
+                                      f"verifier/{W.SCHEMA_VERSION}": sha256_json(W.VERIFIER_SCHEMA),
+                                      f"adjudicator/{W.SCHEMA_VERSION}": sha256_json(W.ADJUDICATOR_SCHEMA),
+                                      f"plan/{W.SCHEMA_VERSION}": sha256_json(W.PLAN_SCHEMA)})
+    run_id = str(manifest.run_id)
+    manifest.write(rd)
+    own_con = con is None
+    con = con or connect()
+    try:
+        card_paths = cards(list(cell_ids), rd / "cards", log=log, con=con) if arm.inputs.card else {}
+        log(f"  chains: arm {arm.name} over {len(cell_ids)} cell(s), budget "
+            f"{'none' if budget_usd is None else f'${budget_usd:.2f}'}, run {run_id}")
+        budget = manifest.budget()
+        backend = cached_backend(backend_factory(arm), budget, arm.max_budget_usd_per_call, root=cache_root)
+        stop = threading.Event()
+        lock = threading.Lock()
+        state: dict[str, Any] = {"stopped_by": None}
+
+        def work(cell_id: str) -> tuple[str, str, Any]:
+            if stop.is_set():
+                return "pending", cell_id, None
+            cursor = con.cursor()
+            try:
+                stage = rd / "stages" / cell_id
+                session = session_factory(cell_id, arm, stage, {"con": cursor})
+                try:
+                    with span("cell", kind="tool", cell_id=cell_id, arm=arm.name):
+                        row = LOOP.run_cell_v1(backend, session, card_paths.get(cell_id), arm.inputs, arm.switches,
+                                               cfg, criteria, chain_id=f"{run_id}:{cell_id}", run_id=run_id,
+                                               con=cursor, stage=stage, arm=arm.name)
+                    row["bench_id"] = cell_id   # the rows are keyed by the cell asked for, as a benchmark's are
+                    row["session"] = session.manifest_fields()
+                finally:
+                    session.close()
+            except (BudgetExhausted, UsageLimitReached) as signal:
+                stop.set()
+                with lock:
+                    state["stopped_by"] = state["stopped_by"] or signal
+                return "pending", cell_id, None
+            except BackendError as err:
+                return "failed", cell_id, err
+            finally:
+                cursor.close()
+            return "done", cell_id, row
+
+        done, failed, pending = [], [], []
+        with trace(run_id, CHAIN_KIND, run_dir=rd, arm=arm.name):
+            with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+                for fut in as_completed([pool.submit(work, c) for c in cell_ids]):
+                    status, cell_id, payload = fut.result()
+                    base = {"cell_id": cell_id, "arm": arm.name, "run_id": run_id,
+                            "finished_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds")}
+                    if status == "done":
+                        row = {**payload, **base}
+                        _append(rd, row)
+                        done.append(row)
+                        st = row.get("stages") or {}
+                        log(f"    {cell_id}  {row['answer'].get('verdict', '?'):<22} p={row['answer'].get('probability', float('nan')):.2f}"
+                            f"  ${row['cost_usd']:.3f}  rounds {st.get('rounds')} {'valid' if st.get('valid') else 'never valid'}"
+                            f"  gate {st.get('n_gate_rejections')}/{st.get('attempts_total')}"
+                            f"{'' if row['published'] else '  WITHHELD: ' + (row['problems'] or ['?'])[0]}")
+                    elif status == "failed":
+                        row = {"bench_id": cell_id, "answer": None, "problems": [f"{type(payload).__name__}: {payload}"],
+                               "published": False, "cost_usd": 0.0, "duration_s": None, "error": str(payload), **base}
+                        _append(rd, row)
+                        failed.append(row)
+                        log(f"    {cell_id}  FAILED: {payload}")
+                    else:
+                        pending.append(cell_id)
+    finally:
+        if own_con:
+            con.close()
+    spent = float(budget.spent_usd)
+    manifest.finish(spent_usd=spent)
+    manifest.write(rd)
+    stopped = state["stopped_by"]
+    if stopped is not None:
+        log(f"  stopped: {stopped}; {len(pending)} cell(s) pending")
+    rows = SC.read_cells(rd)
+    stages = SC.stage_metrics(rows)
+    summary: dict[str, Any] = {
+        "run_id": run_id, "run_dir": str(rd), "kind": CHAIN_KIND, "arm": arm.name, "models": cfg.models(),
+        "cells": list(cell_ids), "done": len(done), "failed": len(failed), "pending": sorted(pending),
+        "published": sum(1 for r in done if r.get("published")), "spent_usd": round(spent, 4), "budget_usd": budget_usd,
+        "budget_exhausted": isinstance(stopped, BudgetExhausted), "usage_limited": isinstance(stopped, UsageLimitReached),
+        "resets_at_text": getattr(stopped, "resets_at_text", None), "started_at": started,
+        "finished_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"), "stages": stages, "mlflow_run_id": None,
+    }
+    if track and stages:
+        summary["mlflow_run_id"] = TR.log_run(
+            f"chain.{arm.name}",
+            params={"arm": arm.name, "agent": arm.agent, "models": cfg.models(), "effort": arm.effort,
+                    "prompt_version": arm.prompt_version, "run_id": run_id, "cells": len(cell_ids)},
+            metrics=_flat(stages), tags={"kind": CHAIN_KIND, "arm": arm.name, "run_id": run_id},
+            artifacts={"summary.json": summary})
+    (rd / "summary.json").write_text(json.dumps(TR.jsonable(summary), indent=1) + "\n")
     return summary

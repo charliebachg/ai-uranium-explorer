@@ -78,6 +78,44 @@ def run_cmd(
         raise typer.Exit(3)
 
 
+@bench_run_app.command("chain")
+def chain_cmd(
+    arm: str = typer.Option("v1", "--arm", help="a v1 arm under configs/arms/"),
+    cells: list[str] = typer.Option(None, "--cells", help="real cell ids (repeatable or comma-separated)"),
+    enabled: bool = typer.Option(False, "--enabled", help="the enabled cells from knowledge/enabled_cells.toml"),
+    budget_usd: float = typer.Option(15.0, "--budget-usd", help="ceiling on live spend for this run"),
+    workers: int = typer.Option(1, "--workers", help="cells in parallel; the segments inside a cell run in parallel anyway"),
+    track: bool = typer.Option(True, "--track/--no-track", help="log one MLflow run"),
+    backend: str = typer.Option("claude", "--backend", help="claude (live, cached) or replay (recorded only)"),
+) -> None:
+    """Run the staged analyst over real cells for the dashboard: chains land in the agent tier. Exits 3 on
+    budget, 75 on a usage limit."""
+    import os
+    import tomllib
+
+    from ..paths import PATHS
+    from .arms import load_arm
+    from .run import run_cells
+
+    ids = [x.strip() for c in (cells or []) for x in c.split(",") if x.strip()]
+    if enabled:
+        doc = tomllib.loads((PATHS.pipeline / "knowledge" / "enabled_cells.toml").read_text())
+        ids += [str(c["id"]) for c in doc.get("cell", []) if str(c["id"]) not in ids]
+    if not ids:
+        raise typer.BadParameter("name cells with --cells, or --enabled")
+    os.environ["LR_STORE_RW"] = "1"   # the run writes chains while the tools read: one connection kind per file
+    summary = run_cells(ids, load_arm(arm), _factory(backend), budget_usd, typer.echo, workers=workers, track=track)
+    st = summary["stages"]
+    typer.echo(f"  run {summary['run_id']}: {summary['done']} done ({summary['published']} published), "
+               f"{summary['failed']} failed, {len(summary['pending'])} pending, ${summary['spent_usd']:.2f} live spend"
+               + (f"; gate rejection {st.get('stage_gate_rejection_rate', float('nan')):.2f}, valid {st.get('stage_valid_rate', float('nan')):.2f}" if st else "")
+               + (f", mlflow {summary['mlflow_run_id']}" if summary.get("mlflow_run_id") else ""))
+    if summary["usage_limited"]:
+        raise typer.Exit(75)
+    if summary["budget_exhausted"]:
+        raise typer.Exit(3)
+
+
 @bench_run_app.command("score")
 def score_cmd(
     version: str = typer.Option("v1", "--version"),
