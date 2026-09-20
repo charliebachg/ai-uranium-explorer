@@ -187,3 +187,19 @@ def test_a_routed_arm_keys_its_cache_and_its_ledger_by_the_adapter_that_answered
     assert cached.run_budget.spent_usd == pytest.approx(0.5 + 0.0021)
     again = cached.call(cheap)
     assert again.from_cache is True and len(http.sent) == 1, "the routed call is served from its own key"
+
+
+def test_the_requests_effort_is_the_models_reasoning_effort_and_a_length_cut_reply_is_asked_again_at_low(tmp_path: Path, env: Path) -> None:
+    """These models think before they answer and the thinking is billed as completion tokens; unbounded it
+    ate a 2,000-token allowance on a verifier prompt and returned nothing, which is how the first smoke run
+    failed every cell."""
+    cut = {"id": "gen", "model": "z-ai/glm-5.3-flash", "usage": {"prompt_tokens": 600, "completion_tokens": 2000, "cost": 0.001,
+                                                                  "completion_tokens_details": {"reasoning_tokens": 2000}},
+           "choices": [{"finish_reason": "length", "message": {"content": ""}}]}
+    http = FakeHttp([(200, cut), (200, reply({"status": "met"}))])
+    resp = OR.OpenRouterBackend(http=http, prices={}, max_output_tokens=2000).call(request(tmp_path))
+    first, second = http.sent[0]["json"], http.sent[1]["json"]
+    assert first["reasoning"] == {"effort": "medium"} and first["max_tokens"] == 2000, "medium effort on the request"
+    assert second["reasoning"] == {"effort": "low"} and second["max_tokens"] == 4000, "less thinking, more room"
+    assert resp.structured == {"status": "met"} and resp.envelope["reasoning_effort"] == "low"
+    assert len(env.read_text().splitlines()) == 2, "the cut attempt was charged too"

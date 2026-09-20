@@ -45,6 +45,9 @@ MODELS_ENDPOINT = "https://openrouter.ai/api/v1/models"
 VERSION = "openrouter/v1/chat.completions"
 #: a card is 1000 px square; this is a pessimistic token allowance for one image in the pre-call estimate
 IMAGE_TOKENS = 1600
+#: the request's effort as the provider's reasoning effort: these models think before they answer, the
+#: thinking is billed as completion tokens, and unbounded it can eat the whole allowance and return nothing
+REASONING_EFFORT = {"low": "low", "medium": "medium", "high": "high", "xhigh": "high", "max": "high"}
 #: what a call is priced at when neither the reply nor the models endpoint says: high on purpose
 FALLBACK_PRICE = Price(per_mtok_in=2.0, per_mtok_out=8.0)
 MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
@@ -140,7 +143,7 @@ class OpenRouterBackend:
                  prices: dict[str, Price] | None = None, http: Any = None) -> None:
         load_dotenv()
         self.timeout_s = timeout_s
-        self.max_output_tokens = max_output_tokens or int(os.environ.get("OPENROUTER_MAX_OUTPUT_TOKENS", "2000"))
+        self.max_output_tokens = max_output_tokens or int(os.environ.get("OPENROUTER_MAX_OUTPUT_TOKENS", "8000"))
         self.structured = structured
         self.prices: dict[str, Price] = dict(prices or {})
         self.prices_fetched = prices is not None
@@ -163,10 +166,12 @@ class OpenRouterBackend:
         tokens_in = int(_text_chars(messages) / 3.5) + IMAGE_TOKENS * len(req.images)
         return self._price(req.model).usd(tokens_in, self.max_output_tokens)
 
-    def _payload(self, req: ExtractionRequest, messages: list[dict[str, Any]], structured: bool) -> dict[str, Any]:
+    def _payload(self, req: ExtractionRequest, messages: list[dict[str, Any]], structured: bool,
+                 effort: str | None = None, max_tokens: int | None = None) -> dict[str, Any]:
         payload: dict[str, Any] = {
-            "model": req.model, "messages": messages, "max_tokens": self.max_output_tokens,
+            "model": req.model, "messages": messages, "max_tokens": max_tokens or self.max_output_tokens,
             "usage": {"include": True},   # the provider's own dollar figure comes back in the usage block
+            "reasoning": {"effort": REASONING_EFFORT.get(effort or req.effort, "medium")},
         }
         if structured:
             payload["response_format"] = {"type": "json_schema", "json_schema": {
@@ -185,10 +190,12 @@ class OpenRouterBackend:
         headers = {"Authorization": f"Bearer {api_key()}", "Content-Type": "application/json",
                    "X-Title": "legacy-reader analyst"}
         structured = self.structured
+        effort: str | None = None
+        max_tokens: int | None = None
         started = time.monotonic()
         last: Exception | None = None
         for attempt in (1, 2, 3):
-            payload = self._payload(req, messages, structured)
+            payload = self._payload(req, messages, structured, effort=effort, max_tokens=max_tokens)
             try:
                 r = self.http.post(ENDPOINT, headers=headers, json=payload, timeout=self.timeout_s)
             except httpx.HTTPError as err:
@@ -215,6 +222,14 @@ class OpenRouterBackend:
             record(FAMILY, req.model, usd, tokens_in, tokens_out, req.task)
             choice = (body.get("choices") or [{}])[0]
             text = ((choice.get("message") or {}).get("content")) or ""
+            if choice.get("finish_reason") == "length" and not text.strip():
+                # the thinking ate the allowance: ask again with less of it and more room, once
+                last = SchemaInvalidError("the reply hit its length limit while reasoning and carried no answer")
+                if attempt == 3:
+                    raise last
+                effort, max_tokens = "low", 2 * (max_tokens or self.max_output_tokens)
+                check(FAMILY, self._worst_case_usd(req, messages))
+                continue
             try:
                 structured_out = _parse(text)
             except (SchemaInvalidError, json.JSONDecodeError) as err:
@@ -226,7 +241,9 @@ class OpenRouterBackend:
             return ExtractionResponse(
                 structured=structured_out,
                 envelope={"id": body.get("id"), "provider": body.get("provider"), "finish_reason": choice.get("finish_reason"),
-                          "structured_ask": structured, "cost_reported": cost is not None},
+                          "structured_ask": structured, "cost_reported": cost is not None,
+                          "reasoning_effort": payload["reasoning"]["effort"],
+                          "reasoning_tokens": ((usage.get("completion_tokens_details") or {}).get("reasoning_tokens"))},
                 backend=FAMILY, backend_version=self.version,
                 model_requested=req.model, model_resolved=str(body.get("model") or req.model),
                 num_turns=1, duration_s=time.monotonic() - started, usage=usage, cost_usd=usd,
