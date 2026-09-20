@@ -81,6 +81,12 @@ TASK_PLAN = "analyst_v1_plan"
 TASK_EXECUTE = "analyst_v1_execute"
 TASK_EXECUTE_BATCH = "analyst_v1_execute_batch"
 TASK_VERIFY = "analyst_v1_verify"
+#: a verifier that rejects the chain must name the nodes to re-execute; one re-ask, then the verdict stands
+VERIFIER_ATTEMPTS = 2
+NAME_THE_NODES = ("Your previous verdict rejected the chain but listed no node in `faulty`, so nothing can be "
+                  "re-executed and the chain would be withheld on prose alone. If nodes are at fault, list each "
+                  "one as {node_id, reason} in `faulty`, by its node id as printed in the chain. If no single "
+                  "node is at fault, return valid: true and put your reservations in `rationale`.")
 TASK_ADJUDICATE = "analyst_v1_adjudicate"
 #: the `model` of a node the harness wrote itself, so the verifier and the store can tell it from a reading
 DETERMINISTIC = "deterministic"
@@ -215,6 +221,7 @@ class _Loop:
         self.decision_row: dict[str, Any] | None = None
         self.decision_published = False
         self.adjudicator_attempts = 0
+        self.verifier_attempts = 0
         self.effort: str | None = None               # the effort note, built once: a refusal is not asked twice
 
     # ---------------------------------------------------------------- shared
@@ -634,19 +641,32 @@ class _Loop:
             self.execute(targets, round, notes)
 
     def verify(self, round: int) -> VerifierVerdict:
+        """One verifier verdict for the chain as it stands. A verdict that rejects the chain but lists no
+        node breaks the protocol the way an uncited node does: there is nothing to re-execute, so the round
+        would end with the chain withheld on prose alone. Seen on the cheap stack (2026-09-21, Qwen 3.8
+        Flash named five nodes in its feedback and none in `faulty`). The verifier is asked once more with
+        that rule as feedback; a second such verdict stands as recorded. The cost is one cheap call."""
         with span("stage:verify", kind="tool", round=round):
-            req = self._request(TASK_VERIFY, PR.verifier_system(),
-                                PR.verifier_user(self.chain.chain_text(), self._effort_note()), VERIFIER_SCHEMA,
-                                self.cfg.verifier_model, self.cfg.verifier_effort or self.cfg.effort,
-                                {"role": "verifier", "round": round})
-            resp = self.backend.call(req)
-            self.calls.append(_account(resp))
-            verdict = replace(self._checked_verdict(dict(resp.structured or {}), round),
-                              model=resp.model_resolved or req.model, cost_usd=float(resp.cost_usd or 0.0),
-                              duration_s=float(resp.duration_s or 0.0))
+            base = PR.verifier_user(self.chain.chain_text(), self._effort_note())
+            cost = duration = 0.0
+            for attempt in range(1, VERIFIER_ATTEMPTS + 1):
+                user = base if attempt == 1 else f"{base}\n\n{NAME_THE_NODES}"
+                req = self._request(TASK_VERIFY, PR.verifier_system(), user, VERIFIER_SCHEMA,
+                                    self.cfg.verifier_model, self.cfg.verifier_effort or self.cfg.effort,
+                                    {"role": "verifier", "round": round, "attempt": attempt})
+                resp = self.backend.call(req)
+                self.calls.append(_account(resp))
+                cost += float(resp.cost_usd or 0.0)
+                duration += float(resp.duration_s or 0.0)
+                verdict = self._checked_verdict(dict(resp.structured or {}), round)
+                self.verifier_attempts += 1
+                unnamed = verdict.valid is False and not verdict.faulty and len(self.chain.current_nodes()) > 1
+                if not unnamed or verdict.feedback.startswith("verifier verdict rejected by the harness"):
+                    break
+            verdict = replace(verdict, model=resp.model_resolved or req.model, cost_usd=cost, duration_s=duration)
             self.chain.verdicts.append(verdict)
             self.counts["n_faulty_total"] += len(verdict.faulty)
-            set_attrs(valid=verdict.valid, n_faulty=len(verdict.faulty))
+            set_attrs(valid=verdict.valid, n_faulty=len(verdict.faulty), attempts=attempt)
             return verdict
 
     def _checked_verdict(self, payload: dict[str, Any], round: int) -> VerifierVerdict:
@@ -911,6 +931,7 @@ class _Loop:
             "n_segments": len(self.chain.plan.segments), "n_nodes": len(self.chain.nodes),
             "attempts_total": c["attempts_total"], "n_gate_rejections": c["n_gate_rejections"],
             "adjudicator_attempts": self.adjudicator_attempts,
+            "verifier_attempts": self.verifier_attempts,
             "n_recorded_unknown": c["n_recorded_unknown"], "rounds": self.chain.rounds(), "valid": self.valid,
             "n_faulty_total": c["n_faulty_total"], "n_faulty_unresolved": c["n_faulty_unresolved"],
             "n_reexecuted": c["n_reexecuted"], "n_refusals_by_rule": self.session.manifest_fields()["refusals"],

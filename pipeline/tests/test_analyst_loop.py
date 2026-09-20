@@ -754,3 +754,31 @@ def test_segment_scoped_composes_with_the_batch_executor_and_skip_unmeasured(tmp
     st = row["stages"]
     assert st["n_skipped_unmeasured"] == 1 and st["n_batch_calls"] == 1 and st["n_gate_rejections"] == 1 and st["n_nodes"] == 10
     assert row["published"] is True and chain.published
+
+
+# ---------------------------------------------------------------- 4b. a rejection that names no node
+
+
+def test_a_verifier_that_rejects_without_naming_a_node_is_asked_once_more(tmp_path: Path, weights_stub) -> None:
+    """Seen on the cheap stack: the verifier named five nodes in its prose and none in `faulty`, so nothing
+    could be re-executed and the chain was withheld on prose alone. The protocol note goes back once."""
+    prose = "Nodes n01 and n05 overstate the evidence."
+    backend = LoopBackend(verifier=[verifier_answer(False, [], feedback=prose),
+                                    verifier_answer(False, [{"node_id": "n01", "reason": "rests on one trace"}], feedback=prose),
+                                    verifier_answer(True)])
+    row, _ = run(tmp_path, backend, rounds=2)
+    verify_reqs = [r for r, (t, _) in zip(backend.requests, backend.calls) if t == L.TASK_VERIFY]
+    assert len(verify_reqs) == 3, "two attempts in round 0, one in round 1"
+    assert L.NAME_THE_NODES in verify_reqs[1].user_prompt and L.NAME_THE_NODES not in verify_reqs[0].user_prompt
+    assert verify_reqs[0].cache_key("x") != verify_reqs[1].cache_key("x"), "the re-ask is never served from the first reply's cache"
+    chain = W.Chain.from_dict(row["chain"]).validate()
+    assert [v.valid for v in chain.verdicts] == [False, True], "only the verdict that stands is recorded per round"
+    assert chain.verdicts[0].faulty_ids() == ["n01"] and chain.verdicts[0].cost_usd == pytest.approx(2 * backend.cost)
+    st = row["stages"]
+    assert st["verifier_attempts"] == 3 and st["rounds"] == 2 and st["valid"] is True and row["published"] is True
+
+    # a second unnamed rejection stands as recorded: nothing to repair, the chain withheld, one round only
+    backend = LoopBackend(verifier=[verifier_answer(False, [], feedback=prose), verifier_answer(False, [], feedback=prose)])
+    row, _ = run(tmp_path / "b", backend, rounds=3)
+    assert sum(1 for t, _ in backend.calls if t == L.TASK_VERIFY) == 2
+    assert row["stages"]["verifier_attempts"] == 2 and row["stages"]["rounds"] == 1 and row["published"] is False

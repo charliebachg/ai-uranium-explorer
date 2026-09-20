@@ -399,7 +399,7 @@ time.
 verdict follow from the nodes, do any nodes contradict, is the effort null acknowledged, is a folklore
 criterion carrying weight, is proximity to a known deposit doing the work. Returns isValid, the faulty node
 ids and corrective feedback; the faulty nodes and every node that depends on them are re-executed and the
-chain re-verified, up to K rounds. The verifier also returns its own candidate label, as STA-CoT's does (their
+chain re-verified, up to K rounds. A verdict that rejects the chain but names no node breaks the protocol the way an uncited node does, so the verifier is asked once more with that rule as feedback and a second such verdict stands as recorded (added 2026-09-21, after the cheap verifier named five nodes in its prose and none in its list on the first on-demand chain; `verifier_attempts` is a per-stage count). The verifier also returns its own candidate label, as STA-CoT's does (their
 verifier emits the candidate answer beside isValid and the feedback); ours is recorded, not acted on, so the
 agreement between the verifier's label and the deciders' is a per-stage metric. STA-CoT's finding that the
 verifier is where capacity pays is why the executor is the cheap model and the verifier the expensive one, and
