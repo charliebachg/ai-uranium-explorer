@@ -22,8 +22,12 @@ any of it. Every score on the map is retrospective. See §8.
 ## 2. Running it
 
     cd pipeline && uv sync
+    uv run lr store seed unpack data/seed/latest   # a fresh clone only: rebuild the analytics store from the seed pack, every table's hash verified (the README says where the pack comes from)
     uv run lr prospect serve          # localhost:8787 — the evidence record and the live chat
     cd ../web && npm install && npm run dev    # http://localhost:5173
+
+Or, with Docker, `docker compose up -d --build` from `legacy-reader/`: the app unpacks the seed pack itself on
+first start when `pipeline/data/lr.duckdb` is missing, and serves the built site and the API on :8787.
 
 The map, the scores, the layers and the guided walkthrough are **static files** and work with nothing running.
 Only the evidence panel and the live chat need `lr prospect serve`; when it is down both panels say so and name

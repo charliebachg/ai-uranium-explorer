@@ -26,6 +26,17 @@ data only. It proposes no drill targets and makes no geological judgement.
 
 ## Running it
 
+    # a fresh clone: the analytics store (pipeline/data/lr.duckdb) is gitignored, so first obtain a seed pack
+    # from the team (<seed host: to be decided; nothing publishes the pack yet>) and put it at
+    # pipeline/data/seed/latest (the directory holding manifest.json, or a symlink to it); then
+    docker compose up -d --build     # the app's first start runs `lr store seed ensure`: unpacks the pack into
+                                     # pipeline/data/lr.duckdb, verifying every table's hash and row count, and serves on :8787
+    # or without Docker
+    cd pipeline && uv sync && uv run lr store seed unpack data/seed/latest && uv run lr prospect serve
+    # the public pack (9 MB) rebuilds the derived tier, the layer registry and the scenes; the read and agent
+    # tiers come back as empty tables, so there are no document readings or chains until the private pack
+    # (team only, 22 MB: page text and quotes never leave the team) is unpacked instead
+
     # pipeline
     cd pipeline
     uv sync
@@ -42,6 +53,11 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr store register-layers  # every pulled layer in native.layer with the hash of its payload
     uv run lr store lineage          # every layer, feature and verified source walks back to a hashed pull; exit 1 on a break
     uv run lr store snapshot         # a hashed manifest of the store: row counts, layer hashes, feature quantiles
+    uv run lr store seed pack        # the store as Parquet under data/seed/<hash>/ with a manifest, and data/seed/latest pointed at it; public: only tables whose every source the inventory marks redistributable
+    uv run lr store seed pack --private   # every table, the read and agent tiers included: page text and quotes never leave the team
+    uv run lr store seed verify data/seed/latest        # every sha256 and row count against the manifest, and the manifest against its own address; exit 1 on a mismatch
+    uv run lr store seed unpack <pack> --into <file>    # rebuild a store from a pack: schema.sql, load, tier audit, recount; refuses an existing file
+    LR_REAL_DATA=1 uv run pytest -m real_data           # the quick model search against the store, read-only, each arm against its stored interval (about a minute); CI unpacks the public pack first
     uv run lr prospect gate          # the five-column readiness gate (present, licensed, covers, servable, versioned); exit 1 when red
     uv run lr prospect drift         # feature distributions now against the latest snapshot; exit 1 on drift
     uv run lr prospect headline --snapshot <hash>     # Phase 0 re-test, pinned to the store it names

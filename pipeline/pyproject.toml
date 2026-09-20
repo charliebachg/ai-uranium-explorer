@@ -52,4 +52,5 @@ testpaths = ["tests"]
 markers = [
   "network: needs internet (grid download, live endpoints)",
   "backend: calls the real claude CLI",
+  "real_data: runs against the live analytics store (data/lr.duckdb, or the unpacked seed); LR_REAL_DATA=1 to enable",
 ]

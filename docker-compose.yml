@@ -1,6 +1,8 @@
 # The serving stack for the prototype (PRD section A): Postgres 16 with PostGIS for serving, MinIO for objects
 # and tiles, Redis for the job queue. DuckDB stays the analytics engine and lives in pipeline/data, not here.
-# `docker compose up -d` brings the three up; `lr store migrate` then `lr store sync-pg` fill the database.
+# `docker compose up -d --build` brings everything up; `lr store migrate` then `lr store sync-pg` fill the
+# serving database. A fresh clone has no analytics store: put a seed pack at pipeline/data/seed/latest (that
+# directory is mounted into the app) and the app unpacks it into pipeline/data/lr.duckdb on its first start.
 services:
   app:
     build: .
@@ -12,6 +14,9 @@ services:
       LR_PG_DSN: postgresql://${LR_PG_USER:-lr}:${LR_PG_PASSWORD:-lr}@db:5432/${LR_PG_DB:-lr}
       LR_S3_ENDPOINT: http://minio:9000
       LR_REDIS_URL: redis://redis:6379/0
+      # the seed pack the first start unpacks when pipeline/data/lr.duckdb is missing; a container path, under
+      # the mounted data directory, so a pack the host keeps at pipeline/data/seed/latest is what the app sees
+      LR_SEED_DIR: /app/pipeline/data/seed/latest
     env_file:
       - path: pipeline/.env      # the OpenAI key and its spend ceiling; gitignored, never copied into the image
         required: false

@@ -817,6 +817,68 @@ def store_audit_cmd() -> None:
     raise typer.Exit(0 if not problems else 1)
 
 
+seed_app = typer.Typer(no_args_is_help=True, help="The seed pack: the store as content-addressed Parquet, so a fresh clone can run.")
+store_app.add_typer(seed_app, name="seed")
+
+
+@seed_app.command("pack")
+def store_seed_pack_cmd(
+    out: str = typer.Option(None, "--out", help="root to write <hash>/ and the latest symlink under; default data/seed"),
+    private: bool = typer.Option(False, "--private", help="every table the store contract covers, including the read and agent tiers"),
+) -> None:
+    """One Parquet file per table plus manifest.json; the public pack holds only tables whose every source is redistributable."""
+    from pathlib import Path
+
+    from .store.seed import pack
+
+    m = pack(scope="private" if private else "public", out=Path(out) if out else None, log=typer.echo)
+    typer.echo(json.dumps({"pack_sha256": m["pack_sha256"], "scope": m["scope"], "tables": len(m["tables"]),
+                           "excluded": sorted(m["excluded"]), "dir": m["dir"]}))
+
+
+@seed_app.command("verify")
+def store_seed_verify_cmd(src: str = typer.Argument(..., help="the pack directory, or its manifest.json")) -> None:
+    """Check every table's sha256 and row count against the manifest, and the manifest against its own address. Exits 1 on a mismatch."""
+    from pathlib import Path
+
+    from .store.seed import SeedError, verify
+
+    try:
+        verify(Path(src), log=typer.echo)
+    except SeedError as e:
+        typer.echo(f"  {e}")
+        raise typer.Exit(1)
+
+
+@seed_app.command("unpack")
+def store_seed_unpack_cmd(
+    src: str = typer.Argument(..., help="the pack directory, or its manifest.json"),
+    into: str = typer.Option(None, "--into", help="the store file to create; default data/lr.duckdb. Refuses an existing file"),
+) -> None:
+    """Rebuild a store from a pack: verify, apply schema.sql, load, audit the tiers, recount. Refuses on any mismatch."""
+    from pathlib import Path
+
+    from .store.seed import SeedError, unpack
+
+    try:
+        unpack(Path(src), into=Path(into) if into else None, log=typer.echo)
+    except SeedError as e:
+        typer.echo(f"  {e}")
+        raise typer.Exit(1)
+
+
+@seed_app.command("ensure")
+def store_seed_ensure_cmd() -> None:
+    """The container's first step: unpack LR_SEED_DIR (default data/seed/latest) when data/lr.duckdb is missing; otherwise nothing."""
+    from .store.seed import SeedError, ensure
+
+    try:
+        typer.echo(f"  seed: {ensure(log=typer.echo)}")
+    except SeedError as e:
+        typer.echo(f"  {e}")
+        raise typer.Exit(1)
+
+
 @app.command("export-reports")
 def export_reports_cmd(
     files: list[str] = typer.Option(None, "--files"),

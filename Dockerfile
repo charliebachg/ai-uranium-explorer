@@ -1,5 +1,7 @@
 # One image: the built site and the API that serves it. The analytics store (pipeline/data) is mounted, not
-# copied: it is a gigabyte of pulls and a DuckDB file, and it belongs to the machine that computed it.
+# copied: it is a gigabyte of pulls and a DuckDB file, and it belongs to the machine that computed it. A fresh
+# clone has no store; the first start unpacks the seed pack at LR_SEED_DIR (`lr store seed ensure`) into
+# pipeline/data/lr.duckdb, verifying every table's hash on the way, and does nothing when a store is present.
 FROM node:22-alpine AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./
@@ -22,4 +24,4 @@ COPY pipeline/alembic.ini pipeline/migrations ./
 RUN uv sync --frozen --no-dev
 COPY --from=web /web/dist /app/web/dist
 EXPOSE 8787
-CMD ["uv", "run", "lr", "prospect", "serve", "--host", "0.0.0.0", "--port", "8787", "--backend", "openai", "--web-dist", "/app/web/dist"]
+CMD ["sh", "-c", "uv run lr store seed ensure && exec uv run lr prospect serve --host 0.0.0.0 --port 8787 --backend openai --web-dist /app/web/dist"]
