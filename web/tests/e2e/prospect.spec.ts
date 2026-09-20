@@ -130,13 +130,25 @@ test("with the service down the cells still draw and both panels say why", async
   const canvas = page.locator(".maplibregl-canvas").first();
   const box = await canvas.boundingBox();
   if (!box) throw new Error("the map has no box");
+  // A hole read from a report may sit on top of the centre cell since the reading pass, and the hovercard
+  // names the hole first; probe a few offsets so the cursor lands on the cell itself.
   const centre = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const offsets = [[0, 0], [24, 0], [0, 24], [-24, 0], [0, -24], [24, 24], [-24, -24]];
+  let hit = centre;
   await expect(async () => {
-    await page.mouse.move(centre.x, centre.y - 1);
-    await page.mouse.move(centre.x, centre.y);
-    await expect(page.getByTestId("hovercard-label")).toHaveText("Analysis cell", { timeout: 1_000 });
+    for (const [dx, dy] of offsets) {
+      const at = { x: centre.x + dx, y: centre.y + dy };
+      await page.mouse.move(at.x, at.y - 1);
+      await page.mouse.move(at.x, at.y);
+      const label = await page.getByTestId("hovercard-label").textContent({ timeout: 1_000 }).catch(() => "");
+      if (label === "Analysis cell") {
+        hit = at;
+        return;
+      }
+    }
+    throw new Error("no analysis cell under the cursor at any probed offset");
   }).toPass({ timeout: 90_000 });
-  await page.mouse.click(centre.x, centre.y);
+  await page.mouse.click(hit.x, hit.y);
 
   // the exported row still says what the map drew, and the service-backed panels explain themselves
   await expect(page.getByTestId("map-scores")).toBeVisible({ timeout: 30_000 });
