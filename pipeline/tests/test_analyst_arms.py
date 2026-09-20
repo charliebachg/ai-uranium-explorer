@@ -10,7 +10,7 @@ import pytest
 from legacy_reader.analyst import arms as A
 
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features"]
-V1 = ["v1", "v1-noverify", "v1-K3", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative"]
+V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative"]
 ALL = V0 + V1
 
 
@@ -93,7 +93,7 @@ def test_the_v1_headline_is_a_cheap_executor_under_an_opus_verifier_with_v0s_swi
     assert v1.loop.executor_model == "claude-sonnet-5" and v1.loop.verifier_model == "claude-opus-5"
     assert v1.loop.adjudicator_model == "claude-opus-5" and v1.loop.planner == "template"
     assert (v1.loop.verifier, v1.loop.rounds, v1.loop.triage, v1.loop.executor_context, v1.loop.decider) == \
-        ("skeptic", 1, False, "independent", "both")
+        ("skeptic", 3, False, "independent", "both"), "K = 3 by default since F7: one round discards the verifier's feedback"
     assert asdict(v1.inputs) == {"card": True, "pack": False, "passages": False}, "the pack is served by the session's tools"
     assert v1.switches == v0.switches, "the evidence rules are v0's, so the two agents are compared on the same evidence"
     cfg = v1.loop.config(v1.effort, v1.prompt_version)
@@ -103,7 +103,7 @@ def test_the_v1_headline_is_a_cheap_executor_under_an_opus_verifier_with_v0s_swi
 
 @pytest.mark.parametrize("name, changed", [
     ("v1-noverify", {"loop.verifier"}),
-    ("v1-K3", {"loop.rounds"}),
+    ("v1-K1", {"loop.rounds"}),
     ("v1-strong", {"loop.executor_model"}),
     ("v1-triage", {"loop.triage", "switches.oof_scores"}),
     ("v1-modelplanner", {"loop.planner"}),

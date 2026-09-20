@@ -1,7 +1,7 @@
 # Analyst v1 arm: the staged loop (PRD §8.4). Every switch is stated; an arm differs from v1 in the one way
 # its notes line names.
 [arm]
-name = "v1-K3"
+name = "v1-K1"
 agent = "v1"
 model = "claude-opus-5"
 effort = "medium"
@@ -9,7 +9,7 @@ prompt_version = "analyst/v1/v1"
 max_budget_usd_per_call = 1.50
 timeout_s = 600
 workers = 2
-notes = "Three refinement rounds instead of one: repair against cost."
+notes = "One verifier round instead of three: the verifier reports faults but nothing is repaired (F7: four chains in ten never validate at K = 1)."
 
 [arm.inputs]
 card = true
@@ -30,7 +30,7 @@ adjudicator_model = "claude-opus-5"
 planner_model = "claude-opus-5"
 planner = "template"
 verifier = "skeptic"
-rounds = 3
+rounds = 1
 triage = false
 executor_context = "independent"
 decider = "both"

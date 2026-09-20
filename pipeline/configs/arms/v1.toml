@@ -9,7 +9,7 @@ prompt_version = "analyst/v1/v1"
 max_budget_usd_per_call = 1.50
 timeout_s = 600
 workers = 2
-notes = "The staged loop: template plan, Sonnet 5 executor per segment behind the gate, Opus 5 verifier with the skeptic brief, one round, both deciders, executors independent."
+notes = "The staged loop: template plan, Sonnet 5 executor per segment behind the gate, Opus 5 verifier with the skeptic brief, up to three rounds, both deciders, executors independent."
 
 [arm.inputs]
 card = true
@@ -30,7 +30,7 @@ adjudicator_model = "claude-opus-5"
 planner_model = "claude-opus-5"
 planner = "template"
 verifier = "skeptic"
-rounds = 1
+rounds = 3
 triage = false
 executor_context = "independent"
 decider = "both"

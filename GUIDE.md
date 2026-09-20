@@ -363,7 +363,7 @@ answers one segment from the tool results the session staged, as a node: met, no
 the ids it cites, one sentence. A mechanical **gate** checks every node (ids resolve, the right cell, polarity,
 unknown only where unmeasured, no arithmetic) and sends it back with feedback that escalates over three
 attempts. A **verifier** (Opus 5, the skeptic's brief) reads the whole chain and names the faulty nodes; those
-and their dependents are re-executed, up to K rounds. Two **deciders** always run: a weighted sum over node
+and their dependents are re-executed, up to K rounds (three by default). Two **deciders** always run: a weighted sum over node
 strengths and an adjudicator; a chain that never validates takes the majority over rounds or abstains. The
 chain, its verdicts and its decision are stored in the agent tier and shown on the evidence panel under the
 memos. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
