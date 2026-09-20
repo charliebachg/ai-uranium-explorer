@@ -159,3 +159,15 @@ def test_pack_text_is_compact_and_stable(store: Path) -> None:
     assert "b:b-0001:cell:d_conductor_m |" in text and "criteria:" in text and "coverage:" in text
     assert "lake_water_uranium | unknown | -" in text
     assert "0000_0000" not in text and "holes_n" not in text
+
+
+def test_pack_text_quotes_a_text_valued_feature_as_known() -> None:
+    from legacy_reader.bench.pack import pack_text
+
+    pack = {"bench_id": "b-0009", "tools": {"cell_features": {"rows": [
+        {"feature": "surficial_class", "value": None, "text": "Glaciofluvial hummocky", "observations": 2},
+        {"feature": "sed_u_max_ppm", "value": None, "observations": 0, "nearest_observation_id": "b:b-0009:cell:sed_u_max_ppm:nearest_m"},
+    ]}}}
+    text = pack_text(pack)
+    assert "surficial_class | Glaciofluvial hummocky | - | 2 | known (text)" in text
+    assert "sed_u_max_ppm | - | - | 0 | unknown (nearest observation id" in text

@@ -283,6 +283,10 @@ def pack_text(pack: dict[str, Any]) -> str:
     if feats:
         lines.append("features: id | value | unit | observations | status")
         for r in feats:
+            if r.get("value") is None and r.get("text"):
+                # a mapped class rather than a number (surficial environment): known, quoted as text
+                lines.append(f"  {r.get('value_id') or r.get('feature')} | {r['text']} | - | {r.get('observations', 0)} | known (text)")
+                continue
             if r.get("value") is None:
                 status = "unknown"
                 near = r.get("nearest_observation_id")
