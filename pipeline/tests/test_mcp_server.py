@@ -20,6 +20,7 @@ from mcp import Client
 from mcp.shared.exceptions import MCPError
 
 from legacy_reader import store as ST
+from legacy_reader.api import jobs as J
 from legacy_reader.mcp import TOOL_VERSION
 from legacy_reader.mcp import contract as C
 from legacy_reader.mcp import server as SV
@@ -237,13 +238,93 @@ def test_abstain_is_recorded_on_the_session_and_its_manifest(store: Path, world:
     assert manifest.config["abstentions"][0]["detail"] == "no boulder count here"
 
 
-def test_run_analyst_is_a_stub_that_says_so(store: Path, world: FakeWorld, tmp_path: Path) -> None:
+def test_run_analyst_without_a_job_runner_says_so(store: Path, world: FakeWorld, tmp_path: Path) -> None:
     async def scenario(client: Client) -> None:
-        sid, _ = await opened(client, "scored")
+        sid, _ = await opened(client, "dashboard")
         r = await client.call_tool("run_analyst", {"session_id": sid, "budget_usd": 1.0})
         assert r.is_error and r.content[0].text == NOT_AVAILABLE and "not available" in NOT_AVAILABLE
+        r = await client.call_tool("job_status", {"session_id": sid, "job_id": "x"})
+        assert r.is_error and r.content[0].text == NOT_AVAILABLE
 
     run(make_server(tmp_path, world), scenario)
+
+
+def fake_jobs(tmp_path: Path) -> J.Runner:
+    """A runner whose analyst kind is a fake that finishes at once: the tools are tested, the loop is not."""
+    def prepare(cell_id: str | None, args: dict[str, Any]) -> dict[str, Any]:
+        if cell_id != CELL:
+            raise J.JobRefused(f"the analyst runs only on the enabled cells (PRD §9.4), and {cell_id} is not one of them")
+        return {"arm": str(args.get("arm") or J.DEFAULT_ARM), "budget_usd": float(args.get("budget_usd", J.DEFAULT_BUDGET_USD)),
+                "reason": str(args.get("reason") or ""), "expert_ids": list(args.get("expert_ids") or [])}
+
+    def work(job: dict[str, Any], progress: J.Progress) -> dict[str, Any]:
+        progress.run_claimed("run-1")
+        progress.event("stage:plan", n_segments=10)
+        progress.event("stage:publish", published=True)
+        return {"chain_id": f"run-1:{job['cell_id']}", "run_id": "run-1", "arm": job["args"]["arm"],
+                "verdict": "supports_closer_look", "published": True, "cost_usd": 0.12, "reason": job["args"]["reason"]}
+
+    kind = J.JobKind("analyst", "admin", work, prepare, lambda args: args["budget_usd"])
+    return J.Runner(tmp_path / "jobs.duckdb", kinds={"analyst": kind}, workers=1, session_budget_usd=1.0)
+
+
+def test_run_analyst_is_a_job_and_job_status_reads_it_back_with_its_cost_as_a_value(store: Path, world: FakeWorld, tmp_path: Path) -> None:
+    runner = fake_jobs(tmp_path)
+
+    async def scenario(client: Client) -> None:
+        sid, _ = await opened(client, "dashboard")
+        r = await client.call_tool("run_analyst", {"session_id": sid, "budget_usd": 0.4, "reason": "the scores disagree",
+                                                   "expert_ids": ["e:abc"]})
+        assert not r.is_error, r.content[0].text
+        sc = r.structured_content
+        assert sc["status"] in ("queued", "running", "done") and sc["cell"] == CELL and sc["session_id"] == sid
+        job_id = sc["job_id"]
+        assert "job_status" in r.content[0].text and job_id in r.content[0].text
+        row = runner.wait(job_id)
+        assert row["requested_by"] == "local" and row["args"]["reason"] == "the scores disagree" and row["args"]["expert_ids"] == ["e:abc"]
+        st = await client.call_tool("job_status", {"session_id": sid, "job_id": job_id})
+        assert not st.is_error, st.content[0].text
+        doc = st.structured_content
+        assert doc["status"] == "done" and doc["job_id"] == job_id and doc["kind"] == "analyst" and doc["cell"] == CELL
+        assert doc["run_id"] == "run-1" and doc["error"] == {"state": "absent", "reason": "no error"}
+        assert [e["event"] for e in doc["progress"]] == ["queued", "started", "run", "stage:plan", "stage:publish", "done"]
+        assert doc["progress"][3]["detail"] == "n_segments 10"
+        res = doc["result"]
+        assert res["chain_id"] == f"run-1:{CELL}" and res["verdict"] == "supports_closer_look" and res["published"] is True
+        assert res["cost_usd"]["id"] == f"c:job:{job_id}:cost_usd" and res["cost_usd"]["value"] == 0.12
+        assert numbers_outside_vals(doc) == [], "the cost is a value with an id; nothing else is a bare number"
+        ok = await client.call_tool("check_claims", {"session_id": sid, "claims": [
+            {"text": "the analyst run cost 0.12 USD", "value_ids": [res["cost_usd"]["id"]]}]})
+        assert ok.structured_content["ok"] is True, "the cost joined the session registry"
+        # a job is refused with its reason: a budget over the session's remainder, an unknown id
+        over = await client.call_tool("run_analyst", {"session_id": sid, "budget_usd": 0.95})
+        assert over.is_error and "session budget of $1.00" in over.content[0].text
+        missing = await client.call_tool("job_status", {"session_id": sid, "job_id": "nope"})
+        assert missing.is_error and "no job 'nope'" in missing.content[0].text
+        other = await client.call_tool("run_analyst", {"session_id": sid, "cell_id": OTHER})
+        assert other.is_error and "session's own cell" in other.content[0].text
+
+    async def blinded(client: Client) -> None:
+        sid, _ = await opened(client, "scored")
+        r = await client.call_tool("run_analyst", {"session_id": sid})
+        assert r.is_error and "dashboard session" in r.content[0].text
+
+    lr = make_server(tmp_path, world, jobs=runner)
+    run(lr, scenario)
+    run(make_server(tmp_path, world, jobs=runner), blinded)
+    runner.close()
+
+
+def test_a_job_refusal_reaches_the_client_as_a_tool_result(store: Path, world: FakeWorld, tmp_path: Path) -> None:
+    runner = fake_jobs(tmp_path)
+
+    async def scenario(client: Client) -> None:
+        sid, _ = await opened(client, "dashboard", cell_id=OTHER)
+        r = await client.call_tool("run_analyst", {"session_id": sid})
+        assert r.is_error and "only on the enabled cells (PRD §9.4)" in r.content[0].text
+
+    run(make_server(tmp_path, world, jobs=runner), scenario)
+    runner.close()
 
 
 # ---------------------------------------------------------------- handles, keys and scopes

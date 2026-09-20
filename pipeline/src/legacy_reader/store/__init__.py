@@ -74,6 +74,9 @@ MIGRATIONS: tuple[tuple[str, str, str], ...] = (
     # DuckDB cannot add a constrained column to a live table, so migrations stay plain
     ("derived", "feature_spec", "is_count boolean"),
     ("read", "corpus_page", "source text"),
+    # who asked (the key label, never the key): the API's roles, PRD §A.2
+    ("agent", "conversation", "requested_by text"),
+    ("agent", "conversation_turn", "requested_by text"),
 )
 
 

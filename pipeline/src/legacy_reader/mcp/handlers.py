@@ -12,7 +12,9 @@ Every call is a span under the session's run (principle 10): the arguments' hash
 latency, the session and the run id, written to the run's `spans.jsonl` and mirrored to MLflow Tracing when
 that is on. Argument values are hashed, never recorded: a real cell id in a benchmark trace is a leak.
 
-Nothing here samples a model (principle 11), and `run_analyst` says so rather than pretending.
+Nothing here samples a model (principle 11). `run_analyst` is long work and so a job, not a blocked call
+(principle 7): it hands the cell to the API's job runner (`api.jobs`, the same pool the dashboard uses) and
+returns the job id at once; `job_status` reads the row back, its cost as a value with an id.
 """
 
 from __future__ import annotations
@@ -29,6 +31,7 @@ from jsonschema import Draft202012Validator
 from jsonschema import exceptions as js_exceptions
 
 from ..analyst.session import SessionRefusal
+from ..api import jobs as JOBS
 from ..ids import sha256_json, short
 from ..prospect import memo
 from ..prospect.inventory import load as load_inventory
@@ -45,8 +48,9 @@ from .sessions import ABSTAIN_REASONS, RUN_KIND, LiveSession, SessionError, Sess
 WITHHELD = "(withheld: report text is not redistributable in the public-safe build)"
 #: the retrieval tiers whose text is a report's own words
 REPORT_TIERS = frozenset({"page", "extracted"})
-NOT_AVAILABLE = ("run_analyst is not available in this build: the staged analyst runs offline through "
-                 "`lr arm chain`, and the task handle (polling, spend approval) is Phase 4d backlog in PRD §E.3")
+#: what `run_analyst` says when the server was built without a job runner (a stdio server outside the API)
+NOT_AVAILABLE = ("run_analyst is not available on this server: it has no job runner, and the staged analyst then "
+                 "runs offline through `lr arm chain`; the API process serves it at /mcp with the runner attached")
 
 
 #: one traced call at a time across sessions. `runtime.tracing.trace` keeps a process-wide fallback trace for
@@ -101,10 +105,13 @@ class Handlers:
     (the live store's, read-write, by default), so a test hands it a temporary one."""
 
     def __init__(self, store: SessionStore, *, public_safe: bool = False,
-                 insight_store: Callable[[], duckdb.DuckDBPyConnection] | None = None) -> None:
+                 insight_store: Callable[[], duckdb.DuckDBPyConnection] | None = None,
+                 jobs: JOBS.Runner | None = None) -> None:
         self.store = store
         self.public_safe = public_safe
         self.insight_store = insight_store or partial(connect, None, False)
+        #: the job runner `run_analyst` submits to and `job_status` reads from; None on a server without one
+        self.jobs = jobs
 
     # ---------------------------------------------------------------- dispatch
 
@@ -151,7 +158,9 @@ class Handlers:
             if spec.name == "record_insight":
                 return self.record_insight(live, args)
             if spec.name == "run_analyst":
-                return error(NOT_AVAILABLE)
+                return self.run_analyst(live, args)
+            if spec.name == "job_status":
+                return self.job_status(live, args)
         except SessionRefusal as refusal:
             # the rule that refused is the reason: the session counted it under that rule already
             return error(f"refused under {refusal.rule}: {refusal.args[0].split(': ', 1)[-1]}")
@@ -337,6 +346,89 @@ class Handlers:
         return result(f"Insight {expert_id} by {author} recorded on cell {live.shown} in the expert tier; the numbers "
                       f"in it now carry expert-tier value ids: {ids}. A claim that leans on one cites its id and "
                       "is labelled expert-tier (B19).", structured)
+
+
+    # ---------------------------------------------------------------- run_analyst, job_status
+
+    def run_analyst(self, live: LiveSession, args: dict[str, Any]) -> types.CallToolResult:
+        if self.jobs is None:
+            return error(NOT_AVAILABLE)
+        if live.blinded:
+            return error(f"run_analyst runs the analyst over the real cell for the dashboard: open a dashboard "
+                         f"session, not a {live.session.purpose} one")
+        asked = args.get("cell_id")
+        if asked is not None and asked != live.shown:
+            return error(f"run_analyst runs over the session's own cell ({live.shown}); open a session on {asked} "
+                         "to run it there")
+        job_args: dict[str, Any] = {"reason": str(args.get("reason") or ""),
+                                    "expert_ids": [str(x) for x in (args.get("expert_ids") or [])]}
+        if args.get("config"):
+            job_args["arm"] = str(args["config"])
+        if args.get("budget_usd") is not None:
+            job_args["budget_usd"] = float(args["budget_usd"])
+        try:
+            job_id = self.jobs.submit("analyst", live.session.cell_id, job_args, requested_by=live.principal)
+        except JOBS.JobRefused as err:
+            return error(str(err))
+        row = self.jobs.get(job_id)
+        structured = {"job_id": job_id, "status": row["status"], "session_id": live.session_id, "cell": live.shown}
+        live.record("run_analyst", {"tool": "run_analyst", "job_id": job_id, "status": row["status"],
+                                    "args": row["args"], "values": {}})
+        return result(f"Analyst job {job_id} {row['status']} on cell {live.shown} (arm {row['args']['arm']}, budget "
+                      f"${row['args']['budget_usd']:.2f}). Poll job_status(session_id, job_id) until its status is "
+                      "done, failed or cancelled; when done the result names the chain id, the verdict and the cost, "
+                      "and lr://cell/{id}/chains lists the chain.", structured)
+
+    def job_status(self, live: LiveSession, args: dict[str, Any]) -> types.CallToolResult:
+        if self.jobs is None:
+            return error(NOT_AVAILABLE)
+        try:
+            row = self.jobs.get(str(args["job_id"]))
+        except JOBS.JobNotFound as err:
+            return error(str(err))
+        job_id = row["job_id"]
+        values: dict[str, dict[str, Any]] = {}
+        res = row.get("result")
+        if isinstance(res, dict):
+            vid = f"c:job:{job_id}:cost_usd"
+            values[vid] = stat(vid, float(res.get("cost_usd") or 0.0), fmt="m2", unit="USD",
+                               note=f"what analyst job {job_id} spent on live model calls")
+            live.register(values)
+            shaped: dict[str, Any] = {"chain_id": str(res.get("chain_id") or ""), "verdict": str(res.get("verdict") or ""),
+                                      "published": bool(res.get("published")), "cost_usd": values[vid]}
+            for key in ("run_id", "arm", "reason"):
+                if res.get(key):
+                    shaped[key] = str(res[key])
+        else:
+            shaped = absent("no result yet" if row["status"] not in JOBS.FINAL else f"the job {row['status']} without a result")
+        progress = []
+        for ev in row.get("progress") or []:
+            rest = {k: v for k, v in ev.items() if k not in ("at", "event")}
+            entry = {"at": str(ev.get("at") or ""), "event": str(ev.get("event") or "")}
+            if rest:
+                entry["detail"] = ", ".join(f"{k} {v}" for k, v in rest.items())
+            progress.append(entry)
+        structured = {
+            "job_id": job_id, "kind": row["kind"], "status": row["status"], "requested_by": row["requested_by"],
+            "created_at": row["created_at"],
+            "started_at": row["started_at"] or absent("not started yet"),
+            "finished_at": row["finished_at"] or absent("not finished yet"),
+            "progress": progress, "result": shaped,
+            "error": row["error"] or absent("no error"),
+            "run_id": row["run_id"] or absent("no run claimed yet"),
+            "session_id": live.session_id,
+        }
+        if row.get("cell_id"):
+            structured["cell"] = str(row["cell_id"])
+        stages = [e["event"] for e in progress if e["event"].startswith("stage:")]
+        text = (f"Job {job_id} ({row['kind']}) is {row['status']}, asked by {row['requested_by']} at {row['created_at']}"
+                + (f"; stages so far: {', '.join(s.removeprefix('stage:') for s in stages)}" if stages else "")
+                + (f"; error: {row['error']}" if row["error"] else ""))
+        if isinstance(res, dict):
+            text += (f". Result: chain {shaped['chain_id']}, verdict {shaped['verdict']}, "
+                     f"{'published' if shaped['published'] else 'not published'}, cost {values[vid]['value']} USD "
+                     f"[{vid}].")
+        return result(text, structured)
 
 
 def cell_centre(cell_id: str) -> tuple[float, float] | None:

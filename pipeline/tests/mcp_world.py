@@ -128,14 +128,15 @@ def crosscheck_fixture(root: Path, monkeypatch: pytest.MonkeyPatch, lonlat: tupl
 
 
 def make_server(tmp_path: Path, world: FakeWorld, *, environ: dict[str, str] | None = None,
-                public_safe: bool = False, clock: Any = None, insight_store: Any = None) -> LrServer:
-    """A server over the fakes, its runs under the test's directory, with no key register unless given, and
-    `record_insight` writing through `insight_store` (a temporary store's connection) when a test needs it."""
+                public_safe: bool = False, clock: Any = None, insight_store: Any = None, jobs: Any = None) -> LrServer:
+    """A server over the fakes, its runs under the test's directory, with no key register unless given,
+    `record_insight` writing through `insight_store` (a temporary store's connection) when a test needs it,
+    and `run_analyst` submitting to `jobs` (a runner over a fake kind) when a test hands one in."""
     from legacy_reader.mcp.handlers import Handlers
     from legacy_reader.mcp.sessions import SessionStore
 
     store = SessionStore(runs_dir=tmp_path / "runs", tools=registry(world), **({"clock": clock} if clock else {}))
-    handlers = Handlers(store, public_safe=public_safe, insight_store=insight_store)
+    handlers = Handlers(store, public_safe=public_safe, insight_store=insight_store, jobs=jobs)
     return LrServer(environ=environ if environ is not None else {}, public_safe=public_safe,
                     runs_dir=tmp_path / "runs", store=store, handlers=handlers)
 

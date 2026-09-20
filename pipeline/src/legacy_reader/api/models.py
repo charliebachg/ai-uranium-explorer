@@ -7,7 +7,7 @@ are the ones the client may rely on."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -122,6 +122,8 @@ class StoredTurn(BaseModel):
     cost_usd: float | None = None
     duration_s: float | None = None
     created_at: str
+    #: who asked: the key's label (never the key), `local` with no register; null on rows older than the roles
+    requested_by: str | None = None
 
 
 class ConversationRecord(BaseModel):
@@ -130,6 +132,7 @@ class ConversationRecord(BaseModel):
     model: str
     backend: str
     created_at: str
+    requested_by: str | None = None
     turns: list[StoredTurn]
 
 
@@ -145,3 +148,49 @@ class ConversationSummary(BaseModel):
 class CellConversations(BaseModel):
     cell_id: str
     conversations: list[ConversationSummary]
+
+
+# ---------------------------------------------------------------- who is calling, and the jobs
+
+
+class Whoami(BaseModel):
+    """The principal a key resolves to: a label that is not the key, its scopes, and the roles they cover."""
+
+    name: str
+    scopes: list[str]
+    roles: list[str]
+
+
+JobStatus = Literal["queued", "running", "done", "failed", "cancelled"]
+
+
+class JobRequest(BaseModel):
+    kind: str = Field(min_length=1, max_length=40, description="a registered job kind: analyst")
+    cell_id: str | None = Field(default=None, pattern=r"^\d{4}_\d{4}$", description="looks like 0123_0045")
+    args: dict[str, Any] = Field(default_factory=dict,
+                                 description="the kind's arguments; for analyst: budget_usd, arm, reason, expert_ids")
+
+
+class Job(BaseModel):
+    """One background job's row, as `agent.job` holds it: the status is the whole story, the progress list says
+    which stages have run, and the result names what the job produced (for analyst: the chain id, the verdict
+    and the cost). A job that was running when the process restarted is failed with that reason."""
+
+    job_id: str
+    kind: str
+    cell_id: str | None = None
+    status: JobStatus
+    requested_by: str
+    args: dict[str, Any] = Field(default_factory=dict)
+    created_at: str
+    started_at: str | None = None
+    finished_at: str | None = None
+    progress: list[dict[str, Any]] = Field(default_factory=list)
+    result: dict[str, Any] | None = None
+    error: str | None = None
+    run_id: str | None = None
+
+
+class CellJobs(BaseModel):
+    cell_id: str
+    jobs: list[Job]

@@ -17,6 +17,8 @@ from legacy_reader.prospect import serve as S
 from legacy_reader.prospect import tools as T
 from legacy_reader.values import stat
 
+LOOPBACK = ("127.0.0.1", 50000)
+
 
 class FakeBackend:
     """Answers straight away, without a number, so the gate has nothing to refuse."""
@@ -53,7 +55,9 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
                    "claims": [{"claim_no": 1, "text": "score 0.5", "value_ids": ["c:score:x"]}]}]})
     backend = FakeBackend()
     app = A.create_app(lambda: backend, model="fake-model", effort="low", backend_name="fake", db_path=tmp_path / "t.duckdb")
-    c = TestClient(app)
+    # from a loopback address, as a browser on the same machine is: with no key register that is the `local`
+    # principal with every role (Starlette's test client would otherwise call itself "testclient")
+    c = TestClient(app, client=LOOPBACK)
     c.backend = backend  # type: ignore[attr-defined]
     c.db_path = tmp_path / "t.duckdb"  # type: ignore[attr-defined]
     return c
@@ -86,6 +90,7 @@ def test_a_chat_turn_is_gated_persisted_and_continued(client: TestClient) -> Non
 
     stored = persist.load_conversation(cid, client.db_path)
     assert stored["cell_id"] == "0001_0001" and stored["model"] == "fake-model" and stored["backend"] == "fake"
+    assert stored["requested_by"] == "local" and stored["turns"][0]["requested_by"] == "local", "who asked is on the row"
     assert len(stored["turns"]) == 1 and stored["turns"][0]["published"] and stored["turns"][0]["problems"] == []
     assert [c["tool"] for c in stored["turns"][0]["tool_calls"]] == ["cell_scores", "cell_features", "criteria_breakdown", "label_context"], \
         "the first turn records the four opening tool calls; the fake then answered without asking for more"
@@ -152,7 +157,8 @@ def test_reads_work_on_a_fresh_store_before_any_conversation_exists(client: Test
 def test_the_openapi_document_types_every_response(client: TestClient) -> None:
     spec = client.app.openapi()
     schemas = spec["components"]["schemas"]
-    for name in ("Cells", "Candidate", "Evidence", "ToolResultOut", "Val", "ChatResponse", "Turn", "ConversationRecord", "CellConversations"):
+    for name in ("Cells", "Candidate", "Evidence", "ToolResultOut", "Val", "ChatResponse", "Turn", "ConversationRecord", "CellConversations",
+                 "Job", "CellJobs", "JobRequest", "Whoami"):
         assert name in schemas, name
     ok = spec["paths"]["/api/cells"]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
     assert ok == {"$ref": "#/components/schemas/Cells"}, "the cells response is a named schema, not additionalProperties"
@@ -184,7 +190,7 @@ def test_the_built_site_is_served_from_the_same_process_behind_the_api(tmp_path:
     (dist / "assets" / "app.js").write_text("console.log(1)")
     monkeypatch.setattr(S, "candidates", lambda limit=40, model="criteria": [])
     app = A.create_app(lambda: None, model="m", db_path=tmp_path / "t.duckdb", web_dist=dist)
-    c = TestClient(app)
+    c = TestClient(app, client=LOOPBACK)
     assert c.get("/api/health").json()["ok"] is True, "the API is not shadowed by the site"
     assert c.get("/").text.startswith("<!doctype html>")
     assert c.get("/eval").text.startswith("<!doctype html>"), "the app's own routes fall back to index.html"

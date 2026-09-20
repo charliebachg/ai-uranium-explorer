@@ -25,6 +25,7 @@ from mcp.server.lowlevel.server import Server
 from mcp.shared.exceptions import MCPError
 from mcp_types import INVALID_REQUEST
 
+from ..api import jobs as JOBS
 from ..paths import PATHS
 from ..prospect import tools as T
 from . import TOOL_VERSION, prompts, resources
@@ -60,7 +61,7 @@ class LrServer:
     def __init__(self, *, keyring: Keyring | None = None, environ: Mapping[str, str] | None = None,
                  public_safe: bool | None = None, runs_dir: Path | None = None,
                  tools: Mapping[str, Callable[..., Any]] | None = None, store: SessionStore | None = None,
-                 handlers: Handlers | None = None) -> None:
+                 handlers: Handlers | None = None, jobs: JOBS.Runner | None = None) -> None:
         env = environ if environ is not None else os.environ
         self.environ = env
         self.keyring = keyring or Keyring.from_env(env)
@@ -69,7 +70,9 @@ class LrServer:
         # `is not None`, not truthiness: an empty session store has a length of zero
         self.store = store if store is not None else SessionStore(
             runs_dir=self.runs_dir, tools=tools if tools is not None else T.REGISTRY)
-        self.handlers = handlers if handlers is not None else Handlers(self.store, public_safe=self.public_safe)
+        # the job runner behind `run_analyst` and `job_status`: the API hands in its own, so a job submitted
+        # over MCP lands on the pool the dashboard polls; a standalone server has none and the tools say so
+        self.handlers = handlers if handlers is not None else Handlers(self.store, public_safe=self.public_safe, jobs=jobs)
         self.server: Server[Any] = Server(
             SERVER_NAME, version=TOOL_VERSION, title=TITLE, instructions=INSTRUCTIONS,
             cache_hints={m: CacheHint(ttl_ms=LIST_TTL_MS, scope="private")

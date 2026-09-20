@@ -24,6 +24,7 @@ import mcp.types as types
 from ..analyst.session import PURPOSES
 from ..prospect.tools import NEARBY_LAYERS, TOOL_HELP
 from ..values import stat
+from ..api.jobs import STATUSES as JOB_STATUSES
 from .auth import SCOPES
 from .sessions import ABSTAIN_REASONS
 
@@ -447,11 +448,40 @@ CATALOGUE: dict[str, ToolSpec] = {spec.name: spec for spec in (
     ),
     ToolSpec(
         "run_analyst", "task", "run",
-        "Run the staged analyst over the cell as a task (PRD §E.3, principle 7). Not available in this build: "
-        "the loop runs offline through `lr arm chain`; the task handle is Phase 4d backlog.",
-        input_schema(["session_id"], session_id=SID, cell_id=CELL, config={"type": "string"},
-                     budget_usd={"type": "number", "minimum": 0}),
-        plain_schema(["task_id", "status"], task_id=S, status=S),
+        "Run the staged analyst over the session's cell as a background job (PRD §E.3, principle 7): returns "
+        "a job id at once; poll job_status until it is done, failed or cancelled. Dashboard sessions on an "
+        "enabled cell only (§9.4); the chain lands in the agent tier as `lr arm chain` publishes one, and the "
+        "job's result names its chain id, verdict and cost. `config` is an arm name (default v1-openrouter); "
+        "`budget_usd` is this job's ceiling (default 0.50, at most 2.00) inside the process's session budget.",
+        input_schema(["session_id"], session_id=SID, cell_id=CELL,
+                     config={"type": "string", "description": "the arm to run; a v1 arm under configs/arms/"},
+                     budget_usd={"type": "number", "minimum": 0},
+                     reason={"type": "string", "maxLength": 2000,
+                             "description": "why the analyst is invoked; recorded on the job"},
+                     expert_ids={"type": "array", "items": S,
+                                 "description": "expert-tier ids the invocation rests on, recorded on the job"}),
+        plain_schema(["job_id", "status", "session_id", "cell"], job_id=S, status={"enum": list(JOB_STATUSES)},
+                     session_id=S, cell=S),
+    ),
+    ToolSpec(
+        "job_status", "read", "read",
+        "One background job's row: its status (queued, running, done, failed, cancelled), who asked, the "
+        "stages that have run, and when done its result: for an analyst job the chain id, the verdict and "
+        "the cost as a value with an id. A job that was running when the server restarted is failed with "
+        "that reason.",
+        input_schema(["session_id", "job_id"], session_id=SID, job_id={"type": "string", "minLength": 1}),
+        plain_schema(["job_id", "kind", "status", "requested_by", "created_at", "started_at", "finished_at",
+                      "progress", "result", "error", "run_id", "session_id"],
+                     job_id=S, kind=S, cell=S, status={"enum": list(JOB_STATUSES)}, requested_by=S, created_at=S,
+                     started_at=one_of(S, A), finished_at=one_of(S, A),
+                     progress={"type": "array", "items": {"type": "object", "required": ["at", "event"],
+                                                          "properties": {"at": S, "event": S, "detail": S},
+                                                          "additionalProperties": False}},
+                     result=one_of(A, {"type": "object", "required": ["chain_id", "verdict", "published", "cost_usd"],
+                                       "properties": {"chain_id": S, "verdict": S, "published": B, "cost_usd": V,
+                                                      "run_id": S, "arm": S, "reason": S},
+                                       "additionalProperties": False}),
+                     error=one_of(S, A), run_id=one_of(S, A), session_id=S),
     ),
 )}
 

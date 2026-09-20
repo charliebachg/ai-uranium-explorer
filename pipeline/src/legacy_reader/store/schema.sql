@@ -334,6 +334,7 @@ create table if not exists agent.conversation (
   model           text not null,
   backend         text not null,
   created_at      text not null,
+  requested_by    text,                -- the key label (never the key) that opened it; local with no register
   tier            text not null default 'agent' check (tier = 'agent')
 );
 create table if not exists agent.conversation_turn (
@@ -350,6 +351,7 @@ create table if not exists agent.conversation_turn (
   cost_usd         double,
   duration_s       double,
   created_at       text not null,
+  requested_by     text,               -- who asked this turn (the key label, never the key)
   tier             text not null default 'agent' check (tier = 'agent')
 );
 
@@ -437,6 +439,30 @@ create table if not exists agent.chain_decision (
   created_at       text not null,
   tier             text not null default 'agent' check (tier = 'agent')
 );
+
+-- Background jobs (PRD §A.2): anything over a second the API runs on its own worker pool, in this process,
+-- because DuckDB allows one read-write connection per file and the serving process holds it. One row per job,
+-- written as its state changes, so a restart shows every job's last state and marks the ones that were running
+-- as failed with that reason. The first kind is `analyst`: the staged loop over one enabled cell (§9.4), whose
+-- chain lands in agent.chain* exactly as `lr arm chain` publishes one. A job row is bookkeeping about a run,
+-- never a source of numbers: the result names a chain id and the chain carries the values.
+create table if not exists agent.job (
+  job_id        text primary key,
+  kind          text not null,         -- a registered job kind: analyst
+  cell_id       text,                  -- the cell the job is about, when it is about one
+  status        text not null,         -- queued | running | done | failed | cancelled
+  requested_by  text not null,         -- the key label (never the key) that submitted it; local with no register
+  args_json     text not null,         -- what was asked: arm, budget, reason, expert ids
+  created_at    text not null,
+  started_at    text,
+  finished_at   text,
+  progress_json text not null,         -- [{at, event, ...}]: the stages as they happen
+  result_json   text,                  -- the kind's result; for analyst: chain_id, verdict, cost_usd, run_id
+  error         text,                  -- why it failed or was cancelled; "process restarted" after a restart
+  run_id        text,                  -- the run directory the job claimed, once it has one
+  tier          text not null default 'agent' check (tier = 'agent')
+);
+create index if not exists job_cell_idx on agent.job (cell_id, created_at);
 
 -- ---------------------------------------------------------------- tier E: expert
 

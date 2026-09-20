@@ -8,9 +8,13 @@ first eight hex characters of the key's sha256, which is enough to tell two keys
 
 Local-only by default: with no register configured, a loopback client and a stdio client are the `local`
 principal with every scope, and a client from any other address gets nothing. With a register configured
-every caller presents a key: `Authorization: Bearer <key>` over HTTP, `LR_MCP_KEY` in the environment of a
-stdio server (the client launches that process and owns its environment, so over stdio a key selects a scope
-set rather than proving anything).
+every caller presents a key: `Authorization: Bearer <key>` (or `X-Api-Key: <key>`, which a browser page can
+set without touching the authorization header) over HTTP, `LR_MCP_KEY` in the environment of a stdio server
+(the client launches that process and owns its environment, so over stdio a key selects a scope set rather
+than proving anything).
+
+The same register serves the API (`api.auth`): a role there is a set of these scopes, so one key opens the
+same things over both.
 """
 
 from __future__ import annotations
@@ -113,20 +117,23 @@ class Keyring:
             return Principal(LOCAL, ALL_SCOPES)
         return self.for_key((environ if environ is not None else os.environ).get(KEY_VAR))
 
-    def for_http(self, authorization: str | None, client_host: str | None) -> Principal | None:
-        """An HTTP caller: loopback only when no register is configured, else the bearer key's principal."""
+    def for_http(self, authorization: str | None, client_host: str | None,
+                 api_key: str | None = None) -> Principal | None:
+        """An HTTP caller: loopback only when no register is configured, else the principal of the bearer key
+        or, failing that, of the `X-Api-Key` header's key."""
         if not self.configured:
             return Principal(LOCAL, ALL_SCOPES) if is_loopback(client_host) else None
-        if not authorization:
-            return None
-        scheme, _, token = authorization.strip().partition(" ")
-        if scheme.lower() != "bearer":
-            return None
-        return self.for_key(token.strip())
+        if authorization:
+            scheme, _, token = authorization.strip().partition(" ")
+            if scheme.lower() == "bearer":
+                found = self.for_key(token.strip())
+                if found is not None:
+                    return found
+        return self.for_key(api_key.strip()) if api_key else None
 
     def refusal(self, client_host: str | None) -> str:
         """Why an HTTP caller got nothing, worded for the caller and without the register's contents."""
         if not self.configured:
             return (f"local clients only: {KEYS_VAR} is not configured, so the server answers loopback "
                     f"addresses alone (this request came from {client_host or 'an unknown address'})")
-        return f"a bearer API key from {KEYS_VAR} is required: Authorization: Bearer <key>"
+        return f"an API key from {KEYS_VAR} is required: Authorization: Bearer <key> (or X-Api-Key: <key>)"

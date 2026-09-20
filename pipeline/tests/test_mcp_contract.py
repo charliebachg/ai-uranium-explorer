@@ -20,14 +20,16 @@ from mcp_world import numbers_outside_vals
 def test_the_catalogue_is_the_prd_table_in_order() -> None:
     assert list(C.CATALOGUE) == ["open_session", "cell_features", "cell_scores", "criteria_breakdown", "label_context",
                                  "nearby", "coverage", "crosscheck", "hole_crosscheck", "retrieve", "check_claims",
-                                 "abstain", "record_insight", "run_analyst"]
+                                 "abstain", "record_insight", "run_analyst", "job_status"]
     assert set(C.REGISTRY_TOOLS) == set(REGISTRY), "the eight reads are exactly the deterministic tools the loops call"
     assert TOOL_VERSION == "prospect/tools/v2"
     kinds = {name: spec.kind for name, spec in C.CATALOGUE.items()}
     assert kinds["run_analyst"] == "task" and kinds["abstain"] == "action" and kinds["record_insight"] == "action"
+    assert kinds["job_status"] == "read", "polling a job is a read"
     assert {spec.scope for spec in C.CATALOGUE.values()} <= set(SCOPES)
     assert C.CATALOGUE["record_insight"].scope == "record" and C.CATALOGUE["run_analyst"].scope == "run"
     assert all(spec.scope == "read" for name, spec in C.CATALOGUE.items() if name not in ("record_insight", "run_analyst"))
+    assert C.CATALOGUE["run_analyst"].output["required"][:2] == ["job_id", "status"], "a job id, not a blocked call"
 
 
 def test_every_read_tool_is_annotated_read_only_over_a_closed_store() -> None:
