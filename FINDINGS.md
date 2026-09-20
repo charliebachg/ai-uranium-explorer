@@ -3,6 +3,45 @@
 Measured results that changed what the project claims. Each entry names the run that produced it, so every
 number here walks back to a stored metric. Newest first.
 
+## F9 · Two data faults the verifier found are fixed; the learned model is unmoved, the criteria score loses a signal it should never have had (2026-09-21)
+
+**What was fixed.** The two readings the staged analyst's verifier refused on the first cells it saw (F7):
+*graphitic host under cover* and *zero-filled boulder counts*. `graphitic_host` is now unknown inside the
+basin outline unless the 1:250,000 map names a host unit there (18,619 covered cells that read "not met"
+now read unknown; 4,566 cells outside the outline still read not met; 5,306 read met), and a
+radioactive-boulder record at exactly 0.0 cps is left out of `boulder_max_cps` and its reading count (2,127
+of 6,591 records; the feature now has a reading on 2,486 cells). Commits `e33006b` and `6f6d47a`; store
+snapshot `3eff0a46031c`; gate green.
+
+**What the first rebuild taught.** The frame the benchmark samples from, and the learned model, use complete
+cases by design (imputing nothing), so a feature that is null under the basin dropped every covered cell
+from both, and the covered cells are where the deposits are: the first benchmark v2 sampled 7 deposit cells
+against v1's 23, and the learned model fitted on 3,491 cells. The fix is two features from one map, named
+for what each says: `graphitic_host` (unknown under cover) for the criteria score and the analyst, and
+`graphitic_host_surface` (a host is mapped at the surface; 0 under the cover is true of the surface) for the
+learned model. With that the frame is 23,038 cells again and benchmark v2 samples the same 163 cells as v1,
+bench id for bench id, so every result to date stays comparable; 16 packs changed content (the criteria rows
+of covered cells and the boulder values), and the audit is clean (manifest `b50f71014eaf`).
+
+| Baseline, spatial folds, 10,183 comparison cells | before | after |
+|---|---|---|
+| Learned model PR-AUC / ROC-AUC | 0.133 / 0.762 | 0.133 / 0.762 |
+| Effort null PR-AUC / ROC-AUC | 0.347 / 0.852 | 0.347 / 0.852 |
+| Criteria score PR-AUC / ROC-AUC / capture at 10% | 0.082 / 0.547 / 11% | 0.062 / 0.517 / 14% |
+
+**What it means.** The learned model reads the surface feature, which is the old feature under an honest
+name, so nothing moved; the effort null does not read either. The criteria score got slightly worse by
+ROC-AUC, which is the correct direction: its "graphitic host not met" under cover was a signal about being
+inside the basin, not about the basement, and a criterion that fires on where the sandstone is was helping
+it for the wrong reason. The verdict of F1 stands and is a little cleaner: effort beats geology, and the
+knowledge-driven score is close to random.
+
+**What it changes for the benchmark.** Arms run from now on read benchmark v2 (`--version v2`). The v1
+results (F6, F8) stand on v1's packs; the difference between the two is 16 cells' criteria rows and boulder
+values, and the analyst arms saw those cells' features, so a re-run on v2 of the v0 headline is the check
+that the change did not move the single call ($18 on Opus, or $0.71 on the cheap model), deferred with the
+rest of the spend.
+
 ## F8 · The staged loop on a cheap stack: the gates hold, the cost falls a hundredfold, and the verifier is where the capacity is missed (2026-09-21)
 
 **The question.** Can the staged loop run off the Claude subscription, on cheap models through OpenRouter,
