@@ -441,6 +441,11 @@ def _why_withheld(row: dict[str, Any]) -> str:
     if verdicts and not verdicts[-1].get("valid"):
         faulty = ", ".join(f.get("node_id", "?") for f in verdicts[-1].get("faulty") or [])
         return f"never valid; faulty {faulty or 'none named'}: {str(verdicts[-1].get('feedback') or '')[:90]}"
+    unknown = [n for n in (row.get("chain") or {}).get("nodes") or [] if not n.get("published")]
+    if unknown:
+        last = unknown[-1]
+        return (f"{len(unknown)} node(s) recorded unknown after three gate attempts; last {last.get('criterion')}: "
+                f"{str((last.get('problems') or ['?'])[0])[:90]}")
     return "not published"
 
 CHAIN_KIND = "chain"
