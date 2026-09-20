@@ -9,7 +9,7 @@ import pytest
 
 from legacy_reader.analyst import arms as A
 
-V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features"]
+V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
 V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter"]
 ALL = V0 + V1
 
@@ -55,6 +55,7 @@ def _diff(a: A.ArmConfig, b: A.ArmConfig) -> dict[str, tuple]:
     ("v0-scores", {"switches.oof_scores"}),
     ("v0-retrieval", {"inputs.passages"}),
     ("v0-features", {"switches.criteria"}),
+    ("v0-qwen38", {"model"}),
 ])
 def test_each_ablation_differs_from_the_headline_in_exactly_the_stated_way(name: str, changed: set[str]) -> None:
     assert set(_diff(A.load_arm("v0"), A.load_arm(name))) == changed

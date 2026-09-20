@@ -3,13 +3,13 @@
 [arm]
 name = "v1-openrouter"
 agent = "v1"
-model = "qwen/qwen3.7-plus"
+model = "qwen/qwen3.8-flash"
 effort = "medium"
 prompt_version = "analyst/v1/v1"
 max_budget_usd_per_call = 0.30
 timeout_s = 600
 workers = 2
-notes = "Every role off the Claude subscription: GLM 5.3 Flash executes, Qwen 3.7 Plus verifies, adjudicates and plans; the stack costs a tenth of v1 and this arm says what that tenth buys."
+notes = "Every role off the Claude subscription: GLM 5.3 Flash executes, Qwen 3.8 Flash verifies, adjudicates and plans; the stack costs a tenth of v1 and this arm says what that tenth buys."
 
 [arm.inputs]
 card = true
@@ -25,9 +25,9 @@ criteria = true
 
 [arm.loop]
 executor_model = "z-ai/glm-5.3-flash"
-verifier_model = "qwen/qwen3.7-plus"
-adjudicator_model = "qwen/qwen3.7-plus"
-planner_model = "qwen/qwen3.7-plus"
+verifier_model = "qwen/qwen3.8-flash"
+adjudicator_model = "qwen/qwen3.8-flash"
+planner_model = "qwen/qwen3.8-flash"
 planner = "template"
 verifier = "skeptic"
 rounds = 3

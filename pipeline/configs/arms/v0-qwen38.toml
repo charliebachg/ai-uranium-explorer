@@ -1,0 +1,23 @@
+# Analyst_v0 arm. Every switch is stated; an arm differs from v0 in the one way its notes line names.
+[arm]
+name = "v0-qwen38"
+agent = "v0"
+model = "qwen/qwen3.8-flash"
+effort = "medium"
+prompt_version = "analyst/v0/v1"
+max_budget_usd_per_call = 1.50
+timeout_s = 600
+workers = 2
+notes = "The single closed-book call on Qwen 3.8 Flash through OpenRouter: the same card and pack as v0, at a hundredth of the price."
+
+[arm.inputs]
+card = true
+pack = true
+passages = false
+
+[arm.switches]
+drillholes = false
+label_context = false
+oof_scores = false
+effort_features = false
+criteria = true
