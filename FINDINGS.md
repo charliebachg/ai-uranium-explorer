@@ -17,7 +17,9 @@ pages exist and fewer where a file is thin, with assay tables first.
 
 **The Opus read, complete.** 208 of the 212 planned pages were read; every one of the 211 live calls
 resolved to `claude-opus-5`. Four pages are on the give-up list (74H04-0097 p5; 74H04-0110 p70, p71, p73):
-each stalled past the call timeout on three attempts and is skipped until `--retry-failed` asks for it.
+each stalled past the call timeout on three attempts and is skipped until `--retry-failed` asks for it. A
+retry pass on 2026-09-20 gave the same result on three of them (nine more timeouts, no cost) and tripped the
+circuit breaker before the fourth; they are recorded as gaps, not retried again.
 
 | Usage, from `calls.jsonl` across 17 runs | |
 |---|---|
