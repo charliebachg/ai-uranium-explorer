@@ -4,12 +4,12 @@
 [extract]
 model = "claude-opus-5"
 effort = "medium"
-workers = 1
+workers = 3
 page_classes = ["collar_table", "assay_table", "lith_log"]
 class_priority = ["assay_table", "lith_log", "collar_table", "probe_log", "certificate", "uncertain", "other"]
 max_pages_per_file = 12
 reask = false
 validator_mode = "enforce"
 max_budget_usd = 2.50
-timeout_s = 900
+timeout_s = 600
 note = "opus1 with assay and lithology pages first: the grade-bearing pages of a file before its collar tables."
