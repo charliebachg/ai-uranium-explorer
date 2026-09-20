@@ -247,3 +247,13 @@ def test_a_backend_that_cannot_stream_is_called_the_way_it_expects() -> None:
 
     assert streams(Streaming()) is True
     assert streams(Plain()) is False
+
+
+def test_a_reply_with_a_second_object_or_a_remark_after_the_first_is_read_as_the_first() -> None:
+    """A reasoning model followed its answer with a second object; `Extra data` failed a cell for it."""
+    from legacy_reader.backends.openai_api import _parse
+
+    assert _parse('{"status": "met", "n": 1}\n{"status": "again"}') == {"status": "met", "n": 1}
+    assert _parse('{"status": "met"} -- that is my answer') == {"status": "met"}
+    with pytest.raises(Exception):
+        _parse('{"status": "met"')

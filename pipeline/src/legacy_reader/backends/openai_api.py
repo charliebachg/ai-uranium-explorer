@@ -141,7 +141,18 @@ def _parse(text: str) -> dict[str, Any]:
     start, end = body.find("{"), body.rfind("}")
     if start < 0 or end <= start:
         raise SchemaInvalidError(f"no JSON object in the reply: {text[:200]!r}")
-    return json.loads(body[start:end + 1])
+    try:
+        return json.loads(body[start:end + 1])
+    except json.JSONDecodeError as err:
+        # a reasoning model sometimes follows its object with a second one or a remark; the first complete
+        # object is the answer, and what follows it is not guessed at
+        try:
+            obj, _ = json.JSONDecoder().raw_decode(body, start)
+        except json.JSONDecodeError:
+            raise err from None
+        if not isinstance(obj, dict):
+            raise err from None
+        return obj
 
 
 class OpenAIBackend:
