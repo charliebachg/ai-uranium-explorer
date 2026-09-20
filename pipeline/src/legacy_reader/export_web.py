@@ -331,7 +331,13 @@ def export(public_safe: bool = False, log: Any = print) -> Path:
     artifacts["context/datum_grid.json"] = {"path": "context/datum_grid.json", "bytes": grid_path.stat().st_size,
                                             "sha256": sha256_file(grid_path)}
 
-    files_read = 0
+    # the files the dashboard can open: the reports index this export sits beside, else what has been assembled
+    index_path = PATHS.web_data / "reports" / "index.json"
+    if index_path.is_file():
+        files_read = len(json.loads(index_path.read_text()).get("reports") or [])
+    else:
+        from .assemble import assembled_files
+        files_read = len(assembled_files())
     cmp_u = sum(1 for f in cmp_fc["features"] if f["properties"]["u"])
     stats = registry(
         stat("m:compilation_collars", pull["compilation"]["count"],
