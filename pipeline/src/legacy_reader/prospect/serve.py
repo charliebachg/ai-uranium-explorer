@@ -15,10 +15,110 @@ from __future__ import annotations
 import json
 from typing import Any, Callable
 
+import duckdb
+
+from ..analyst import chains as C
 from ..store import connect
+from ..values import stat
 from . import tools as T
 
 DEFAULT_PORT = 8787
+
+#: how many of a cell's chains the record carries: the panel opens the newest and lists the rest to pick from
+CHAIN_LIMIT = 5
+
+
+def chain_value_id(chain_id: str, *parts: str) -> str:
+    """The id a chain's own number is registered under: `c:chain:<chain_id>:<field>`, with a node's id before
+    the field for a strength. The panel builds the same ids from the chain it is drawing, as it does for a
+    criterion's weight, so the chain's JSON carries the numbers as the store holds them and nothing else."""
+    return ":".join(("c:chain", chain_id, *parts))
+
+
+def _chain_record(loaded: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """One chain as the record serves it, with the value records its numbers print through.
+
+    Only the current attempt of each node is served: the earlier attempts are the store's history of the repair,
+    and the chain the verifier judged and the adjudicator read is the one that stands. The numbers a chain holds
+    as plain columns (a probability, the weighted score, a node's strength) are registered as stats here, because
+    the panel may not print a bare number; a null column registers nothing, and the panel shows it as absent.
+    """
+    chain, decision = loaded["chain"], loaded["decision"]
+    chain_id = str(chain["chain_id"])
+    values: dict[str, Any] = {}
+
+    def mint(vid: str, value: Any, fmt: str, note: str, unit: str | None = None) -> None:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            values[vid] = stat(vid, value, fmt=fmt, note=f"{note}, from chain {chain_id}", unit=unit)
+
+    mint(chain_value_id(chain_id, "final_probability"), chain.get("final_probability"), "ratio3",
+         "the probability the chain publishes with its verdict")
+    mint(chain_value_id(chain_id, "weighted_score"), chain.get("weighted_score"), "ratio3",
+         "decider (a): the weighted sum over node strengths, weights fitted out-of-fold")
+    mint(chain_value_id(chain_id, "rounds"), chain.get("rounds"), "int", "verifier rounds run")
+    mint(chain_value_id(chain_id, "cost_usd"), chain.get("cost_usd"), "m2", "list-price cost of the chain", "USD")
+
+    nodes = []
+    for n in C.current_nodes(loaded["nodes"]):
+        node_id = str(n["node_id"])
+        mint(chain_value_id(chain_id, node_id, "strength"), n.get("strength"), "int",
+             f"the strength the executor gave node {node_id}, 0 to 5")
+        nodes.append({
+            "node_id": node_id, "segment_id": n.get("segment_id"), "kind": n.get("kind"),
+            "criterion": n.get("criterion"), "status": n.get("status"), "strength": n.get("strength"),
+            "value_ids": list(n.get("value_ids_json") or []), "expert_ids": list(n.get("expert_ids_json") or []),
+            "depends_on": list(n.get("depends_on_json") or []), "text": n.get("text") or "",
+            "published": bool(n.get("published")), "problems": list(n.get("problems_json") or []),
+            "round": n.get("round"), "attempt": n.get("attempt"),
+        })
+    verdicts = [
+        {"round": v.get("round"), "valid": bool(v.get("valid")), "faulty": list(v.get("faulty_json") or []),
+         "feedback": v.get("feedback"), "candidate_label": v.get("candidate_label"),
+         "candidate_probability": v.get("candidate_probability"), "rationale": v.get("rationale")}
+        for v in loaded["verdicts"]
+    ]
+
+    served_decision = None
+    if decision is not None:
+        answer = decision.get("adjudicator_json") or {}
+        mint(chain_value_id(chain_id, "decision_probability"), answer.get("probability"), "ratio3",
+             "decider (b): the adjudicator's probability")
+        served_decision = {
+            "verdict": answer.get("verdict"), "probability": answer.get("probability"),
+            "claims": [{"text": c.get("text") or "", "value_ids": list(c.get("value_ids") or [])}
+                       for c in (decision.get("claims_json") or [])],
+            "unknown_criteria": list(answer.get("unknown_criteria") or []),
+            "absent_criteria": list(answer.get("absent_criteria") or []),
+            "next_observation": answer.get("next_observation"), "rationale": answer.get("rationale"),
+            "published": bool(decision.get("published")), "problems": list(decision.get("problems_json") or []),
+        }
+        # the decision carries the values it cited so the chain is self-contained; only entries that are value
+        # records (the registry's rule is that the key is the record's id) are served, because one malformed
+        # entry would fail the whole record against the web contract
+        cited = decision.get("values_json")
+        if isinstance(cited, dict):
+            values |= {k: v for k, v in cited.items() if isinstance(v, dict) and v.get("id") == k}
+
+    record = {
+        **{k: chain.get(k) for k in ("chain_id", "run_id", "arm", "purpose", "planner", "rounds", "final_verdict",
+                                     "final_probability", "weighted_score", "weights_version", "verifier_label",
+                                     "majority_label", "abstained_reason", "created_at", "cost_usd")},
+        "valid": bool(chain.get("valid")), "published": bool(chain.get("published")),
+        "nodes": nodes, "verdicts": verdicts, "decision": served_decision,
+    }
+    return record, values
+
+
+def _chains(con: duckdb.DuckDBPyConnection, cell_id: str) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """The cell's newest chains as the record serves them, each with the values it prints through.
+
+    A store from before the chain tables existed serves the rest of the record with no chains rather than
+    failing: the panel's empty state is the right thing to show there, and the scores and memos still stand."""
+    try:
+        summaries = C.chains_for_cell(con, cell_id)[:CHAIN_LIMIT]
+    except duckdb.CatalogException:
+        return []
+    return [_chain_record(C.load_chain(con, str(s["chain_id"]))) for s in summaries]
 
 
 
@@ -57,7 +157,8 @@ def candidates(limit: int = 40, model: str = "criteria") -> list[dict[str, Any]]
 
 
 def evidence(cell_id: str) -> dict[str, Any]:
-    """The whole evidence record for one cell: exactly what the chat agent is given."""
+    """The whole evidence record for one cell: exactly what the chat agent is given, plus the analyst chains
+    stored for it (PRD §9.4: computed offline for the enabled cells, served as-is), newest first."""
     parts = {name: T.call(name, {"cell_id": cell_id}).as_json()
              for name in ("cell_scores", "cell_features", "criteria_breakdown", "label_context")}
     values: dict[str, Any] = {}
@@ -77,6 +178,7 @@ def evidence(cell_id: str) -> dict[str, Any]:
         cell = con.execute(
             "select lon, lat, in_basin from derived.cell where cell_id = ?", [cell_id]
         ).fetchone()
+        chains = _chains(con, cell_id)
     finally:
         con.close()
     by_memo: dict[str, list[dict[str, Any]]] = {}
@@ -84,6 +186,11 @@ def evidence(cell_id: str) -> dict[str, Any]:
         by_memo.setdefault(memo_id, []).append(
             {"claim_no": claim_no, "text": text, "value_ids": json.loads(value_ids or "[]")}
         )
+    # a value the tools returned for this request is the same number the chain cited, read fresh; the chain's
+    # own copy fills in only the ids the tools no longer serve, so every id the panel shows still resolves
+    for _record, chain_values in chains:
+        for vid, val in chain_values.items():
+            values.setdefault(vid, val)
     return {
         "cell_id": cell_id,
         "lon": cell[0] if cell else None,
@@ -96,6 +203,7 @@ def evidence(cell_id: str) -> dict[str, Any]:
              "claims": by_memo.get(m[0], [])}
             for m in memos
         ],
+        "chains": [record for record, _values in chains],
     }
 
 

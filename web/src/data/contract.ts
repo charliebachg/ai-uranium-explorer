@@ -858,6 +858,94 @@ export type Readiness = z.infer<typeof Readiness>;
 
 // ---------- prospect scores: what the three models say, and what they are worth
 
+// ---------- the analyst chain: what the staged loop produced over a cell (PRD §8.4 Stage 6, §9.4)
+
+/** The three-level verdict every decider speaks. The panel renders each level as words, never as a colour. */
+export const ChainVerdict = z.enum(["evidence_against", "insufficient", "supports_closer_look"]);
+export type ChainVerdict = z.infer<typeof ChainVerdict>;
+
+/** A node's reading of its criterion: `unknown` means never measured here, which is not `not_met`. */
+export const ChainNodeStatus = z.enum(["met", "not_met", "unknown"]);
+export type ChainNodeStatus = z.infer<typeof ChainNodeStatus>;
+
+/**
+ * One node as the chain stands: the executor's last attempt at it. Its numbers live in `value_ids`; `strength`
+ * is served as the store holds it and printed through the stat the service registers for it, as a score is.
+ */
+export const ChainNode = z.object({
+  node_id: z.string(),
+  segment_id: z.string(),
+  kind: z.enum(["criterion", "crosscheck", "retrieval"]),
+  criterion: z.string().nullable(),
+  status: ChainNodeStatus,
+  strength: z.number().int().min(0).max(5),
+  value_ids: z.array(z.string()),
+  /** those of the cited ids that are expert-tier, labelled as such in every node that cites them (B19) */
+  expert_ids: z.array(z.string()),
+  depends_on: z.array(z.string()),
+  text: z.string(),
+  published: z.boolean(),
+  problems: z.array(z.string()),
+  round: z.number().int(),
+  attempt: z.number().int(),
+});
+export type ChainNode = z.infer<typeof ChainNode>;
+
+/** One chain-verify round. The candidate label is the verifier's own answer, recorded and never acted on. */
+export const ChainRound = z.object({
+  round: z.number().int(),
+  valid: z.boolean(),
+  faulty: z.array(z.object({ node_id: z.string(), reason: z.string() })),
+  feedback: z.string().nullable(),
+  candidate_label: ChainVerdict.nullable(),
+  candidate_probability: z.number().nullable(),
+  rationale: z.string().nullable(),
+});
+export type ChainRound = z.infer<typeof ChainRound>;
+
+/** The adjudicator's answer, gated like a memo: withheld claims are kept as a record, not offered as argument. */
+export const ChainDecision = z.object({
+  verdict: ChainVerdict,
+  probability: z.number().nullable(),
+  claims: z.array(z.object({ text: z.string(), value_ids: z.array(z.string()) })),
+  unknown_criteria: z.array(z.string()),
+  absent_criteria: z.array(z.string()),
+  next_observation: z.string().nullable(),
+  rationale: z.string().nullable(),
+  published: z.boolean(),
+  problems: z.array(z.string()),
+});
+export type ChainDecision = z.infer<typeof ChainDecision>;
+
+/**
+ * One analyst chain over a cell. Both deciders are carried: the weighted sum with the weights it used, and
+ * the adjudicator's decision; `majority_label` is the vote over rounds when K was exhausted, and a chain that
+ * never validated publishes `insufficient` with `abstained_reason` set.
+ */
+export const AnalystChain = z.object({
+  chain_id: z.string(),
+  run_id: z.string(),
+  arm: z.string(),
+  purpose: z.enum(["dashboard", "scored", "benchmark"]),
+  planner: z.enum(["template", "model"]),
+  rounds: z.number().int(),
+  valid: z.boolean(),
+  final_verdict: ChainVerdict,
+  final_probability: z.number().nullable(),
+  weighted_score: z.number().nullable(),
+  weights_version: z.string().nullable(),
+  verifier_label: ChainVerdict.nullable(),
+  majority_label: ChainVerdict.nullable(),
+  abstained_reason: z.string().nullable(),
+  published: z.boolean(),
+  created_at: z.string(),
+  cost_usd: z.number().nullable(),
+  nodes: z.array(ChainNode),
+  verdicts: z.array(ChainRound),
+  decision: ChainDecision.nullable(),
+});
+export type AnalystChain = z.infer<typeof AnalystChain>;
+
 /** The evidence record for one cell, served by the local agent service (never bundled into the static build). */
 export const CellEvidence = z.object({
   cell_id: z.string(),
@@ -885,6 +973,8 @@ export const CellEvidence = z.object({
       claims: z.array(z.object({ claim_no: z.number(), text: z.string(), value_ids: z.array(z.string()) })),
     }),
   ),
+  /** The cell's analyst chains, newest first; a record from before the chains existed simply has none. */
+  chains: z.array(AnalystChain).default([]),
 });
 export type CellEvidence = z.infer<typeof CellEvidence>;
 

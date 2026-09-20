@@ -71,6 +71,7 @@ def test_cells_and_evidence_keep_the_old_contract(client: TestClient) -> None:
     assert [c["cell_id"] for c in cells] == ["0001_0001"] and cells[0]["km_to_label"] == 12.3
     ev = client.get("/api/cell/0001_0001").json()
     assert ev["cell_id"] == "0001_0001" and ev["memos"][0]["claims"][0]["value_ids"] == ["c:score:x"]
+    assert "chains" in ev, "the response model passes the analyst chains through (a strict model once stripped them)"
     assert client.get("/api/cell/not-a-cell").status_code == 400
     assert client.get("/api/cells?limit=0").status_code == 422
 
