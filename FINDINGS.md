@@ -3,6 +3,61 @@
 Measured results that changed what the project claims. Each entry names the run that produced it, so every
 number here walks back to a stored metric. Newest first.
 
+## F7 · Analyst v1 on the enabled cells: the loop runs end to end, and the verifier finds the data's faults before ours (2026-09-20)
+
+**The question.** Does the staged loop (PRD §8.4) run over real cells, store what it decides, and earn its
+verifier? Fifteen enabled cells, dashboard purpose (nothing blinded, the label kept off the pack by the arm's
+switches), the v1 arm: template plan of eight criteria and two cross-checks, Sonnet 5 executor per segment,
+the mechanical gate, one Opus 5 verifier round (K = 1), both deciders, chains into the agent tier. Run
+`20260920T122617Z-chain`, MLflow `ad5a0491`; the first attempt stopped at its $15 budget after eleven cells
+and the second replayed those eleven from the cache for nothing and ran the last four live.
+
+| | |
+|---|---|
+| Chains | 15 stored, 8 published, 7 never validated |
+| Nodes | 150: 74 met, 40 not met, 36 unknown; every one on `claude-sonnet-5` |
+| Node gate | 3 rejections in 152 executor attempts (2%); none recorded unknown after three attempts |
+| Verifier | 15 verdicts on `claude-opus-5`; its recorded label agreed with the final verdict on 14 of 15 |
+| Deciders | weighted score and adjudicator on the same side of 0.5 on 8 of 14; the adjudicator's probability lower on 13 of 15 |
+| Cost | $17.85 for 15 cells, $1.19 a cell; 12 to 13 calls a cell |
+
+**What the verifier objected to, and it was right every time.**
+- *Cover masks the host* (six cells: 0015_0065, 0033_0047, 0037_0049, 0145_0019, 0185_0058, and a note on
+  0145_0018). The executor read the 1:250k bedrock polygon as "not met" for graphitic host where the cell
+  sits under basin sandstone, so the polygon describes the cover and says nothing about the basement. The
+  verifier's instruction each time: unknown, not not met. The criteria score makes the same error for every
+  covered cell, silently. A cover mask on `graphitic_host` is now on the backlog ahead of 5c.
+- *Absence of mapping read as absence of features* (0000_0053). The cell sits outside the geological map's
+  footprint, every nearest feature about 30 km away; the executor scored conductors, faults, density and the
+  cross-check as absent. The verifier called four nodes unmeasured, and one number cited to nothing.
+- *A zero-filled count field* (0145_0018, 0145_0019). Fifteen boulders within 5 km at 0.0 cps is a null in the
+  source layer, not a measured negative.
+
+With K = 1 none of this could be repaired inside the run: the chains are stored unpublished with the
+verifier's reasons, which is what the dashboard shows beside the memos. On these cells the K3 arm would have
+re-executed one node with that feedback for about one more executor call and one more verifier call a cell.
+
+**What the loop read on the labelled cells.** Seven deposit cells: six "supports a closer look", one
+"insufficient evidence" (0030_0081, valid chain, adjudicator at 0.22 against a weighted 0.52). Both
+occurrence cells: supports a closer look. Six unlabelled cells: two insufficient, one evidence against, three
+supports a closer look. Not a benchmark: the cells were chosen, and this purpose does not blind them.
+
+**What the gate found in us, again.** The second chain was withheld at the store for quoting a map scale:
+"1:250,000" scanned as the token "000" once the colon stopped the match at "250,000", and the store's
+publish check had no tool transcript to see the scale was a tool's own text. The scanner no longer starts a
+number after a digit and a comma, the store now re-checks with the transcript the loop's gate used, the
+fabrication suite is unchanged at 228 of 232 refused and 0 of 128 honest claims refused, and the replay
+published the cell. Before the run, staging one benchmark cell through a real session with no model found
+the criteria rows carrying their literature lines, which name the deposits each threshold came from; blinded
+sessions now drop that line and scrub the handbook's own place names.
+
+**What it decides.** The cover mask and the zero-fill rule land before 5c, because the verifier will keep
+failing four chains in ten on them and the criteria baseline carries the same errors. K = 1 discards the
+verifier's most useful output; K = 3 is the default to test first. A chain costs $1.19, so a 114-cell arm is
+about $135 and the seven arms about $950; the arm set is sized against usage, not run wholesale. The two
+deciders disagree on the threshold for four chains in ten, with the adjudicator the conservative one; 5c
+reports both and the ranking decides.
+
 ## F6 · Analyst_v0: a single closed-book call reads the evidence as well as the fitted model, and no better (2026-09-20)
 
 **The question.** UraniumBench v1, analyst track: 114 open scored cells (50 labelled: 18 deposit, 32
