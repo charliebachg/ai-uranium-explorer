@@ -1087,3 +1087,224 @@ export const Candidate = z.object({
   km_to_label: z.number().nullable(),
 });
 export type Candidate = z.infer<typeof Candidate>;
+
+// ---------------------------------------------------------------- the interface agent (PRD §8.3, Phase 4c)
+
+/**
+ * The kinds the intent router picks from. Each has a plan of tool calls written in Python: the model decides
+ * what is being asked, never what the answer is. `other` is the plain tool loop, capped at a few calls.
+ */
+export const RouteKind = z.enum([
+  "lookup",
+  "compare",
+  "explain_score",
+  "what_is_unknown",
+  "what_would_change",
+  "record_insight",
+  "run_analyst",
+  "other",
+]);
+export type RouteKind = z.infer<typeof RouteKind>;
+
+/** The route a turn took: the kind, what it named, whether it was out of scope, and the plan that followed. */
+export const ChatRoute = z.object({
+  kind: RouteKind,
+  topic: z.string().nullable().default(null),
+  cell_ids: z.array(z.string()).default([]),
+  entities: z.array(z.string()).default([]),
+  out_of_scope: z.boolean().default(false),
+  detail: z.string().default(""),
+  reason: z.string().default(""),
+  /** set when the router's reply could not be read and the turn fell back to the loop */
+  fallback: z.string().nullable().default(null),
+  meaning: z.string().default(""),
+  plan: z.array(z.object({ tool: z.string(), args: z.record(z.string(), z.unknown()) })).default([]),
+});
+export type ChatRoute = z.infer<typeof ChatRoute>;
+
+/** Why the agent declined: the four reasons the abstain tool takes (PRD §E.3), never a free-text shrug. */
+export const AbstainReason = z.enum(["not_measured", "outside_grid", "no_value", "out_of_scope"]);
+export type AbstainReason = z.infer<typeof AbstainReason>;
+
+/** A refusal, recorded under its own id so it can be counted; `detail` is the model's words, shown only if gated. */
+export const ChatAbstention = z.object({
+  abstain_id: z.string(),
+  reason: AbstainReason,
+  detail: z.string().default(""),
+  said: z.string().default(""),
+  recorded_at: z.string().optional(),
+});
+export type ChatAbstention = z.infer<typeof ChatAbstention>;
+
+/** A geologist's statement written to the expert tier; the numbers in it now carry expert-tier value ids (B19). */
+export const ChatInsight = z.object({
+  expert_id: z.string(),
+  author: z.string(),
+  text: z.string(),
+  value_ids: z.array(z.string()).default([]),
+  recorded_at: z.string().nullable().optional(),
+});
+export type ChatInsight = z.infer<typeof ChatInsight>;
+
+/**
+ * The session assessment: a finished analyst job beside the cell's stored chain without the insight, node by
+ * node and verdict by verdict. Words, not numbers: the counts are of the rows in this very object.
+ */
+export const ChainDiff = z.object({
+  chain_id: z.string().nullable().optional(),
+  baseline_chain_id: z.string().nullable().optional(),
+  verdict: z.object({
+    before: z.string().nullable(),
+    after: z.string().nullable(),
+    changed: z.boolean(),
+  }),
+  nodes: z.array(
+    z.object({
+      node_id: z.string(),
+      criterion: z.string().nullable().optional(),
+      kind: z.string().nullable().optional(),
+      before: z.string().nullable(),
+      after: z.string().nullable(),
+      expert_ids: z.array(z.string()).default([]),
+      changed: z.boolean(),
+    }),
+  ),
+  n_changed: z.number().int(),
+  n_leaning_on_expert: z.number().int().optional(),
+  expert_ids: z.array(z.string()).default([]),
+  note: z.string().default(""),
+});
+export type ChainDiff = z.infer<typeof ChainDiff>;
+
+/** An analyst job the conversation submitted: the handover, and once it is done the verdict and the diff. */
+export const ChatJob = z
+  .object({
+    job_id: z.string(),
+    cell_id: z.string(),
+    reason: z.string().default(""),
+    expert_ids: z.array(z.string()).default([]),
+    score_ids: z.array(z.string()).default([]),
+    budget_usd: z.number().optional(),
+    requested_by: z.string().optional(),
+    submitted_at: z.string().optional(),
+    status: z.string().default("submitted"),
+    verdict: z.string().nullable().optional(),
+    result: z.record(z.string(), z.unknown()).nullable().optional(),
+    assessment: ChainDiff.nullable().optional(),
+    assessment_error: z.string().optional(),
+    error: z.string().optional(),
+  })
+  .passthrough();
+export type ChatJob = z.infer<typeof ChatJob>;
+
+/** A chat turn as the interface agent returns it: the old shape plus the route and the actions it took. */
+export const InterfaceTurn = ChatTurn.extend({
+  route: ChatRoute.nullable().optional(),
+  abstention: ChatAbstention.nullable().optional(),
+  insight: ChatInsight.nullable().optional(),
+  job: ChatJob.nullable().optional(),
+  jobs_done: z.array(ChatJob).default([]),
+  expert_ids: z.array(z.string()).default([]),
+  retried: z.boolean().default(false),
+  model: z.string().optional(),
+});
+export type InterfaceTurn = z.infer<typeof InterfaceTurn>;
+export const InterfaceChatResponse = ChatResponse.extend({ turn: InterfaceTurn });
+export type InterfaceChatResponse = z.infer<typeof InterfaceChatResponse>;
+
+// ---------- background jobs (PRD §A.2): the service's `agent.job` rows, polled while one runs ----------
+
+export const JobStatus = z.enum(["queued", "running", "done", "failed", "cancelled"]);
+export type JobStatus = z.infer<typeof JobStatus>;
+/** One event on a job's row: the stages as they happen (`stage:plan`, `stage:verify`), a run claimed, a log line. */
+export const JobEvent = z.object({ at: z.string(), event: z.string() }).passthrough();
+export type JobEvent = z.infer<typeof JobEvent>;
+/** What an analyst job produced: the chain the evidence panel now lists, its verdict and its cost. Other
+ *  kinds will shape their own results; the strip prints only what it knows. */
+export const AnalystJobResult = z
+  .object({
+    chain_id: z.string(),
+    verdict: z.string().nullable().optional(),
+    published: z.boolean().optional(),
+    cost_usd: z.number().optional(),
+    run_id: z.string().optional(),
+  })
+  .passthrough();
+export const Job = z.object({
+  job_id: z.string(),
+  kind: z.string(),
+  cell_id: z.string().nullable(),
+  status: JobStatus,
+  requested_by: z.string(),
+  args: z.record(z.string(), z.unknown()),
+  created_at: z.string(),
+  started_at: z.string().nullable(),
+  finished_at: z.string().nullable(),
+  progress: z.array(JobEvent),
+  result: z.record(z.string(), z.unknown()).nullable(),
+  error: z.string().nullable(),
+  run_id: z.string().nullable(),
+});
+export type Job = z.infer<typeof Job>;
+export const CellJobs = z.object({ cell_id: z.string(), jobs: z.array(Job) });
+export type CellJobs = z.infer<typeof CellJobs>;
+/** Who the key resolves to, from `/api/whoami`: a label that is never the key, and the roles it holds. */
+export const Whoami = z.object({ name: z.string(), scopes: z.array(z.string()), roles: z.array(z.string()) });
+export type Whoami = z.infer<typeof Whoami>;
+
+// ---------- the extractor's review queue (PRD §8.2 stage 4): what the second reader disagreed on, served by /api/review
+
+/** One reader's view of a value, as the comparer recorded it; `bbox` is the value's own located box, `row_bbox` its row's band. */
+export const ReviewReading = z
+  .object({
+    field: z.string(),
+    scope: z.string(),
+    as_printed: z.string(),
+    unit_as_printed: z.string().nullable().optional(),
+    analyte: z.string().nullable().optional(),
+    quote: z.string().nullable().optional(),
+    bbox: BBox.nullable().optional(),
+    row_bbox: BBox.nullable().optional(),
+    row_index: z.number().int().nullable().optional(),
+    value_id: z.string().nullable().optional(),
+    model: z.string().nullable().optional(),
+  })
+  .passthrough();
+export type ReviewReading = z.infer<typeof ReviewReading>;
+
+export const ReviewStatus = z.enum(["open", "accepted_a", "accepted_b", "rejected", "edited"]);
+export type ReviewStatus = z.infer<typeof ReviewStatus>;
+
+/** A queue item: a disagreement, or a value only one reader found. A resolution never rewrites the two readings. */
+export const ReviewItem = z.object({
+  queue_id: z.string(),
+  file_num: z.string(),
+  page: z.number().int().min(1),
+  page_id: z.string().nullable().optional(),
+  field: z.string(),
+  field_type: z.string().nullable().optional(),
+  value_id: z.string().nullable().optional(),
+  reading_a: ReviewReading.nullable(),
+  reading_b: ReviewReading.nullable(),
+  reason: z.enum(["disagreed", "only_a", "only_b"]),
+  status: ReviewStatus,
+  run_id: z.string(),
+  model_a: z.string().nullable().optional(),
+  model_b: z.string().nullable().optional(),
+  created_at: z.string(),
+  resolved_by: z.string().nullable().optional(),
+  resolved_at: z.string().nullable().optional(),
+  resolution: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+export type ReviewItem = z.infer<typeof ReviewItem>;
+
+export const ReviewQueuePage = z.object({
+  items: z.array(ReviewItem),
+  total: z.number().int(),
+  limit: z.number().int(),
+  offset: z.number().int(),
+  status: z.string(),
+  file_num: z.string().nullable().optional(),
+  counts: z.record(z.string(), z.number().int()),
+});
+export type ReviewQueuePage = z.infer<typeof ReviewQueuePage>;

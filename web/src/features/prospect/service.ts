@@ -1,11 +1,17 @@
 import { z } from "zod";
-import { api, SERVICE_ROOT } from "@/api/client";
+import { api, authHeaders, SERVICE_ROOT } from "@/api/client";
 import {
   Candidate,
   CellConversations,
   CellEvidence,
+  type ChatAbstention,
+  type ChatInsight,
+  type ChatJob,
   ChatResponse,
+  type ChatRoute,
   ConversationRecord,
+  InterfaceChatResponse,
+  Job,
 } from "@/data/contract";
 import { registerValues } from "@/data/registry";
 import { registerCandidateScores, registerCriterionWeights, registerKnownShares } from "./cellValues";
@@ -24,7 +30,7 @@ const HEALTH_TIMEOUT_MS = 2500;
 const READ_TIMEOUT_MS = 15_000;
 
 /** openapi-fetch hands back {data, error, response}; a non-2xx is an error here, never an empty answer. */
-function got<T>(path: string, out: { data?: T; error?: unknown; response: Response }): T {
+export function got<T>(path: string, out: { data?: T; error?: unknown; response: Response }): T {
   if (out.error !== undefined || out.data === undefined) {
     const detail =
       out.error && typeof out.error === "object" && "detail" in out.error
@@ -34,7 +40,7 @@ function got<T>(path: string, out: { data?: T; error?: unknown; response: Respon
   }
   return out.data;
 }
-function parsed<S extends z.ZodTypeAny>(path: string, schema: S, raw: unknown): z.infer<S> {
+export function parsed<S extends z.ZodTypeAny>(path: string, schema: S, raw: unknown): z.infer<S> {
   const out = schema.safeParse(raw);
   if (!out.success) {
     const issues = out.error.issues
@@ -103,6 +109,13 @@ export type ChatEvent =
     }
   | { type: "tool_error"; tool: string; error: string }
   | { type: "checking"; claims: number }
+  /** the gate objected once; the answer is being asked for again with the objections */
+  | { type: "refused"; problems: string[] }
+  // the interface agent's own steps (PRD §8.3): the route and its plan, then the actions it took
+  | ({ type: "route" } & ChatRoute)
+  | ({ type: "abstain" } & ChatAbstention)
+  | ({ type: "insight" } & ChatInsight)
+  | ({ type: "job" } & ChatJob)
   | { type: "error"; error: string };
 
 /**
@@ -113,10 +126,11 @@ export type ChatEvent =
 export async function askStreaming(
   body: { cell_id: string; question: string; conversation_id?: string },
   onEvent: (e: ChatEvent) => void,
-): Promise<ChatResponse> {
+): Promise<InterfaceChatResponse> {
   const res = await fetch(`${SERVICE_ROOT}/api/chat/stream`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    // the typed client's middleware does not see this fetch, so the key goes on here
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) throw new Error(`/api/chat/stream: HTTP ${res.status}`);
@@ -145,9 +159,18 @@ export async function askStreaming(
   if (buffer.trim()) take(buffer);
 
   if (!done) throw new Error("the service closed the stream before answering");
-  const answer = parsed("/api/chat/stream", ChatResponse, done);
+  const answer = parsed("/api/chat/stream", InterfaceChatResponse, done);
   registerValues(answer.values);
   return answer;
+}
+
+/** One job's row, for the transcript's job card to poll until the analyst has finished. */
+export async function job(jobId: string): Promise<Job> {
+  const res = await fetch(`${SERVICE_ROOT}/api/jobs/${encodeURIComponent(jobId)}`, {
+    signal: AbortSignal.timeout(READ_TIMEOUT_MS),
+  });
+  if (!res.ok) throw new Error(`/api/jobs/${jobId}: HTTP ${res.status}`);
+  return parsed(`/api/jobs/${jobId}`, Job, await res.json());
 }
 
 export async function ask(body: {

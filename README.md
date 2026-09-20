@@ -85,6 +85,12 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr arm run --arm v1-anthropic-or --backend auto --workers 20 --budget-usd 60 --resume <run id>   # the same two models pay-per-token, many cells at once, carrying a stopped run forward
     uv run lr arm table                      # every arm's latest run beside the random, learned, effort and criteria baselines, with the staged loop's per-stage columns for the v1 arms
 
+    # the extractor as an agent (PRD §8.2): locate → read → validate → agree → file, one page at a time, resumable
+    uv run lr extract agent --config opus1-assay --agree-only --backend auto --budget-usd 0.50 --page 74H16-0034:27   # a second family (z-ai/glm-5.3-flash on OpenRouter) over pages already read on Opus; disagreements go to the review queue in read.review_item
+    uv run lr extract agent --files 74H16-0034 --budget-usd 5 --store /tmp/copy.duckdb   # fresh pages too (the reader on the CLI); --store files the queue somewhere other than data/lr.duckdb, --no-store keeps it in the run directory, --resume <run id> carries finished stages forward
+    uv run lr gold key 74H16-0034 27         # an empty gold skeleton under gold/pages/ for a person to key from the page image; never prefilled from a model
+    uv run lr gold score --run <run id>      # precision and recall against every keyed gold page the run read, per field type, with the denominators; reports zero gold pages while none is keyed
+
     # web
     cd web
     npm install
@@ -98,9 +104,12 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr openai models          # free: what the key can reach, before spending anything
     uv run lr openai budget          # cumulative spend and what is left of the ceiling
     uv run lr prospect serve         # localhost:8787, the evidence record and the live chat; /docs for the OpenAPI page
+    uv run lr prospect serve --backend auto   # the interface agent on its cheap OpenRouter model (LR_INTERFACE_MODEL)
+    uv run lr interface ask --cell 0201_0072 -q "which criteria are unknown here?" --budget-usd 0.50   # one routed turn from the terminal
+    LR_MCP_KEYS=<key>:read,record uv run lr prospect serve   # with a key register the API needs a key too: X-Api-Key or a bearer; see "Keys, roles and jobs"
 
     # the same tools over MCP (PRD §E.3): a geologist's own Claude Code or Cursor session as the client
-    uv run lr mcp tools              # the catalogue as served: 14 tools, their kind and scope; --json for the tools/list document
+    uv run lr mcp tools              # the catalogue as served: 15 tools, their kind and scope; --json for the tools/list document
     uv run lr mcp serve --stdio      # what a client launches: the server on stdin and stdout (see the .mcp.json below)
     uv run lr mcp serve --http       # streamable HTTP on :8788/mcp when the API is not running; `lr prospect serve` mounts it at :8787/mcp
     uv run lr mcp key --scopes read  # mint a key and print its LR_MCP_KEYS entry; without a register only local clients are served
@@ -113,11 +122,34 @@ A client connects by launching the stdio server. Claude Code reads `.mcp.json` i
 With no `LR_MCP_KEYS` register a stdio client and a loopback HTTP client have every scope. To hand out
 scopes, set `LR_MCP_KEYS=<key>:<scope>[,<scope>];<key>:...` in the server's environment (a key is any string
 without `:`, `;`, `,` or white space; `lr mcp key` mints one); an HTTP client then sends
-`Authorization: Bearer <key>`, and a stdio client puts its key in `LR_MCP_KEY`. Scopes: `read` (open a session,
-the eight reads, `hole_crosscheck`, `check_claims`, `abstain`, every resource and prompt), `record`
-(`record_insight`, which writes the expert tier), `run` (`run_analyst`, a stub until Phase 4d). `tools/list`
-shows a key only the tools its scopes carry. `--public-safe` (or `LR_MCP_PUBLIC=1`) never serves report text or
-a layer the inventory marks non-redistributable.
+`Authorization: Bearer <key>` (or `X-Api-Key: <key>`), and a stdio client puts its key in `LR_MCP_KEY`. Scopes:
+`read` (open a session, the eight reads, `hole_crosscheck`, `check_claims`, `abstain`, `job_status`, every
+resource and prompt), `record` (`record_insight`, which writes the expert tier), `run` (`run_analyst`, which
+starts an analyst job on the API's runner and returns its id; only in the API process, where `/mcp` has the
+runner). `tools/list` shows a key only the tools its scopes carry. `--public-safe` (or `LR_MCP_PUBLIC=1`) never
+serves report text or a layer the inventory marks non-redistributable.
+
+**Keys, roles and jobs (PRD §A.2).** The same `LR_MCP_KEYS` register is the API's: a role is a set of the MCP
+scopes, so one key opens the same things over both.
+
+| Role | Scopes | What it opens on the API |
+|---|---|---|
+| `viewer` | `read` | the record, the stored conversations, a job's row (`GET /api/jobs/{id}`, `GET /api/cell/{id}/jobs`) |
+| `geologist` | `read`, `record` | the chat (`POST /api/chat`, `/api/chat/stream`); every turn records who asked |
+| `admin` | `read`, `record`, `run` | `POST /api/jobs` with kind `analyst`, and cancelling one |
+
+With no register a loopback client is `local` with every role, so a local prototype needs no key; with one,
+every call that writes carries `X-Api-Key: <key>` (the site's Key button keeps it in the browser) or a bearer
+header, and `GET /api/whoami` says what a key holds. A 401 or 403 carries a plain reason and never a key.
+Anything over a second is a job with a durable row in `agent.job`: `POST /api/jobs {kind, cell_id, args}`
+answers 202 with the row, `GET /api/jobs/{id}` polls it (status queued, running, done, failed or cancelled,
+the stages reached, the result), `POST /api/jobs/{id}/cancel` stops it at its next model call. The `analyst`
+kind runs the staged loop on one enabled cell (any other cell is refused with PRD §9.4's reason), arm
+`v1-openrouter` through the router by default, `budget_usd` 0.50 by default and 2.00 at most inside a
+per-process budget (`LR_JOB_SESSION_BUDGET_USD`, default 5), and publishes the chain exactly as
+`lr arm chain` does; the chat's "run the analyst" intent submits the same job and the agent rail's jobs strip
+polls it, refreshing the evidence panel's chains when it finishes. A job that was running when the process
+restarted is marked failed with that reason.
 
     # the serving stack (Postgres + PostGIS, MinIO, Redis) and the containerised app
     docker compose up -d db          # needs Docker; the PostGIS image is multi-arch
@@ -162,13 +194,19 @@ that one exception and refuses any other, the banner at the top changes to say s
 Click a cell and the rail on the right holds its evidence — the three scores, what each criterion contributed,
 how close the nearest labelled deposit is — and a conversation about it. The agent reads the same tools the
 panel is drawn from, and every number it states is checked against those tool values before the answer is
-shown; an answer that fails is withheld, with the objection shown in its place. The chat needs
+shown; an answer that fails is withheld, with the objection shown in its place. Behind the panel is the
+interface agent (PRD §8.3): a router classifies each question into a fixed kind and a plan written in Python
+fetches its evidence, a refusal is recorded with its reason rather than guessed past, a geologist's own
+statement can be recorded into the expert tier and cited from then on, and the analyst can be invoked on an
+enabled cell as a job whose verdict comes back beside the stored chain without the insight. The chat needs
 `lr prospect serve`; everything else on the map is static files.
 
 Other views: `/data` (how much of the grid each feature actually covers), `/eval` (what the run read, what the
-checks caught, and how the fabrication gate scores on an adversarial suite) and `/limits` (what this demo can
-and cannot claim, carried from research report 05). `?motion=0` turns off every animation, `?perf=lite` drops
-backdrop blur.
+checks caught, and how the fabrication gate scores on an adversarial suite), `/limits` (what this demo can
+and cannot claim, carried from research report 05) and `/review` (the extractor's review queue: every value the
+second reader family disagreed with the first about, both readings beside the page crop, accepted or rejected
+with the geologist key; the decision is recorded with the key's label and never rewrites a reading).
+`?motion=0` turns off every animation, `?perf=lite` drops backdrop blur.
 
 ## Data sources
 

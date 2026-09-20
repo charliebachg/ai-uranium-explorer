@@ -5,6 +5,7 @@ import { WORDING } from "@/config/wording";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/state/store";
 import { FixtureBadge } from "./FixtureWatermark";
+import { KeyButton } from "./KeyDialog";
 
 export function TopBar({ ready }: { ready: boolean }) {
   return (
@@ -39,7 +40,7 @@ export function TopBar({ ready }: { ready: boolean }) {
   );
 }
 
-/** Search and the walkthrough, reachable from every view (the same two commands as ⌘K and G). */
+/** Search, the walkthrough and the API key, reachable from every view (the first two are also ⌘K and G). */
 function Actions() {
   const setPalette = useStore((s) => s.setPalette);
   const setTour = useStore((s) => s.setTour);
@@ -70,6 +71,7 @@ function Actions() {
         <Route className="size-3.5" aria-hidden="true" />
         <span className="hidden lg:inline">{tourActive ? "Leave tour" : "Tour"}</span>
       </button>
+      <KeyButton />
     </div>
   );
 }
@@ -102,6 +104,7 @@ const LINKS: [string, string][] = [
   ["/data", "Data"],
   ["/eval", "Eval"],
   ["/limits", "Limits"],
+  ["/review", "Review"],
 ];
 
 function Nav() {

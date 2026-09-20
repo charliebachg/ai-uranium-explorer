@@ -18,6 +18,7 @@ import { CommandPalette } from "@/features/palette/CommandPalette";
 import { ReadinessPage } from "@/features/prospect/ReadinessPage";
 import { ScoreLegend } from "@/features/prospect/ScoreLegend";
 import { ReportPanel } from "@/features/report/ReportPanel";
+import { ReviewPage } from "@/features/review/ReviewPage";
 import { AttributionDialog } from "@/features/shell/AttributionDialog";
 import { ErrorBoundary } from "@/features/shell/ErrorBoundary";
 import { HonestyBanner } from "@/features/shell/HonestyBanner";
@@ -52,6 +53,11 @@ export function App() {
         <Route path="/limits">
           <PageShell>
             <LimitsPage />
+          </PageShell>
+        </Route>
+        <Route path="/review">
+          <PageShell>
+            <ReviewPage />
           </PageShell>
         </Route>
         <Route>

@@ -1,17 +1,26 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, SendHorizontal, Wrench } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Chip } from "@/components/ui/StatusMark";
 import { V } from "@/components/values/V";
-import type { ChatTurn, RecordedChat, StoredTurn } from "@/data/contract";
+import type {
+  ChainDiff,
+  ChatAbstention,
+  ChatInsight,
+  ChatJob,
+  ChatRoute,
+  InterfaceTurn,
+  RecordedChat,
+  StoredTurn,
+} from "@/data/contract";
 import { loadRecordedChat } from "@/data/loader";
-import { hasValue } from "@/data/registry";
+import { hasValue, registryVersion, subscribeRegistry } from "@/data/registry";
 import { cn } from "@/lib/cn";
 import { useStore } from "@/state/store";
 import { AnswerText, type CiteHandler } from "./AnswerText";
-import { conversationCostId, registerChatCost, turnCostId } from "./cellValues";
+import { conversationCostId, jobCostId, registerChatCost, registerJobCost, turnCostId } from "./cellValues";
 import { OfflineNotice, type ServiceState } from "./OfflineNotice";
-import { keys, useConversation, useConversations } from "./queries";
+import { jobFinished, keys, useConversation, useConversations, useJob } from "./queries";
 import { askStreaming, type ChatEvent } from "./service";
 
 /**
@@ -22,6 +31,12 @@ import { askStreaming, type ChatEvent } from "./service";
  * It is not retried quietly and it is not dropped. The turn stays in the transcript with its text withheld and
  * the checker's objection in its place, because "the agent said something it could not back" is the most
  * informative thing this panel ever has to show.
+ *
+ * Since Phase 4c every turn is routed first (PRD §8.3), and the transcript says so: the route line names the
+ * kind the question was read as and the plan that fetched its evidence; a refusal shows its reason rather than
+ * an apology; an insight shows the expert-tier id it was recorded under; an invoked analyst is a card that
+ * polls its job, and the turn that finds it finished carries the verdict beside the stored chain without the
+ * insight.
  */
 
 const SUGGESTIONS = [
@@ -30,8 +45,12 @@ const SUGGESTIONS = [
   "Which criteria are unknown here rather than not met?",
 ];
 
-/** A persisted turn, in the shape the panel draws: what the gate published, its claims, and its objections. */
-function fromStored(t: StoredTurn): ChatTurn {
+/**
+ * A persisted turn, in the shape the panel draws: what the gate published, its claims, and its objections.
+ * The route, the abstention and the insight are not persisted as such; the actions are, as tool calls named
+ * `abstain`, `record_insight` and `run_analyst`, so a resumed transcript still says what the agent did.
+ */
+function fromStored(t: StoredTurn): InterfaceTurn {
   return {
     question: t.question,
     text: t.text,
@@ -42,10 +61,13 @@ function fromStored(t: StoredTurn): ChatTurn {
     problems: t.problems,
     tools_used: t.tool_calls.map((c) => c.tool),
     cost_usd: t.cost_usd ?? undefined,
+    jobs_done: [],
+    expert_ids: [],
+    retried: false,
   };
 }
 
-type Entry = { turn: ChatTurn; conversationId: string; index: number };
+type Entry = { turn: InterfaceTurn; conversationId: string; index: number };
 
 export function ChatPanel({
   cellId,
@@ -163,7 +185,11 @@ export function ChatPanel({
           {shown.map((turn, i) => (
             <Exchange
               key={turn.question}
-              entry={{ turn, conversationId: `recorded-${recorded.cell_id}`, index: i }}
+              entry={{
+                turn: { ...turn, jobs_done: [], expert_ids: [], retried: false },
+                conversationId: `recorded-${recorded.cell_id}`,
+                index: i,
+              }}
               onCite={onCite}
             />
           ))}
@@ -242,7 +268,12 @@ export function ChatPanel({
         ) : null}
 
         {entries.map((entry) => (
-          <Exchange key={`${entry.conversationId}-${entry.index}`} entry={entry} onCite={onCite} />
+          <Exchange
+            key={`${entry.conversationId}-${entry.index}`}
+            entry={entry}
+            onCite={onCite}
+            cellId={cellId}
+          />
         ))}
 
         {busy ? <Working events={live} /> : null}
@@ -293,7 +324,63 @@ const TOOL_SAYS: Record<string, string> = {
   label_context: "checking the nearest known deposit",
   coverage: "checking how much of the grid that feature covers",
   retrieve: "searching the assessment corpus",
+  nearby: "counting one evidence layer around the cell",
+  crosscheck: "computing the conductor-fault and sediment-sampling pairs",
+  sensitivity: "ranking the unmeasured criteria by how far each would move the score",
+  abstain: "recording a refusal with its reason",
+  record_insight: "writing the statement to the expert tier",
+  run_analyst: "handing the cell to the analyst",
 };
+
+/** The route line's words for each kind: what the agent read the question as. */
+const KIND_SAYS: Record<ChatRoute["kind"], string> = {
+  lookup: "a lookup",
+  compare: "a comparison of two cells",
+  explain_score: "explain the score",
+  what_is_unknown: "what is unknown here",
+  what_would_change: "what would change the reading",
+  record_insight: "record an insight",
+  run_analyst: "run the analyst",
+  other: "unrouted: the plain tool loop",
+};
+
+const REASON_SAYS: Record<ChatAbstention["reason"], string> = {
+  not_measured: "not measured here",
+  outside_grid: "outside the grid",
+  no_value: "no value in the store",
+  out_of_scope: "out of scope",
+};
+
+const VERDICT_SAYS: Record<string, string> = {
+  evidence_against: "evidence against",
+  insufficient: "insufficient evidence",
+  supports_closer_look: "supports a closer look",
+};
+
+function verdictWords(v: string | null | undefined): string {
+  return v ? (VERDICT_SAYS[v] ?? v) : "no verdict";
+}
+
+function RouteLine({ route }: { route: ChatRoute }) {
+  return (
+    <p
+      className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1 text-[10.5px] text-ink-3"
+      data-testid="chat-route"
+    >
+      <span className="uppercase tracking-wider">routed as</span>
+      <span className="text-ink-2" data-route-kind={route.kind}>
+        {KIND_SAYS[route.kind]}
+      </span>
+      {route.out_of_scope ? <Chip tone="flag">out of scope</Chip> : null}
+      {route.plan.length ? (
+        <span className="font-mono" data-ident>
+          {route.plan.map((s) => s.tool).join(" · ")}
+        </span>
+      ) : null}
+      {route.fallback ? <span className="italic">{route.fallback}</span> : null}
+    </p>
+  );
+}
 
 /**
  * What the agent is doing, while it does it — including *why*, which is the part worth watching.
@@ -378,6 +465,31 @@ function Working({ events }: { events: ChatEvent[] }) {
                 <span className="text-ink-2">checking every number against the tool values</span>
                 {last ? <Dots /> : null}
               </p>
+            ) : e.type === "refused" ? (
+              <p className="text-st-flag">
+                the check objected; asking once more with{" "}
+                {e.problems.length === 1 ? "the objection" : "the objections"}
+                {last ? <Dots /> : null}
+              </p>
+            ) : e.type === "route" ? (
+              <RouteLine route={e} />
+            ) : e.type === "abstain" ? (
+              <p className="text-st-flag">declining: {REASON_SAYS[e.reason]}</p>
+            ) : e.type === "insight" ? (
+              <p>
+                recorded in the expert tier as{" "}
+                <span className="font-mono text-[10.5px]" data-ident>
+                  {e.expert_id}
+                </span>
+              </p>
+            ) : e.type === "job" ? (
+              <p>
+                analyst job{" "}
+                <span className="font-mono text-[10.5px]" data-ident>
+                  {e.job_id}
+                </span>{" "}
+                {e.status}
+              </p>
             ) : (
               <p className="text-st-miss">{e.error}</p>
             )}
@@ -394,16 +506,176 @@ function Working({ events }: { events: ChatEvent[] }) {
   );
 }
 
+/** A refusal, with its reason where an answer would be: the reason is the answer. */
+function Abstention({ abstention }: { abstention: ChatAbstention }) {
+  return (
+    <div data-testid="chat-abstention" data-reason={abstention.reason}>
+      <Chip tone="flag" className="uppercase tracking-wider">
+        declined
+      </Chip>
+      <p className="mt-1.5 text-[12px] text-ink">
+        <span className="text-ink-2">{REASON_SAYS[abstention.reason]}</span>
+        {abstention.said ? <span className="text-ink-3"> · {abstention.said}</span> : null}
+      </p>
+      {abstention.detail ? (
+        <p className="mt-1 text-[11.5px] text-ink-3" data-source-text>
+          {abstention.detail}
+        </p>
+      ) : null}
+      <p className="mt-1 font-mono text-[10.5px] text-ink-3" data-ident>
+        {abstention.abstain_id}
+      </p>
+    </div>
+  );
+}
+
+/** A statement written to the expert tier: its id, its author, and the expert-tier values minted from it. */
+function Insight({ insight }: { insight: ChatInsight }) {
+  return (
+    <div className="mt-2 rounded-lg border border-line border-dashed px-2.5 py-2" data-testid="chat-insight">
+      <p className="flex flex-wrap items-baseline gap-x-2 text-[10.5px] text-ink-3">
+        <span className="uppercase tracking-wider">expert tier</span>
+        <span className="font-mono" data-ident>
+          {insight.expert_id}
+        </span>
+        <span>by {insight.author}</span>
+      </p>
+      <p className="mt-1 text-[11.5px] text-ink-2 italic" data-source-text>
+        {insight.text}
+      </p>
+      {insight.value_ids.some(hasValue) ? (
+        <p className="mt-1 flex flex-wrap items-baseline gap-1.5">
+          {insight.value_ids.filter(hasValue).map((id) => (
+            <V key={id} id={id} className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10.5px] text-ink-2" />
+          ))}
+        </p>
+      ) : (
+        <p className="mt-1 text-[10.5px] text-ink-3">no numbers in it; nothing minted</p>
+      )}
+    </div>
+  );
+}
+
+/** The session assessment: the verdict with the insight beside the verdict without it, and the nodes that moved. */
+function Assessment({ diff }: { diff: ChainDiff }) {
+  const moved = diff.nodes.filter((n) => n.changed);
+  return (
+    <div className="mt-1.5 space-y-1 text-[11px]" data-testid="chat-assessment">
+      <p className="text-ink-2">
+        verdict {diff.verdict.changed ? "changed" : "unchanged"}:{" "}
+        <span className="text-ink-3">{verdictWords(diff.verdict.before)}</span>
+        <span className="text-ink-3"> → </span>
+        <span>{verdictWords(diff.verdict.after)}</span>
+      </p>
+      {moved.length ? (
+        <ul className="space-y-0.5 border-line border-l pl-2.5 text-ink-3">
+          {moved.map((n) => (
+            <li key={n.node_id}>
+              <span className="font-mono text-[10.5px]" data-ident>
+                {n.criterion ?? n.node_id}
+              </span>{" "}
+              {n.before ?? "absent"} → {n.after ?? "absent"}
+              {n.expert_ids.length ? <span className="text-st-flag"> · leans on your insight</span> : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-ink-3">no node changed its status</p>
+      )}
+      <p className="text-ink-3">{diff.note}</p>
+    </div>
+  );
+}
+
+/**
+ * An analyst job the conversation invoked, polled until it finishes. Done, its verdict and its cost are shown
+ * (the cost as a value, registered from the row) and the evidence query is invalidated so the chains section
+ * lists the new chain; the diff against the stored chain arrives with the next turn, which reports it.
+ */
+function JobCard({ job, cellId }: { job: ChatJob; cellId: string | null }) {
+  const queryClient = useQueryClient();
+  // the cost is registered once the row says done; the card re-renders when the registry gains it
+  useSyncExternalStore(subscribeRegistry, registryVersion);
+  const live = useJob(job.job_id, !jobFinished(job.status));
+  const status = live.data?.status ?? job.status;
+  const result = live.data?.result ?? job.result ?? null;
+  const verdict = (result?.verdict as string | undefined) ?? job.verdict ?? null;
+  const error = live.data?.error ?? job.error ?? null;
+  const finished = jobFinished(status);
+  useEffect(() => {
+    if (!finished) return;
+    registerJobCost(job.job_id, result?.cost_usd);
+    if (cellId) void queryClient.invalidateQueries({ queryKey: keys.evidence(cellId) });
+  }, [finished, job.job_id, result, cellId, queryClient]);
+  return (
+    <div
+      className="mt-2 rounded-lg border border-line px-2.5 py-2"
+      data-testid="chat-job"
+      data-status={status}
+    >
+      <p className="flex flex-wrap items-baseline gap-x-2 text-[10.5px] text-ink-3">
+        <span className="uppercase tracking-wider">analyst job</span>
+        <span className="font-mono" data-ident>
+          {job.job_id}
+        </span>
+        <Chip
+          tone={
+            status === "done" ? "pass" : status === "failed" || status === "cancelled" ? "miss" : "neutral"
+          }
+        >
+          {status}
+        </Chip>
+        {!finished ? <Dots /> : null}
+      </p>
+      <p className="mt-1 text-[11px] text-ink-3">
+        handed over: the cell, {job.score_ids.length ? "its out-of-fold score ids" : "no out-of-fold score"},{" "}
+        {job.expert_ids.length
+          ? `${job.expert_ids.length === 1 ? "the insight" : "the insights"} recorded here`
+          : "no insight"}
+        {job.reason ? <span className="italic"> · "{job.reason}"</span> : null}
+      </p>
+      {finished ? (
+        <p className="mt-1 text-[11.5px] text-ink">
+          {status === "done" ? (
+            <>
+              verdict: {verdictWords(verdict)}
+              {hasValue(jobCostId(job.job_id)) ? (
+                <span className="text-ink-3">
+                  {" "}
+                  · cost <V id={jobCostId(job.job_id)} />
+                </span>
+              ) : null}
+            </>
+          ) : (
+            <span className="text-st-miss">{error ?? status}</span>
+          )}
+        </p>
+      ) : null}
+      {job.assessment ? <Assessment diff={job.assessment} /> : null}
+    </div>
+  );
+}
+
 /** One question and its answer, as a pair of messages. */
-function Exchange({ entry, onCite }: { entry: Entry; onCite?: CiteHandler }) {
+function Exchange({
+  entry,
+  onCite,
+  cellId = null,
+}: {
+  entry: Entry;
+  onCite?: CiteHandler;
+  cellId?: string | null;
+}) {
   const { turn } = entry;
   const costId = turnCostId(entry.conversationId, entry.index);
+  const declined = turn.abstention ?? null;
   return (
     <div
       className="space-y-2"
       data-testid="chat-turn"
       data-published={turn.published ? "" : undefined}
       data-withheld={turn.published ? undefined : ""}
+      data-kind={turn.route?.kind}
     >
       <div className="flex justify-end">
         <p
@@ -419,9 +691,19 @@ function Exchange({ entry, onCite }: { entry: Entry; onCite?: CiteHandler }) {
           className={cn(
             "max-w-[93%] rounded-2xl rounded-bl-sm border px-3 py-2",
             turn.published ? "border-line bg-white/[0.04]" : "border-st-miss/40 bg-st-miss/[0.05]",
+            declined && "border-st-flag/40 bg-st-flag/[0.04]",
           )}
         >
-          {turn.published ? (
+          {turn.route ? <RouteLine route={turn.route} /> : null}
+          {turn.jobs_done.map((job) => (
+            <div key={job.job_id} className="mb-2" data-testid="chat-job-done">
+              <p className="text-[10.5px] text-ink-3 uppercase tracking-wider">the analyst finished</p>
+              <JobCard job={job} cellId={cellId} />
+            </div>
+          ))}
+          {declined ? (
+            <Abstention abstention={declined} />
+          ) : turn.published ? (
             <>
               <AnswerText text={turn.text ?? ""} onCite={onCite} />
               {turn.claims.length ? (
@@ -454,6 +736,8 @@ function Exchange({ entry, onCite }: { entry: Entry; onCite?: CiteHandler }) {
                   ))}
                 </ul>
               ) : null}
+              {turn.insight ? <Insight insight={turn.insight} /> : null}
+              {turn.job ? <JobCard job={turn.job} cellId={cellId} /> : null}
             </>
           ) : (
             <>
@@ -485,7 +769,13 @@ function Exchange({ entry, onCite }: { entry: Entry; onCite?: CiteHandler }) {
             ) : (
               <span>answered from what was already read</span>
             )}
-            {turn.cannot_answer ? <span className="text-st-flag">the agent declined</span> : null}
+            {turn.cannot_answer && !declined ? (
+              <span className="text-st-flag">the agent declined</span>
+            ) : null}
+            {turn.retried ? <span className="text-st-flag">answered on the second ask</span> : null}
+            {turn.expert_ids.length ? (
+              <span className="text-st-flag">leans on your insight (expert tier)</span>
+            ) : null}
             {hasValue(costId) ? (
               <span className="ml-auto">
                 <V id={costId} />

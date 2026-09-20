@@ -167,3 +167,24 @@ export function registerChatCost(
   }
   if (Object.keys(reg).length) registerValues(reg, { notify: false });
 }
+
+// ---------- an analyst job the conversation invoked ----------
+
+export function jobCostId(jobId: string): ValueId {
+  return `c:job:${jobId}:cost_usd` as ValueId;
+}
+
+/** What a finished analyst job cost, as its result reports it, so the job card prints it like any other number. */
+export function registerJobCost(jobId: string, cost: unknown): void {
+  if (typeof cost !== "number") return;
+  const reg: ValRegistry = {};
+  add(
+    reg,
+    jobCostId(jobId),
+    cost,
+    "m2",
+    `list-price cost of analyst job ${jobId}, as the job runner recorded it`,
+    "USD",
+  );
+  registerValues(reg);
+}

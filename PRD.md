@@ -312,6 +312,18 @@ The chat panel. It adds no signal; it finds, explains, records and invokes.
   invoking; receives a gated chain and reports the verdict with the diff against the run without the insight.
 - Scored on tiers 1–3 and by the MineTRACE rating protocol (§D.3.1, §D.3.4).
 
+*Status 2026-09-21: built (Phase 4c, `legacy_reader.interface`). The router is one structured call on a cheap
+model (`z-ai/glm-5.3-flash` through OpenRouter, `LR_INTERFACE_MODEL`) over the eight kinds above plus `other`;
+each kind has a deterministic plan of tool calls, `what would change` runs a sensitivity over the criteria table
+(score if met, if not met, and the move, per unknown criterion, every figure an id), and one answer call is gated
+as a memo is, refused and retried once with the objections. `abstain` and `record_insight` run the MCP server's
+own handlers; `run_analyst` submits to the API's job runner on enabled cells only, within a per-session budget,
+and a later turn reports the verdict with the node-by-node diff against the stored chain without the insight.
+Smoke-tested on one enabled cell for six turns under a $0.50 cap ($0.036 spent): the four read kinds routed as
+asked, the out-of-scope question refused without an answer call, the insight recorded; two answer replies carried
+no answer object (the model wrote into `reasoning`), which is now refused and retried once. Tiers 1 and 3 built,
+not yet run against it.*
+
 ### 8.4 Analyst agent — multi-step reasoning over the evidence record (must)
 
 MineAgent judges each *image* and aggregates; STA-CoT plans, executes each step against a *target area*, and
@@ -579,7 +591,7 @@ MineTRACE protocol, one day.
 | The other eight switches of the §8.5 matrix | each is another 6–13 hours per arm | the four-arm table shows where the variance is |
 | Multimodal arm and Tier 4 chip agreement | Sentinel-2 and DEM features not built; effort mask (B15) not designed | §B.2 chips exist |
 | Deep learning models (§C.2.2) | no chips; 60 positives | §B.2 chips exist and the PU re-test says the labels support it |
-| Image input on the OpenAI backend, so the extractor can run on an API | prototype reads on Claude Code headless | Phase 4a, before any production reading |
+| ~~Image input on the OpenAI backend, so the extractor can run on an API~~: done 2026-09-21 (Phase 4b): the OpenAI adapter sends a request's page images as data-URL parts beside the text, the way the OpenRouter adapter does, for models the adapter knows take images (`VISION_MODEL_PREFIXES`, plus `OPENAI_VISION_MODELS` in `.env`) and refuses an image for any other model before anything is sent; the pre-call estimate counts the image; a test with a fake transport asserts the message shape | | done |
 | Analyst benchmark subset sizing (§9.4) | depends on usage available at Phase 5a | Phase 5a, discussed then |
 | Reading beyond two drilling files per enabled cell | tens of files cannot reach the hundreds of cells reliable negatives need | a page-type classifier picks only table pages, or a cheaper reader is measured against the gold |
 | Analyst on demand for any cell outside the subset | correct design (§6), but every call is unbudgeted until 4a's manifests exist | Phase 4a |
@@ -626,7 +638,23 @@ MineTRACE protocol, one day.
   the live MinIO. The mechanism exists; the URL is a deployment choice.
 - **Traces (2026-09-21)**: the in-house spans (`spans.jsonl` per run, mirrored to MLflow Tracing) also export
   over OTLP/HTTP when `LR_OTLP_ENDPOINT` is set, same ids and attributes, batched and bounded (§A.2).
-- **Not started**: auth and roles; background jobs.
+- **Auth and roles (done 2026-09-21)**: one key register for the API and the MCP server (`LR_MCP_KEYS`,
+  `mcp.auth`'s parser and keyring); roles as sets of the MCP scopes (viewer = read, geologist = read +
+  record, admin = read + record + run); a FastAPI dependency resolves the principal from a bearer key or
+  `X-Api-Key`, a loopback client with no register is `local` with every role; every conversation, turn and
+  job records who asked (the key's label, never the key); 401 and 403 with a plain reason; the site keeps a
+  key in the browser and sends it as the header.
+- **Background jobs (done 2026-09-21)**: a bounded thread pool inside the API process (DuckDB allows one
+  read-write connection per file and the serving process holds it), durable rows in `agent.job` (migration
+  0006) rewritten as a job's state changes, a restart marking what was running as failed with `process
+  restarted`; `POST /api/jobs`, `GET /api/jobs/{id}`, `GET /api/cell/{id}/jobs`, `POST /api/jobs/{id}/cancel`;
+  job kinds in one table with the role each needs. The first kind is `analyst`: the staged loop on one enabled
+  cell (§9.4; any other cell refused with that reason), arm `v1-openrouter` through the router, a per-job budget
+  (0.50 default, 2.00 at most) inside a per-process budget (`LR_JOB_SESSION_BUDGET_USD`, default 5), the chain
+  published through the same `run_cells` as `lr arm chain`, the stage names into `progress_json` as the run's
+  spans close, the chain id, verdict and cost in `result_json`. Over MCP `run_analyst` submits the same job and
+  `job_status` reads it back; in the rail a jobs strip polls the cell's jobs and refreshes the chains when one
+  finishes. **Backlog**: an `input_required` spend approval before a job spends.
 
 ### A.2 Requirements
 
@@ -927,6 +955,12 @@ reports with a company-level split (Dimeski & Rahimi 2022); an LLM at 100% on cl
 on scanned ones (Ma et al. 2024). Nobody has published precision and recall for grade or tonnage extraction
 from NI 43-101 or assessment files — MinMod, at 680,000 sites, publishes scale and time saved, not accuracy —
 so §C's hand-keyed gold set would produce the first such number. Backlog because that gold does not exist yet.
+*Status 2026-09-21: the loop and its scorer are built (Phase 4b, §12): `lr extract agent` runs locate → read →
+validate → agree → file per page with second-family agreement into a review queue, and `lr gold key` writes
+the skeleton a person fills while `lr gold score` reports precision and recall per field type against every
+keyed page. Zero gold pages exist: nobody on this project is a geologist, no skeleton has been keyed, and no
+model output has been presented as gold, so the score reports zero pages and no number. The agreement rate is
+the only Tier 4 figure so far: 0.933 over 553 values on five Opus-read pages against GLM 5.3 Flash (§12).*
 The **LLM-derived-features arm** (text embeddings of report and bedrock descriptions as inputs to the learned
 model, with and without, under spatial folds — QueryPlot's design) lives in §C.2 and is scored there.
 
@@ -982,6 +1016,13 @@ stamping every result into the session registry; a run manifest and a span per c
 HTTP on the API at `/mcp` and stdio through `lr mcp serve --stdio`; contract tests through the SDK's in-memory
 client. The in-house loops still call the tools in-process; the benchmark harness running against the server
 (§E.5, second bullet) is not yet done.
+
+The interface agent (Phase 4c, 2026-09-21) is the first in-house client of the action tools: its `abstain`
+and `record_insight` are the server's own handler functions over a conversation-backed session, so the chat
+panel and a geologist's own MCP client write the same `expert.insight` rows and mint the same ids, and its
+`run_analyst` goes through the API's job runner. Its reads are still in-process calls of the same tool
+functions the server dispatches, plus one tool of its own, `sensitivity` (§E.2's "next observation"), which
+is not yet in the MCP catalogue.
 
 ### E.2 What a geologist needs from the tools (must) — derived from the user jobs in §3
 - **Compare**, not just inspect: two or more cells side by side; a cell against its camp.
@@ -1063,7 +1104,8 @@ deterministic with a `ttlMs`, so clients and prompt caches can hold it.
 | `check_claims` | read | `session_id`, `claims[]` | problems list, resolved ids | the gate as a callable, so a stock client can self-check before answering |
 | `abstain` | action | `session_id`, `reason` (not_measured, outside_grid, no_value, out_of_scope), `detail` | `abstain_id` | refusal becomes measurable (GeoBenchX) |
 | `record_insight` | action | `session_id`, `cell_id`, `text`, `author` | `expert_id` | writes the `expert` tier; client confirms |
-| `run_analyst` | task | `session_id`, `cell_id`, `config`, `budget_usd` | task handle → `chain_id`, verdict, manifest id | Phase 4d; until then returns `isError` "not available" |
+| `run_analyst` | task | `session_id`, `cell_id`, `config`, `budget_usd`, `reason`, `expert_ids` | `job_id`, `status` | a background job on the API's runner (§A.1, 2026-09-21); dashboard sessions on an enabled cell only |
+| `job_status` | read | `session_id`, `job_id` | status, who asked, the stages reached, and when done the `chain_id`, verdict and cost as a `Val` | the poll for `run_analyst`; a job that was running when the process restarted is failed with that reason |
 
 Annotations: every read tool `readOnlyHint: true`, `openWorldHint: false` (a closed store); the two actions
 and the task are idempotent by handle. Resources: `lr://handbook`, `lr://criteria`, `lr://cell/{id}/evidence`,
@@ -1082,7 +1124,7 @@ out-of-fold scores, a stock client (Claude Code as MCP client) gets a gated answ
 
 | Item | Why not in 4a | Unblocks when |
 |---|---|---|
-| Tasks extension for `run_analyst` (polling, `input_required` spend approval, durable handles) | the analyst loop does not exist until 4d | Phase 4d |
+| ~~Tasks extension for `run_analyst`~~ closed 2026-09-21 as a job with polling: `run_analyst` submits to the API's job runner and returns a job id, `job_status` polls the durable row (§A.1); an `input_required` spend approval is still backlog | the analyst loop does not exist until 4d | the spend approval: when a client wants to be asked before a job spends |
 | OAuth in place of API keys | local and single-tenant today | a second organisation uses the server |
 | Per-client rate limits and quotas | one client at a time | the benchmark harness runs arms in parallel |
 | `notifications/tools/list_changed` and resource subscriptions | the tool list is fixed per version | tools change between versions |
@@ -1113,7 +1155,7 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | Phase | Weeks | What ships | Gate to next phase |
 |---|---|---|---|
 | **0 · Settle the headline** | done | §C.2.1: 48 configurations, three folds, intervals, area-budget capture, MineTRACE protocol | **Confirmed in writing, FINDINGS.md F1** |
-| **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. Seed pack: the store as content-addressed Parquet, unpacked on first start (2026-09-21). Seed pack transport: push to S3, pull from s3:// or https://, `ensure` pulls from `LR_SEED_URL` (2026-09-21, tested against a fake S3, not yet the live MinIO). OTLP export of the run spans as a configuration (2026-09-21). **Open**: evidence reads through PostGIS, jobs, auth, §B catalogue + lineage | e2e green against the API (met); one-command start (met given a seed pack; the pack's URL is a deployment choice); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
+| **1 · Platform** | mostly done | §A: FastAPI with typed models, PostGIS serving database synced from DuckDB, PMTiles, TanStack Query and a typed client, persisted conversations, one image and compose. Seed pack: the store as content-addressed Parquet, unpacked on first start (2026-09-21). Seed pack transport: push to S3, pull from s3:// or https://, `ensure` pulls from `LR_SEED_URL` (2026-09-21, tested against a fake S3, not yet the live MinIO). OTLP export of the run spans as a configuration (2026-09-21). Auth and roles over the MCP key register, and background jobs on an in-process pool with durable rows, the analyst as the first kind (2026-09-21). **Open**: evidence reads through PostGIS, §B catalogue + lineage | e2e green against the API (met); one-command start (met given a seed pack; the pack's URL is a deployment choice); p95 84 ms warmed, 96 ms cold, against the 300 ms target (met) |
 | **2 · Data ownership** | done for the prototype | §B: gap re-verification (magnetics: published, not yet pulled); the 15 enabled cells frozen with their selection rule (§9.3); their 18 enabled files fetched in full (858 MB raw); lineage clean, every layer hashed; snapshots with feature quantiles; the five-column gate as a command and on the data page. OCR pass over the enabled files' 8,853 pages done (2026-09-20), the OCR-backed text index rebuilt, assay sheets read, the Opus-only read of the top-two drilling files per cell complete (208 of 212 pages, four on the give-up list; F5); 22 reports on the dashboard | Every on-screen value walks to a hashed source pull (**met**: lineage clean, snapshot named by every run); **the §9.1 readiness checklist is green for the focused tasks (met 2026-09-20, `lr prospect gate` green at snapshot 073bd46408b7 with every file read)** |
 | **3 · ML programme** | done for the prototype | §C.2.2–C.2.4: MLflow tracking and registry with the promotion rule (nothing served), six candidates, six ablations, block sizes, the dated hindcast; every run pinned to a store snapshot (`--snapshot`), the drift check (`lr prospect drift`), the model card and every run id on the Eval page; re-run 2026-09-19 pinned, numbers reproduced exactly (seeded). The real-data CI regression runs from the seed pack (`pytest -m real_data`, 2026-09-21). **Backlog**: 1 km and 5 km cells, the LLM-derived features arm | Eval page links every number to a run: **met** (three tables, each row naming its MLflow run and store snapshot) |
 | **4a-lite · Runtime minimum** | done 2026-09-20 | §8.1: cache key covers system prompt and schema (B22); run manifest per invocation; budget ledger checked before every call; OpenTelemetry spans into MLflow Tracing; per-cell incremental results (done in Phase 2) | A prompt change can no longer be served a stale answer (test); a run replays from its manifest; no model calls |
@@ -1124,8 +1166,8 @@ Revisit only if §D's winning configuration needs graph features we do not have.
 | **5c · Arms on the subset** | 1 to 2 weeks; started 2026-09-21 with v1-openrouter (full), v0-qwen38 (full) and v1-anthropic-or (76 of 130, resumable) | §8.5 at matched compute on the frozen subset: v0; staged with the template planner; staged with the model planner; staged without the verifier; executor and verifier pairing as a switch; per-stage metrics from traces; the other switches stay in §9.6 | The arms table with intervals on the Eval page; the number of cells per arm decided against usage at this point (about 15 calls a cell) |
 | **5d · Human adjudication and decision** | **out of scope for the prototype (decided 2026-09-21: there is no geologist on the project)**; stays the plan for a product | §D.3.4: one geologist-day on the top two arms, MineTRACE protocol, chance-corrected agreement, the held-out 20% opened; the written finding | The table decides the shipped configuration; the finding names the number that decided it |
 | **4a · MCP server** | built 2026-09-21 | §E.3 design v1 as `legacy_reader.mcp`: the fourteen-tool catalogue (the eight reads, `open_session`, `hole_crosscheck`, `check_claims`, `abstain`, `record_insight` with the `expert` tier as a fifth schema and migration 0005, `run_analyst` as an `isError` stub), the seven resources, the six prompts, the gate stamping every outgoing result into the session registry with every number a `Val` and unknown and absent distinct types in every output schema, `open_session` handles that expire and are bound to the caller's key (scored and benchmark sessions reuse `analyst.session` for B17, B18, B19, B30), a run manifest and a span per call (arguments hash, result ids, latency, session and run id, into the run's `spans.jsonl` and MLflow Tracing), API-key scopes `read`/`record`/`run` with `tools/list` filtered by scope, local-only by default and a public-safe flag, streamable HTTP mounted on the API at `/mcp` and stdio via `lr mcp serve --stdio`. **Backlog** (the §E.3 table, plus): the Tasks extension for `run_analyst` (4d), the benchmark harness as an MCP client (§E.5), a session-scoped view of the evidence and chains resources for a blinded harness, `TIER_BY_SCHEMA` and the tier audits learning the `expert` schema, per-key rate limits | A stock client gets a gated answer: **met** (the SDK's client, in-memory, over HTTP through the app and over stdio, each validating every result against its output schema); the §E.3 contract tests pass: **met** (`tests/test_mcp_*.py`, 45 in the suite plus 3 read-only against the live store under `LR_REAL_DATA=1`) |
-| **4c · Interface agent** | 1 week; tiers 1 and 3 built 2026-09-21, not run (interface v1, content `fcc006c9ffc1`, on analyst v2's 130 open cells at store `3eff0a46031c`: tier 1 299 items, 255 answerable over 16 kinds and 44 unanswerable with a reason, 4 short on nearest-deposit for the probe cells; tier 3 110 items over 14 observed failure sources, no shortfall; `knowledge/bench/interface/v1/`) | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff; tiers 1 and 3 generated (`lr bench interface build`, `audit`, `show`: done, no agent scored on them yet) | Tier 1 pass rate, refusal and false-refusal rates with a denominator; the 30 rating questions drafted |
-| **4b · Extractor agent** | 1 week | §8.2: the reading loop as an agent with second-family agreement and a review queue; image input on the OpenAI backend; 30 hand-keyed gold pages | Precision and recall against the gold pages |
+| **4c · Interface agent** | agent built 2026-09-21 (`legacy_reader.interface`): router on `z-ai/glm-5.3-flash` over the eight kinds with a deterministic plan each, the sensitivity, one gated answer call with one retry, `abstain` and `record_insight` through the MCP handlers, `run_analyst` through the job runner on enabled cells with the session assessment diff; `lr prospect serve --backend auto`, `lr interface ask`; the panel shows the route, the refusal with its reason, the insight with its id and a polling job card. Smoke run on cell 0201_0072, six turns, $0.036 on the ledger against a $0.50 cap: lookup, explain_score, what_is_unknown and what_would_change routed as asked, the out-of-scope question refused with `out_of_scope` and no answer call, the insight written to a temp copy of the store as `e:24b8acbca1`; four turns passed the gate, and the explain_score and what_would_change replies came back with the answer written into the model's `reasoning` field and no answer object (published empty at the time; now refused and retried once, the field dropped from the answer schema, covered by a test). Tiers 1 and 3 built 2026-09-21, not run (interface v1, content `fcc006c9ffc1`, on analyst v2's 130 open cells at store `3eff0a46031c`: tier 1 299 items, 255 answerable over 16 kinds and 44 unanswerable with a reason, 4 short on nearest-deposit for the probe cells; tier 3 110 items over 14 observed failure sources, no shortfall; `knowledge/bench/interface/v1/`) | §8.3: intent router, abstain tool, record-insight, invoke-analyst, session assessment with diff: **built**; tiers 1 and 3 generated (`lr bench interface build`, `audit`, `show`: done, no agent scored on them yet) | Tier 1 pass rate, refusal and false-refusal rates with a denominator; the 30 rating questions drafted |
+| **4b · Extractor agent** | built 2026-09-21; smoke-run on five pages, no gold keyed | §8.2 as code (`legacy_reader.extractor`): a typed per-page state machine locate → read → validate → agree → file, resumable from the call cache and the run manifest, every stage a span, a budget checked before each call and a clean stop on a usage limit; pages already read on Opus are carried in as read, so the second family runs over them without re-reading; **agree** is a second read by a different family (`z-ai/glm-5.3-flash` through OpenRouter, `--backend auto`), compared value by value (same field and analyte, same located box or the same printed row; numbers equal within the first reader's printed precision with the same qualifier, text equal after normalisation), agreed values marked in `read.agreement`, every disagreement and every value only one reader found queued in `read.review_item` (migration 0007); `GET /api/review` and `POST /api/review/{id}` (geologist role, `resolved_by` the key's label, readings never rewritten) and the `/review` page with both readings beside the page crop; image input on the OpenAI backend (§9.6, closed); `lr gold key` and `lr gold score`. **Smoke run** (run `20260920T220134Z-opus1-assay-agent`, five assay and collar pages from five enabled files: 74H16-0034 p27, 74H04-0094 p5, MAW00645 p10, 74G07-0070 p22, MAW01968 p41): agreement **0.933** over the 553 values either reader found, **0.996** over the 518 values both found (2 disagreements: one grade `2.8`/`2.0`, one UTM zone `13N`/`Zone 13N`); by field type coordinates and angles 1.00, grades 0.955, depths 0.943, identifiers 0.742 (the second reader took every sample number on one certificate page for a hole identifier: 15 of the 27 values only it found), page-level statements 0.70; **37 queue rows**; cost **$0.029** on the ledger against the $0.50 cap, about $0.006 a page. **Gold pages: 0** (none keyed; the earlier phase left none, and the web fixture is a UI development fixture, not gold), so the gate below is not met | Precision and recall against the gold pages: **not met** (zero keyed pages; 30 remain to key by a person) |
 | **5e · Multimodal arm** | after §B.2 chips | §8.4 with the chip and map tile attached; §D.3.1 MineBench-for-uranium numbers | Backlog until chips and their effort mask exist (B15) |
 
 Phase 0 is first because it is the only one that can change what the rest of the document is *for*. The order

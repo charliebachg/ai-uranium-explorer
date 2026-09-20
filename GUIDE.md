@@ -36,7 +36,8 @@ the command, rather than erroring.
 
 For the chat on OpenAI, put a key in `legacy-reader/.env` (gitignored) and restart the service — it defaults to
 `--backend openai`. Check `uv run lr openai models` first (free) and `uv run lr openai budget` any time; spend
-is capped cumulatively on disk, default $2.00.
+is capped cumulatively on disk, default $2.00. With an OpenRouter key, `--backend auto` runs the interface
+agent on its cheap default model (§6.3).
 
 ---
 
@@ -113,6 +114,11 @@ row so the rail still says something with the service down.
 - **Chat tab** — a conversation about that same cell. Question right, answer left, citations under each answer
   as value chips, the tools it called, and what the turn cost. An answer that fails the check is **kept in the
   transcript, marked withheld, with the checker's objection in its place**.
+- **Jobs strip** (between the scores and the tabs) — the cell's background jobs: an analyst run queued or in
+  progress with the stage it reached, a finished one with its chain id, verdict and cost, a failed one with
+  its reason. A status is a word, never a colour. "Run analyst" starts one on an enabled cell (any other cell
+  is refused with the reason); when it finishes the evidence tab re-reads the record and lists the chain.
+  The top bar's **Key** button keeps an API key in this browser for a service that has a key register (6.9).
 
 ---
 
@@ -312,10 +318,52 @@ observation that would change the verdict. The verdict scale tops out at "suppor
 The skeptic has already earned its place: on one run it noticed the criteria model had no validation metric
 while the other two did. That is why §5.6 has a criteria row at all.
 
-### 6.3 The chat
+### 6.3 The chat: the interface agent
 
 Same tools, same evidence record, same gate. A conversation is bound to one cell; selecting another starts a
 fresh one rather than carrying stale context.
+
+Since Phase 4c the agent behind the panel is the **interface agent** (PRD §8.3, `legacy_reader.interface`).
+It adds no signal: it finds, explains, records and invokes, on a cheap model, because the value ids and the
+gate carry the correctness rather than the model. Every turn goes:
+
+1. **Route.** One structured call (no evidence attached) classifies the question into a fixed kind: `lookup`,
+   `compare`, `explain_score`, `what_is_unknown`, `what_would_change`, `record_insight`, `run_analyst` or
+   `other`, names the cells and the things it is about, and says whether it is out of scope. The model never
+   computes here, and a reply it cannot be read as is routed as `other`.
+2. **Plan.** Each kind has a plan written in Python: lookup goes to the one tool that holds the topic (features,
+   scores, criteria, labels, coverage, passages, nearby, crosscheck); compare runs the same tools on the two
+   cells; explain_score reads `cell_scores` and `criteria_breakdown`; what_is_unknown reads `criteria_breakdown`
+   and `coverage`; what_would_change runs the **sensitivity**, the one computation the agent has: for every
+   criterion unknown at the cell, the criteria score if it were measured and met, if measured and not met, and
+   the move from now, from the weights and memberships the store holds, ranked by the move, every figure a
+   value with an id (`c:sens:<cell>:…`). A read already staged in the conversation is reused. `other` falls
+   back to the plain tool loop, capped at five calls.
+3. **Answer, gated.** One answer call on the same model over the staged evidence. Every number in the prose and
+   the claims must cite, by id, a value a tool returned in this conversation; an answer that fails is sent back
+   once with the objections and asked again, and one that fails twice is withheld, objections in its place.
+4. **Or abstain.** The answer call may decline instead: `not_measured`, `outside_grid`, `no_value` or
+   `out_of_scope`, recorded under an `abstain_id` on the conversation (the same handler the MCP server runs),
+   so a refusal is something the benchmark counts. An out-of-scope question (a company's holdings, a grade, a
+   place to drill) goes straight to it from the router with no answer call at all. The model's own words for
+   the refusal are shown only if they pass the gate too.
+
+Two of the kinds are actions rather than reads. **Record insight** writes the person's statement to the
+`expert` tier through the MCP server's own `record_insight` (author = the caller's label, `local` on a
+machine with no key register), returns its `expert_id`, and from then on any claim in the conversation may
+cite the values minted from it, labelled as the geologist's statement rather than a measurement (B19).
+**Run analyst** hands the cell, its out-of-fold score ids, the expert ids recorded in the conversation and the
+reason to the job runner (`api.jobs`), only on an enabled cell and within a per-session budget (PRD §9.4;
+`LR_ANALYST_JOB_BUDGET_USD`, `LR_ANALYST_SESSION_BUDGET_USD`), and returns a job id; the panel shows a job
+card that polls it, and the turn that finds it finished reports the verdict with the diff against the cell's
+stored chain without the insight (node statuses and the verdict, computed, never reasoned).
+
+The panel says all of this out loud: the route line under each answer names the kind and the plan's tools, a
+refusal shows its reason and its id, an insight its expert id and the values minted from it, and the stream
+carries `route`, `abstain`, `insight` and `job` events beside the tool calls. The model defaults to
+`z-ai/glm-5.3-flash` through OpenRouter (`LR_INTERFACE_MODEL` overrides it) under `lr prospect serve --backend
+auto`; `lr interface ask --cell … -q … --budget-usd 0.50` runs turns from the terminal under a hard ceiling,
+with an insight written only to the store named by `--insight-store`.
 
 The chat is scored on its own track of the benchmark (PRD §D.3.1, role 2), not on AUC: whether what it says
 is what the store says, and whether it declines when the store cannot answer. Two of its three tiers need no
@@ -431,7 +479,10 @@ Beside the eight reads: `hole_crosscheck` (the extraction crosscheck over hole p
 only), `check_claims` (the fabrication gate of 6.4 as a callable over what this session returned, so a stock
 client checks itself before answering), `abstain` (a reason from a fixed set, recorded on the session so refusal
 is measurable), `record_insight` (a geologist's statement into the `expert` tier, its numbers minted
-expert-tier ids) and `run_analyst` (a stub that says it is not available until Phase 4d). Resources hold data:
+expert-tier ids), `run_analyst` (the staged analyst over the session's cell as a background job on the API's
+runner: it returns a job id at once, and `job_status` reads the row back with the stages reached and, when
+done, the chain id, the verdict and the cost as a value with an id; on a server without the runner it says so).
+Resources hold data:
 `lr://handbook`, `lr://criteria`, `lr://cell/{id}/evidence`, `lr://cell/{id}/chains`, `lr://run/{id}/manifest`,
 `lr://readiness/gate`, `lr://reading/inventory`. Prompts are the six roles (`proponent`, `skeptic`,
 `adjudicator`, `analyst.executor`, `analyst.verifier`, `interface.router`), each built from the text the
@@ -462,7 +513,7 @@ recorded under the first eight hex characters of the key's hash.
 |---|---|
 | `read` | `open_session`, the eight reads, `hole_crosscheck`, `check_claims`, `abstain`, every resource and prompt |
 | `record` | `record_insight`: writes the `expert` tier |
-| `run` | `run_analyst`: the task handle, a stub until Phase 4d |
+| `run` | `run_analyst`: starts an analyst job (6.9) and returns its id; `job_status` is a read |
 
 `tools/list` shows a key only the tools its scopes carry, in a fixed order with a `ttlMs`, so a client can
 cache it. `--public-safe` (or `LR_MCP_PUBLIC=1`) is the build for anyone outside the team: a passage's text is
@@ -470,6 +521,90 @@ withheld (its citation, page and ids stay), `hole_crosscheck` is not served, and
 inventory marks non-redistributable is refused. Contract tests (`tests/test_mcp_*.py`) run the whole thing
 through the SDK's in-memory client with no network and no model; the few that need the live store skip
 without it.
+
+### 6.9 Keys, roles and background jobs
+
+**One register.** `LR_MCP_KEYS` is the key register for the MCP server and the API alike; the API speaks in
+roles, and a role is a set of the MCP scopes, so a key minted with `lr mcp key --scopes read,record` is a
+geologist on the API without any second register.
+
+| Role | Scopes | What it opens |
+|---|---|---|
+| `viewer` | `read` | the record, the stored conversations, a job's row |
+| `geologist` | `read`, `record` | the chat; every conversation and turn records who asked (the key's label, never the key) |
+| `admin` | `read`, `record`, `run` | submitting and cancelling an `analyst` job |
+
+With no register a loopback client is `local` with every role (the MCP server's rule), so a local prototype
+works with no key. With one, a page sends `X-Api-Key: <key>` on every call (the Key button in the top bar
+keeps it in this browser's storage, nowhere else) and an MCP client its bearer header; `GET /api/whoami` says
+what a key holds. A refusal is a 401 (nobody could be resolved) or a 403 (a principal without the role) with a
+plain reason.
+
+**Jobs.** Anything longer than a request is a job (PRD §A.2): `POST /api/jobs {kind, cell_id, args}` answers
+202 with the job's row, `GET /api/jobs/{id}` and `GET /api/cell/{id}/jobs` poll it, `POST /api/jobs/{id}/cancel`
+stops it. A row lives in `agent.job` (status queued, running, done, failed or cancelled; who asked; the stages
+as they happen in `progress_json`; the result; the run id) and outlives the process: a restart marks what was
+running as failed with `process restarted` rather than leaving it running for ever. The pool is a bounded set
+of threads inside the API process, because DuckDB allows one read-write connection per file and the serving
+process holds it; a worker beside the API could not publish a chain.
+
+The first kind is `analyst`: the staged loop of 6.7 over one **enabled** cell (any other cell is refused with
+§9.4's reason: no analyst reading exists for it), through the same `run_cells` that `lr arm chain` runs, so the
+chain lands in the agent tier and the evidence panel lists it. Arm `v1-openrouter` through the router by
+default (a vendor/model id to OpenRouter, a claude id to the CLI); `budget_usd` 0.50 by default and 2.00 at
+most, refused when under the arm's per-call ceiling (no call could then be made); a per-process budget across
+jobs (`LR_JOB_SESSION_BUDGET_USD`, default 5) that a submission may not take the total past. The result names
+the chain id, the verdict, whether the store published it and the cost. In the chat, "run the analyst" is an
+intent the router recognises and turns into this job; the jobs strip polls it and the evidence tab refreshes
+when it finishes. Over MCP the same runner sits behind `run_analyst` and `job_status`.
+
+### 6.10 The extractor as an agent — a second reader, and a queue for what they disagree on
+
+The batch reader (`lr extract`) reads one page image per call under a fixed schema; the assembler locates
+every quote on the page and the twenty validators flag what does not add up. `lr extract agent` runs the same
+pieces as the loop PRD §8.2 asks for, one page at a time through five typed stages, each written to the run
+directory as it finishes so a stopped run resumes where it was:
+
+1. **locate** — the page's OCR words (Apple Vision, already on disk) become the locator both readings are
+   held to; no model call.
+2. **read** — the first reading, from the batch reader's results when the page was already read (the Opus
+   pass over the enabled files is carried in at no cost), else one call to the reader model.
+3. **validate** — the file assembled and V01–V20 run; the findings that touch this page are recorded.
+4. **agree** — a **second read of the same page by a different model family** (`z-ai/glm-5.3-flash` through
+   OpenRouter by default; the run refuses a model the catalogue says cannot see images), compared with the
+   first value by value. The same value means the same field, the same analyte for a grade and the same
+   located box on the page (or the same printed row when a value's own quote did not locate, which is what
+   happens when the two readers read a digit differently). Equal means, for a number, the same qualifier and
+   within half a unit of the last decimal the first reader printed; for text, the same after the locator's
+   normalisation. Values both agree on are marked `agreed`; a disagreement, and any value only one reader
+   found, goes to the review queue. The agreement rate (agreed over the union of what either reader found,
+   per page and per field type) is in the run summary.
+5. **file** — the marks into `read.agreement` and the queue rows into `read.review_item`, beside the values
+   and never rewriting them; a fresh reading also lands in the batch reader's results and the file's
+   assembled document, which is what `lr store rebuild` files under `read`.
+
+The budget is checked before every live call (`--budget-usd` is a hard stop; a usage limit or an exhausted
+budget leaves the page marked stopped and the rest pending), every stage is a span under the run's trace, and
+the manifest names both models, the prompt and schema hashes and what was spent. `--agree-only` never calls
+the reader, so the second family can be run over pages already read without paying for the first reading
+again; `--store` points the filing at another DuckDB file (the serving process holds the live store's one
+read-write connection), `--no-store` keeps it in the run directory.
+
+**The review page** (`/review`) lists the open items, oldest first, filterable by file: both readings side by
+side with the model that made each, the page cropped around the located box, and *accept first*, *accept
+second* or *reject both*. A decision needs the geologist role (the key in the top bar) and is recorded on
+the item with the key's label, never the key; the two readings stay as they were, so the decision can always
+be seen beside what it decided between. The first smoke pass (five Opus-read assay and collar pages, GLM 5.3
+Flash as the second family, $0.03) agreed on 93% of the 553 values either reader found and on 99.6% of the
+values both found; the 37 queue rows are mostly rows one reader saw and the other did not, and one page
+where the second reader took every sample number for a hole identifier.
+
+**Gold.** Tier 4 scores the reading against pages a person keyed by hand. `lr gold key <file> <page>` writes
+the empty skeleton under `gold/pages/` in the schema's own vocabulary, every value null; it counts for
+nothing until a person sets `status` to `keyed` and their name in `keyed_by`, and nothing in it is ever
+prefilled from a model, because a gold set that started as model output would score the model against
+itself. `lr gold score --run <id>` reports precision and recall per field type with the denominators beside
+every rate. No page has been keyed yet, so the score today reports zero gold pages and no number.
 
 ## 7. The other three pages
 
@@ -483,6 +618,8 @@ without it.
   tables names its MLflow run and the store snapshot it read. It states at
   the top that these are run statistics, not accuracy, because no gold set has been labelled.
 - **Limits** — what this demo can and cannot claim, carried from the project's research with each line cited.
+- **Review** — the extractor's review queue (§6.10): what the second reader disagreed with the first about,
+  decided by a geologist and recorded with their key's label.
 
 ---
 

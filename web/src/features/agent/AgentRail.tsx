@@ -16,6 +16,7 @@ import { serviceState, useCandidates, useEvidence, useServiceHealth } from "@/fe
 import { cn } from "@/lib/cn";
 import { formatLatLon } from "@/lib/format";
 import { useStore } from "@/state/store";
+import { JobsStrip } from "./JobsStrip";
 
 /**
  * The agent, on the right of the map. Click a cell and this holds everything the system knows about it: the
@@ -113,6 +114,8 @@ export function AgentRail() {
       ) : (
         <div className="flex min-h-0 flex-1 flex-col">
           <MapScores cellId={cellId} />
+          {/* the cell's background jobs (an analyst run in progress, what the last one produced) */}
+          <JobsStrip key={cellId} cellId={cellId} state={service} />
           {/* two views of one cell: what is recorded about it, and a conversation about that record */}
           <div className="flex shrink-0 gap-1 border-line border-b px-3 pt-2" role="tablist">
             {(["evidence", "chat"] as const).map((id) => (

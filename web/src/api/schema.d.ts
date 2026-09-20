@@ -38,6 +38,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cell/{cell_id}/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cell Jobs */
+        get: operations["cell_jobs_api_cell__cell_id__jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/cells": {
         parameters: {
             query?: never;
@@ -123,6 +140,119 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Job
+         * @description Queue a job of a registered kind; the row comes back at once and is polled at /api/jobs/{id}. The
+         *     role a kind needs is the kind's own (analyst: admin); the reason for a refusal is the response.
+         */
+        post: operations["submit_job_api_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job */
+        get: operations["job_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Job
+         * @description Stop a job: queued, it never starts; running, it stops at its next model call. Needs the role the
+         *     job's kind needs. A finished job is returned as it is.
+         */
+        post: operations["cancel_job_api_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Review */
+        get: operations["list_review_api_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/review/{queue_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve Review */
+        post: operations["resolve_review_api_review__queue_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/whoami": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Whoami
+         * @description The principal the request's key resolves to: how a page checks a key before it relies on it.
+         */
+        get: operations["whoami_api_whoami_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -156,6 +286,13 @@ export interface components {
             cell_id: string;
             /** Conversations */
             conversations: components["schemas"]["ConversationSummary"][];
+        };
+        /** CellJobs */
+        CellJobs: {
+            /** Cell Id */
+            cell_id: string;
+            /** Jobs */
+            jobs: components["schemas"]["Job"][];
         };
         /** Cells */
         Cells: {
@@ -211,6 +348,8 @@ export interface components {
             created_at: string;
             /** Model */
             model: string;
+            /** Requested By */
+            requested_by?: string | null;
             /** Turns */
             turns: components["schemas"]["StoredTurn"][];
         };
@@ -229,10 +368,31 @@ export interface components {
             /** Turns */
             turns: number;
         };
+        /** Decision */
+        Decision: {
+            /** Decision */
+            decision: string;
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Value
+             * @description for `edited`: the reading the person keyed, with `as_printed`
+             */
+            value?: {
+                [key: string]: unknown;
+            } | null;
+        };
         /** Evidence */
         Evidence: {
             /** Cell Id */
             cell_id: string;
+            /** Chains */
+            chains?: {
+                [key: string]: unknown;
+            }[];
             /** In Basin */
             in_basin?: boolean | null;
             /** Lat */
@@ -261,10 +421,82 @@ export interface components {
             backend: string;
             /** Effort */
             effort: string;
+            /** Evidence Cache */
+            evidence_cache?: {
+                [key: string]: number;
+            };
             /** Model */
             model: string;
             /** Ok */
             ok: boolean;
+            /**
+             * Reads
+             * @default duckdb
+             */
+            reads: string;
+        };
+        /**
+         * Job
+         * @description One background job's row, as `agent.job` holds it: the status is the whole story, the progress list says
+         *     which stages have run, and the result names what the job produced (for analyst: the chain id, the verdict
+         *     and the cost). A job that was running when the process restarted is failed with that reason.
+         */
+        Job: {
+            /** Args */
+            args?: {
+                [key: string]: unknown;
+            };
+            /** Cell Id */
+            cell_id?: string | null;
+            /** Created At */
+            created_at: string;
+            /** Error */
+            error?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Job Id */
+            job_id: string;
+            /** Kind */
+            kind: string;
+            /** Progress */
+            progress?: {
+                [key: string]: unknown;
+            }[];
+            /** Requested By */
+            requested_by: string;
+            /** Result */
+            result?: {
+                [key: string]: unknown;
+            } | null;
+            /** Run Id */
+            run_id?: string | null;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "done" | "failed" | "cancelled";
+        };
+        /** JobRequest */
+        JobRequest: {
+            /**
+             * Args
+             * @description the kind's arguments; for analyst: budget_usd, arm, reason, expert_ids
+             */
+            args?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Cell Id
+             * @description looks like 0123_0045
+             */
+            cell_id?: string | null;
+            /**
+             * Kind
+             * @description a registered job kind: analyst
+             */
+            kind: string;
         };
         /** Memo */
         Memo: {
@@ -280,6 +512,93 @@ export interface components {
             role: string;
             /** Verdict */
             verdict?: string | null;
+        };
+        /**
+         * Reading
+         * @description One reader's view of a value, as the comparer recorded it. Open on purpose: the agreement rule may
+         *     add a field and the page should still parse.
+         */
+        Reading: {
+            /** Analyte */
+            analyte?: string | null;
+            /** As Printed */
+            as_printed: string;
+            /** Bbox */
+            bbox?: number[] | null;
+            /** Field */
+            field: string;
+            /** Model */
+            model?: string | null;
+            /** Quote */
+            quote?: string | null;
+            /** Row Index */
+            row_index?: number | null;
+            /** Scope */
+            scope: string;
+            /** Unit As Printed */
+            unit_as_printed?: string | null;
+            /** Value Id */
+            value_id?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
+        /** ReviewItem */
+        ReviewItem: {
+            /** Created At */
+            created_at: string;
+            /** Field */
+            field: string;
+            /** Field Type */
+            field_type?: string | null;
+            /** File Num */
+            file_num: string;
+            /** Model A */
+            model_a?: string | null;
+            /** Model B */
+            model_b?: string | null;
+            /** Page */
+            page: number;
+            /** Page Id */
+            page_id?: string | null;
+            /** Queue Id */
+            queue_id: string;
+            reading_a?: components["schemas"]["Reading"] | null;
+            reading_b?: components["schemas"]["Reading"] | null;
+            /** Reason */
+            reason: string;
+            /** Resolution */
+            resolution?: {
+                [key: string]: unknown;
+            } | null;
+            /** Resolved At */
+            resolved_at?: string | null;
+            /** Resolved By */
+            resolved_by?: string | null;
+            /** Run Id */
+            run_id: string;
+            /** Status */
+            status: string;
+            /** Value Id */
+            value_id?: string | null;
+        };
+        /** ReviewPage */
+        ReviewPage: {
+            /** Counts */
+            counts?: {
+                [key: string]: number;
+            };
+            /** File Num */
+            file_num?: string | null;
+            /** Items */
+            items: components["schemas"]["ReviewItem"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Status */
+            status: string;
+            /** Total */
+            total: number;
         };
         /** StoredTurn */
         StoredTurn: {
@@ -297,6 +616,8 @@ export interface components {
             published: boolean;
             /** Question */
             question: string;
+            /** Requested By */
+            requested_by?: string | null;
             /** Step */
             step: number;
             /** Text */
@@ -414,6 +735,18 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /**
+         * Whoami
+         * @description The principal a key resolves to: a label that is not the key, its scopes, and the roles they cover.
+         */
+        Whoami: {
+            /** Name */
+            name: string;
+            /** Roles */
+            roles: string[];
+            /** Scopes */
+            scopes: string[];
+        };
     };
     responses: never;
     parameters: never;
@@ -472,6 +805,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CellConversations"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cell_jobs_api_cell__cell_id__jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                cell_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CellJobs"];
                 };
             };
             /** @description Validation Error */
@@ -630,6 +994,191 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Health"];
+                };
+            };
+        };
+    };
+    submit_job_api_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_job_api_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_api_review_get: {
+        parameters: {
+            query?: {
+                /** @description an assessment file number */
+                file?: string | null;
+                status?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_review_api_review__queue_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Decision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewItem"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    whoami_api_whoami_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Whoami"];
                 };
             };
         };
