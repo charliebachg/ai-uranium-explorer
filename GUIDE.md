@@ -282,9 +282,12 @@ model trained on public labels partly learns exploration history.
 
 ## 6. The LLM layer
 
-### 6.1 Six tools, all deterministic Python
+### 6.1 Eight tools, all deterministic Python
 
-`cell_features`, `cell_scores`, `criteria_breakdown`, `label_context`, `coverage`, `retrieve`.
+`cell_features`, `cell_scores`, `criteria_breakdown`, `label_context`, `coverage`, `retrieve`, and two the
+staged analyst added: `nearby` (what one evidence layer holds around the cell: counts, nearest distances, the
+nearest features) and `crosscheck` (the conjunctions the handbook names, computed: conductor with fault,
+sediment anomaly with sampling density).
 
 Every number a tool returns arrives inside a **Val with an id**. The model never computes anything — no
 arithmetic, no distances, no conversions — because that boundary is where documented GIS-agent failures happen.
@@ -349,6 +352,22 @@ re-serves the old answer until `PROMPT_VERSION` is bumped. This was observed, no
 when you change a prompt.
 
 ---
+
+### 6.7 The staged analyst (Analyst v1)
+
+The panel of 6.2 reasons in one pass; the staged analyst reasons in stages, after STA-CoT (Findings of EMNLP
+2025) adapted to structured evidence. A **session** is the only path from a tool to a model, and the leakage
+rules live in it as code: out-of-fold scores only, blind-listed retrieval, the cell's own label masked, expert
+values marked. A **plan** lists one segment per criterion and two cross-checks. An **executor** (Sonnet 5)
+answers one segment from the tool results the session staged, as a node: met, not met or unknown, a strength,
+the ids it cites, one sentence. A mechanical **gate** checks every node (ids resolve, the right cell, polarity,
+unknown only where unmeasured, no arithmetic) and sends it back with feedback that escalates over three
+attempts. A **verifier** (Opus 5, the skeptic's brief) reads the whole chain and names the faulty nodes; those
+and their dependents are re-executed, up to K rounds. Two **deciders** always run: a weighted sum over node
+strengths and an adjudicator; a chain that never validates takes the majority over rounds or abstains. The
+chain, its verdicts and its decision are stored in the agent tier and shown on the evidence panel under the
+memos. `lr arm chain --enabled` computes them for the enabled cells; `lr arm run --arm v1` runs the same loop
+over the frozen benchmark, blinded, beside v0 and the baselines.
 
 ## 7. The other three pages
 

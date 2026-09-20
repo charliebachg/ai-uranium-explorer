@@ -51,6 +51,13 @@ data only. It proposes no drill targets and makes no geological judgement.
     zsh scripts/read-enabled.sh      # the Opus-only read of the enabled cells' drilling files, through to the dashboard; resumable, run it in a plain terminal
     uv run mlflow ui --backend-store-uri sqlite:///data/mlflow.db   # the runs and the registry (installed with --extra mlflow)
 
+    # the analyst benchmark and the staged analyst (PRD §8.4, §9.4)
+    uv run lr bench build --version v1       # the frozen benchmark: anonymised packs, cards, blind lists; `lr bench audit` re-hashes and scans it
+    uv run lr arm run --arm v0               # one arm over the open cells: cached, budgeted, traced, scored; arms live in configs/arms/
+    uv run lr arm run --arm v1               # the staged loop: template plan, executor per criterion, gate, verifier, both deciders
+    uv run lr arm chain --enabled --arm v1   # chains for the enabled cells into the agent tier, shown on the dashboard's evidence panel
+    uv run lr arm table                      # every arm's latest run beside the random, learned, effort and criteria baselines
+
     # web
     cd web
     npm install
