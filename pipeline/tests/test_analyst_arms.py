@@ -110,7 +110,7 @@ def test_the_v1_headline_is_a_cheap_executor_under_an_opus_verifier_with_v0s_swi
     ("v1-modelplanner", {"loop.planner"}),
     ("v1-cumulative", {"loop.executor_context"}),
     ("v1-cheap", {"loop.executor_model"}),
-    ("v1-openrouter", {"model", "max_budget_usd_per_call", "loop.executor_model", "loop.verifier_model", "loop.adjudicator_model", "loop.planner_model"}),
+    ("v1-openrouter", {"model", "effort", "max_budget_usd_per_call", "loop.executor_model", "loop.verifier_model", "loop.adjudicator_model", "loop.planner_model"}),
 ])
 def test_each_v1_ablation_differs_from_the_v1_headline_in_exactly_the_stated_way(name: str, changed: set[str]) -> None:
     assert set(_diff(A.load_arm("v1"), A.load_arm(name))) == changed

@@ -4,7 +4,7 @@
 name = "v1-openrouter"
 agent = "v1"
 model = "qwen/qwen3.8-flash"
-effort = "medium"
+effort = "low"
 prompt_version = "analyst/v1/v1"
 max_budget_usd_per_call = 0.30
 timeout_s = 600
