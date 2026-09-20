@@ -99,6 +99,53 @@ def _claim(base: str) -> tuple[str, Path]:
     raise RuntimeError(f"could not claim a run directory under {base}")
 
 
+def regate_run(version: str, run_id: str, log: Callable[[str], None] = print, boot: int = 1000,
+               seed: int = 0) -> dict[str, Any]:
+    """Re-apply the gate to a finished run's stored answers and re-score it, without any model call.
+
+    The gate is deterministic code; when it changes (a number glued to its unit was not recognised as the
+    quoted number it is), every arm is re-judged by the same rule from the answers on disk, so the arms stay
+    comparable. The first version of each row is kept beside it in `cells.pre-regate.jsonl`."""
+    bench = F.load_bench(version)
+    rd = run_dir(run_id)
+    rows = SC.read_cells(rd)
+    if not rows:
+        raise FileNotFoundError(f"no cells in {rd}")
+    backup = rd / "cells.pre-regate.jsonl"
+    if not backup.is_file():
+        backup.write_bytes((rd / "cells.jsonl").read_bytes())
+    changed = 0
+    out_rows = []
+    for bench_id, row in rows.items():
+        answer = row.get("answer")
+        if isinstance(answer, dict):
+            arm = load_arm(str(row["arm"]))
+            shown = V0.apply_switches(bench.pack(bench_id), arm.switches)
+            passages = bench.passages(bench_id) if arm.inputs.passages else None
+            problems = V0.gate(answer, shown, context=V0.gate_context(shown, passages))
+            if problems != (row.get("problems") or []) or bool(row.get("published")) != (not problems):
+                changed += 1
+            row = {**row, "problems": problems, "published": not problems}
+        out_rows.append(row)
+    (rd / "cells.jsonl").write_text("".join(json.dumps(TR.jsonable(x)) + "\n" for x in out_rows))
+    score = SC.score_run(rd, bench.key, boot=boot, seed=seed)
+    (rd / "score.json").write_text(json.dumps(TR.jsonable(score), indent=1) + "\n")
+    summary_path = rd / "summary.json"
+    summary = json.loads(summary_path.read_text()) if summary_path.is_file() else {"run_id": run_id, "run_dir": str(rd)}
+    summary["score"] = score
+    summary["regated_at"] = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+    summary["regate_changed"] = changed
+    summary_path.write_text(json.dumps(TR.jsonable(summary), indent=1) + "\n")
+    arm_name = summary.get("arm") or next((str(x["arm"]) for x in out_rows if x.get("arm")), None)
+    if arm_name:
+        pointer = SC.out_dir(str(summary.get("version") or version)) / "arms" / f"{arm_name}.json"
+        pointer.parent.mkdir(parents=True, exist_ok=True)
+        pointer.write_text(json.dumps(TR.jsonable(summary), indent=1) + "\n")
+    log(f"  re-gated {run_id}: {changed} row(s) changed; F1 {score.get('f1', float('nan')):.3f}  "
+        f"PR-AUC {score.get('pr_auc', float('nan')):.3f}  gate rejected {score['n_rejected']}/{score['n_answered']}")
+    return summary
+
+
 def run_arm(
     version: str, arm: ArmConfig | str, backend_factory: Factory, budget_usd: float | None,
     log: Callable[[str], None] = print, cells: list[str] | None = None, workers: int | None = None,

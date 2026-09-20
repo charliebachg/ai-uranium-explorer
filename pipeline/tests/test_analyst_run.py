@@ -196,3 +196,23 @@ def test_workers_run_in_parallel_and_every_cell_still_lands(world) -> None:
     s = run(bench, backend, rt, workers=3)
     assert s["done"] == 5 and sorted(backend.calls) == OPEN and set(rows(rt, s["run_id"])) == set(OPEN)
     assert sorted(LABELLED) == sorted(b for b in rows(rt, s["run_id"]) if b != "b05")
+
+
+def test_regate_rejudges_stored_answers_with_the_current_gate(tmp_path, monkeypatch) -> None:
+    """A gate change re-judges every stored answer from disk, keeps the first rows beside them, and re-scores."""
+    import json as _json
+
+    rt = install_runtime(monkeypatch, tmp_path)
+    bench = make_bench(tmp_path)
+    backend = AnalystBackend()
+    RUN.run_arm(bench.version, "v0", lambda arm: backend, budget_usd=5.0, log=lambda *a: None, track=False, boot=5)
+    rd = next(rt.runs.glob("bench-*"))
+    before = SC.read_cells(rd)
+    assert all(r["published"] for r in before.values() if r.get("answer"))
+    # the gate now refuses everything
+    monkeypatch.setattr(RUN.V0, "gate", lambda answer, pack, context=None: ["refused by the new rule"])
+    summary = RUN.regate_run(bench.version, rd.name, log=lambda *a: None, boot=5)
+    after = SC.read_cells(rd)
+    assert all(not r["published"] and r["problems"] == ["refused by the new rule"] for r in after.values() if r.get("answer"))
+    assert (rd / "cells.pre-regate.jsonl").is_file() and summary["regate_changed"] == len([r for r in before.values() if r.get("answer")])
+    assert _json.loads((rd / "score.json").read_text())["n_rejected"] == summary["regate_changed"]

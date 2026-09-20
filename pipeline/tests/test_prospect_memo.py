@@ -307,3 +307,15 @@ def test_a_conversion_is_only_offered_for_units_that_have_one():
     vals = {"c:u": val("c:u", 228.0, unit="ppm")}
     bad = memo(claims=[{"text": "Sediment uranium reaches 0.228 there.", "value_ids": ["c:u"]}])
     assert any("0.228" in p for p in M.check_memo(bad, vals))
+
+
+def test_a_number_glued_to_its_unit_in_quoted_text_is_the_same_number() -> None:
+    from legacy_reader.prospect.memo import check_claims, numbers_in
+
+    assert numbers_in("9 holes totalling 2310m in 2013-2014 and 838m; hole PLS12-023 on sheet 74H09") == ["9", "2310", "838"]
+    assert numbers_in("2018: drilling resumed. 111.4: sandstone; id c:cell:0201_0072:d_fault_m") == ["2018", "111.4"]
+    context = "description = 9 drill holes totalling 2310m in 2013-2014 and 7 holes totalling 838m"
+    claims = [{"text": "The passages describe 9 holes totalling 2310 m and 7 holes totalling 838 m.", "value_ids": []}]
+    assert check_claims(claims, {}, context) == []
+    # a number that is not in the text is still refused
+    assert check_claims([{"text": "the holes total 2400 m", "value_ids": []}], {}, context)

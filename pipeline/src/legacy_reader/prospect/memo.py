@@ -48,8 +48,23 @@ MAX_STEPS = 6
 #: a map scale of 1:250,000 and a survey period of 1975-1978 are names, not measurements, and the first run of
 #: this gate rejected three otherwise sound memos for quoting them. The rule that replaced it: a number must
 #: either match a value the claim cites, or appear verbatim in a tool result from this session.
-NUMBER = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?![\w:-])")
+NUMBER = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?![\w:-]|\.\d)")
+#: a number glued to its unit, as scanned report text prints it ("2310m", "95ft", "2.5ppm"): the same number
+#: whether or not a space follows it. The unit list is closed so a digit run inside an identifier (74H09,
+#: PLS12-023) is still not a number.
+NUMBER_UNIT = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?=(?:km|mm|cm|m|ft|in|ppm|ppb|cps|%|deg|kg|g|wt)\b)")
 BARE_OK = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "100"}
+
+
+#: a number that ends a label, as a report's log prints a year or a depth before a colon ("2018: drilled",
+#: "111.4: sandstone"): the colon is followed by white space, unlike the colon inside a value id
+NUMBER_LABEL = re.compile(r"(?<![\w.:-])(\d(?:[\d,]*\d)?(?:\.\d+)?)(?=:(?:\s|$))")
+
+
+def numbers_in(text: str) -> list[str]:
+    """Every number in a text: standing alone, glued to a unit, or ending a label, in order of appearance."""
+    found = NUMBER.findall(text) + NUMBER_UNIT.findall(text) + NUMBER_LABEL.findall(text)
+    return list(dict.fromkeys(found))
 
 
 SYSTEM = """You are part of a three-role panel assessing one 2 km cell of public Saskatchewan data for
@@ -229,7 +244,7 @@ def check_claims(
     # The allowance is for numbers the tools genuinely returned as text, so it reads the context with the same
     # scanner it reads the claim with. A plain substring test let "72" through because some cell id was
     # 0201_0072, and "1.1" through because it sat inside a longer figure: coincidences, not quotations.
-    quoted = {t.strip(".,") for t in NUMBER.findall(context)} if context else set()
+    quoted = {t.strip(".,") for t in numbers_in(context)} if context else set()
     quoted |= {t.replace(",", "") for t in quoted}
     for i, claim in enumerate(claims):
         text = str(claim.get("text") or "")
@@ -240,7 +255,7 @@ def check_claims(
                 problems.append(f"claim {i}: cites {vid}, which no tool returned in this session")
                 continue
             allowed |= _formatted(values[vid])
-        for token in NUMBER.findall(text):
+        for token in numbers_in(text):
             plain = token.strip(".,")
             if plain in BARE_OK or plain.replace(",", "") in BARE_OK:
                 continue

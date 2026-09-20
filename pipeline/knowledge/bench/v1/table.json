@@ -1,6 +1,6 @@
 {
  "version": "v1",
- "computed_at": "2026-09-20T07:53:08+00:00",
+ "computed_at": "2026-09-20T09:28:26+00:00",
  "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
  "rows": [
   {
@@ -98,6 +98,104 @@
      "n": 64,
      "accuracy": 0.03125,
      "abstain_rate": 0.296875
+    }
+   }
+  },
+  {
+   "name": "v0-retrieval",
+   "kind": "arm",
+   "model": "claude-opus-5",
+   "effort": "medium",
+   "n_cells": 98,
+   "run_id": "20260920T075216Z-bench",
+   "mlflow_run_id": "e30fbf8161b74862bd002e175ba7aff7",
+   "cost_usd": 20.130662,
+   "pending": 21,
+   "n_rows": 109,
+   "n_labelled": 98,
+   "n_probe": 11,
+   "n_unknown_key": 0,
+   "n_answered": 109,
+   "n_rejected": 5,
+   "n_failed": 0,
+   "gate_rejection_rate": 0.045871559633027525,
+   "gate_rejection_denominator": 109,
+   "probe_abstain_rate": 0.2727272727272727,
+   "cost_usd_total": 20.130662,
+   "cost_usd_per_cell": 0.18468497247706425,
+   "latency_s_per_cell": 44.7359633027523,
+   "from_cache_share": 0.0,
+   "n": 98,
+   "n_pos": 43,
+   "n_neg": 55,
+   "base_rate": 0.4387755102040816,
+   "abstain_n": 19,
+   "abstain_denominator": 98,
+   "precision": 0.44594594594594594,
+   "recall": 0.7674418604651163,
+   "f1": 0.5641025641025641,
+   "abstain_rate": 0.19387755102040816,
+   "pr_auc": 0.4966589014387735,
+   "roc_auc": 0.5535714285714286,
+   "pr_auc_all": 0.4823072080559671,
+   "roc_auc_all": 0.5439746300211417,
+   "ece": 0.08642857142857147,
+   "ece_committed": 0.0882278481012659,
+   "precision_ci": [
+    0.3888888888888889,
+    0.5
+   ],
+   "recall_ci": [
+    0.627906976744186,
+    0.8837209302325582
+   ],
+   "f1_ci": [
+    0.48695652173913045,
+    0.6281225006664889
+   ],
+   "abstain_rate_ci": [
+    0.11224489795918367,
+    0.2755102040816326
+   ],
+   "pr_auc_ci": [
+    0.41001279283777053,
+    0.6218676582310185
+   ],
+   "roc_auc_ci": [
+    0.4225967261904761,
+    0.6821365162719251
+   ],
+   "pr_auc_all_ci": [
+    0.4131054574482548,
+    0.5822354818131064
+   ],
+   "roc_auc_all_ci": [
+    0.4322991543340381,
+    0.6553964059196618
+   ],
+   "ece_ci": [
+    0.06548469387755097,
+    0.1889872448979592
+   ],
+   "ece_committed_ci": [
+    0.06666333333333332,
+    0.20981329113924044
+   ],
+   "strata": {
+    "deposit": {
+     "n": 16,
+     "accuracy": 0.875,
+     "abstain_rate": 0.125
+    },
+    "occurrence": {
+     "n": 27,
+     "accuracy": 0.7037037037037037,
+     "abstain_rate": 0.2222222222222222
+    },
+    "negative": {
+     "n": 55,
+     "accuracy": 0.05454545454545454,
+     "abstain_rate": 0.2
     }
    }
   },

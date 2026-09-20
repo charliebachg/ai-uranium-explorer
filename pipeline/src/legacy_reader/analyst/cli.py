@@ -105,6 +105,18 @@ def score_cmd(
     typer.echo(f"  wrote {rd / 'score.json'}")
 
 
+@bench_run_app.command("regate")
+def regate_cmd(
+    version: str = typer.Option("v1", "--version"),
+    run: list[str] = typer.Option(..., "--run", help="run id(s) to re-gate and re-score (repeatable)"),
+) -> None:
+    """Re-apply the current gate to a run's stored answers and re-score it. No model calls."""
+    from .run import regate_run
+
+    for rid in run:
+        regate_run(version, rid, log=typer.echo)
+
+
 @bench_run_app.command("table")
 def table_cmd(version: str = typer.Option("v1", "--version")) -> None:
     """Merge every arm's latest run with the baselines into data/out/bench/<version>/table.json."""
