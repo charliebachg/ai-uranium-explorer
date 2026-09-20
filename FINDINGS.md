@@ -8,43 +8,68 @@ number here walks back to a stored metric. Newest first.
 **The question.** UraniumBench v1, analyst track: 114 open scored cells (50 labelled: 18 deposit, 32
 occurrence; 64 drilled, unlabelled negatives matched to the positives' drilling profile) plus 16 never-drilled
 probe cells, closed book, no names, no coordinates, no effort features, no label context, no fitted scores.
-One call per cell with the map card and the evidence pack; the gate on every answer. Manifest
-`fa09da9a2230`; the answer key never staged.
+One call per cell; the gate on every answer; every arm at medium reasoning effort. Manifest `fa09da9a2230`;
+the answer key never staged. Five arms, each differing from v0 in one way.
 
 | Row, same 114 cells | F1 | PR-AUC | ROC-AUC | ECE | Abstain | Gate rejected | Cost |
 |---|---|---|---|---|---|---|---|
-| **v0** (Opus 5, medium) | 0.531 [0.452, 0.605] | 0.523 [0.423, 0.649] | 0.586 | 0.084 | 24% | 1 of 130 | $18.46, $0.14 a cell |
-| **v0-sonnet** (Sonnet 5, medium) | 0.521 [0.424, 0.605] | 0.484 [0.390, 0.609] | 0.541 | 0.166 | 33% | 25 of 129 | $8.87, $0.07 a cell |
-| effort null, out of fold | 0.568 [0.439, 0.689] | 0.659 [0.556, 0.776] | 0.667 | 0.170 | — | — | free |
-| criteria, unfitted | 0.551 [0.485, 0.615] | 0.469 [0.394, 0.580] | 0.513 | 0.199 | — | — | free |
-| learned, out of fold | 0.226 [0.097, 0.358] | 0.497 [0.405, 0.609] | 0.508 | 0.212 | — | — | free |
-| random | 0.496 [0.389, 0.581] | 0.424 [0.369, 0.524] | 0.494 | 0.275 | — | — | free |
+| **v0** Opus 5, card + pack | 0.531 [0.452, 0.605] | **0.523** [0.423, 0.649] | 0.586 | **0.084** | 24% | 1 of 130 | $18.46 |
+| v0-text, pack only | 0.553 [0.470, 0.634] | 0.463 [0.379, 0.585] | 0.514 | 0.118 | 27% | 0 of 130 | $15.29 |
+| v0-features, no criteria table | 0.558 [0.476, 0.632] | 0.470 [0.384, 0.597] | 0.515 | 0.097 | 28% | 0 of 130 | $18.35 |
+| v0-retrieval, passages, blind-listed | 0.552 [0.478, 0.625] | 0.472 [0.391, 0.586] | 0.540 | 0.093 | 21% | 8 of 129 | $23.99 |
+| v0-sonnet, Sonnet 5 | 0.521 [0.424, 0.605] | 0.484 [0.390, 0.609] | 0.541 | 0.166 | 33% | 25 of 129 | $8.87 |
+| effort null, out of fold | 0.568 [0.439, 0.689] | **0.659** [0.556, 0.776] | 0.667 | 0.170 | | | free |
+| criteria, unfitted | 0.551 | 0.469 | 0.513 | 0.199 | | | free |
+| learned, out of fold | 0.226 | 0.497 [0.405, 0.609] | 0.508 | 0.212 | | | free |
+| random | 0.496 | 0.424 | 0.494 | 0.275 | | | free |
 
-**Reading it.** On effort-matched ground, a strong model reading the map and the numbers ranks cells about
-as well as the fitted geology model does (PR-AUC 0.52 against 0.50, intervals overlapping) and better than
-random, and nowhere near the effort null (0.66), which it never saw. Its probability is well calibrated (ECE
-0.084, the best row on the table). Its failure is the same as the fitted model's: it calls 39 of the 64
-drilled negatives "supports a closer look", because on the geology they look like the positives; deposits it
-gets right 78% of the time, occurrences 63%, negatives 8%. Recall 0.68, precision 0.44.
+Precision of the top of each ranking (cells labelled among the top 10 / 20 / 30 by score): v0 0.60 / 0.55 /
+0.60; learned 0.60 / 0.50 / 0.47; criteria 0.30 / 0.55 / 0.53; **effort 0.90 / 0.75 / 0.70**; v0-text 0.30 /
+0.50 / 0.50; v0-features 0.50 / 0.50 / 0.43; v0-retrieval 0.30 / 0.40 / 0.50. Curves in
+`deck/figures/v0-arms-pr-curves.png`.
 
-**Sonnet against Opus.** Sonnet lands inside Opus's intervals on F1 and PR-AUC, abstains more (33% against
-24%) and is worse calibrated (0.166 against 0.084). The difference that matters for the loop design is the
-gate: 25 of Sonnet's 129 answers were refused, 20 of them for citing an observation-count id for a feature
-the pack marks unmeasured, an id it guessed by pattern; Opus did that once in 130. A cheap executor is
-viable, but only behind the mechanical verifier that already exists.
+**Reading it.** On effort-matched ground a strong model reading the map and the numbers ranks cells about
+as well as the fitted geology model on the same cells (0.52 against 0.50, intervals overlapping), above
+random, and nowhere near the effort null (0.66), which it never saw. It is the best-calibrated row. Its
+failure is the fitted model's failure: it calls 39 of the 64 drilled negatives "supports a closer look",
+because on the geology they look like the positives; deposits right 78%, occurrences 62%, negatives 8%. The
+verdict threshold adds nothing over calling everything (its point sits on the base-rate line); the value,
+such as it is, sits in the top of the ranking, where v0 and the learned model both reach 60% precision in
+the first ten against a 44% base rate, and effort reaches 90%.
 
-**What it decides for the staged loop.** The single-call floor is 0.52 PR-AUC, not the baselines' chance
-level, so the loop has something to improve on and a clear target: the negatives. The executor can be the
-cheap model with the gate on every node. Two must-run arms remain before the design is frozen: v0-text
-(does the executor need the card) and v0-features (does the model reason from raw values or echo the
-criteria memberships).
+**What each arm decided.** Every interval overlaps every other, so these are directions, not verdicts.
+- *The map is where the lift is.* Without the card (v0-text) the ranking falls to 0.46 and the top-ten
+  precision to 0.30; F1 at the verdict does not move. The executor in the staged loop keeps the card.
+- *The model is not echoing the criteria table.* Without it (v0-features) F1 and calibration hold and the
+  ranking sits at 0.47, the criteria score's own level. The planner can hand the executor raw values and
+  thresholds; the memberships are a convenience.
+- *Retrieved text did not help, blind-listed.* Passages from files 10 to 40 km away (the cell's own files
+  excluded) left the ranking at 0.47, raised the cost to $0.19 a cell, and produced the run's only real
+  gate finding (below). The leak measurement, blind-list off, is still to run.
+- *Sonnet is viable behind the gate, not in front of it.* Inside Opus's intervals on F1 and PR-AUC, worse
+  calibrated (0.166), and 25 of 129 answers refused, 20 of them for citing an observation-count id on an
+  unmeasured feature, an id it guessed by pattern. Opus did that once in 130.
 
-**Probes.** On the 16 never-drilled cells v0 abstained on 38% and Sonnet on 56%; the rest were mostly
-"evidence against", which is a reasonable reading of empty ground and an honest one.
+**What the gate found in us.** The retrieval arm's first pass had 24 refusals; 19 were report text the
+model quoted verbatim ("2310m", "2018:") that the gate's number scanner did not read as numbers. The scanner
+now reads a number glued to its unit or ending a label on both sides of the check, `lr arm regate`
+re-judged every stored answer of every arm with no model call (the four other arms did not change by one
+row), and the fabrication suite went from 224 to 228 of 232 refused with still 0 of 128 honest claims
+refused. Eight refusals remain in the retrieval arm, mostly depths quoted from hole labels.
 
-**What this is not.** Fifty positives and 64 negatives: every interval on the table is wide and printed. The
-labels are a drilling map; a "negative" is drilled ground with nothing recorded. Both runs at medium
-reasoning effort, recorded in every row.
+**What it decides for the staged loop.** The single-call floor is 0.52 PR-AUC. The reasoning is not the
+bottleneck on this pack; the evidence is: the same pack read by a gradient-boosted model, by Opus, by Opus
+without the criteria table and by Opus with neighbouring passages all land within a few hundredths. The loop
+earns its cost only where it brings evidence the pack does not carry, or where it turns a ranking into
+abstention on thin ground. So: cheap executor behind the gate, card kept, criteria template as the plan,
+verifier on Opus, and the deciders scored as a ranking, not a threshold.
+
+**Probes.** On the 16 never-drilled cells the arms abstained 31 to 56% of the time and mostly said "evidence
+against" otherwise, a reasonable reading of empty ground.
+
+**What this is not.** Fifty positives and 64 negatives: every interval is wide and printed. The labels are a
+drilling map; a "negative" is drilled ground with nothing recorded. One cell of the retrieval arm failed its
+call and counts as an abstention.
 
 ## F5 · The reading pass over the enabled cells is complete: text-indexed in full, the gate green, 208 of 212 pages read on Opus (2026-09-20)
 
