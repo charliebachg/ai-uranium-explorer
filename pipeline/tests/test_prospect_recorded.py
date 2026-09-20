@@ -29,13 +29,15 @@ VALUES = {
 
 
 class FakeBackend:
-    """Answers each call with the next scripted step, so a recording can be made without a model."""
+    """Answers each call with the next scripted step, so a recording can be made without a model. Since
+    Phase 4c every turn is routed first; the router's call is answered `other` here so the scripted steps
+    stay the loop's, as they were before the interface agent existed."""
 
     def __init__(self, steps):
         self.steps = list(steps)
 
     def call(self, req):
-        step = self.steps.pop(0)
+        step = {"kind": "other"} if req.task == "interface_route" else self.steps.pop(0)
 
         class Response:
             structured = step
@@ -76,8 +78,10 @@ def fabricated() -> dict:
 
 
 def test_a_recording_keeps_the_answer_the_gate_refused(stub_tools) -> None:
-    """The withheld turn is the point of showing this at all: it is the check firing, in public."""
-    payload = R.record("0001_0001", FakeBackend([fabricated(), good()]),
+    """The withheld turn is the point of showing this at all: it is the check firing, in public. The gate
+    hands the model its objections once before withholding, so a turn that stays fabricated takes two
+    scripted replies."""
+    payload = R.record("0001_0001", FakeBackend([fabricated(), fabricated(), good()]),
                        questions=("how far?", "how far again?"))
     assert [t["published"] for t in payload["turns"]] == [False, True]
     withheld = payload["turns"][0]
@@ -119,7 +123,7 @@ def test_the_chat_backend_can_be_chosen_and_the_two_never_share_a_cache() -> Non
 
 
 def test_an_unknown_backend_is_refused_rather_than_guessed_at() -> None:
-    with pytest.raises(ValueError, match="openai or claude"):
+    with pytest.raises(ValueError, match="openai, claude or auto"):
         S.make_backend("gemini", "")
 
 
