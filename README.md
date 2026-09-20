@@ -92,6 +92,26 @@ data only. It proposes no drill targets and makes no geological judgement.
     uv run lr openai budget          # cumulative spend and what is left of the ceiling
     uv run lr prospect serve         # localhost:8787, the evidence record and the live chat; /docs for the OpenAPI page
 
+    # the same tools over MCP (PRD §E.3): a geologist's own Claude Code or Cursor session as the client
+    uv run lr mcp tools              # the catalogue as served: 14 tools, their kind and scope; --json for the tools/list document
+    uv run lr mcp serve --stdio      # what a client launches: the server on stdin and stdout (see the .mcp.json below)
+    uv run lr mcp serve --http       # streamable HTTP on :8788/mcp when the API is not running; `lr prospect serve` mounts it at :8787/mcp
+    uv run lr mcp key --scopes read  # mint a key and print its LR_MCP_KEYS entry; without a register only local clients are served
+
+A client connects by launching the stdio server. Claude Code reads `.mcp.json` in the project root, Cursor
+`.cursor/mcp.json`; the same shape works in both:
+
+    {"mcpServers": {"legacy-reader": {"command": "uv", "args": ["run", "--directory", "pipeline", "lr", "mcp", "serve", "--stdio"]}}}
+
+With no `LR_MCP_KEYS` register a stdio client and a loopback HTTP client have every scope. To hand out
+scopes, set `LR_MCP_KEYS=<key>:<scope>[,<scope>];<key>:...` in the server's environment (a key is any string
+without `:`, `;`, `,` or white space; `lr mcp key` mints one); an HTTP client then sends
+`Authorization: Bearer <key>`, and a stdio client puts its key in `LR_MCP_KEY`. Scopes: `read` (open a session,
+the eight reads, `hole_crosscheck`, `check_claims`, `abstain`, every resource and prompt), `record`
+(`record_insight`, which writes the expert tier), `run` (`run_analyst`, a stub until Phase 4d). `tools/list`
+shows a key only the tools its scopes carry. `--public-safe` (or `LR_MCP_PUBLIC=1`) never serves report text or
+a layer the inventory marks non-redistributable.
+
     # the serving stack (Postgres + PostGIS, MinIO, Redis) and the containerised app
     docker compose up -d db          # needs Docker; the PostGIS image is multi-arch
     cd pipeline

@@ -56,7 +56,7 @@ def take(log: Callable[[str], None] = print, path: Path | None = None) -> dict[s
     try:
         tables = con.execute(
             "select table_schema, table_name from information_schema.tables "
-            "where table_schema in ('native','read','derived','agent') and table_type = 'BASE TABLE' order by 1, 2").fetchall()
+            "where table_schema in ('native','read','derived','agent','expert') and table_type = 'BASE TABLE' order by 1, 2").fetchall()
         counts = {f"{s}.{t}": con.execute(f"select count(*) from {s}.{t}").fetchone()[0] for s, t in tables}
         layers = con.execute("select layer_key, payload_sha256, retrieved_at, record_count from native.layer order by 1").fetchall()
         meta = con.execute("select store_version, pipeline_version, built_at from main.meta").fetchone()

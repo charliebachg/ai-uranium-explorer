@@ -115,7 +115,7 @@ def tier_audit_pg(conn: Any) -> list[str]:
     problems: list[str] = []
     with conn.cursor() as cur:
         cur.execute("select table_schema, table_name from information_schema.tables "
-                    "where table_schema in ('native','read','derived','agent') and table_type = 'BASE TABLE' order by 1, 2")
+                    "where table_schema in ('native','read','derived','agent','expert') and table_type = 'BASE TABLE' order by 1, 2")
         tables = cur.fetchall()
         for schema, table in tables:
             cur.execute("select column_name from information_schema.columns where table_schema = %s and table_name = %s",

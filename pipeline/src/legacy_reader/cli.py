@@ -38,6 +38,9 @@ prospect_app = typer.Typer(help="The cell grid, its features, and what they can 
 app.add_typer(prospect_app, name="prospect")
 openai_app = typer.Typer(no_args_is_help=True, help="The chat agent's OpenAI backend, and what it has spent.")
 app.add_typer(openai_app, name="openai")
+from .mcp.cli import mcp_app  # noqa: E402  (the MCP server: PRD §E.3)
+
+app.add_typer(mcp_app, name="mcp")
 
 
 @openai_app.command("models")

@@ -1,9 +1,10 @@
 """The service the dashboard talks to: FastAPI over the store and the chat agent.
 
 Same contract as the stdlib server it replaces — `/api/health`, `/api/cells`, `/api/cell/{id}`, `/api/chat`,
-`/api/chat/stream` with the same NDJSON events — plus persisted conversations. Every endpoint reads the same
-evidence record the map is drawn from, and no endpoint invents a number: a chat answer passes the same gate a
-published memo does before it leaves this process.
+`/api/chat/stream` with the same NDJSON events — plus persisted conversations, and the same tools over MCP at
+`/mcp` (PRD §E.3, `legacy_reader.mcp`). Every endpoint reads the same evidence record the map is drawn from,
+and no endpoint invents a number: a chat answer passes the same gate a published memo does before it leaves
+this process.
 
 The agent loop is synchronous and takes tens of seconds; streaming it means running it on a worker thread and
 handing each event through a queue to the response generator, so the client sees tool calls as they happen.
@@ -25,6 +26,8 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from ..mcp import server as MCPS
+from ..mcp import transport as MCPT
 from ..prospect import serve as S
 from ..store import connect
 from ..prospect.chat import Conversation, ask
@@ -180,6 +183,10 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
 
         return StreamingResponse(lines(), media_type="application/x-ndjson",
                                  headers={"Cache-Control": "no-store", "Connection": "close"})
+
+    # the same tools over MCP (PRD §E.3), in this process and on this store connection mode: one route, and
+    # the transport's session manager running inside the app's lifespan. Declared before the site's catch-all.
+    MCPT.mount(app, MCPS.build(), MCPT.MCP_PATH)
 
     if web_dist is not None and (web_dist / "index.html").is_file():
         # the built site, from the same process: assets and data as files, every other path the app's own

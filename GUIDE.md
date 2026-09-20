@@ -348,7 +348,7 @@ file were part of the allowance, making every threshold an uncited number.
 
 ### 6.5 Provenance tiers — the rule underneath everything
 
-Four DuckDB schemas, enforced by a `tier` column with CHECK constraints and an audit that refuses a mixed table:
+Five DuckDB schemas, enforced by a `tier` column with CHECK constraints and an audit that refuses a mixed table:
 
 | Tier | What lives there |
 |---|---|
@@ -356,6 +356,7 @@ Four DuckDB schemas, enforced by a `tier` column with CHECK constraints and an a
 | `read` | What a model read off a scanned page. **Unvalidated.** Never becomes a feature or a label. |
 | `derived` | Anything computed — grid, features, scores, metrics. Records its inputs. |
 | `agent` | What a model argued. **Never a source of numbers.** |
+| `expert` | What a geologist stated, recorded with author, time and cell (`record_insight` over MCP) before any agent may cite it; the numbers in it carry expert-tier ids, so a claim that leans on one says so (B19). |
 
 ### 6.6 Backends, cost and caching
 
@@ -401,6 +402,63 @@ node gate's refusals over executor attempts, the share of chains a verifier roun
 verifier refused at least once, rounds over the chains that validated, nodes re-executed on the verifier's
 feedback, and how often the verifier's own label and the weighted-sum decider agreed with the final verdict.
 A single-call arm and a baseline have no stages and show a dash there.
+
+### 6.8 The MCP server — the same tools for any client
+
+The eight tools of 6.1 are also served over the Model Context Protocol (PRD §E.3), so a geologist's own
+Claude Code or Cursor session, the dashboard and the benchmark harness read the same contract from the same
+code. `open_session(cell_id, purpose)` returns a handle every other call carries: a `dashboard` session
+shows the record as it is; `scored` and `benchmark` sessions reuse the staged analyst's session (6.7), so
+they serve out-of-fold scores only, mask the cell's own label, blind-list the files within 10 km, and (in a
+benchmark) show the cell under a bench id and refuse any real cell id. Every number in a result is a value
+with an id in `structuredContent` and beside its id in the text; unknown ("nobody measured it here") and
+absent ("mapped, nothing there") are two types in every output schema, never a null, and the SDK's client
+validates each result against that schema before a model reads it. A refusal is a tool result with
+`isError` and a reason to act on: a cell outside the grid, a layer that is a label, a file on the blind-list.
+
+Beside the eight reads: `hole_crosscheck` (the extraction crosscheck over hole positions, dashboard sessions
+only), `check_claims` (the fabrication gate of 6.4 as a callable over what this session returned, so a stock
+client checks itself before answering), `abstain` (a reason from a fixed set, recorded on the session so refusal
+is measurable), `record_insight` (a geologist's statement into the `expert` tier, its numbers minted
+expert-tier ids) and `run_analyst` (a stub that says it is not available until Phase 4d). Resources hold data:
+`lr://handbook`, `lr://criteria`, `lr://cell/{id}/evidence`, `lr://cell/{id}/chains`, `lr://run/{id}/manifest`,
+`lr://readiness/gate`, `lr://reading/inventory`. Prompts are the six roles (`proponent`, `skeptic`,
+`adjudicator`, `analyst.executor`, `analyst.verifier`, `interface.router`), each built from the text the
+in-house loops use and taking `cell_id` and `session_id`. The server never asks a client's model for anything.
+
+Every session is a run: a directory under `data/runs/<id>-mcp/` with the manifest of 6.6 (store hash,
+prompt hashes, fold, blind-list hash, the scores seen, every abstention and insight) and `spans.jsonl`, one
+span per call carrying the arguments' hash (never their values), the result ids, the latency, the session and
+the run id, mirrored to MLflow Tracing when that is on. Handles expire after four hours and are bound to the
+key that opened them.
+
+**Connecting.** `lr mcp serve --stdio` is what a client launches; put this in `.mcp.json` (Claude Code) or
+`.cursor/mcp.json` (Cursor) at the project root:
+
+    {"mcpServers": {"legacy-reader": {"command": "uv", "args": ["run", "--directory", "pipeline", "lr", "mcp", "serve", "--stdio"]}}}
+
+`lr prospect serve` mounts the same server on the API at `http://127.0.0.1:8787/mcp` (streamable HTTP), and
+`lr mcp serve --http` serves it alone on `:8788/mcp`. Local only by default: with no key register a stdio
+client and a loopback HTTP client hold every scope and any other address gets nothing.
+
+**Keys and scopes.** `LR_MCP_KEYS=<key>:<scope>[,<scope>];<key>:...` in the server's environment turns the
+register on; a key is any string without `:`, `;`, `,` or white space, and `lr mcp key --scopes read,record`
+mints one. An HTTP client sends `Authorization: Bearer <key>`; a stdio client (which owns the process it
+launched) names its key in `LR_MCP_KEY`. A key never appears in a log, a span or a manifest: a session is
+recorded under the first eight hex characters of the key's hash.
+
+| Scope | What it opens |
+|---|---|
+| `read` | `open_session`, the eight reads, `hole_crosscheck`, `check_claims`, `abstain`, every resource and prompt |
+| `record` | `record_insight`: writes the `expert` tier |
+| `run` | `run_analyst`: the task handle, a stub until Phase 4d |
+
+`tools/list` shows a key only the tools its scopes carry, in a fixed order with a `ttlMs`, so a client can
+cache it. `--public-safe` (or `LR_MCP_PUBLIC=1`) is the build for anyone outside the team: a passage's text is
+withheld (its citation, page and ids stay), `hole_crosscheck` is not served, and a `nearby` layer the
+inventory marks non-redistributable is refused. Contract tests (`tests/test_mcp_*.py`) run the whole thing
+through the SDK's in-memory client with no network and no model; the few that need the live store skip
+without it.
 
 ## 7. The other three pages
 

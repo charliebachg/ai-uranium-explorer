@@ -27,6 +27,7 @@ TIER_BY_SCHEMA: dict[str, str] = {
     "read": "read",
     "derived": "derived",
     "agent": "agent",
+    "expert": "expert",
 }
 
 SCHEMA_SQL = Path(__file__).with_name("schema.sql")
@@ -168,7 +169,7 @@ def tier_audit(con: duckdb.DuckDBPyConnection) -> list[str]:
     problems: list[str] = []
     rows = con.execute(
         "select table_schema, table_name from information_schema.tables "
-        "where table_schema in ('native','read','derived','agent') and table_type = 'BASE TABLE' "
+        "where table_schema in ('native','read','derived','agent','expert') and table_type = 'BASE TABLE' "
         "order by 1, 2"
     ).fetchall()
     for schema, table in rows:

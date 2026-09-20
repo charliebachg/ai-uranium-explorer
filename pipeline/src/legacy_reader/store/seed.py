@@ -154,7 +154,7 @@ def decisions(con: duckdb.DuckDBPyConnection, inventory: Any = None) -> list[dic
     inv = inventory or load_inventory()
     rows = con.execute(
         "select table_schema, table_name from information_schema.tables where table_type = 'BASE TABLE' "
-        "and table_schema in ('native', 'read', 'derived', 'agent', 'main') order by 1, 2").fetchall()
+        "and table_schema in ('native', 'read', 'derived', 'agent', 'expert', 'main') order by 1, 2").fetchall()
     tables = {(s, t) for s, t in rows}
     layers: dict[str, dict[str, Any]] = {}
     if ("native", "layer") in tables:
@@ -176,6 +176,8 @@ def decisions(con: duckdb.DuckDBPyConnection, inventory: Any = None) -> list[dic
                 d.update(private=False, reason="outside the four tiers (a v1 leftover); not part of the store contract")
         elif schema == "agent":
             d.update(reason="the agent tier: model-written argument over the private evidence record; private pack only")
+        elif schema == "expert":
+            d.update(reason="the expert tier: what a named geologist stated about a cell, with their name; private pack only")
         elif "file_num" in columns or "doc_sha256" in columns:
             d.update(sources=[s.key for s in read_sources],
                      reason="keyed by assessment file; the documents carry no named licence and the inventory's "

@@ -1,9 +1,10 @@
--- The store's four provenance tiers. A fact never changes tier, and no table mixes tiers:
+-- The store's five provenance tiers. A fact never changes tier, and no table mixes tiers:
 --
 --   native   exactly what a public service returned (ArcGIS REST, STAC). As published.
 --   read     what OCR and the vision model read off document pages. Unvalidated until a check says so.
 --   derived  anything this pipeline computed, recording its inputs.
 --   agent    model-written argument. Never a source of numbers.
+--   expert   what a geologist stated, recorded before any agent may cite it (PRD §8.3, B19).
 --
 -- Every fact table carries a `tier` column defaulted and CHECK-constrained to its schema, so a row can only
 -- be inserted into the tier it belongs to. Cross-tier questions go through the views at the bottom, which
@@ -13,6 +14,7 @@ create schema if not exists native;
 create schema if not exists read;
 create schema if not exists derived;
 create schema if not exists agent;
+create schema if not exists expert;
 
 -- ---------------------------------------------------------------- tier A: native
 
@@ -435,3 +437,26 @@ create table if not exists agent.chain_decision (
   created_at       text not null,
   tier             text not null default 'agent' check (tier = 'agent')
 );
+
+-- ---------------------------------------------------------------- tier E: expert
+
+-- A geologist's own statement about a cell, recorded by the interface (`record_insight` over MCP, PRD §E.3)
+-- with author, time and cell before any agent may cite it (§8.3). The numbers in the text are minted
+-- expert-tier value ids by the server that recorded it, and the values themselves ride along so a chain that
+-- cites one is self-contained; a node that leans on one is labelled expert-tier (B19). Never rewritten by a
+-- model, never folded into a feature: it is the fifth tier of the §6 diagram, not a derived number and not an
+-- agent's argument.
+create table if not exists expert.insight (
+  expert_id       text primary key,
+  cell_id         text not null,
+  author          text not null,
+  text            text not null,
+  value_ids_json  text not null,       -- the expert-tier value ids minted from the numbers in `text`
+  values_json     text not null,       -- the values themselves, by id
+  session_id      text,                -- the MCP session that recorded it
+  run_id          text,                -- that session's run, whose manifest lists the insight
+  principal       text,                -- the key label (never the key) the session was opened with
+  recorded_at     text not null,
+  tier            text not null default 'expert' check (tier = 'expert')
+);
+create index if not exists insight_cell_idx on expert.insight (cell_id, recorded_at);

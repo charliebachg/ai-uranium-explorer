@@ -24,12 +24,12 @@ def con(tmp_path):
     c.close()
 
 
-def test_schema_declares_four_tiers(con):
+def test_schema_declares_five_tiers(con):
     schemas = {
         r[0]
         for r in con.execute(
             "select schema_name from information_schema.schemata where schema_name in "
-            "('native','read','derived','agent')"
+            "('native','read','derived','agent','expert')"
         ).fetchall()
     }
     assert schemas == set(TIER_BY_SCHEMA)

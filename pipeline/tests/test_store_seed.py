@@ -81,7 +81,7 @@ def _counts(db: Path) -> dict[str, int]:
     con = duckdb.connect(str(db), read_only=True)
     try:
         rows = con.execute("select table_schema, table_name from information_schema.tables where table_type = 'BASE TABLE' "
-                           "and table_schema in ('native', 'read', 'derived', 'agent', 'main') order by 1, 2").fetchall()
+                           "and table_schema in ('native', 'read', 'derived', 'agent', 'expert', 'main') order by 1, 2").fetchall()
         return {f"{s}.{t}": con.execute(f"select count(*) from {s}.{t}").fetchone()[0] for s, t in rows}
     finally:
         con.close()
