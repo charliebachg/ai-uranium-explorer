@@ -299,7 +299,7 @@ now and what would unblock it.
 | **Repository** | | |
 | Whether the frozen benchmark dataset returns to the repository, and at which path; if it does, the dataset-directory override becomes optional | the dataset is unfinished, so it lives outside the tree with an override | a decision once the benchmark has run |
 | A clearer refusal when only the dataset copy is present and not the built packs: name the build command instead of "drifted from its manifest" | the flag touches the benchmark object and the runner | a "dataset copy, not a build" flag |
-| A stale command name (`record-chat`) in a test comment | a one-word fix | nothing |
+| A CI workflow (GitHub Actions) running the pipeline suite and the web checks on every push, with its badge in the README | the repository is private and both suites run locally before every commit | the repository going public |
 
 ## 8. Decided out of scope
 
