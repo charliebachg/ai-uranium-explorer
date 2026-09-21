@@ -302,3 +302,22 @@ def test_an_unknown_backend_is_refused_rather_than_guessed_at() -> None:
 def test_an_explicit_model_wins_over_the_default() -> None:
     _backend, model = S.make_backend("openai", "gpt-4.1-mini")
     assert model == "gpt-4.1-mini"
+
+
+def test_the_auto_backend_serves_without_the_claude_binary_and_refuses_only_its_own_route(monkeypatch) -> None:
+    """A container has no `claude`: the service must still start and route vendor/model ids to OpenRouter;
+    a bare claude-* request is refused with the fix, at call time, not at start."""
+    import shutil
+
+    from uranium_explorer.backends.base import BackendConfigError
+
+    monkeypatch.setattr(shutil, "which", lambda _name: None)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key-never-used")
+    backend, model = S.make_backend("auto", "")
+    assert "/" in model, "the default model is a vendor/model id, so it never touches the missing CLI"
+    routed = backend.inner
+    req = SimpleNamespace(model="claude-sonnet-5")
+    with pytest.raises(BackendConfigError, match="does not have"):
+        routed.route(req).call(req)
+    assert routed.route(SimpleNamespace(model="z-ai/glm-5.3-flash")).family != "claude_cli"
+
