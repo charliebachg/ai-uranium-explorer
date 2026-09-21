@@ -82,7 +82,14 @@ def log_run(name: str, params: dict[str, Any], metrics: dict[str, float], tags: 
 
     A tag whose value is None is not set, so a run on a store no snapshot names carries no `snapshot` tag
     rather than the string "None"."""
-    mlflow = _mlflow()
+    try:
+        mlflow = _mlflow()
+    except ModuleNotFoundError as err:
+        # the mlflow extra is optional (a container, a slim clone): the run directory and its manifest stay the
+        # record, and a run that cannot be mirrored to the tracker is still a finished run, not a failed one
+        if err.name != "mlflow":
+            raise
+        return None
     with mlflow.start_run(run_name=name) as run:
         mlflow.log_params({k: (v if isinstance(v, (int, float, str, bool)) else json.dumps(v)) for k, v in params.items()})
         mlflow.log_metrics({k: float(v) for k, v in metrics.items() if v is not None and v == v})
