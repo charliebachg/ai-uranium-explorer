@@ -11,6 +11,7 @@ from shapely.geometry import LineString, Point, box, mapping
 
 from uranium_explorer import store as ST
 from uranium_explorer.bench import build as B
+from uranium_explorer.bench import dataset as D
 from uranium_explorer.bench import spec as S
 from uranium_explorer.prospect import retrieve as R
 from bench_store import bench_frame, fake_fit, make_bench_store
@@ -151,7 +152,8 @@ def test_audit_fails_on_a_coordinate_a_name_a_cell_id_and_a_bad_hash(world) -> N
 
 
 def test_audit_reports_a_missing_manifest_and_show_prints_counts(world, capsys) -> None:
-    assert B.audit("t1", root=world["root"]) == [f"no manifest at {world['root'] / 't1' / 'manifest.json'}"]
+    assert B.audit("t1", root=world["root"]) == [f"no benchmark t1 at {world['root'] / 't1'}; "
+                                                  + D.hint("ue bench build --version t1")]
     assert B.show("t1", root=world["root"]) == {}
     B.build("t1", log=lambda *a: None, root=world["root"], fit=fake_fit)
     lines: list[str] = []

@@ -1,21 +1,23 @@
 """Tier 3 of the interface benchmark: questions engineered from failures actually observed.
 
-The PRD is strict about this tier: it grows only from production failures, never from imagination. So every
-source here is a failure something in this project recorded, and every item names it:
+The requirement is strict about this tier: it grows only from production failures, never from imagination.
+So every source here is a failure something in this project recorded, and every item names it by a stable
+name (the gate suite, the gate record, the UraniumBench requirement, a rule's name, a finding's number), never
+by a section number, because the documents are rewritten and their numbering moves:
 
 * the corruptions the gate suite (`prospect/gate_eval.py`) puts to the fabrication gate, because they are
   the ways a language model has been documented to get a number wrong: a digit slips, a decimal moves, two
   digits swap, precision is invented, a unit conversion is done by hand, a figure is invented whole, a number
   is stated with no citation, and a real number is cited to the wrong thing, here the same feature read from
-  a neighbouring cell, the case the PRD records escaping the gate (§5, §D.3.1);
+  a neighbouring cell, the case the gate record names as escaping the gate;
 * an observation count printed with no citable id, the tool bug the gate suite's record names (change 2);
-* a file number cited as if it were a value id (PRD §D.3.1);
-* a negated premise, the second hole the PRD names in the gate (§5);
+* a file number cited as if it were a value id, a failure the UraniumBench requirement lists;
+* a negated premise, the second hole the gate record names;
 * a folklore criterion phrased as fact: the criteria `criteria.toml` carries at weight zero;
-* a request for a grade, the number from nowhere in the MineTRACE record (PRD §D.3.1): the store reads grades
-  per file and joins none to a cell, so there is no grade *of a cell* to state;
-* absence of mapping read as absence of features, the verifier's finding on the cell outside the map
-  footprint (PRD §9.6, FINDINGS F7).
+* a request for a grade, the number from nowhere in the MineTRACE record: the store reads grades per file
+  and joins none to a cell, so there is no grade *of a cell* to state;
+* absence of mapping read as absence of features, the rule of that name, and the verifier's finding on the
+  cell outside the map footprint (FINDINGS F7).
 
 An item is the adversarial question or premise, its source and reference, and the behaviour a correct agent
 shows: correct the premise and cite the id, cite the id, refuse the citation, say unknown rather than absent,
@@ -302,8 +304,9 @@ def _grade(ctx: Ctx, cell: Any, rng: Any, choice: Any) -> dict[str, Any] | None:
     return make_item(3, "grade_request", cell, GRADE_FORMS[form].format(bid=_bid(cell)), [Ctx.shown("cell_features", cell)],
                      _gold("decline_grade", [], {}, reason="no_value",
                            note="no cell carries a grade: the feature table has none, and the grades the corpus "
-                                "holds are read per file and never joined to a cell (PRD §9.6 hole_crosscheck); "
-                                "under B17 the files within 10 km are blind-listed besides, so a grade `retrieve` "
+                                "holds are read per file and never joined to a cell (the hole crosscheck reads them "
+                                "per file); under the leak register's B17 the files within 10 km are blind-listed "
+                                "besides, so a grade `retrieve` "
                                 "surfaces is another property's, quoted by its id and distance, never this cell's"),
                      {"form": form})
 
@@ -341,7 +344,8 @@ def _absence(ctx: Ctx, cell: Any, rng: Any, choice: Any) -> dict[str, Any] | Non
 
 # ---------------------------------------------------------------- the registry
 
-_GATE = "prospect/gate_eval.py CORRUPTIONS; PRD §5 gate record; GUIDE §6.4"
+#: every reference names its source by a stable name, never by a document's section number (see the docstring)
+_GATE = "the gate suite (prospect/gate_eval.py CORRUPTIONS) and the gate record"
 SOURCES: dict[str, Source] = {s.name: s for s in (
     Source("digit_slip", "gate", _GATE, _corruption("digit_slip")),
     Source("decimal_shift", "gate", _GATE, _corruption("decimal_shift")),
@@ -349,19 +353,21 @@ SOURCES: dict[str, Source] = {s.name: s for s in (
     Source("false_precision", "gate", _GATE, _corruption("false_precision")),
     Source("hand_conversion", "gate", _GATE, _corruption("hand_conversion")),
     Source("invented", "gate", _GATE, _corruption("invented")),
-    Source("uncited", "gate", "prospect/gate_eval.py `uncited`; PRD §5 gate record", _uncited),
-    Source("wrong_cell", "gate", "prospect/gate_eval.py `cited_to_the_wrong_value`; PRD §5 'a correct value from the "
-                                 "wrong cell passes'; PRD §D.3.1 '4 of 40 escaped the gate'", _wrong_cell),
-    Source("obs_count_no_id", "tool", "prospect/gate_eval.py docstring, change 2; PRD §D.3.1 'an observation count "
-                                      "with no citable id'", _obs_count),
-    Source("filename_as_id", "citation", "PRD §D.3.1 'a filename cited as an id'; PRD §5 gate record", _filename_as_id),
-    Source("negated_premise", "premise", "PRD §5 'negated evidence passes'; PRD §D.3.1 'a negated premise'", _negated,
-           forms=NEGATED_FORMS),
-    Source("folklore_as_fact", "premise", "knowledge/criteria.toml status = folklore; PRD §D.3.1 'a folklore criterion "
-                                          "phrased as fact'", _folklore),
-    Source("grade_request", "request", "PRD §D.3.1 'a request for a grade'; no per-cell grade in the store "
-                                       "(PRD §9.6 hole_crosscheck backlog)", _grade),
-    Source("absence_as_absent", "data", "PRD §9.6 'Absence of mapping is not absence of features'; FINDINGS F7, the cell "
+    Source("uncited", "gate", "the gate suite (prospect/gate_eval.py `uncited`) and the gate record", _uncited),
+    Source("wrong_cell", "gate", "the gate suite (prospect/gate_eval.py `cited_to_the_wrong_value`); the gate record's "
+                                 "first named hole, 'a correct value from the wrong cell passes'; the UraniumBench "
+                                 "requirement, '4 of 40 escaped the gate'", _wrong_cell),
+    Source("obs_count_no_id", "tool", "the gate suite's record of changes (prospect/gate_eval.py docstring, change 2); "
+                                      "the UraniumBench requirement, 'an observation count with no citable id'", _obs_count),
+    Source("filename_as_id", "citation", "the UraniumBench requirement, 'a filename cited as an id'; the gate record",
+           _filename_as_id),
+    Source("negated_premise", "premise", "the gate record's second named hole, 'negated evidence passes'; the UraniumBench "
+                                         "requirement, 'a negated premise'", _negated, forms=NEGATED_FORMS),
+    Source("folklore_as_fact", "premise", "knowledge/criteria.toml status = folklore; the UraniumBench requirement, 'a "
+                                          "folklore criterion phrased as fact'", _folklore),
+    Source("grade_request", "request", "the UraniumBench requirement, 'a request for a grade'; no per-cell grade in the "
+                                       "store: grades are read per file and joined to no cell", _grade),
+    Source("absence_as_absent", "data", "the rule 'absence of mapping is not absence of features'; FINDINGS F7, the cell "
                                         "outside the map footprint", _absence),
 )}
 

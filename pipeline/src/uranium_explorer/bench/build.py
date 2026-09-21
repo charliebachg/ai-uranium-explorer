@@ -37,6 +37,7 @@ from ..store import connect
 from ..store import snapshot as SN
 from .blind import blind_list, passages
 from .card import card_layers, png_bytes, render_card
+from .dataset import hint
 from .frame import load_frame
 from .oof import COLUMNS as OOF_COLUMNS
 from .oof import oof_scores
@@ -225,7 +226,7 @@ def audit(version: str, root: Path | None = None, con: Any = None) -> list[str]:
     problems: list[str] = []
     manifest_path = out / "manifest.json"
     if not manifest_path.is_file():
-        return [f"no manifest at {manifest_path}"]
+        return [f"no benchmark {version} at {out}; " + hint(f"ue bench build --version {version}")]
     manifest = json.loads(manifest_path.read_text())
     files: dict[str, str] = manifest.get("files", {})
     for rel, sha in files.items():
@@ -340,7 +341,7 @@ def show(version: str, root: Path | None = None, log: Callable[[str], None] = pr
     out = bench_dir(version, root)
     manifest_path = out / "manifest.json"
     if not manifest_path.is_file():
-        log(f"  no benchmark {version} at {out}; run `ue bench build --version {version}`")
+        log(f"  no benchmark {version} at {out}; " + hint(f"ue bench build --version {version}"))
         return {}
     m = json.loads(manifest_path.read_text())
     counts = m.get("counts", {})

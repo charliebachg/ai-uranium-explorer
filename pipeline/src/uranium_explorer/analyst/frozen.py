@@ -5,6 +5,11 @@ key sits in the same directory as the evidence. The two facts together are why t
 the model is shown goes through `Bench.pack`, `Bench.card` and `Bench.passages`, and `key.json` is read only by
 the scorer. Nothing here can stage the key by accident, because nothing here returns its path.
 
+Where the build is absent, `bench_dir` falls back to the dataset copy under the knowledge directory
+(`bench/dataset.py`: `pipeline/knowledge/bench/`, or `UE_BENCH_KNOWLEDGE_DIR`), which holds the cells, the
+held-out list, the key and the manifest: enough to score a run against, not to run one, since the packs and
+cards are built, never copied.
+
 Held-out cells are never run before the day they are unsealed. `open_cells` excludes them and `require_open`
 refuses a request that names one, so the only way to score a held-out cell is to change this module.
 """
@@ -16,6 +21,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from ..bench.dataset import hint, knowledge_dir
 from ..ids import sha256_file
 from ..paths import PATHS
 
@@ -28,7 +34,15 @@ def bench_root() -> Path:
 
 
 def bench_dir(version: str) -> Path:
-    return bench_root() / version
+    """The built benchmark when its manifest is there, else the dataset copy when it holds one, else the
+    built path, so a message can say where the build would go."""
+    built = bench_root() / version
+    if (built / "manifest.json").is_file():
+        return built
+    copy = knowledge_dir() / version
+    if (copy / "manifest.json").is_file():
+        return copy
+    return built
 
 
 @dataclass(frozen=True)
@@ -133,7 +147,8 @@ def load_bench(version: str) -> Bench:
     d = bench_dir(version)
     manifest_path = d / "manifest.json"
     if not manifest_path.is_file():
-        raise FileNotFoundError(f"no benchmark {version!r}: {manifest_path} is missing")
+        raise FileNotFoundError(f"no benchmark {version!r}: {manifest_path} is missing; "
+                                + hint(f"ue bench build --version {version}"))
     manifest = json.loads(manifest_path.read_text())
     cells = tuple(json.loads(line) for line in (d / "cells.jsonl").read_text().splitlines() if line.strip())
     key_path = d / "key.json"

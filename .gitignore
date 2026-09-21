@@ -23,3 +23,6 @@ web/public/data/tiles/
 
 # MLflow artefacts land beside the tracking database (`ue prospect modelsearch`); never committed
 pipeline/mlruns/
+
+# the benchmark dataset is unfinished and lives outside the repository (a symlink here; UE_BENCH_KNOWLEDGE_DIR elsewhere)
+pipeline/knowledge/bench

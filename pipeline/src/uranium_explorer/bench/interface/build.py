@@ -1,6 +1,7 @@
-"""Build, audit and show an interface benchmark version: `knowledge/bench/interface/<version>/`, hashed.
+"""Build, audit and show an interface benchmark version: `interface/<version>/` under the dataset directory, hashed.
 
-The layout is the contract:
+The dataset directory is `pipeline/knowledge/bench/` unless `UE_BENCH_KNOWLEDGE_DIR` names another one
+(`bench/dataset.py` says why it is not in the repository). The layout is the contract:
 
     tier1.jsonl      one deterministic item per line, gold as value ids and values, or abstention with a reason
     tier3.jsonl      one adversarial item per line, its source failure and reference, gold as the expected behaviour
@@ -32,6 +33,7 @@ from ...paths import PATHS
 from ...prospect import tools as T
 from ...store import snapshot as SN
 from ..build import bench_dir as analyst_data_dir
+from ..dataset import hint, knowledge_dir
 from ..spec import STRATA
 from . import tier1, tier3
 from .items import BANNED, GRID, NONE, REASONS, Ctx, check_wording
@@ -45,7 +47,7 @@ SESSION_RULES = ("B17", "B18", "B30")
 
 
 def interface_root() -> Path:
-    return PATHS.pipeline / "knowledge" / "bench" / "interface"
+    return knowledge_dir() / "interface"
 
 
 def interface_dir(version: str, root: Path | None = None) -> Path:
@@ -53,15 +55,16 @@ def interface_dir(version: str, root: Path | None = None) -> Path:
 
 
 def analyst_dir(version: str) -> Path:
-    """The analyst benchmark's directory: the committed copy under `knowledge/bench/` when it holds the cell
-    list, else the built one under `data/bench/`."""
-    committed = PATHS.pipeline / "knowledge" / "bench" / version
-    if (committed / "cells.jsonl").is_file():
-        return committed
+    """The analyst benchmark's directory: the dataset copy under the knowledge directory when it holds the
+    cell list, else the built one under `data/bench/`."""
+    copy = knowledge_dir() / version
+    if (copy / "cells.jsonl").is_file():
+        return copy
     built = analyst_data_dir(version)
     if (built / "cells.jsonl").is_file():
         return built
-    raise FileNotFoundError(f"no analyst benchmark {version!r}: neither {committed} nor {built} holds cells.jsonl")
+    raise FileNotFoundError(f"no analyst benchmark {version!r}: neither {copy} nor {built} holds cells.jsonl; "
+                            + hint(f"ue bench build --version {version}"))
 
 
 def _dump(obj: Any) -> str:
@@ -144,8 +147,8 @@ def _number(items: list[dict[str, Any]], names: list[str], prefix: str) -> list[
 
 def build(version: str, log: Callable[[str], None] = print, root: Path | None = None,
           reader: Reader | None = None, adir: Path | None = None) -> dict[str, Any]:
-    """Write `knowledge/bench/interface/<version>/` from the spec, the analyst benchmark and the store, and
-    return the manifest. Read-only on the store. `reader` and `adir` exist for tests on fixtures."""
+    """Write `interface/<version>/` under the dataset directory from the spec, the analyst benchmark and the
+    store, and return the manifest. Read-only on the store. `reader` and `adir` exist for tests on fixtures."""
     spec = load_spec(version)
     analyst = load_analyst(spec.analyst_version, spec.split, adir)
     ctx = make_ctx(spec, analyst, reader)
@@ -231,7 +234,7 @@ def audit(version: str, root: Path | None = None, reader: Reader | None = None, 
     problems: list[str] = []
     manifest_path = out / "manifest.json"
     if not manifest_path.is_file():
-        return [f"no manifest at {manifest_path}"]
+        return [f"no interface benchmark {version} at {out}; " + hint(f"ue bench interface build --version {version}")]
     manifest = json.loads(manifest_path.read_text())
     for name, sha in (manifest.get("files") or {}).items():
         p = out / name
@@ -335,7 +338,7 @@ def show(version: str, root: Path | None = None, log: Callable[[str], None] = pr
     out = interface_dir(version, root)
     manifest_path = out / "manifest.json"
     if not manifest_path.is_file():
-        log(f"  no interface benchmark {version} at {out}; run `ue bench interface build --version {version}`")
+        log(f"  no interface benchmark {version} at {out}; " + hint(f"ue bench interface build --version {version}"))
         return {}
     m = json.loads(manifest_path.read_text())
     a = m.get("analyst") or {}
@@ -362,9 +365,18 @@ def show(version: str, root: Path | None = None, log: Callable[[str], None] = pr
     return m
 
 
+def is_built(version: str, root: Path | None = None) -> bool:
+    """Whether the dataset directory holds this interface version: what a test that reads it skips on."""
+    return (interface_dir(version, root) / "manifest.json").is_file()
+
+
 def load_items(version: str, tier: int, root: Path | None = None) -> list[dict[str, Any]]:
     """The items of one tier of a built interface benchmark, for anything that runs or scores against it."""
-    return _read_jsonl(interface_dir(version, root) / f"tier{tier}.jsonl")
+    p = interface_dir(version, root) / f"tier{tier}.jsonl"
+    if not p.is_file():
+        raise FileNotFoundError(f"no interface benchmark {version} tier {tier} at {p}; "
+                                + hint(f"ue bench interface build --version {version}"))
+    return _read_jsonl(p)
 
 
-__all__ = ["BANNED", "audit", "build", "content_sha256", "interface_dir", "load_analyst", "load_items", "show"]
+__all__ = ["BANNED", "audit", "build", "content_sha256", "interface_dir", "is_built", "load_analyst", "load_items", "show"]

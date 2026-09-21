@@ -11,12 +11,22 @@ import typer
 bench_app = typer.Typer(no_args_is_help=True, help="UraniumBench: frozen, anonymised benchmark cells.")
 
 
+def _plain(fn, *args, **kwargs):
+    """A benchmark or dataset that is not on disk is one line naming what builds it, and exit 2, never a
+    traceback: a public clone has neither the dataset nor the built packs."""
+    try:
+        return fn(*args, **kwargs)
+    except FileNotFoundError as err:
+        typer.echo(f"  {err}", err=True)
+        raise typer.Exit(2) from err
+
+
 @bench_app.command("build")
 def build_cmd(version: str = typer.Option("v1", "--version", help="spec under configs/bench/<version>.toml")) -> None:
     """Write data/bench/<version>/ from the spec and the store (resumable; the store is read only)."""
     from .build import build
 
-    m = build(version, log=typer.echo)
+    m = _plain(build, version, log=typer.echo)
     typer.echo(f"built {version}: {m['counts']['cells']} cells, {len(m['files'])} files hashed")
 
 
@@ -25,7 +35,7 @@ def audit_cmd(version: str = typer.Option("v1", "--version")) -> None:
     """Re-hash every file and scan every pack and passage for anything that places or names the ground."""
     from .build import audit
 
-    problems = audit(version)
+    problems = _plain(audit, version)
     for p in problems:
         typer.echo(f"  {p}")
     typer.echo(f"{version}: {'clean' if not problems else f'{len(problems)} problem(s)'}")
@@ -37,7 +47,7 @@ def show_cmd(version: str = typer.Option("v1", "--version")) -> None:
     """Counts per stratum and split, shortfalls, and what was hashed."""
     from .build import show
 
-    show(version, log=typer.echo)
+    _plain(show, version, log=typer.echo)
 
 
 @bench_app.command("oof-scores")
@@ -73,10 +83,11 @@ bench_app.add_typer(interface_app, name="interface")
 @interface_app.command("build")
 def interface_build_cmd(version: str = typer.Option("v1", "--version",
                                                     help="spec under configs/bench/interface-<version>.toml")) -> None:
-    """Write knowledge/bench/interface/<version>/ from the spec, the analyst benchmark and the store (read only)."""
+    """Write interface/<version>/ under the dataset directory (knowledge/bench/, or UE_BENCH_KNOWLEDGE_DIR) from the
+    spec, the analyst benchmark and the store (read only)."""
     from .interface.build import build
 
-    m = build(version, log=typer.echo)
+    m = _plain(build, version, log=typer.echo)
     c = m["counts"]
     typer.echo(f"built interface {version}: tier 1 {c['tier1']['items']} items, tier 3 {c['tier3']['items']} items, "
                f"content {m['content_sha256'][:12]}")
@@ -87,7 +98,7 @@ def interface_audit_cmd(version: str = typer.Option("v1", "--version")) -> None:
     """Re-hash the tier files and regenerate every item from its recorded choice against the store."""
     from .interface.build import audit
 
-    problems = audit(version)
+    problems = _plain(audit, version)
     for p in problems:
         typer.echo(f"  {p}")
     typer.echo(f"interface {version}: {'clean' if not problems else f'{len(problems)} problem(s)'}")
@@ -99,4 +110,4 @@ def interface_show_cmd(version: str = typer.Option("v1", "--version")) -> None:
     """Counts by tier, kind, stratum, reason and source; shortfalls; the hashes."""
     from .interface.build import show
 
-    show(version, log=typer.echo)
+    _plain(show, version, log=typer.echo)

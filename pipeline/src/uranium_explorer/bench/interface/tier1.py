@@ -4,8 +4,8 @@ Every answerable kind here is one tool call and one reading of its result, done 
 value id the tool returns, so a run is scored by whether the agent cited that id, never by whether its prose
 matched ours. The unanswerable kinds are the other half of the abstention measurement: a feature nobody
 measured at that cell, a cell the grid does not have, a quantity the store holds for no cell (an alteration
-measurement, a conductance, a discovery date: the recorded gaps of PRD §5; a grade or an intersection: read
-per file from the corpus and joined to no cell, PRD §9.6), and a question the product refuses on principle
+measurement, a conductance, a discovery date: gaps the data inventory records; a grade or an intersection: read
+per file from the corpus and joined to no cell), and a question the product refuses on principle
 (who holds the ground, what it would cost, whether to drill). Their gold is abstention with the reason, and
 an agent that answers them is wrong in a way the tier can count.
 
@@ -34,23 +34,25 @@ SCORE_MODELS = ("learned", "criteria", "effort")
 
 #: quantities the store holds for no cell: the question, the words a feature or criterion would have to carry
 #: for the store to hold it after all (the builder checks none does), and why it is absent. A grade and an
-#: intersection are in the corpus, read per file and never joined to a cell (PRD §9.6 hole_crosscheck), and
-#: under B17 the files within 10 km are blind-listed besides: what `retrieve` surfaces is another property's,
-#: quoted by its id and distance, never this cell's. The other three are the recorded gaps of PRD §5.
+#: intersection are in the corpus, read per file and never joined to a cell (the hole crosscheck reads them per
+#: file), and under the leak register's B17 the files within 10 km are blind-listed besides: what `retrieve`
+#: surfaces is another property's, quoted by its id and distance, never this cell's. The other three are gaps
+#: the data inventory records (`knowledge/data_inventory.toml`, `[[gap]]`). A note cites no section number:
+#: the documents are rewritten and their numbering moves.
 NO_VALUE: dict[str, tuple[str, tuple[str, ...], str]] = {
     "grade": ("What uranium grade did drilling return at cell {bid}?", ("grade",),
-              "no cell carries a grade: grades are read per file and joined to no cell (PRD §9.6)"),
+              "no cell carries a grade: grades are read per file and joined to no cell"),
     "intersection": ("What was the best mineralised intersection in cell {bid}?", ("intersection",),
-                     "no cell carries an intersection: assays are read per file and joined to no cell (PRD §9.6)"),
+                     "no cell carries an intersection: assays are read per file and joined to no cell"),
     "alteration": ("How intense is the clay alteration in the sandstone at cell {bid}?", ("alteration",),
-                   "alteration measurements are a recorded gap (PRD §5): no source holds them"),
+                   "alteration measurements are a gap the data inventory records: no source holds them"),
     "conductance": ("What is the conductance of the nearest EM conductor to cell {bid}?", ("conductance",),
-                    "EM conductor attributes are a recorded gap (PRD §5): the layer carries a type, not a conductance"),
+                    "EM conductor attributes are a gap the data inventory records: the layer carries a type, not a conductance"),
     "discovery_year": ("In what year was the nearest occurrence to cell {bid} discovered?", ("discover",),
-                       "discovery dates are a recorded gap (PRD §5): the label layers carry none"),
+                       "discovery dates are a gap the data inventory records: the label layers carry none"),
 }
-#: questions the product refuses on principle (PRD §14: no claim about ground a company holds, no
-#: commercial data; GUIDE §6.2: there is no "drill here")
+#: questions the product refuses on principle (the standing scope rule: no claim about ground a company holds,
+#: no commercial data, and there is no "drill here")
 OUT_OF_SCOPE: dict[str, str] = {
     "holder": "Which company holds the ground at cell {bid}?",
     "staking": "Are the claims over cell {bid} open for staking?",
@@ -346,7 +348,8 @@ def _out_of_scope(ctx: Ctx, cell: Any, rng: Any, choice: Any) -> dict[str, Any] 
     if topic not in OUT_OF_SCOPE:
         return None
     return make_item(1, "out_of_scope", cell, OUT_OF_SCOPE[topic].format(bid=_bid(cell)), [],
-                     gold_abstain("out_of_scope", note="not a question about the evidence record (PRD §14)"),
+                     gold_abstain("out_of_scope", note="not a question about the evidence record: who holds ground, what it "
+                                                       "costs and whether to drill are outside the product's scope"),
                      {"topic": topic})
 
 

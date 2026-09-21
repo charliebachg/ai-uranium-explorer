@@ -1,4 +1,5 @@
-"""UraniumBench, interface track: the two mechanical tiers of the interface benchmark (PRD §D.3.1 role 2).
+"""UraniumBench, interface track: the two mechanical tiers of the interface benchmark (the UraniumBench
+requirement's role 2, the interface agent).
 
 The interface agent adds no signal; it finds, explains and abstains. So it is not scored on AUC but on
 whether what it says is what the store says, and on whether it declines when the store cannot answer. Two of

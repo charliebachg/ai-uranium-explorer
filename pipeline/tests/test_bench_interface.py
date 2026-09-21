@@ -11,6 +11,7 @@ from typing import Any
 import pandas as pd
 import pytest
 
+from uranium_explorer.bench import dataset as D
 from uranium_explorer.bench.interface import build as B
 from uranium_explorer.bench.interface import items as I
 from uranium_explorer.bench.interface import spec as S
@@ -514,12 +515,24 @@ def test_store_reader_applies_the_mask_and_serves_the_fold_out_of_fold(world) ->
 # ---------------------------------------------------------------- the shipped build
 
 
-def test_shipped_v1_audits_clean_against_the_store() -> None:
+def require_shipped(version: str) -> None:
+    """Skip unless the dataset directory holds this interface build and the store is there to audit it against:
+    a public clone has neither, and the test must say so rather than fail."""
     from uranium_explorer.store import db_path
 
+    if not B.is_built(version):
+        pytest.skip(f"interface {version} is not in the dataset directory {D.knowledge_dir()}")
     if not db_path().is_file():
         pytest.skip("no store to audit against")
-    if not (B.interface_dir("v1") / "manifest.json").is_file():
-        pytest.skip("interface v1 is not built")
+
+
+def test_shipped_v1_audits_clean_against_the_store() -> None:
+    require_shipped("v1")
     problems = B.audit("v1", limit=30)
     assert problems == []
+
+
+def test_the_shipped_audit_skips_cleanly_when_the_dataset_is_absent(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv(D.ENV, str(tmp_path))                   # an empty dataset directory: a public clone
+    with pytest.raises(pytest.skip.Exception, match="not in the dataset directory"):
+        test_shipped_v1_audits_clean_against_the_store()
