@@ -2,11 +2,11 @@
 # to get. Counts and field lists were confirmed by live calls on the dates recorded here; anything not
 # confirmed carries `verified = false` and must not be relied on until it is.
 #
-# `bears_on` uses the mineral-systems vocabulary, restricted to what the research reports actually support for
-# the Athabasca: pathway, trap, detection (a measurable expression), dispersal (glacial transport of a signal),
+# `bears_on` uses the mineral-systems vocabulary, restricted to what the published Athabasca literature (Jefferson
+# et al. 2007, Powell et al. 2007, and the sources cited on each row) supports for the Athabasca: pathway, trap, detection (a measurable expression), dispersal (glacial transport of a signal),
 # cover (what sits above the target), effort (where people looked, for the null model), label, study_area.
-# Source and preservation are deliberately absent: research reports 01 and 02 do not give Athabasca-specific
-# proxies for either, so no criterion may claim one.
+# Source and preservation are deliberately absent: the sources consulted give no Athabasca-specific proxy for
+# either, so no criterion may claim one.
 #
 # `tier` is the provenance tier the rows land in (see store/schema.sql). `role` is feature, label or context:
 # a label may never enter a feature set.
@@ -63,9 +63,9 @@ licence = "sk"
 verified = true
 verified_at = "2026-09-18"
 fields_verified = false
-notes = """Graphitic basement units are "the source of most significant conductors in the Athabasca Basin, and are key empirical locators for U deposits" (Jefferson et al. 2007, via research report 02 section 1.1.3). This is the single most valuable public feature here."""
+notes = """Graphitic basement units are "the source of most significant conductors in the Athabasca Basin, and are key empirical locators for U deposits" (Jefferson et al. 2007). This is the single most valuable public feature here."""
 caveats = [
-  "Conductor traces plot up-dip of blind ore, so a buffer must extend down-dip rather than being symmetric (report 02, 1.1.3).",
+  "Conductor traces plot up-dip of blind ore, so a buffer must extend down-dip rather than being symmetric.",
   "Silicification can turn graphitic gneiss from a conductor into a resistor, so absence is not evidence of absence.",
   "The Wolverine Point Formation is itself a conductor and hinders detection of graphitic units beneath it.",
   "Attribute list not yet confirmed: do not assume a conductance field exists.",
@@ -88,7 +88,7 @@ licence = "sk"
 verified = true
 verified_at = "2026-09-18"
 fields_verified = true
-notes = """The trap element: "the unconformity offset where footwall faults meet the P2 fault hosts the McArthur River ore pods" (report 02, 1.1.5). Fault intersections matter more than fault proximity alone."""
+notes = """The trap element: "the unconformity offset where footwall faults meet the P2 fault hosts the McArthur River ore pods". Fault intersections matter more than fault proximity alone."""
 caveats = [
   "YEAR was 0 in every sampled row: treat it as unpopulated, not as a compilation date.",
   "A 1:250,000 line has map-scale position error far larger than an ore body.",
@@ -110,7 +110,7 @@ licence = "sk"
 verified = true
 verified_at = "2026-09-18"
 fields_verified = true
-notes = """Magnetic lows mark "pelitic-psammopelitic gneiss, the host of graphitic conductors" (report 02, 1.1.2); with no public magnetic grid, the mapped lithology is the only way to reach that element. LITHOLOGY carries the graphitic and pelitic descriptors a criterion can key on."""
+notes = """Magnetic lows mark "pelitic-psammopelitic gneiss, the host of graphitic conductors"; with no public magnetic grid, the mapped lithology is the only way to reach that element. LITHOLOGY carries the graphitic and pelitic descriptors a criterion can key on."""
 caveats = ["Better than the 1:1,000,000 compilation already pulled, but still a regional map."]
 
 [[source]]
@@ -170,7 +170,7 @@ licence = "sk"
 verified = true
 verified_at = "2026-09-18"
 fields_verified = true
-notes = "Collected 1975-1978 around the Athabasca sandstone, before most mining: a pre-mining baseline (report 02, 1.2)."
+notes = "Collected 1975-1978 around the Athabasca sandstone, before most mining: a pre-mining baseline."
 caveats = ["Same lake-limited sampling frame; carries its own year field, so it can be used in a dated hindcast."]
 
 [[source]]
@@ -208,7 +208,7 @@ licence = "sk"
 verified = true
 verified_at = "2026-09-18"
 fields_verified = true
-notes = """A boulder train is a vector, not a location: at Patterson Lake the discovery hole cut over 1% U3O8 3.8 km up-ice of the boulders (report 02, 1.2). The only layer here with a populated year, so it also dates exploration effort."""
+notes = """A boulder train is a vector, not a location: at Patterson Lake the discovery hole cut over 1% U3O8 3.8 km up-ice of the boulders. The only layer here with a populated year, so it also dates exploration effort."""
 caveats = [
   "The source lies up-ice, so the criterion is a corridor in the ice-flow direction, not a buffer.",
   "Zircon in till travelled over 100 km up-ice in one study: transport distance is not fixed.",
@@ -231,7 +231,7 @@ fields_verified = false
 notes = "Interpreted domain polygons: the nearest public stand-in for a magnetic grid, which is not published by URL."
 caveats = [
   "An interpretation, not a measurement.",
-  "Report 02 records that the magnetic signature is contested: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign.",
+  "The magnetic signature is contested in the literature: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign.",
 ]
 
 # ---------------------------------------------------------------- already pulled by `ue index pull`
@@ -392,7 +392,7 @@ fields_verified = true
 notes = """COGs on the public sentinel-cogs bucket; a SWIR asset returned HTTP 200 unauthenticated and a 0.5 by 0.3 degree box over the basin matched 27 scenes under 10% cloud in one summer. Jobs: a lake and wetland mask (the sampling frame for the lake geochemistry), cover versus outcrop, and true-colour and SWIR chips for each candidate cell."""
 caveats = [
   "Athabasca deposits sit 100 to 900 m down under 1 to 2 km of sandstone: no optical sensor sees them, and this layer is never an ore detector here.",
-  "A frontier model scored 0.369 on geological map understanding (report 02, 4.4), so an agent may describe ground context from a chip but must not claim alteration from it.",
+  "A frontier model scored 0.369 on geological map understanding, so an agent may describe ground context from a chip but must not claim alteration from it.",
   "Clay alteration is detectable by SWIR only where it reaches the surface; in this basin it generally does not.",
 ]
 

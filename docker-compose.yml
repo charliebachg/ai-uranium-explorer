@@ -13,8 +13,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      minio:
-        condition: service_started   # the first start may pull the seed pack from it
+      # MinIO is not a dependency: the app needs it only to pull a seed pack when no store is mounted, and
+      # `ue store seed ensure` copes with the bucket being absent or the service being down (no-seed).
     environment:
       UE_PG_DSN: postgresql://${UE_PG_USER:-ue}:${UE_PG_PASSWORD:-ue}@db:5432/${UE_PG_DB:-ue}
       UE_S3_ENDPOINT: http://minio:9000
@@ -22,6 +22,9 @@ services:
       # the seed pack the first start unpacks when pipeline/data/ue.duckdb is missing; a container path, under
       # the mounted data directory, so a pack the host keeps at pipeline/data/seed/latest is what the app sees
       UE_SEED_DIR: /app/pipeline/data/seed/latest
+      # the chat and the analyst jobs run on a pay-per-token model through OpenRouter (OPENROUTER_API_KEY in .env);
+      # a vendor/model id routes there, a claude-* id to the CLI, anything else to OpenAI
+      UE_INTERFACE_MODEL: ${UE_INTERFACE_MODEL:-z-ai/glm-5.3-flash}
       # ...and when there is none there either, where `ue store seed ensure` pulls one from: the compose MinIO,
       # bucket `seeds`, prefix `latest` (what `ue store seed push <pack> --to s3://seeds/latest` writes, with
       # UE_S3_ENDPOINT=http://127.0.0.1:9000 on the host). An empty bucket is "no seed", not a failed start.
@@ -36,7 +39,11 @@ services:
       # spans stay in each run's spans.jsonl and the MLflow mirror, and the SDK is not imported
       # UE_OTLP_ENDPOINT: http://jaeger:4318
     env_file:
-      - path: pipeline/.env      # the OpenAI key and its spend ceiling; gitignored, never copied into the image
+      # the model keys and their spend ceilings live in the repository's .env (see .env.example); gitignored,
+      # read by the container at start and never copied into the image. pipeline/.env is the serving stack's.
+      - path: .env
+        required: false
+      - path: pipeline/.env
         required: false
     volumes: ["./pipeline/data:/app/pipeline/data"]   # the analytics store, computed on the host
   db:
@@ -53,7 +60,8 @@ services:
       timeout: 3s
       retries: 20
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    # MinIO publishes its images on Quay; the Docker Hub repository no longer carries current tags
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${UE_S3_KEY:-ue-minio}

@@ -2,7 +2,7 @@
 
 The requirement is strict about this tier: it grows only from production failures, never from imagination.
 So every source here is a failure something in this project recorded, and every item names it by a stable
-name (the gate suite, the gate record, the UraniumBench requirement, a rule's name, a finding's number), never
+name (the gate suite, the gate record, the UraniumBench requirement, a rule's name), never
 by a section number, because the documents are rewritten and their numbering moves:
 
 * the corruptions the gate suite (`prospect/gate_eval.py`) puts to the fabrication gate, because they are
@@ -16,8 +16,8 @@ by a section number, because the documents are rewritten and their numbering mov
 * a folklore criterion phrased as fact: the criteria `criteria.toml` carries at weight zero;
 * a request for a grade, the number from nowhere in the MineTRACE record: the store reads grades per file
   and joins none to a cell, so there is no grade *of a cell* to state;
-* absence of mapping read as absence of features, the rule of that name, and the verifier's finding on the
-  cell outside the map footprint (FINDINGS F7).
+* absence of mapping read as absence of features, the rule of that name (the PRD's standing constraints), and
+  the verifier's refusal on the cell outside the map footprint that gave the rule its name.
 
 An item is the adversarial question or premise, its source and reference, and the behaviour a correct agent
 shows: correct the premise and cite the id, cite the id, refuse the citation, say unknown rather than absent,
@@ -356,7 +356,7 @@ SOURCES: dict[str, Source] = {s.name: s for s in (
     Source("uncited", "gate", "the gate suite (prospect/gate_eval.py `uncited`) and the gate record", _uncited),
     Source("wrong_cell", "gate", "the gate suite (prospect/gate_eval.py `cited_to_the_wrong_value`); the gate record's "
                                  "first named hole, 'a correct value from the wrong cell passes'; the UraniumBench "
-                                 "requirement, '4 of 40 escaped the gate'", _wrong_cell),
+                                 "requirement, 'a real number from a neighbouring cell'", _wrong_cell),
     Source("obs_count_no_id", "tool", "the gate suite's record of changes (prospect/gate_eval.py docstring, change 2); "
                                       "the UraniumBench requirement, 'an observation count with no citable id'", _obs_count),
     Source("filename_as_id", "citation", "the UraniumBench requirement, 'a filename cited as an id'; the gate record",
@@ -367,8 +367,8 @@ SOURCES: dict[str, Source] = {s.name: s for s in (
                                           "folklore criterion phrased as fact'", _folklore),
     Source("grade_request", "request", "the UraniumBench requirement, 'a request for a grade'; no per-cell grade in the "
                                        "store: grades are read per file and joined to no cell", _grade),
-    Source("absence_as_absent", "data", "the rule 'absence of mapping is not absence of features'; FINDINGS F7, the cell "
-                                        "outside the map footprint", _absence),
+    Source("absence_as_absent", "data", "the rule 'absence of mapping is not absence of features' (the PRD's standing "
+                                        "constraints); the verifier's refusal on the cell outside the map footprint", _absence),
 )}
 
 

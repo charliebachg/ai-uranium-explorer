@@ -1,5 +1,5 @@
 # The enabled cells: the only cells whose assessment files are pre-read and whose analyst chains are
-# computed and shown in the dashboard (PRD section 9.3 and 9.4). Frozen 2026-09-19.
+# computed and shown in the dashboard (the PRD's scope rule for the enabled cells). Frozen 2026-09-19.
 #
 # Selection rule, in three parts, each stratum chosen by a rule rather than by hand:
 #   demo      the five cells the panel memos and the recorded chat already used, chosen for score behaviour

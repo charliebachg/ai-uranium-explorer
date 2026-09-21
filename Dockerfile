@@ -25,4 +25,4 @@ COPY pipeline/alembic.ini pipeline/migrations ./
 RUN uv sync --frozen --no-dev
 COPY --from=web /web/dist /app/web/dist
 EXPOSE 8787
-CMD ["sh", "-c", "uv run ue store seed ensure && exec uv run ue prospect serve --host 0.0.0.0 --port 8787 --backend openai --web-dist /app/web/dist"]
+CMD ["sh", "-c", "uv run ue store seed ensure && exec uv run ue prospect serve --host 0.0.0.0 --port 8787 --backend auto --web-dist /app/web/dist"]

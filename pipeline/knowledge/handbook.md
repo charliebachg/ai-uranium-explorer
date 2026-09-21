@@ -1,8 +1,12 @@
 # Athabasca unconformity uranium: what the record supports
 
-This is the domain reference for the agent panel. Everything here is drawn from this project's research
-reports 01 and 02, which cite their own sources. Where a claim is contested, both sides are given. Where a
-claim is folklore, it is labelled and must never be used as support.
+This is the domain reference for the agent panel. Everything here is drawn from published sources on the
+Athabasca Basin, chiefly Jefferson et al. (2007) and Powell et al. (2007) in Proceedings of Exploration 07,
+Thomas and McHardy (2007) and Thomas and Wood (2007) in GSC Bulletin 588, Zhang et al. (2001) on clay
+alteration, the Saskatchewan Geological Survey's lake sediment and lake water survey records, and the
+operators' public technical reports and news releases for the deposits named; `criteria.toml` carries the
+citation for each threshold. Where a claim is contested, both sides are given. Where a claim is folklore, it
+is labelled and must never be used as support.
 
 **The one rule that outranks everything below:** you may not state a number that did not come from a tool
 result, with its value id. Not from this handbook, not from memory, not from arithmetic you did yourself. The
@@ -141,7 +145,8 @@ Read these before arguing that a high score means something.
   sampling?
 - **Dispersal** — boulders, and the glacial transport that moved them.
 
-Reports 01 and 02 give **no Athabasca-specific proxy for source or preservation**. Do not claim either.
+The published record consulted gives **no Athabasca-specific proxy for source or preservation**. Do not
+claim either.
 
 **Unknown is not absent.** A criterion with no measurement is unknown. A criterion measured and not met is
 absent. The adjudicator must separate them explicitly, and "insufficient evidence" is a correct, respectable

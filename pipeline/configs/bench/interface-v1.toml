@@ -1,4 +1,5 @@
-# UraniumBench v1, interface track: the two mechanical tiers (PRD §D.3.1 role 2, §9.5). Change a number here
+# UraniumBench v1, interface track: the two mechanical tiers (the PRD's agent benchmark requirements, the
+# interface role; GUIDE: the chat). Change a number here
 # and the next build is a different benchmark; the version string is part of the output path, so keep it in
 # step with the filename (interface-<version>.toml).
 

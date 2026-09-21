@@ -136,8 +136,8 @@ def point_stat(
     anomaly" and "never sampled" are different facts and must stay different. `zero_is_null` reads a value
     of exactly 0 as a missing measurement: the radioactive-boulder layer carries 2,127 records at 0.0 cps
     among 6,591, a filled-in blank, and the staged analyst's verifier refused a node that read it as a
-    measured absence (FINDINGS F7). A record so dropped still counts for the effort features, which count
-    records, not readings.
+    measured absence: a filled-in blank is no reading, and unknown and absent stay distinct (the PRD's standing
+    constraints). A record so dropped still counts for the effort features, which count records, not readings.
     """
     pts = _layer(layer_key)
     if value_field not in pts.columns:
@@ -311,11 +311,12 @@ def graphitic_host(cells: gpd.GeoDataFrame) -> pd.DataFrame:
     outside the basin; null if unmapped, and null inside the basin unless the map names a host there.
 
     With no public magnetic grid, the mapped lithology is the only route to the element the magnetic low is a
-    proxy for: "pelitic-psammopelitic gneiss, the host of graphitic conductors" (research report 02, 1.1.2).
+    proxy for: "pelitic-psammopelitic gneiss, the host of graphitic conductors" (Thomas and McHardy 2007, GSC
+    Bulletin 588).
     Inside the basin outline the 1:250,000 map shows the Athabasca sandstone, which is the cover, not the
     basement the criterion asks about, so a non-host polygon there says nothing: unknown, not absent. The
-    verifier of the staged analyst refused that reading on six of the first fifteen cells it saw (FINDINGS F7),
-    and before this rule the criteria score counted it against 18,619 covered cells. A host unit mapped inside
+    verifier of the staged analyst refused that reading on six of the first fifteen cells it saw, which is where
+    the rule "absence of mapping is not absence of features" came from, and before this rule the criteria score counted it against 18,619 covered cells. A host unit mapped inside
     the outline (a basement window or the rim) still counts as 1.
     """
     cls = polygon_class(cells, "bedrock_250k", "LITHOLOGY")
