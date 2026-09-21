@@ -81,7 +81,11 @@ class Trace:
 
 _trace_var: contextvars.ContextVar[Trace | None] = contextvars.ContextVar("ue_trace", default=None)
 _span_var: contextvars.ContextVar[Span | None] = contextvars.ContextVar("ue_span", default=None)
-_active: Trace | None = None                  # process-wide fallback for pool threads
+#: the process-wide fallback a pool thread's span attaches to. One run at a time per process is where this
+#: stops: two traces open at once in one process would each set it, and a pool thread could attach to the
+#: wrong run (the MCP handlers serialise their traced calls for this reason); a registry keyed by the run,
+#: so that concurrent runs trace apart, is on the PRD's backlog.
+_active: Trace | None = None
 _mlflow_warned = False
 
 

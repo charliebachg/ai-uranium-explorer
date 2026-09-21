@@ -8,7 +8,7 @@ from pathlib import Path
 
 import typer
 
-mcp_app = typer.Typer(no_args_is_help=True, help="The MCP server: the tool contract of PRD §E.3 over stdio or HTTP.")
+mcp_app = typer.Typer(no_args_is_help=True, help="The MCP server: the tool contract over stdio or HTTP.")
 
 
 @mcp_app.command("serve")
@@ -20,7 +20,12 @@ def serve_cmd(
     public_safe: bool = typer.Option(False, "--public-safe", help="never serve report text or a non-redistributable layer"),
     runs_dir: str = typer.Option("", "--runs-dir", help="where each session writes its run (default: data/runs)"),
 ) -> None:
-    """Serve the tools, resources and prompts. One transport per process; the API mounts its own at /mcp."""
+    """Serve the tools, resources and prompts. One transport per process; the API mounts its own at /mcp.
+
+    This server has no job runner, so `run_analyst` refuses with the reason and `ue prospect serve` is where
+    the analyst runs as a job: a runner's recovery pass marks every queued or running job in the store as
+    failed on start, which is right for the one API process that owns the pool and wrong for a second process
+    beside it. A runner for the standalone server is on the PRD's backlog."""
     from .server import build
     from .transport import serve_http, serve_stdio
 

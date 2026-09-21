@@ -7,7 +7,7 @@ What it writes under `web/public/data`:
   pages/<file>/pNNNN.webp         150 dpi-equivalent page image, quality 80 (git-ignored, never public-safe)
   pages/<file>/tNNNN.webp         thumbnail
 and patches exactly two things in the existing `manifest.json`: the `m:files_read` stat and the artifact
-entries for the files written here. `export_web.py` (Phase 1, owned elsewhere) still owns the rest.
+entries for the files written here. `export_web.py` owns the rest.
 
 Nothing is written until `contract_check` passes on the staged copy: an invalid export never lands.
 """
@@ -29,12 +29,11 @@ from . import __version__, contract_check
 from .assemble import assembled_files, read_assembled
 from .crosscheck import read_crosscheck
 from .ids import sha256_file, sha256_json, short
-from .normalise import normalise_hole_name
 from .nts import nts_bounds
 from .paths import PATHS
 from .position import read_positions
 from .render import read_pages
-from .values import registry, stat
+from .values import stat
 
 EXPORT_VERSION = "export-reports/v1"
 HOLE_BUFFER_M = 250.0
@@ -492,5 +491,3 @@ def stage_export_reports(files: list[str] | None = None, public_safe: bool = Fal
         f"contract {'ok' if not final_errors else f'{len(final_errors)} errors'}")
     return summary
 
-
-REGISTRY_HELPERS = (registry, normalise_hole_name)

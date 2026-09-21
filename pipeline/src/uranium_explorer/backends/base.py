@@ -1,4 +1,4 @@
-"""Backend interface and error taxonomy shared by the claude CLI, replay and (later) API adapters."""
+"""Backend interface and error taxonomy shared by the claude CLI, replay, OpenAI and OpenRouter adapters."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""The shared runtime every kind of run stands on (PRD §8.1, the "4a-lite" minimum).
+"""The shared runtime every kind of run stands on.
 
 Four things live here, and nothing that belongs to one agent:
 

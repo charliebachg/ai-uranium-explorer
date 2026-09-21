@@ -10,7 +10,7 @@ from uranium_explorer import contract_check, export_reports
 from uranium_explorer.assemble import assemble_file
 from uranium_explorer.crosscheck import build_provincial_lith, crosscheck_file
 from uranium_explorer.ocr import read_words
-from uranium_explorer.position import stage_position, transform_hole
+from uranium_explorer.position import transform_hole
 from uranium_explorer.validators import apply_findings, build_context, run_validators
 from uranium_explorer.validators.checks import geometric_row_counts
 

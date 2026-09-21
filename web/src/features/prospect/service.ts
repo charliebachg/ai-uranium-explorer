@@ -111,7 +111,7 @@ export type ChatEvent =
   | { type: "checking"; claims: number }
   /** the gate objected once; the answer is being asked for again with the objections */
   | { type: "refused"; problems: string[] }
-  // the interface agent's own steps (PRD §8.3): the route and its plan, then the actions it took
+  // the interface agent's own steps: the route and its plan, then the actions it took
   | ({ type: "route" } & ChatRoute)
   | ({ type: "abstain" } & ChatAbstention)
   | ({ type: "insight" } & ChatInsight)

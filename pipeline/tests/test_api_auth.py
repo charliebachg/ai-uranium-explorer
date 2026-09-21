@@ -1,4 +1,4 @@
-"""Auth and roles on the API (PRD §A.2), and the job routes over HTTP.
+"""Auth and roles on the API, and the job routes over HTTP.
 
 One key register for the API and the MCP server: a fake `UE_MCP_KEYS` here, never a real key. The chat backend
 is the scripted fake of `test_api`, the tools are stubbed, and the job kind is a fake that finishes at once,
@@ -41,7 +41,7 @@ def fake_kind(role: str = "admin") -> J.JobKind:
 
     def prepare(cell_id: str | None, args: dict[str, Any]) -> dict[str, Any]:
         if cell_id != CELL:
-            raise J.JobRefused(f"the analyst runs only on the enabled cells (PRD §9.4), and {cell_id} is not one of them")
+            raise J.JobRefused(f"the analyst runs only on the enabled cells (the dashboard's scope rule), and {cell_id} is not one of them")
         return {"budget_usd": float(args.get("budget_usd", 0.5)), "reason": str(args.get("reason") or "")}
 
     kind = J.JobKind("analyst", role, run, prepare, lambda args: args["budget_usd"])
@@ -177,7 +177,7 @@ def test_a_job_is_submitted_polled_listed_and_its_requester_recorded(tmp_path: P
 def test_a_refused_submission_is_a_400_with_the_reason(tmp_path: Path, stubs: None) -> None:
     c = make_client(tmp_path, None)
     r = c.post("/api/jobs", json={"kind": "analyst", "cell_id": "0000_0001"})
-    assert r.status_code == 400 and "only on the enabled cells (PRD §9.4)" in r.json()["detail"]
+    assert r.status_code == 400 and "only on the enabled cells (the dashboard's scope rule)" in r.json()["detail"]
     assert c.post("/api/jobs", json={"kind": "corpus", "cell_id": CELL}).status_code == 404
     assert c.post("/api/jobs", json={"kind": "analyst", "cell_id": "not-a-cell"}).status_code == 422
     over = c.post("/api/jobs", json={"kind": "analyst", "cell_id": CELL, "args": {"budget_usd": 1.5}})

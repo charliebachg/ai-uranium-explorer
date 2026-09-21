@@ -34,7 +34,13 @@ test("map loads real provincial data, hover and selection work", async ({ page }
 
   // hover the densest visible compilation collar near the centre of the viewport
   const target = await page.evaluate(() => {
-    const m = (window as unknown as { __ue: { map: any } }).__ue.map;
+    type Feat = { id?: string | number; geometry: { coordinates: [number, number] } };
+    type Map = {
+      queryRenderedFeatures: (o: { layers: string[] }) => Feat[];
+      getCanvas: () => HTMLCanvasElement;
+      project: (c: [number, number]) => { x: number; y: number };
+    };
+    const m = (window as unknown as { __ue: { map: Map } }).__ue.map;
     const feats = m.queryRenderedFeatures({ layers: ["compilation-dot"] });
     const w = m.getCanvas().clientWidth;
     const h = m.getCanvas().clientHeight;
@@ -51,14 +57,15 @@ test("map loads real provincial data, hover and selection work", async ({ page }
     return best;
   });
   expect(target).not.toBeNull();
-  await page.mouse.move(target!.x, target!.y);
+  if (target === null) throw new Error("no compilation collar in view");
+  await page.mouse.move(target.x, target.y);
   await expect(page.locator('[data-strict="hovercard"]')).toBeVisible({ timeout: 5000 });
   await expect(page.locator('[data-strict="hovercard"]')).toContainText(
     "Assay values: none in provincial tables",
   );
   await page.screenshot({ path: "test-results/map-hover.png" });
 
-  await page.mouse.click(target!.x, target!.y);
+  await page.mouse.click(target.x, target.y);
   await expect(page.locator('[data-strict="hole-panel"]')).toBeVisible({ timeout: 5000 });
   await page.waitForTimeout(500);
   await page.screenshot({ path: "test-results/map-selected.png" });

@@ -5,11 +5,9 @@ from __future__ import annotations
 import json
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from uranium_explorer.prospect import hindcast as HC
-from uranium_explorer.prospect import models as M
 from uranium_explorer.prospect import tracking as TR
 from uranium_explorer.store import snapshot as SN
 from test_prospect_headline import frame

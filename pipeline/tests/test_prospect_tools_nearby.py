@@ -136,9 +136,9 @@ def test_the_radius_changes_the_count_and_is_part_of_every_id(world: Path) -> No
     odd = T.nearby(CELL, "em_conductors", radius_m=2500.5)
     assert near.rows[0]["n_within"] == 1 and near.rows[0]["nearest_m"] == 1000.0
     assert wide.rows[0]["n_within"] == 2 and wide.rows[2]["dist_m"] == 8000.0
-    assert all(f":em_conductors:5000:" in vid for vid in near.values)
-    assert all(f":em_conductors:10000:" in vid for vid in wide.values)
-    assert all(f":em_conductors:2500.5:" in vid for vid in odd.values)
+    assert all(":em_conductors:5000:" in vid for vid in near.values)
+    assert all(":em_conductors:10000:" in vid for vid in wide.values)
+    assert all(":em_conductors:2500.5:" in vid for vid in odd.values)
     assert near.rows[1]["text"] == "TEM"
 
 

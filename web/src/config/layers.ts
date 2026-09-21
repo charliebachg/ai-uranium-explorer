@@ -11,7 +11,7 @@ import {
 import { RELIEF } from "./basemaps";
 
 /**
- * App layer registry. Colour encodes data source (and, from Phase 2, extraction status) only: never grade,
+ * App layer registry. Colour encodes data source (and extraction status) only: never grade,
  * commodity or potential. tests/unit/composeStyle.test.ts enforces that on the composed style.
  */
 

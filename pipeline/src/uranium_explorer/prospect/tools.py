@@ -171,7 +171,7 @@ def criteria_breakdown(cell_id: str) -> ToolResult:
     finally:
         con.close()
     out = ToolResult("criteria_breakdown", {"cell_id": cell_id})
-    for key, membership, weight, contribution in rows:
+    for key, membership, weight, _contribution in rows:
         c = by_key.get(key)
         row: dict[str, Any] = {
             "criterion": key, "title": c.title if c else key, "element": c.element if c else "",

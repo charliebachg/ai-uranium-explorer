@@ -12,7 +12,7 @@ Two differences from that design, both deliberate:
 * **Missing is a first-class answer.** A cell with no lake has no lake-sediment reading, and the agent is
   required to say so rather than treat silence as a low value.
 
-Since Phase 4c the agent behind this module is the interface agent (`uranium_explorer.interface`, PRD §8.3): a
+The agent behind this module is the interface agent (`uranium_explorer.interface`; see GUIDE: the chat): a
 router classifies the question, a plan written in Python fetches the evidence for its kind, one answer call
 on a cheap model says what was found, and the gate holds it. This module keeps the names the API, the MCP
 session manifest and the persisted conversations already use: `Conversation`, `ask` with its signature,

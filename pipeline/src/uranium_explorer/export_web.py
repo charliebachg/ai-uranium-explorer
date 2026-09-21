@@ -1,8 +1,8 @@
 """`ue export-web`: write the web contract (see web/src/data/contract.ts) into web/public/data.
 
-Phase 1 exports the provincial context: manifest (value-backed stats, sources, licences), bulk drillhole
-layers, year histogram, basin outline, deposit footprints, uranium occurrences and the NTS grid. Report
-artifacts are added by later phases.
+It exports the provincial context: manifest (value-backed stats, sources, licences), bulk drillhole
+layers, year histogram, basin outline, deposit footprints, uranium occurrences and the NTS grid. The report
+artifacts beside them are `ue export-reports`'s.
 """
 
 from __future__ import annotations
@@ -357,7 +357,7 @@ def export(public_safe: bool = False, log: Any = print) -> Path:
                               page_images=False)
     _dump(stage / "manifest.json", manifest, compact=False)
 
-    # atomic-ish swap of the exported files (pages/ and reports/ from later phases are left untouched)
+    # atomic-ish swap of the exported files (pages/ and reports/, which `ue export-reports` writes, are left untouched)
     for rel in [*artifacts, "manifest.json"]:
         dst = target / rel
         dst.parent.mkdir(parents=True, exist_ok=True)

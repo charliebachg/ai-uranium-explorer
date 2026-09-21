@@ -23,12 +23,11 @@ import datetime as dt
 import json
 import os
 from dataclasses import dataclass
-from typing import Any, Callable, Iterator
+from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
 
-from ..paths import PATHS
 from ..store import append_frame, connect
 from .grid import GRID_EPSG, load_cells
 
@@ -454,7 +453,7 @@ def build(
               or (only == "dem") == (f[0] in DEM_KEYS)]
     now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
     frames = []
-    for key, col, unit, bears_on, _note in wanted:
+    for key, col, unit, _bears_on, _note in wanted:
         pixels = merged["pixels_dem"] if key in DEM_KEYS else merged["pixels_s2"]
         frames.append(pd.DataFrame({
             "cell_id": merged["cell_id"], "feature_key": key, "value": merged[col], "value_text": None,

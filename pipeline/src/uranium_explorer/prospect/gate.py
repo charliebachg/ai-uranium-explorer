@@ -1,9 +1,8 @@
-"""The data readiness gate (PRD §9.1): five columns, one row per dataset the focused tasks depend on.
+"""The data readiness gate: five columns, one row per dataset the focused tasks depend on.
 
 The rule is "no agent phase starts until every dataset the focused tasks depend on is green on all five
 columns". This module says, for each such dataset, which columns are green and why the others are not. It
-never fixes anything; it is the checklist the agent phases wait behind, and the verdict it prints is the one
-the PRD asks for.
+never fixes anything; it is the checklist the agent phases wait behind.
 
 Three kinds of dataset are in scope, one row each:
 

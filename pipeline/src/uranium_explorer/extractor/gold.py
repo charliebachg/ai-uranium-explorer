@@ -1,4 +1,4 @@
-"""Hand-keyed gold pages and the score against them (PRD §8.2 "scored by Tier 4", §D.3.1 role 1).
+"""Hand-keyed gold pages and the score against them: the reading track's own ground truth.
 
 A gold page is a file under `gold/pages/<file>/p<NNNN>.json` in the shape of the wire schema, keyed by a
 person from the page image. `ue gold key` writes the empty skeleton with the schema's own vocabulary, so the
@@ -9,7 +9,8 @@ nothing until the person sets `status` to `keyed` and puts their name in `keyed_
 The score is precision and recall of a run's first-family readings against every keyed gold page the run
 read, per field type, with the denominators printed beside every rate: a bag of printed values per page,
 field and analyte, equal under the agreement rule (`agree.values_equal`). Row position is not scored. With
-no keyed page the score says so and reports zero, which is the honest number today.
+no keyed page the score says so and reports zero, which is the honest number today: no gold page has been
+keyed yet, and keying the first set is on the PRD's backlog.
 """
 
 from __future__ import annotations

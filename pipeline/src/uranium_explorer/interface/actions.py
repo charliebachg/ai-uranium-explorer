@@ -1,13 +1,13 @@
-"""The three actions of PRD §8.3: abstain, record an insight, invoke the analyst.
+"""The interface agent's three actions: abstain, record an insight, invoke the analyst.
 
 `abstain` and `record_insight` run the MCP server's own handlers (`mcp.handlers.Handlers`), not a second
 implementation: the same id minting, the same number scanning, the same `expert.insight` insert. The
 handlers read a handful of attributes of a live MCP session; `Live` gives them those, backed by the
 conversation, which is the whole cost of sharing one write path. `invoke_analyst` hands the cell, the
 out-of-fold score ids, the expert ids recorded in this conversation and the reason to the job runner
-(`api.jobs`, imported lazily because it may not be in the build) and returns a job id; the chain runs
-offline and a later turn or the panel's poll reports it (PRD §E.3, principle 7). The analyst runs only on
-the enabled cells, within a per-session budget (PRD §9.4).
+(`api.jobs`) and returns a job id; the chain runs offline and a later turn or the panel's poll reports it
+(long work is a job, never a blocked call). The analyst runs only on the enabled cells, within a
+per-session budget (see GUIDE: keys, roles and background jobs).
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ from functools import lru_cache
 from types import SimpleNamespace
 from typing import Any
 
+from ..api import jobs as J
 from ..bench import pack as P
 from ..paths import PATHS
 from ..store import connect
@@ -26,16 +27,15 @@ from .conversation import Conversation
 from .loop import ABSTAIN_REASONS
 
 ENABLED_CELLS = PATHS.pipeline / "knowledge" / "enabled_cells.toml"
-#: what one invocation may spend, and what one conversation may spend over all of them (PRD §9.4); both are
+#: what one invocation may spend, and what one conversation may spend over all of them; both are
 #: read by name from the environment so a deployment can set them without a code change. The runner has its
-#: own process-wide ceiling on top; the conversation's is the per-session budget §9.4 names.
+#: own process-wide ceiling on top; the conversation's is the per-session budget the scope rule names.
 JOB_BUDGET_VAR, SESSION_BUDGET_VAR = "UE_ANALYST_JOB_BUDGET_USD", "UE_ANALYST_SESSION_BUDGET_USD"
 JOB_BUDGET_USD, SESSION_BUDGET_USD = 0.50, 2.00
-#: the §9.4 reason, worded without a figure: a refusal is shown as prose and passes the gate like any other
-NOT_ENABLED = ("the analyst runs only on the enabled cells in the dashboard (the scope boundary of the PRD): their "
+#: the scope rule's reason, worded without a figure: a refusal is shown as prose and passes the gate like any other
+NOT_ENABLED = ("the analyst runs only on the enabled cells in the dashboard (the scope rule): their "
                "chains are computed offline and served as-is, and a live reading is available only on them, within "
                "a per-session budget; cell {cell} is not one of them")
-NO_RUNNER = "the analyst job runner (uranium_explorer.api.jobs) is not in this build, so nothing can be submitted"
 
 
 def _iso(t: dt.datetime) -> str:
@@ -51,7 +51,7 @@ def _budget(var: str, default: float) -> float:
 
 @lru_cache(maxsize=1)
 def enabled_cells() -> tuple[str, ...]:
-    """The enabled cells, frozen in `knowledge/enabled_cells.toml` (PRD §9.3)."""
+    """The enabled cells, frozen in `knowledge/enabled_cells.toml`."""
     doc = tomllib.loads(ENABLED_CELLS.read_text())
     return tuple(str(c["id"]) for c in doc.get("cell") or [])
 
@@ -144,8 +144,8 @@ def oof_score_ids(cell_id: str) -> list[str]:
 
 def invoke_analyst(conv: Conversation, reason: str, *, budget_usd: float | None = None,
                    requested_by: str | None = None) -> dict[str, Any]:
-    """Submit the analyst on the conversation's cell. Refuses a cell that is not enabled, a session over its
-    budget, and a build without the runner; otherwise returns the job record the conversation keeps."""
+    """Submit the analyst on the conversation's cell. Refuses a cell that is not enabled and a session over
+    its budget; otherwise returns the job record the conversation keeps."""
     cell = conv.cell_id
     if cell not in enabled_cells():
         rec = {"tool": "run_analyst", "error": NOT_ENABLED.format(cell=cell), "cell_id": cell}
@@ -159,12 +159,6 @@ def invoke_analyst(conv: Conversation, reason: str, *, budget_usd: float | None 
                "session_budget_usd": cap, "asked_usd": budget,
                "error": ("this conversation has committed its per-session analyst budget; another invocation "
                          "would cross it")}
-        conv.record_action("run_analyst", rec)
-        return rec
-    try:
-        from ..api import jobs as J
-    except ImportError:
-        rec = {"tool": "run_analyst", "cell_id": cell, "error": NO_RUNNER}
         conv.record_action("run_analyst", rec)
         return rec
     who = (requested_by or conv.requested_by).strip() or conv.requested_by
@@ -185,20 +179,15 @@ def invoke_analyst(conv: Conversation, reason: str, *, budget_usd: float | None 
     return rec
 
 
-def job_status(job_id: str) -> dict[str, Any] | None:
-    """The runner's view of a job (`status`, `progress`, `result`, `error`), None when the runner is not in
-    the build, and a failed row when the runner no longer knows the id: a job the store lost is reported
-    once, not polled for ever."""
+def job_status(job_id: str) -> dict[str, Any]:
+    """The runner's view of a job (`status`, `progress`, `result`, `error`), or a failed row when the runner
+    no longer knows the id: a job the store lost is reported once, not polled for ever."""
     try:
-        from ..api import jobs as J
-    except ImportError:
-        return None
-    try:
-        return dict(J.get(job_id) or {})
+        return dict(J.get(job_id))
     except J.JobNotFound as err:
         return {"job_id": job_id, "status": "failed", "error": str(err)}
 
 
-__all__ = ["ENABLED_CELLS", "JOB_BUDGET_USD", "JOB_BUDGET_VAR", "Live", "NOT_ENABLED", "NO_RUNNER",
+__all__ = ["ENABLED_CELLS", "JOB_BUDGET_USD", "JOB_BUDGET_VAR", "Live", "NOT_ENABLED",
            "SESSION_BUDGET_USD", "SESSION_BUDGET_VAR", "abstain", "enabled_cells", "invoke_analyst",
            "job_status", "oof_score_ids", "record_insight"]

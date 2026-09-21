@@ -165,7 +165,7 @@ def test_a_rejected_answer_is_written_as_rejected_and_a_backend_error_as_failed(
     assert s["score"]["n_rejected"] == 1 and s["score"]["n_failed"] == 1 and s["score"]["gate_rejection_rate"] == 0.25
     # a failed cell is not "done": a resume runs it again, and does not run the rejected one again
     again = AnalystBackend()
-    second = run(bench, again, rt, resume=s["run_id"])
+    run(bench, again, rt, resume=s["run_id"])
     assert again.calls == ["b04"]
 
 

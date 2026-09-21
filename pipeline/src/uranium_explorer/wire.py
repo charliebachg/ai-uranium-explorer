@@ -24,8 +24,6 @@ from pydantic import BaseModel, Field
 
 from .ids import sha256_json, short
 
-WIRE_VERSION = "wire/v1"
-
 # Printed verdict for any value. "not_printed" and "illegible" are expected answers, never failures.
 Printed = Literal["printed", "not_printed", "illegible"]
 

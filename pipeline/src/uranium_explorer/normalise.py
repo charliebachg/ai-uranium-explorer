@@ -149,11 +149,6 @@ def to_metres(value: float | None, unit: str | None) -> tuple[float | None, str,
                                          "assumption": "none: the number is carried through unchanged and flagged by V01"}
 
 
-def u_to_u3o8(value: float) -> float:
-    """Cross-check only (V02). Never used to rewrite a printed grade."""
-    return value * U_TO_U3O8
-
-
 def normalise_hole_name(name: str | None) -> str:
     """Hole names for matching only. Never stored as the name, and never shown.
 

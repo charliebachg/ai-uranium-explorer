@@ -2,7 +2,7 @@
 
 Same contract as the stdlib server it replaces — `/api/health`, `/api/cells`, `/api/cell/{id}`, `/api/chat`,
 `/api/chat/stream` with the same NDJSON events — plus persisted conversations, and the same tools over MCP at
-`/mcp` (PRD §E.3, `uranium_explorer.mcp`). Every endpoint reads the same evidence record the map is drawn from,
+`/mcp` (`uranium_explorer.mcp`). Every endpoint reads the same evidence record the map is drawn from,
 and no endpoint invents a number: a chat answer passes the same gate a published memo does before it leaves
 this process.
 
@@ -34,7 +34,6 @@ from pydantic import BaseModel, Field
 
 from ..mcp import server as MCPS
 from ..mcp import transport as MCPT
-from ..prospect import serve as S
 from ..store import connect
 from ..prospect.chat import Conversation, ask
 from . import auth as AUTH
@@ -137,7 +136,7 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
         calls_before = len(conv.calls)
         t0 = time.monotonic()
         if requested_by:
-            conv.requested_by = requested_by   # the author an insight is recorded under (PRD §8.3), never the key
+            conv.requested_by = requested_by   # the author an insight is recorded under, never the key
         turn = ask(conv, question, backend_factory(), model=model, effort=effort, on_event=on_event)
         step = len(conv.turns)
         persist.save_turn(conv.conversation_id, step, turn, conv.calls[calls_before:], _cited_values(conv, turn),
@@ -212,7 +211,7 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
         return StreamingResponse(lines(), media_type="application/x-ndjson",
                                  headers={"Cache-Control": "no-store", "Connection": "close"})
 
-    # ---------------------------------------------------------------- jobs (PRD §A.2: anything over a second)
+    # ---------------------------------------------------------------- jobs (anything over a second)
 
     def kind_of(name: str) -> JOBS.JobKind:
         spec = runner.kinds.get(name)
@@ -256,9 +255,9 @@ def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "me
         AUTH.check(who, kind_of(row["kind"]).role, f"cancelling a {row['kind']} job")
         return runner.cancel(job_id)
 
-    app.include_router(REVIEW.build_router(db_path))   # the extractor's review queue (PRD §8.2): api/review.py
+    app.include_router(REVIEW.build_router(db_path))   # the extractor's review queue: api/review.py
 
-    # the same tools over MCP (PRD §E.3), in this process and on this store connection mode: one route, and
+    # the same tools over MCP, in this process and on this store connection mode: one route, and
     # the transport's session manager running inside the app's lifespan; the same keyring, and the job runner
     # behind `run_analyst`. Declared before the site's catch-all.
     MCPT.mount(app, MCPS.build(keyring=keyring, jobs=runner), MCPT.MCP_PATH)

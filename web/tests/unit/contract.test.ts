@@ -134,8 +134,10 @@ describe("contract", () => {
     expect(BenchBlock.safeParse({ ...block, rows: [{ ...arm, kind: "model" }] }).success).toBe(false);
     // a stage column the contract does not name is refused, and a stage must be a value id, never a number
     expect(
-      BenchBlock.safeParse({ ...block, rows: [{ ...staged, stages: { calls_per_chain: "c:bench:v1:v1:stage:calls" } }] })
-        .success,
+      BenchBlock.safeParse({
+        ...block,
+        rows: [{ ...staged, stages: { calls_per_chain: "c:bench:v1:v1:stage:calls" } }],
+      }).success,
     ).toBe(false);
     expect(
       BenchBlock.safeParse({ ...block, rows: [{ ...staged, stages: { valid_rate: 0.71 } }] }).success,

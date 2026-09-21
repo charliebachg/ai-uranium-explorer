@@ -1,4 +1,4 @@
-"""The MCP server through the SDK's in-memory client (PRD §E.3, §E.5): a stock client gets a gated answer.
+"""The MCP server through the SDK's in-memory client : a stock client gets a gated answer.
 
 Every test here is a client round trip with no network and no model: the server runs in-process over the
 synthetic store and the session tests' fakes, whose leakage keywords are ignored on purpose, so a rule that
@@ -253,7 +253,7 @@ def fake_jobs(tmp_path: Path) -> J.Runner:
     """A runner whose analyst kind is a fake that finishes at once: the tools are tested, the loop is not."""
     def prepare(cell_id: str | None, args: dict[str, Any]) -> dict[str, Any]:
         if cell_id != CELL:
-            raise J.JobRefused(f"the analyst runs only on the enabled cells (PRD §9.4), and {cell_id} is not one of them")
+            raise J.JobRefused(f"the analyst runs only on the enabled cells (the dashboard's scope rule), and {cell_id} is not one of them")
         return {"arm": str(args.get("arm") or J.DEFAULT_ARM), "budget_usd": float(args.get("budget_usd", J.DEFAULT_BUDGET_USD)),
                 "reason": str(args.get("reason") or ""), "expert_ids": list(args.get("expert_ids") or [])}
 
@@ -321,7 +321,7 @@ def test_a_job_refusal_reaches_the_client_as_a_tool_result(store: Path, world: F
     async def scenario(client: Client) -> None:
         sid, _ = await opened(client, "dashboard", cell_id=OTHER)
         r = await client.call_tool("run_analyst", {"session_id": sid})
-        assert r.is_error and "only on the enabled cells (PRD §9.4)" in r.content[0].text
+        assert r.is_error and "only on the enabled cells (the dashboard's scope rule)" in r.content[0].text
 
     run(make_server(tmp_path, world, jobs=runner), scenario)
     runner.close()

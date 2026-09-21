@@ -18,7 +18,7 @@ from . import __version__
 from .ids import sha256_json, short
 from .paths import PATHS
 from .validators import REGISTRY
-from .values import derived, registry, stat
+from .values import registry, stat
 
 SCHEMA_VERSION = "1.0.0"
 

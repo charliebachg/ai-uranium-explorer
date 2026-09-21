@@ -85,8 +85,6 @@ def test_thinned_positives_keeps_one_per_block_and_every_negative() -> None:
     kept = df[keep & (y == 1)]
     blocks = list(zip(np.floor(kept["cx"] / 10_000), np.floor(kept["cy"] / 10_000), strict=True))
     assert len(blocks) == len(set(blocks)), "at most one positive per 10 km block"
-    all_blocks = {(bx, by) for bx, by in zip(np.floor(df["cx"] / 10_000), np.floor(df["cy"] / 10_000), strict=True)
-                  if True}
     occupied = {(bx, by) for bx, by, yy in zip(np.floor(df["cx"] / 10_000), np.floor(df["cy"] / 10_000), y, strict=True) if yy}
     assert len(kept) == len(occupied), "exactly one positive survives per block that had any"
     assert 0 < len(kept) < (y == 1).sum()

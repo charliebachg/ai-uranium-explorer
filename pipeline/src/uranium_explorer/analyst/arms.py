@@ -46,7 +46,7 @@ class Switches:
 
 @dataclass(frozen=True)
 class LoopSpec:
-    """The staged loop's switches (PRD §8.4 and §8.5), one table per v1 arm. Every field is stated in the file,
+    """The staged loop's switches, one table per v1 arm. Every field is stated in the file,
     as the pack switches are, so the arms table can say in what exactly two v1 rows differ. The enums are
     checked where they are used, by `analyst.loop.LoopConfig`, so this module stays free of the loop."""
 

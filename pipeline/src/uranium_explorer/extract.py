@@ -51,7 +51,6 @@ RETRY_DELAYS_S = (20.0, 60.0)          # two transient retries, per the plan
 LAUNCH_GAP_S = 4.0
 WORKERS = 2
 CIRCUIT_BREAK_AFTER = 3                 # consecutive unknown failures
-EXIT_USAGE_LIMIT = 75
 
 # Probe-measured per-call usage, used only when no call has been recorded yet (see estimate_cost).
 PROBE_FIXTURE = PATHS.pipeline / "tests" / "fixtures" / "replay" / "probe_drilllog_p1.json"

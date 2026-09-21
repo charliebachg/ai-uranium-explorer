@@ -1,5 +1,5 @@
 """The Analyst v1 wire protocol: what a plan, a node, a verifier verdict, a decision and a chain look like on
-disk and on the wire between the stages of the staged loop (PRD 8.4).
+disk and on the wire between the stages of the staged loop.
 
 The loop is STA-CoT's (planner, executor per segment, mechanical rule check, model chain verifier with
 node-level feedback, K refinement rounds, majority over rounds) adapted to structured evidence, and the

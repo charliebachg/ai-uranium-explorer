@@ -19,7 +19,6 @@ import pandas as pd
 
 from ..paths import PATHS
 from ..store import connect
-from .features import SPECS
 from .inventory import load as load_inventory
 
 #: coverage at or below this is called thin on the page: a model leaning on it is learning the sampling frame

@@ -1,6 +1,6 @@
 """`ue interface ask`: one conversation with the interface agent from the terminal, under a hard budget.
 
-Built for the cheap smoke test of Phase 4c and for anyone who wants to see a turn routed without the web
+Built for a cheap smoke test, and for anyone who wants to see a turn routed without the web
 app: the store is read read-only, an insight is written only to the store you name with `--insight-store`
 (a temporary copy, never the live one), and `--budget-usd` is a ceiling the call cache refuses to cross.
 Every turn prints its route, whether the gate passed, and what it cost; the ledger's own figure for the run
@@ -17,7 +17,7 @@ from typing import Any
 import typer
 
 interface_app = typer.Typer(no_args_is_help=True,
-                            help="The interface agent (PRD §8.3): route, plan, answer, gate, from the terminal.")
+                            help="The interface agent: route, plan, answer, gate, from the terminal.")
 
 #: the worst case one interface call is allowed to cost, checked against the run budget before it is sent
 ESTIMATE_USD = 0.05

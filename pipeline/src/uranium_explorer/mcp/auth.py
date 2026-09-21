@@ -1,4 +1,4 @@
-"""API keys and scopes (PRD §E.3, principle 9): who may list which tools, and what a session is bound to.
+"""API keys and scopes: who may list which tools, and what a session is bound to.
 
 Three scopes: `read` (open a session, the read tools, `check_claims`, `abstain`, every resource and prompt),
 `record` (`record_insight`, which writes the store) and `run` (`run_analyst`). The register is the environment

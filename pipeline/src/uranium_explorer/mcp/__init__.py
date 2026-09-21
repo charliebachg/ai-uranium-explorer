@@ -1,4 +1,4 @@
-"""The MCP server: the tool contract of PRD §E.3, served to any client.
+"""The MCP server: the tool contract, served to any client (see GUIDE: the MCP server).
 
 The same eight deterministic tools that serve the dashboard and the analyst (`prospect.tools`) are exposed
 over the Model Context Protocol, behind a session handle that carries the leakage rules (`analyst.session`)

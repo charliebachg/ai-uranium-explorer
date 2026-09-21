@@ -26,7 +26,7 @@ from typing import Any, Callable
 from . import crs
 from .assemble import assembled_files, read_assembled
 from .ids import sha256_json, short
-from .normalise import FT_TO_M, normalise_hole_name
+from .normalise import normalise_hole_name
 from .nts import nts_bounds, point_in_sheet
 from .paths import PATHS
 from .values import PROJ_TOOL, derived
@@ -400,5 +400,3 @@ def _params(h: dict[str, Any]) -> dict[str, Any]:
         p["provincial_record"] = h["provincial"]
     return p
 
-
-FEET_PER_METRE = 1 / FT_TO_M

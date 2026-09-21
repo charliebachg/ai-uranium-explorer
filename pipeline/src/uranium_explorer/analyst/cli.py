@@ -136,8 +136,6 @@ def score_cmd(
     from .run import run_dir
     from .score import score_run
 
-    if run_dir is None:
-        raise typer.BadParameter("the runtime package is not available")
     rd = run_dir(run)
     try:
         score = score_run(rd, load_bench(version).key)

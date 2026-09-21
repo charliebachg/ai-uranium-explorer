@@ -112,7 +112,7 @@ def test_a_clean_chain_publishes_with_every_stage_counted_and_the_store_takes_it
         assert by_seg["s07"].status == "unknown" and by_seg["s07"].strength == 0
         assert chains_file(tmp_path) == row["chain"]
         # every executor read its own segment's staged files and nothing else
-        for req, (task, seg) in zip(backend.requests, backend.calls):
+        for req, (task, _seg) in zip(backend.requests, backend.calls):
             if task == L.TASK_EXECUTE:
                 names = [name for _path, name in req.stage_files]
                 assert names and all((session.stage / n).is_file() for n in names)

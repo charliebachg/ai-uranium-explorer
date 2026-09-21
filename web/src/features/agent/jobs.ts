@@ -7,7 +7,7 @@ import { keys } from "@/features/prospect/queries";
 import { got, parsed } from "@/features/prospect/service";
 
 /**
- * Background jobs on one cell (PRD §A.2): the service runs anything over a second on its own pool and keeps a
+ * Background jobs on one cell: the service runs anything over a second on its own pool and keeps a
  * row per job, so the rail polls the row rather than holding a request open. The first kind is the staged
  * analyst; when one of its jobs finishes, the evidence record's chains are stale, and the record is
  * invalidated so the new chain appears where the stored ones do. The strip shows status, never merit.

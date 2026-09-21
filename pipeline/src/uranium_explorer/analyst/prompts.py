@@ -107,7 +107,7 @@ def executor_user(segment: Segment, staged: list[str], card: bool, prior_nodes: 
 
 
 def executor_batch_user(segments: list[Segment], staged: list[str], card: bool) -> str:
-    """Every criterion segment's ask in one prompt, the single-shot executor arm of PRD 8.5: the staged files
+    """Every criterion segment's ask in one prompt, the single-shot executor arm (`executor_batch`): the staged files
     of all of them under `{STAGE_DIR}`, then each segment with its purpose, and one node asked for per listed
     criterion under the same one-step system prompt. No prior nodes: a criterion depends on nothing, and the
     batch is the first construction, before any node exists."""

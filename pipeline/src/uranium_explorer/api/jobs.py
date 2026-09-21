@@ -7,7 +7,7 @@ the store the API is reading. The pool is a bounded set of threads inside the AP
 running when the process died is marked failed with that reason rather than left running for ever.
 
 A job kind is a function plus the role a submitter needs, registered in one table (`KINDS`). The first kind is
-`analyst`: the staged loop (PRD §8.4) over one **enabled** cell (§9.4: any other cell is refused with that
+`analyst`: the staged loop over one **enabled** cell (any other cell is refused with that
 reason), through the same `run_cells` that `ue arm chain` runs, so the chain lands in `agent.chain*` exactly
 as an offline one does and the evidence panel lists it. A job has a budget in dollars; the process has a
 budget across jobs (`UE_JOB_SESSION_BUDGET_USD`), and a submission that would take the total past it is
@@ -83,7 +83,7 @@ def _iso(t: dt.datetime) -> str:
 
 
 def enabled_cells(path: Path | None = None) -> set[str]:
-    """The enabled cells of PRD §9.3, read from the same file `ue arm chain --enabled` reads."""
+    """The enabled cells, read from the same file `ue arm chain --enabled` reads."""
     doc = tomllib.loads((path or PATHS.pipeline / "knowledge" / "enabled_cells.toml").read_text())
     return {str(c["id"]) for c in doc.get("cell", [])}
 
@@ -466,7 +466,7 @@ class AnalystKind:
         if not cell_id:
             raise JobRefused("an analyst job is about one cell: pass cell_id")
         if cell_id not in self.enabled():
-            raise JobRefused(f"the analyst runs only on the enabled cells (PRD §9.4), and {cell_id} is not one of "
+            raise JobRefused(f"the analyst runs only on the enabled cells (the dashboard's scope rule), and {cell_id} is not one of "
                              "them: it shows its scores and its evidence, and no analyst reading exists for it")
         try:
             budget = float(args.get("budget_usd", DEFAULT_BUDGET_USD))

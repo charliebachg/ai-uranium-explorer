@@ -1,4 +1,4 @@
-"""Resources hold data (PRD §E.3, principle 2): seven of them, each served from what already exists.
+"""Resources hold data, tools take actions: seven resources, each served from what already exists.
 
 `ue://handbook` and `ue://criteria` are the two knowledge files the panel stages for every role;
 `ue://cell/{id}/evidence` is the record the dashboard draws (`prospect.serve.evidence`); `ue://cell/{id}/chains`
@@ -9,7 +9,8 @@ data inventory with every source's licence flag, which is what the public-safe b
 may serve.
 
 A resource carries no session: the evidence record and the chains are the dashboard's unblinded view, so a
-benchmark harness must not read them for the cell it is scoring (a session-scoped view is backlog).
+benchmark harness must not read them for the cell it is scoring. A session-scoped view of a resource is
+where this stops, and the PRD's backlog carries it.
 """
 
 from __future__ import annotations

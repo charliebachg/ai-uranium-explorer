@@ -478,7 +478,7 @@ function ChainNumber({ id, emptyText = "none" }: { id: string; emptyText?: strin
 }
 
 /**
- * Which decider the published verdict came from. The loop's rule is fixed (PRD §8.4 Stage 5): the
+ * Which decider the published verdict came from. The loop's rule is fixed (the decision stage): the
  * adjudicator's label when it ran, the majority over rounds when K was exhausted, an abstention publishing
  * "insufficient" when nothing validated, and the weighted sum alone only when no adjudicator ran. The record
  * does not name the source, so this reads the rule back off which fields are set; it computes nothing.

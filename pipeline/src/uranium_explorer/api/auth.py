@@ -1,7 +1,7 @@
 """Who is calling the API, and what they may do: one key register, shared with the MCP server.
 
-The register is `UE_MCP_KEYS` and the parser and keyring are `mcp.auth`'s (PRD §E.3, principle 9); nothing
-about a key is defined twice. The API speaks in roles because that is what §A.2 asks for and what a person
+The register is `UE_MCP_KEYS` and the parser and keyring are `mcp.auth`'s; nothing
+about a key is defined twice. The API speaks in roles because that is what a person
 is handed: `viewer` is the `read` scope, `geologist` is `read` and `record`, `admin` is `read`, `record` and
 `run`. A role is a set of scopes, so a key minted for the MCP server opens the same things on the API and a
 route and `tools/list` refuse the same callers.

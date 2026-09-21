@@ -1,4 +1,4 @@
-"""The dated hindcast: prediction before the claim (PRD C.2.3).
+"""The dated hindcast: prediction before the claim.
 
 Every other test in this project asks whether a model separates known deposits from the rest of the grid. This
 one asks the question a company would: had the model been run in year C, where would it have ranked the ground
@@ -25,7 +25,6 @@ import pandas as pd
 from ..paths import PATHS
 from ..store import append_frame, connect
 from ..store import snapshot as SN
-from . import headline as H
 from . import models as M
 from . import tracking as TR
 

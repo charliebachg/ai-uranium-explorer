@@ -4,7 +4,7 @@ Nothing here is a source of numbers: the tier CHECK on both tables says so. What
 and re-score an answer later — the question, the gated answer, its claims and value ids, the tool calls that
 produced them and the gate's objections — which is the raw material of the agent benchmark. Each row also says
 who asked (`requested_by`: the key's label, never the key; `local` with no register), which is what a role
-is for (PRD §A.2)."""
+is for."""
 
 from __future__ import annotations
 

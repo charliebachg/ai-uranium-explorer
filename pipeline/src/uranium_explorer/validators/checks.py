@@ -48,7 +48,7 @@ def _intervals(doc: dict[str, Any]) -> Iterable[tuple[dict[str, Any], str, dict[
 
 @register("V01", "Depth unit is printed, and feet were not read as metres", severity="warn")
 def v01(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
-    for hole, group, interval in _intervals(doc):
+    for _hole, _group, interval in _intervals(doc):
         ids = [i for i in (interval.get("from"), interval.get("to")) if i]
         if not ids:
             continue
@@ -94,7 +94,7 @@ def _provincial_depth(ctx: dict[str, Any], hole: dict[str, Any]) -> float | None
 
 @register("V02", "Grade unit is printed and internally consistent", severity="warn")
 def v02(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
-    for hole, _group, interval in _intervals(doc):
+    for _hole, _group, interval in _intervals(doc):
         grades = interval.get("grades") or []
         for g in grades:
             vid = g["value"]
@@ -153,7 +153,7 @@ def v02(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
 
 @register("V03", "Grade species is printed, with a quote", severity="warn")
 def v03(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
-    for hole, _group, interval in _intervals(doc):
+    for _hole, _group, interval in _intervals(doc):
         for g in interval.get("grades") or []:
             vid = g["value"]
             if g.get("species") == "not_printed":
@@ -175,7 +175,7 @@ def v03(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
           severity="error", class_a=True)
 def v04(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
     probe_words = re.compile(r"probe|cps|count|gamma|radiometric|equivalent|\beu", re.I)
-    for hole, _group, interval in _intervals(doc):
+    for _hole, _group, interval in _intervals(doc):
         for g in interval.get("grades") or []:
             vid = g["value"]
             printed = " ".join(str(x) for x in (g.get("analyte_as_printed"), g.get("unit_as_printed"),
@@ -199,7 +199,7 @@ def v04(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
 
 @register("V05", "Interval starts above where it ends", severity="error", class_a=False)
 def v05(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
-    for hole, _group, interval in _intervals(doc):
+    for _hole, _group, interval in _intervals(doc):
         a, b = interval.get("from_value"), interval.get("to_value")
         if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
             continue
@@ -241,7 +241,7 @@ def v06(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
 
 @register("V07", "Printed interval length equals to minus from", severity="warn")
 def v07(doc: dict[str, Any], ctx: dict[str, Any]) -> Iterable[Finding]:
-    for hole, _group, interval in _intervals(doc):
+    for _hole, _group, interval in _intervals(doc):
         width_vid = interval.get("width")
         if not width_vid:
             continue

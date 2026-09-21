@@ -1,4 +1,4 @@
-"""The review queue and the agreement marks, in the `read` tier (PRD §8.2, stage 4; §A.2's memo review queue).
+"""The review queue and the agreement marks, in the `read` tier: what the loop's fourth stage files.
 
 Two tables, both filed beside the values they are about and never rewriting them:
 

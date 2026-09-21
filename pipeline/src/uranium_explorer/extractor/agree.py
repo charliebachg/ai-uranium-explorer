@@ -1,4 +1,4 @@
-"""Second-family agreement (PRD §8.2, stage 4): two readings of one page, compared value by value.
+"""Second-family agreement (the loop's fourth stage): two readings of one page, compared value by value.
 
 The rule, so it can be argued with:
 

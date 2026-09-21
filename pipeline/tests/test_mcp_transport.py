@@ -1,4 +1,4 @@
-"""The two transports (PRD §E.3): streamable HTTP mounted on the API at /mcp, and stdio for a launched client.
+"""The two transports: streamable HTTP mounted on the API at /mcp, and stdio for a launched client.
 
 Over HTTP the SDK's own client talks to the FastAPI app through an in-process ASGI transport, so the whole
 path is exercised (the route, the session manager inside the app's lifespan, the bearer key or the loopback
@@ -64,7 +64,7 @@ def over_http(app: Any, scenario: Callable[[Client], Awaitable[None]], headers: 
 
 
 async def gated_round_trip(client: Client) -> None:
-    """What §E.5 asks for: a stock client asks about a cell and gets a gated answer."""
+    """The acceptance test: a stock client asks about a cell and gets a gated answer."""
     assert client.server_info is not None and client.server_info.version == TOOL_VERSION
     assert [t.name for t in (await client.list_tools()).tools] == list(C.CATALOGUE)
     r = await client.call_tool("open_session", {"cell_id": CELL, "purpose": "dashboard"})

@@ -1,7 +1,7 @@
-"""Decider (a) of Analyst v1: a weighted sum over node strengths, with weights fitted out of fold (PRD 8.4
-Stage 5).
+"""Decider (a) of Analyst v1: a weighted sum over node strengths, with weights fitted out of fold (Stage 5
+of the loop).
 
-MineAgent's decision module, MineTRACE's fitted expert weights and the fitted-weights criteria arm of PRD C are
+MineAgent's decision module, MineTRACE's fitted expert weights and the fitted-weights criteria arm are
 one thing here: a chain's nodes become a feature vector, a weight set turns the vector into a number in 0..1,
 and the only question is where the weights came from. Two answers, one `Weights` type:
 

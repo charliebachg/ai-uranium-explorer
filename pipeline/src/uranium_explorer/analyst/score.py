@@ -41,7 +41,7 @@ POSITIVE_LABELS = ("deposit", "occurrence")
 LABEL_STRATA = ("deposit", "occurrence", "negative")
 BASELINE_MODELS = ("learned", "effort", "criteria")
 FOLD_KIND = "spatial"
-#: the staged loop's per-stage columns the bench table carries for an arm (PRD §8.5), each with the formatter
+#: the staged loop's per-stage columns the bench table carries for an arm, each with the formatter
 #: the store's metric row and the Eval page print it with. A v0 arm and a baseline have no stages, so their
 #: rows hold null under each; so does a stage a run never had (no verifier, no rounds).
 STAGE_COLUMNS: dict[str, str] = {
@@ -235,7 +235,7 @@ def score_run(run_dir: Path, key: dict[str, dict[str, Any]], boot: int = BOOT, s
 
 
 def stage_metrics(rows: dict[str, dict[str, Any]]) -> dict[str, float]:
-    """The per-stage metrics PRD §8.4 asks of the staged loop, from the counts each v1 row carries under
+    """The per-stage metrics of the staged loop, from the counts each v1 row carries under
     `stages`: the node gate's rejection rate over every executor attempt, the share of nodes recorded unknown
     after three attempts, the share of chains a round validated, the share the verifier refused at least once,
     rounds per chain and rounds over the chains that validated, re-executions per chain, how often the

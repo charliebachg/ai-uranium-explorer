@@ -3,17 +3,16 @@
 Every handler returns a `CallToolResult`. A refusal of any kind (a cell outside the grid, a handle that is not
 the caller's, a blind-listed file, a tool the key's scope does not carry, an argument outside its schema) is
 a result with `isError` and a reason the model can act on, never an exception, because the model is the one
-that has to do something about it (principle 5). The only exceptions that leave this module are bugs.
+that has to do something about it (a refusal is a result, not an exception). The only exceptions that leave this module are bugs.
 
-The gate is middleware here in the first of its three places (principle 8): every read result is shaped by
+The gate is middleware here in the first of its three places: every read result is shaped by
 the contract and every id it carries, the tools' own and the ones minted on the way, is stamped into the
 session registry before the result goes out, so `check_claims` later resolves exactly what was served.
-Every call is a span under the session's run (principle 10): the arguments' hash, the result ids, the
+Every call is a span under the session's run: the arguments' hash, the result ids, the
 latency, the session and the run id, written to the run's `spans.jsonl` and mirrored to MLflow Tracing when
 that is on. Argument values are hashed, never recorded: a real cell id in a benchmark trace is a leak.
 
-Nothing here samples a model (principle 11). `run_analyst` is long work and so a job, not a blocked call
-(principle 7): it hands the cell to the API's job runner (`api.jobs`, the same pool the dashboard uses) and
+Nothing here samples a model. `run_analyst` is long work and so a job, not a blocked call: it hands the cell to the API's job runner (`api.jobs`, the same pool the dashboard uses) and
 returns the job id at once; `job_status` reads the row back, its cost as a value with an id.
 """
 
@@ -48,7 +47,8 @@ from .sessions import ABSTAIN_REASONS, RUN_KIND, LiveSession, SessionError, Sess
 WITHHELD = "(withheld: report text is not redistributable in the public-safe build)"
 #: the retrieval tiers whose text is a report's own words
 REPORT_TIERS = frozenset({"page", "extracted"})
-#: what `run_analyst` says when the server was built without a job runner (a stdio server outside the API)
+#: what `run_analyst` and `job_status` say on a server built without a job runner (`ue mcp serve`, outside the
+#: API): the boundary is stated here, and a runner for the standalone server is on the PRD's backlog
 NOT_AVAILABLE = ("run_analyst is not available on this server: it has no job runner, and the staged analyst then "
                  "runs offline through `ue arm chain`; the API process serves it at /mcp with the runner attached")
 
@@ -57,7 +57,8 @@ NOT_AVAILABLE = ("run_analyst is not available on this server: it has no job run
 #: pool threads and restores it on exit; two traces overlapping from two worker threads would leave a stale
 #: fallback behind, and a span opened later in a thread with no trace of its own (the chat agent's tool calls in
 #: the API process) would attach to a closed MCP run. Serialising the traced block keeps the nesting strict.
-#: One client at a time is the prototype's stated limit (PRD §E.3 backlog: per-client quotas).
+#: One traced call at a time across clients is where this server stops; concurrent traces and per-client
+#: quotas are on the PRD's backlog.
 _TRACE_LOCK = threading.Lock()
 
 

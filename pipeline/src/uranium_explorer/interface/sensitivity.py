@@ -12,7 +12,7 @@ memberships the store already holds:
 Every number here is a value with an id under `c:sens:<cell>:...`, and the rows are ranked by how far the
 score would move if the criterion were measured and met, the largest first. A cell too little known to score
 at all is handled the same way: the row says whether one measurement would make it scorable, and at what.
-This is PRD §E.2's "next observation" tool: the most actionable thing the system can say, and the one place
+This is the "next observation" rule the tools owe a geologist: the most actionable thing the system can say, and the one place
 the interface agent's plan runs arithmetic, in Python, from ids to ids.
 """
 

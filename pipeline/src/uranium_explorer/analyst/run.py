@@ -479,7 +479,7 @@ def run_cells(
     session_factory: Callable[[str, ArmConfig, Path, dict[str, Any]], Any] = open_dashboard_session,
     cards: Callable[..., dict[str, Path]] = render_cards, con: Any = None, seed: int = 0,
 ) -> dict[str, Any]:
-    """The staged loop over real cells for the dashboard (PRD §9.4): nothing blinded, the chains stored in
+    """The staged loop over real cells for the dashboard: nothing blinded, the chains stored in
     the agent tier as they publish, the rows and the per-stage metrics beside them in the run directory.
 
     The store is written to, so the run holds one read-write connection and hands each worker a cursor of

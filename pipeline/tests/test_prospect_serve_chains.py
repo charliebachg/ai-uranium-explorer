@@ -1,4 +1,4 @@
-"""The evidence record carries a cell's analyst chains (PRD §8.4 Stage 6, §9.4): the newest few, current nodes
+"""The evidence record carries a cell's analyst chains : the newest few, current nodes
 only, the values they cite merged into the record so every id the panel shows resolves, and none at all when
 the store predates the chain tables."""
 

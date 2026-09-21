@@ -1,4 +1,4 @@
-"""The interface agent (PRD §8.3): the chat panel's router, its deterministic plans, its three actions and the gate.
+"""The interface agent (see GUIDE: the chat): the chat panel's router, its deterministic plans, its three actions and the gate.
 
 It adds no signal. It finds (the eight tools), explains (one answer call over what the tools returned), records
 (a geologist's insight into the `expert` tier) and invokes (the analyst, as a job). The pieces:

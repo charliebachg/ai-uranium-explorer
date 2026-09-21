@@ -7,8 +7,13 @@ import { inkStyle } from "@/map/style/inkStyle";
 
 const groups = layerGroups();
 const visible = Object.fromEntries(groups.map((g) => [g.id, true])) as Record<LayerGroupId, boolean>;
-const ink = BASEMAPS.find((b) => b.id === "ink")!;
-const none = BASEMAPS.find((b) => b.id === "none")!;
+function basemap(id: string) {
+  const b = BASEMAPS.find((x) => x.id === id);
+  if (!b) throw new Error(`no basemap ${id}`);
+  return b;
+}
+const ink = basemap("ink");
+const none = basemap("none");
 
 describe("composeStyle", () => {
   it("injects app layers before the basemap labels on ink", () => {
@@ -81,7 +86,8 @@ describe("the score colour exception", () => {
   it("lets the declared score layer colour by a score, and the real style stays clean", () => {
     expect(honestyViolations(style())).toEqual([]);
     const cell = style().layers.find((l) => l.id === "prospect-cell");
-    expect((cell?.metadata as Record<string, unknown>)["ue:score"]).toBe(true);
+    const meta = (cell?.metadata ?? {}) as Record<string, unknown>;
+    expect(meta["ue:score"]).toBe(true);
   });
 
   it("refuses a layer that colours by a computed key without declaring itself", () => {

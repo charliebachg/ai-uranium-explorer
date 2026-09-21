@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import { type Decision, listReview, ReviewError, resolveReview } from "./service";
 
 /**
- * The review queue (PRD §8.2 stage 4): every value the two reader families disagreed on, or that only one of
+ * The review queue: every value the two reader families disagreed on, or that only one of
  * them found, with both readings side by side and the page cropped to the box the quote was located at. A
  * geologist accepts one reading or rejects both; the decision is recorded on the item with who made it, and
  * neither reading is ever rewritten. Readings are shown as printed text with the model that read them: they

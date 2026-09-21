@@ -1,14 +1,14 @@
-"""The two transports (PRD §E.3): streamable HTTP inside the API process, and stdio for a local client.
+"""The two transports: streamable HTTP inside the API process, and stdio for a local client.
 
 Over HTTP the server is one route on the FastAPI app, `/mcp`, served by the SDK's session manager in its
 stateless, JSON-response mode: every request is complete in itself, which is what a handle-carrying contract
-wants (principle 6: the session is `open_session`'s handle, never the transport's), and a JSON reply is what
+wants (the session is `open_session`'s handle, never the transport's), and a JSON reply is what
 the plainest client can read. The manager runs for the life of the process, so the mount wraps the app's
 lifespan rather than trusting a sub-application's, which Starlette does not start. `ue mcp serve --http`
 serves the same route on its own Starlette app when the API is not running; `--stdio` serves a client that
 launched this process and owns its stdin and stdout, which is how Claude Code and Cursor connect.
 
-Local-only by default (principle 9): with no key register the HTTP route answers loopback addresses only,
+Local-only by default: with no key register the HTTP route answers loopback addresses only,
 and the SDK's DNS-rebinding check is turned on with the loopback hosts allowed, so a page in a browser on the
 same machine cannot reach the route under another name. With a register configured the check is off, because
 the deployment then sits behind whatever host it was given and every caller presents a key.

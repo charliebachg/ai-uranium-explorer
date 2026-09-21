@@ -11,7 +11,6 @@ from uranium_explorer.backends.base import (
     BackendConfigError,
     ExtractionRequest,
     ExtractionResponse,
-    SchemaInvalidError,
     TransientBackendError,
     UsageLimitReached,
 )

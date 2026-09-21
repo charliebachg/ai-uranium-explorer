@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import re
 import statistics
 from collections import Counter, defaultdict
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
@@ -30,6 +30,7 @@ from .paths import PATHS
 from .worktext import first_year, join_work_fields, parse_work_text
 
 SELECTION_VERSION = "selection/v1"
+#: part of the hash that splits the files; it keeps the project's old name so the recorded split stays reproducible
 SPLIT_SEED = "legacy-reader-split-v1:"
 TABLE23 = ("https://geoscience-data-system.saskatchewan.ca/arcgis/rest/services/"
            "P_GeoDS_AssessmentPage_EM/FeatureServer/23")
@@ -1031,12 +1032,6 @@ def read_heldout(lock_path: Path | None = None) -> set[str]:
     if not lock_path.is_file():
         raise FileNotFoundError(f"{lock_path} missing; run `ue lock-heldout` before rendering anything")
     return set(json.loads(lock_path.read_text())["file_nums"])
-
-
-def heldout_pdf_hashes(lock_path: Path | None = None) -> set[str]:
-    lock_path = lock_path or (PATHS.gold / "heldout.lock")
-    lock = json.loads(lock_path.read_text())
-    return {p["sha256"] for h in lock["heldout"] for p in h["report_pdfs"]}
 
 
 __all__ = [

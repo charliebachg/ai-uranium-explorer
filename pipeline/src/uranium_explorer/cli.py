@@ -38,12 +38,12 @@ prospect_app = typer.Typer(help="The cell grid, its features, and what they can 
 app.add_typer(prospect_app, name="prospect")
 openai_app = typer.Typer(no_args_is_help=True, help="The chat agent's OpenAI backend, and what it has spent.")
 app.add_typer(openai_app, name="openai")
-from .mcp.cli import mcp_app  # noqa: E402  (the MCP server: PRD §E.3)
-from .interface.cli import interface_app  # noqa: E402  (the interface agent: PRD §8.3)
+from .mcp.cli import mcp_app  # noqa: E402  (the MCP server; see GUIDE: the MCP server)
+from .interface.cli import interface_app  # noqa: E402  (the interface agent; see GUIDE: the chat)
 
 app.add_typer(mcp_app, name="mcp")
 app.add_typer(interface_app, name="interface")
-from .extractor.cli import agent_cmd, gold_app  # noqa: E402  (the extractor agent and its gold: PRD §8.2)
+from .extractor.cli import agent_cmd, gold_app  # noqa: E402  (the extractor agent and its gold pages; see GUIDE: the extractor as an agent)
 
 # `ue extract` stays the batch reader (the group's own callback below); `ue extract agent` is the loop
 extract_app = typer.Typer(invoke_without_command=True, help="Read routed pages: the batch reader, or the agent loop (`agent`).")
@@ -650,23 +650,79 @@ def prospect_serve_cmd(
     serve(port=port, model=model, effort=effort, backend=backend, log=typer.echo, host=host, web_dist=web_dist)
 
 
-@prospect_app.command("record-chat")
-def prospect_record_chat_cmd(
-    cell: str = typer.Option("0201_0072", "--cell"),
-    model: str = typer.Option("", "--model"),
-    effort: str = typer.Option("medium", "--effort"),
-    backend: str = typer.Option("openai", "--backend", help="openai | claude"),
+@prospect_app.command("record")
+def prospect_record_cmd(
+    cell: str = typer.Option("0201_0072", "--cell", help="an enabled cell, ideally one with a published chain"),
+    backend: str = typer.Option("auto", "--backend", help="auto | openai | claude (auto: vendor/model ids to OpenRouter)"),
+    model: str = typer.Option("", "--model", help="default: UE_INTERFACE_MODEL, else z-ai/glm-5.3-flash"),
+    effort: str = typer.Option("low", "--effort"),
+    budget_usd: float = typer.Option(0.75, "--budget-usd",
+                                     help="a hard stop on live spend for the whole recording: the turns and the analyst job together"),
+    job_budget_usd: float = typer.Option(0.50, "--job-budget-usd",
+                                         help="what the analyst job may spend, out of --budget-usd; the rest is the turns'"),
+    job: bool = typer.Option(True, "--job/--no-job",
+                             help="ask for the analyst and run its job in this process; --no-job records the other questions only"),
+    refresh: bool = typer.Option(False, "--refresh", help="ignore cached model replies"),
+    out: str = typer.Option("", "--out", help="default: web/public/data/prospect/recorded_chat.json"),
 ) -> None:
-    """Ask the tour's questions for real and write the gate-passed answers for the walkthrough to replay."""
-    from .prospect.serve import make_backend
-    from .prospect.recorded import record, write
+    """Ask the tour's questions of the interface agent for real, run the analyst job it submits to the end in
+    this process, and write the exchange for the walkthrough to replay."""
+    import os
+    from pathlib import Path as _Path
 
-    chosen, model = make_backend(backend, model)
-    payload = record(cell, chosen, model=model, effort=effort, log=typer.echo)
-    path = write(payload)
+    from .api import jobs as J
+    from .backends.openai_api import load_dotenv
+    from .interface import default_model
+    from .interface.cli import _backend as interface_backend
+    from .prospect.recorded import QUESTIONS, record, write
+    from .runtime.spend import BudgetExhausted, spent_usd
+
+    if job and job_budget_usd >= budget_usd:
+        raise typer.BadParameter(f"--job-budget-usd {job_budget_usd:.2f} leaves nothing of --budget-usd "
+                                 f"{budget_usd:.2f} for the turns")
+    model = model or default_model()
+    if backend == "auto" and "/" in model:
+        load_dotenv()   # the .env beside the repo; the key is read by name and never printed
+        if not os.environ.get("OPENROUTER_API_KEY", "").strip():
+            typer.echo("  OPENROUTER_API_KEY is not set, so nothing can be asked: nothing was recorded", err=True)
+            raise typer.Exit(2)
+    turns_cap = budget_usd - job_budget_usd if job else budget_usd
+    chosen = interface_backend(backend, turns_cap, refresh)
+    typer.echo(f"  cell {cell}, model {model}, effort {effort}; turns capped at ${turns_cap:.2f}"
+               + (f", the analyst job at ${job_budget_usd:.2f}" if job else ", no analyst job"))
+    runner = None
+    if job:
+        # The job publishes its chain into the live store, so this process opens the store the way the API
+        # and `ue arm chain` do: one connection kind for the whole process (see `store.one_mode`). The runner
+        # is installed as the module's default so the agent's `run_analyst` lands on it.
+        os.environ["UE_STORE_RW"] = "1"
+        runner = J.install(J.Runner(session_budget_usd=job_budget_usd))
+        typer.echo("  the store is open read-write for the job; its chain is published as a dashboard chain")
+    before = spent_usd()
+    try:
+        payload = record(cell, chosen, model=model, effort=effort, log=typer.echo,
+                         questions=QUESTIONS if job else QUESTIONS[:-1], job_budget_usd=job_budget_usd)
+    except BudgetExhausted as stop:
+        typer.echo(f"  stopped on the budget: {stop} Nothing was written.", err=True)
+        raise typer.Exit(3) from stop
+    finally:
+        if runner is not None:
+            runner.close()
+    after = spent_usd()
+    path = write(payload, out=_Path(out) if out else None)
     kept = sum(1 for t in payload["turns"] if t["published"])
-    typer.echo(f"  {kept} of {len(payload['turns'])} answers passed the gate; "
-               f"{len(payload['values'])} values cited; ${payload['cost_usd']}")
+    declined = sum(1 for t in payload["turns"] if t.get("abstention"))
+    typer.echo(f"  {kept} of {len(payload['turns'])} turns passed the gate ({declined} declined with a reason); "
+               f"{len(payload['values'])} values cited; the turns reported ${payload['cost_usd']:.4f}")
+    if payload.get("job"):
+        j = payload["job"]
+        res = j.get("result") or {}
+        typer.echo(f"  analyst job {j['job_id']} {j['status']}: chain {res.get('chain_id')}, verdict {res.get('verdict')}, "
+                   f"{'published' if res.get('published') else 'withheld'}, ${float(res.get('cost_usd') or 0):.4f}"
+                   + (f"; {j['error']}" if j.get("error") else ""))
+        for problem in res.get("problems") or []:
+            typer.echo(f"    objection: {problem}")
+    typer.echo(f"  the ledger moved ${after - before:.4f} (cache hits cost nothing)")
     typer.echo(f"  wrote {path}")
 
 
@@ -731,7 +787,7 @@ def prospect_drift_cmd(
 
 @prospect_app.command("gate")
 def prospect_gate_cmd() -> None:
-    """The five-column data readiness gate (PRD 9.1): present, licensed, covers, servable, versioned. Exits 1 when red."""
+    """The five-column data readiness gate: present, licensed, covers, servable, versioned. Exits 1 when red."""
     from .prospect.gate import check
 
     out = check(log=typer.echo)

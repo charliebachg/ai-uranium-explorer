@@ -330,7 +330,7 @@ GATE_COLUMNS = ("present", "licensed", "covers", "servable", "versioned")
 
 
 def _gate_columns_block(out_dir: Path | None = None) -> dict[str, Any] | None:
-    """The five-column readiness gate (PRD 9.1) as `ue prospect gate` last wrote it; absent until it has run.
+    """The five-column readiness gate as `ue prospect gate` last wrote it; absent until it has run.
 
     The notes are the gate's own status strings, not measurements, so they travel as text; the counts they
     mention are on this page already as values (the sources and features tables)."""
@@ -379,7 +379,7 @@ BENCH_METRICS = ("f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all",
 BENCH_EXTRA = {"gate_rejection_rate": "ratio3", "probe_abstain_rate": "ratio3", "cost_usd_per_cell": "m2",
                "latency_s_per_cell": "m1"}
 BENCH_STRATA = ("deposit", "occurrence", "negative")
-#: the staged loop's per-stage columns (PRD §8.5) as the table names them without their `stage_` prefix, each
+#: the staged loop's per-stage columns as the table names them without their `stage_` prefix, each
 #: with its formatter and what it counts. Only a staged arm has them: a v0 arm answers in one call and carries
 #: none, and a column identical across every arm so far (the shallow share, refusals per rule) stays in table.json
 BENCH_STAGES = {

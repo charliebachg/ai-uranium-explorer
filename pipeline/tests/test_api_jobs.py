@@ -1,4 +1,4 @@
-"""The job runner (PRD §A.2, background jobs): durable rows in `agent.job` on a temporary store built from
+"""The job runner: durable rows in `agent.job` on a temporary store built from
 `schema.sql`, a bounded pool inside the process, and the analyst kind over the fake loop world.
 
 No model is called anywhere here: the fake kind is a function that waits on an event, and the analyst kind
@@ -203,7 +203,7 @@ def analyst_runner(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 
 def test_the_analyst_kind_refuses_any_cell_but_an_enabled_one_and_an_out_of_range_budget(analyst_runner) -> None:
     r, _db, _rt, _backend = analyst_runner
-    with pytest.raises(J.JobRefused, match=r"only on the enabled cells \(PRD §9.4\), and 0000_0001 is not one"):
+    with pytest.raises(J.JobRefused, match=r"only on the enabled cells \(the dashboard\'s scope rule\), and 0000_0001 is not one"):
         r.submit("analyst", "0000_0001", {}, requested_by="local")
     with pytest.raises(J.JobRefused, match="at most 2.00"):
         r.submit("analyst", ENABLED, {"budget_usd": 2.5}, requested_by="local")

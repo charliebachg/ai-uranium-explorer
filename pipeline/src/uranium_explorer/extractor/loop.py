@@ -435,7 +435,7 @@ class ExtractorRun:
         try:
             with trace(self.run_id, KIND, run_dir=self.rd, loop=LOOP_VERSION, reader=self.config.model,
                        second=self.second_model):
-                for i, page in enumerate(self.plan):
+                for page in self.plan:
                     if self.stopped_by is not None:
                         pending.append(page.page_id)
                         continue

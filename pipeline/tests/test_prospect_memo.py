@@ -8,9 +8,6 @@ tool result is rejected before it reaches the store.
 from __future__ import annotations
 
 import json
-from pathlib import Path
-
-import pytest
 
 from uranium_explorer.prospect import memo as M
 from uranium_explorer.prospect import tools as T

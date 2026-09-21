@@ -1,4 +1,4 @@
-"""The tool contract: the catalogue v1 of PRD §E.3, and the shape every result takes.
+"""The tool contract: the catalogue v1, and the shape every result takes.
 
 Every number a tool returns reaches the client as a `Val` with an id, inside `structuredContent`; the
 `content` text block is the prose a model may quote back. Unknown and absent are two object types,
@@ -448,9 +448,9 @@ CATALOGUE: dict[str, ToolSpec] = {spec.name: spec for spec in (
     ),
     ToolSpec(
         "run_analyst", "task", "run",
-        "Run the staged analyst over the session's cell as a background job (PRD §E.3, principle 7): returns "
+        "Run the staged analyst over the session's cell as a background job: returns "
         "a job id at once; poll job_status until it is done, failed or cancelled. Dashboard sessions on an "
-        "enabled cell only (§9.4); the chain lands in the agent tier as `ue arm chain` publishes one, and the "
+        "enabled cell only; the chain lands in the agent tier as `ue arm chain` publishes one, and the "
         "job's result names its chain id, verdict and cost. `config` is an arm name (default v1-openrouter); "
         "`budget_usd` is this job's ceiling (default 0.50, at most 2.00) inside the process's session budget.",
         input_schema(["session_id"], session_id=SID, cell_id=CELL,

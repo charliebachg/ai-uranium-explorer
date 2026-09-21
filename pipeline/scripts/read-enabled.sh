@@ -1,5 +1,5 @@
 #!/bin/zsh
-# The Opus-only read of the enabled cells' top drilling files (PRD 9.3), carried through to the dashboard.
+# The Opus-only read of the enabled cells' top drilling files (knowledge/enabled_cells.toml), carried through to the dashboard.
 # Every stage is resumable: extract skips pages already in its results file and replays cached calls for
 # free, so a run cut off part-way loses at most the call in flight. Run it from a plain terminal: on a
 # small machine Claude Code's own low-memory watchdog kills long background jobs (FINDINGS.md, F5).

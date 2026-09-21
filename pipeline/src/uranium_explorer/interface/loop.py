@@ -23,7 +23,7 @@ from .sensitivity import sensitivity
 PROMPT_VERSION = "prospect/chat/v3"
 SCHEMA_VERSION = M.SCHEMA_VERSION
 MAX_STEPS = 5
-#: what `abstain` may be charged to (PRD §E.3); the same tuple the MCP server takes
+#: what `abstain` may be charged to; the same tuple the MCP server takes
 ABSTAIN_REASONS: tuple[str, ...] = ("not_measured", "outside_grid", "no_value", "out_of_scope")
 
 SYSTEM = """You answer questions about one 2 km cell of public Saskatchewan data, for someone assessing

@@ -13,7 +13,7 @@ import { registerValues } from "@/data/registry";
 import type { ChatEvent } from "@/features/prospect/service";
 
 /**
- * The chat panel with the interface agent behind it (PRD §8.3): the route line, a refusal with its reason, a
+ * The chat panel with the interface agent behind it: the route line, a refusal with its reason, a
  * recorded insight with its id, and a job card that polls until the analyst has finished. The service is
  * mocked at its two calls; `<V>` throws on an unbacked id under vitest, so a render that completes is itself
  * the check that every number on the cards resolves to a registered value.

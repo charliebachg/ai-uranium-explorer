@@ -158,7 +158,7 @@ def candidates(limit: int = 40, model: str = "criteria") -> list[dict[str, Any]]
 
 def evidence(cell_id: str) -> dict[str, Any]:
     """The whole evidence record for one cell: exactly what the chat agent is given, plus the analyst chains
-    stored for it (PRD §9.4: computed offline for the enabled cells, served as-is), newest first."""
+    stored for it (computed offline for the enabled cells, served as-is), newest first."""
     parts = {name: T.call(name, {"cell_id": cell_id}).as_json()
              for name in ("cell_scores", "cell_features", "criteria_breakdown", "label_context")}
     values: dict[str, Any] = {}
@@ -210,7 +210,7 @@ def evidence(cell_id: str) -> dict[str, Any]:
 def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
     """Pick the backend the chat runs on, and the model name that goes with it.
 
-    `openai` and `claude` are the chat's original two. `auto` is the interface agent's (PRD §8.3): a
+    `openai` and `claude` are the chat's original two. `auto` is the interface agent's: a
     `vendor/model` id goes to OpenRouter and a bare `claude-*` id to the CLI, and the model defaults to the
     cheap interface model (`UE_INTERFACE_MODEL`, else `z-ai/glm-5.3-flash`). The caches never mix because
     the cache key carries the backend family.

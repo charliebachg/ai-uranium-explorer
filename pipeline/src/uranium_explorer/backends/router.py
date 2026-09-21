@@ -29,9 +29,6 @@ class RoutedBackend:
                 return backend
         return self.default
 
-    def family_for(self, req: ExtractionRequest) -> str:
-        return str(self.route(req).family)
-
     def call(self, req: ExtractionRequest, on_delta: Callable[[str], None] | None = None) -> ExtractionResponse:
         backend = self.route(req)
         if on_delta is not None:

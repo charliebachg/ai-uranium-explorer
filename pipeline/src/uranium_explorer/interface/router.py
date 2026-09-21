@@ -1,4 +1,4 @@
-"""The intent router (PRD §8.3): one cheap structured call that says what kind of question this is.
+"""The intent router: one cheap structured call that says what kind of question this is.
 
 The router classifies and names; it never answers. Its output is a kind from a fixed set, the cells and the
 things the question names, and whether the question is outside what the record can say at all. Each kind
@@ -22,7 +22,7 @@ from .conversation import Conversation
 from .sensitivity import TOOL as SENSITIVITY
 
 PROMPT_VERSION = "interface/router/v1"
-#: the fixed kinds of PRD §8.3, in the order the prompt lists them
+#: the fixed kinds, in the order the prompt lists them
 KINDS: tuple[str, ...] = ("lookup", "compare", "explain_score", "what_is_unknown", "what_would_change",
                           "record_insight", "run_analyst", "other")
 #: what a lookup may be about, and the tool that holds it

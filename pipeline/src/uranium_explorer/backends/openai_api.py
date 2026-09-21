@@ -17,7 +17,7 @@ Three differences from the CLI adapter, all forced by the fact that an API call 
 
 One thing the same as the OpenRouter adapter: **images travel as parts.** A request's page images go into the
 user message as data URLs beside the text, the way OpenRouter sends them, so the extractor can read a page
-through an API key (PRD §9.6). Only for a model that takes images: the models endpoint does not say which do,
+through an API key. Only for a model that takes images: the models endpoint does not say which do,
 so `VISION_MODEL_PREFIXES` (and `OPENAI_VISION_MODELS` in `.env`) does, and a request that carries an image
 for any other model is refused before it is sent, because an answer about a page the model never saw is
 exactly the confident wrong answer this pipeline exists to refuse.

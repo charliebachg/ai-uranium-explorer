@@ -202,7 +202,7 @@ def test_pack_then_unpack_round_trip_keeps_every_row_and_the_tiers(store: Path, 
 
 
 def test_the_public_pack_unpacks_to_a_store_without_the_private_tables(store: Path, tmp_path: Path) -> None:
-    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
     rebuilt = tmp_path / "public.duckdb"
     SEED.unpack(tmp_path / "seed" / "latest", into=rebuilt, log=lambda *a: None)
     counts = _counts(rebuilt)
@@ -263,7 +263,7 @@ def test_unpack_refuses_to_overwrite_a_store(store: Path, tmp_path: Path) -> Non
 
 
 def test_ensure_unpacks_only_when_the_store_is_missing(store: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    m = SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
+    SEED.pack("public", out=tmp_path / "seed", path=store, log=lambda *a: None)
     target = tmp_path / "fresh" / "ue.duckdb"
     monkeypatch.setenv("UE_SEED_DIR", str(tmp_path / "seed" / "latest"))
     assert SEED.seed_dir() == tmp_path / "seed" / "latest"
@@ -452,7 +452,7 @@ def test_ensure_pulls_from_the_seed_url_when_nothing_is_on_disk(store: Path, tmp
     assert not any("testing" in line for line in logged), "no credential in a log line"
 
 
-# ---------------------------------------------------------------- the real-data regression (PRD C.2.4)
+# ---------------------------------------------------------------- the real-data regression (the drift check)
 
 
 @pytest.mark.real_data

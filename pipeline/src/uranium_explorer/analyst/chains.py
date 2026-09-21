@@ -1,4 +1,4 @@
-"""Storage for Analyst v1 chains: PRD §8.4 Stage 6, the publish step.
+"""Storage for Analyst v1 chains: the loop's last stage, the publish step.
 
 A chain is what the staged loop produced over one cell: the nodes each segment's executor returned (every
 attempt, every round, so a repaired node keeps its history), the verifier's verdict per round, and the

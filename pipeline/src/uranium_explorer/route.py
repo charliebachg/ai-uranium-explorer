@@ -26,7 +26,6 @@ import json
 import re
 import statistics
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Callable
 
 from rapidfuzz.distance import Levenshtein
@@ -35,8 +34,6 @@ from . import datum as datum_mod
 from .paths import PATHS
 
 ROUTE_VERSION = "route/v1"
-
-CLASSES = ("collar_table", "lith_log", "assay_table", "probe_log", "certificate", "other", "uncertain")
 
 KEYWORDS: dict[str, tuple[str, ...]] = {
     "collar_table": (

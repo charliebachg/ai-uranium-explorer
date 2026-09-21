@@ -1,4 +1,4 @@
-"""The tool contract on its own (PRD §E.3, §E.5): the catalogue, the schemas, and the shaping of a tool's rows
+"""The tool contract on its own: the catalogue, the schemas, and the shaping of a tool's rows
 into values with ids where unknown and absent are two types and never a null."""
 
 from __future__ import annotations

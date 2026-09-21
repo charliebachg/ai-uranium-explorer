@@ -1,4 +1,4 @@
-"""The interface agent (PRD §8.3): the router's kinds and their plans, the three actions, and the gate.
+"""The interface agent: the router's kinds and their plans, the three actions, and the gate.
 
 A scripted backend answers by task (`interface_route`, `interface_answer`, `prospect_chat`), and the tools are
 a fake world, so nothing here calls a model or reads the real store. An insight lands in a temporary DuckDB

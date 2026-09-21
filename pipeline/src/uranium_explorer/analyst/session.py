@@ -1,6 +1,6 @@
 """The analyst session: the only path from a tool to a model, and where the leakage rules live.
 
-Every stage of the staged analyst (PRD §8.4) asks for evidence through one of these. A stage never calls a
+Every stage of the staged analyst (see GUIDE: the staged analyst) asks for evidence through one of these. A stage never calls a
 tool directly, because the four leakage controls the bias register names are properties of *which rows reach
 the model*, and a rule about rows has to sit on the path the rows travel:
 

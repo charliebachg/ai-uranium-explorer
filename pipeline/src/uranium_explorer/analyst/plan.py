@@ -2,7 +2,7 @@
 
 The plan is a list of segments over the criteria table, in the table's order: one criterion segment per
 counted criterion, then the two cross-checks the handbook reads together, then a retrieval pass when the arm
-asks for one. It is the "without planner" arm of PRD 8.5, so it must be dull on purpose: the same criteria
+asks for one. It is the "without planner" arm of the ablation matrix, so it must be dull on purpose: the same criteria
 set and switches always give byte-identical JSON, and nothing in it depends on the cell. That is what lets a
 run over a benchmark be compared with a model-planned run segment for segment.
 

@@ -1,7 +1,7 @@
 """OTLP export of a run's spans: the same spans `spans.jsonl` holds, sent to whatever backend is configured.
 
 The instrumentation is the in-house `Trace`/`Span` in `tracing.py`; this module is the bridge from it to the
-OpenTelemetry SDK, so the backend is a configuration and not a code change (PRD §A.2). With `UE_OTLP_ENDPOINT`
+OpenTelemetry SDK, so the backend is a configuration and not a code change. With `UE_OTLP_ENDPOINT`
 set, every span is started and ended alongside an SDK span carrying the same ids (the file's trace and span
 ids are already 128 and 64 random bits, so a backend's span is the file's span, not a lookalike), the same
 attributes, the resource `service.name=ai-uranium-explorer` and the pipeline version, and is exported over OTLP/HTTP

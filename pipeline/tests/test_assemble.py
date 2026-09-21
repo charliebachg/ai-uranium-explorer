@@ -18,7 +18,7 @@ from uranium_explorer.normalise import (
 )
 from uranium_explorer.ocr import read_words
 
-from fake_page import ASSAY_ROWS, FILE_NUM, LITH_ROWS, PAGE_ID, PAGE_NO, PDF_SHA, extract_row, page_result
+from fake_page import ASSAY_ROWS, FILE_NUM, LITH_ROWS, PAGE_NO, PDF_SHA, extract_row, page_result
 
 
 @pytest.fixture(scope="module")

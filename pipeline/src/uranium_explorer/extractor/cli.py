@@ -12,7 +12,7 @@ from typing import Any
 
 import typer
 
-gold_app = typer.Typer(no_args_is_help=True, help="Hand-keyed gold pages, and a run's precision and recall against them.")
+gold_app = typer.Typer(no_args_is_help=True, help="Hand-keyed gold pages, and a run's precision and recall against them (no page is keyed yet).")
 
 
 def _backend(kind: str, config: Any, second_timeout_s: int) -> Any:

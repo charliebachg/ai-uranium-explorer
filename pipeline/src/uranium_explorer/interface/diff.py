@@ -1,4 +1,4 @@
-"""The session assessment (PRD §6, §8.3): a finished analyst job beside the cell's stored chain without the
+"""The session assessment: a finished analyst job beside the cell's stored chain without the
 insight, compared node by node and verdict by verdict. Deterministic: two chains in, one diff out.
 
 The baseline is the newest published dashboard chain for the cell whose nodes cite no expert-tier id: the run

@@ -8,7 +8,7 @@ does three things: resolve who is calling (`auth`), refuse or filter by scope, a
 (the tools are synchronous and hold the store), so the event loop stays free for the next request.
 
 `serverInfo.version` is the tool-contract version; the tool list is built once from the catalogue and served
-in catalogue order with a `ttlMs`, so a client or a prompt cache can hold it (PRD §E.3, transport).
+in catalogue order with a `ttlMs`, so a client or a prompt cache can hold it.
 """
 
 from __future__ import annotations
@@ -113,7 +113,7 @@ class UeServer:
     # ---------------------------------------------------------------- tools
 
     def tools_for(self, principal: Principal) -> list[types.Tool]:
-        """The catalogue filtered by scope, in catalogue order (principle 9)."""
+        """The catalogue filtered by scope, in catalogue order."""
         return [TOOLS[name] for name, spec in CATALOGUE.items() if principal.allows(spec.scope)]
 
     async def _list_tools(self, ctx: Any, params: types.PaginatedRequestParams | None) -> types.ListToolsResult:

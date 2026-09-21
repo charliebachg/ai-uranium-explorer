@@ -1,4 +1,4 @@
-"""The extractor as an agent (PRD §8.2): locate → read → validate → agree → file, one page at a time.
+"""The extractor as an agent (see GUIDE: the extractor as an agent): locate → read → validate → agree → file, one page at a time.
 
 The batch reader (`uranium_explorer.extract`) already reads a page under the wire schema and the assembler and
 validators already turn a reading into located, checked values. What this package adds is the loop around

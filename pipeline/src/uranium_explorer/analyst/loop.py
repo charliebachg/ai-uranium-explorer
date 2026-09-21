@@ -1,4 +1,4 @@
-"""Analyst v1: the staged analyst loop over one cell, PRD 8.4 Stages 0 to 6.
+"""Analyst v1: the staged analyst loop over one cell, Stages 0 to 6.
 
 v0 asks one question and gates one answer. This loop asks one question per criterion, gates every answer
 mechanically, has a second model read the whole chain for the flaw, repairs what it faults, and only then
@@ -26,7 +26,7 @@ module decides, and why:
 * **Nothing here computes a verdict from evidence.** The weighted decider is `weights.score` over the nodes;
   the adjudicator's answer is gated exactly as v0's; the final label is a lookup (the adjudicator's verdict
   when a round validated, else the majority over the rounds' candidate labels), and an arm with no
-  adjudicator thresholds the weighted score at 0.5, which is the fitted-weights criteria arm of PRD C.
+  adjudicator thresholds the weighted score at 0.5, which is the fitted-weights criteria arm.
 * **The store is the last gate.** When the store refuses a chain the loop marked published, the chain is
   marked unpublished, the refusal joins its problems, and it is stored as the record of the refusal. The
   chain file under `chains/` is written whatever happens, so a budget stop leaves the partial chain behind.
@@ -35,7 +35,7 @@ module decides, and why:
   unknown there, so the node is written deterministically (citing the nearest observation by id when the
   tool gave one), and it still passes the gate like any other node. Under `executor_batch` the first
   construction asks one executor call for every criterion, gates the reply node by node, and sends only the
-  refused criteria down the per-segment path at attempt 2. Both are arms to measure (PRD 8.5), off by
+  refused criteria down the per-segment path at attempt 2. Both are arms to measure, off by
   default, so every other arm runs exactly as before.
 * **A third cuts what each executor reads.** Under `segment_scoped` every segment's call is staged through
   the session under the segment's scope (`plan.segment_scope`), so its files hold its own rows of the
@@ -97,6 +97,9 @@ CONTEXTS = ("independent", "cumulative")
 #: the three scores triage compares; they agree when all three sit on one side of the threshold
 SCORE_MODELS = ("learned", "effort", "criteria")
 THRESHOLD = 0.5
+#: what the verifier and the adjudicator are told about the effort null when the arm's `oof_scores` switch is
+#: off. Every v1 arm so far keeps it off, so v0 and v1 are compared on the same evidence; an arm with the
+#: scores switched on (`v1-scores`) is on the PRD's backlog.
 WITHHELD = "effort features are withheld in this arm"
 #: the v0-shaped answer a row carries when no adjudicator ruled (a weighted-only arm)
 EMPTY_ANSWER: dict[str, Any] = {"verdict": ABSTAIN, "probability": 0.5, "claims": [], "unknown_criteria": [],
@@ -105,7 +108,7 @@ EMPTY_ANSWER: dict[str, Any] = {"verdict": ABSTAIN, "probability": 0.5, "claims"
 
 @dataclass(frozen=True)
 class LoopConfig:
-    """One arm of the loop: the four roles' models, the switches of PRD 8.5 that are the loop's own (the
+    """One arm of the loop: the four roles' models, the switches of the ablation matrix that are the loop's own (the
     evidence switches live in `Switches`), and how many segments may execute at once."""
 
     executor_model: str
@@ -469,7 +472,7 @@ class _Loop:
 
     def _batch(self, asked: list[Segment], ids: dict[str, str], round: int) -> tuple[dict[str, _Executed],
                                                                                     dict[str, list[str]]]:
-        """One executor call over every criterion segment at once, the single-shot executor arm of PRD 8.5,
+        """One executor call over every criterion segment at once, the single-shot executor arm,
         gated node by node exactly as a per-segment answer is. Returns the segments whose node passed, and
         for each the gate refused (or the reply left out) the gate's reasons, which the per-segment path
         takes up at attempt 2 so only the refused criteria cost another call. The reply is split by

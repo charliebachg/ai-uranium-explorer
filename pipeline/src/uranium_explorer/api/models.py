@@ -73,7 +73,7 @@ class Evidence(BaseModel):
     parts: dict[str, ToolResultOut]
     values: dict[str, Val]
     memos: list[Memo]
-    #: the analyst chains stored for the cell (PRD §8.4 Stage 6), as `prospect.serve.evidence` shapes them; the
+    #: the analyst chains stored for the cell (the loop's publish step), as `prospect.serve.evidence` shapes them; the
     #: web contract (`CellEvidence.chains`) is the typed side, so the route passes the dicts through untouched
     chains: list[dict[str, Any]] = Field(default_factory=list)
 

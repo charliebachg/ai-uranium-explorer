@@ -187,7 +187,7 @@ def load(path: Path | None = None) -> Inventory:
 
 
 def summary(inv: Inventory | None = None) -> dict[str, Any]:
-    """Counts for `ue prospect inventory` and, later, the readiness page."""
+    """Counts for `ue prospect inventory` and the readiness page."""
     inv = inv or load()
     return {
         "sources": len(inv.sources),

@@ -25,8 +25,6 @@ from rapidfuzz import fuzz
 
 from .route import group_rows
 
-LOCATE_VERSION = "locate/v1"
-
 MAX_CELL_WIDTH_FRAC = 0.60      # a cell box wider than this is a bad match, not a cell
 CELL_SCORE_MIN = 82.0           # below this, the span is not the value
 ROW_SCORE_MIN = 40.0            # rows are scored by token coverage against the band (see _row_score)

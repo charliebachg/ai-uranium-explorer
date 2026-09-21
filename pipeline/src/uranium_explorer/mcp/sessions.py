@@ -1,4 +1,4 @@
-"""Session handles (PRD §E.3, principle 6): opaque, expiring, bound to the caller's key, one run each.
+"""Session handles: opaque, expiring, bound to the caller's key, one run each.
 
 A handle names an `analyst.session.Session`: that class is where B17, B18, B19 and B30 live, and this module
 never re-states a rule it enforces. A dashboard session is unblinded; a scored session serves out-of-fold
@@ -6,7 +6,7 @@ scores, masks the cell's own label and blind-lists its files; a benchmark sessio
 id. The MCP server adds what the protocol needs around it: a handle the client carries on every call, an
 expiry, the key it belongs to, a lock (one call at a time per session, because the session's store handle is
 one connection), the abstentions and insights recorded through it, and a run directory with a manifest and
-the spans of every call, so a session is a run in the sense of §8.1 and replays from what it wrote.
+the spans of every call, so a session is a run in the runtime's sense and replays from what it wrote.
 
 The manifest is the runtime's own (`runtime.manifest.Manifest`); the store hash it names is computed once per
 process per store version rather than per session, because hashing a store the size of the live one on every
@@ -41,7 +41,7 @@ from ..store import snapshot as SN
 #: how long a handle lives; fixed from the open, so `expires_at` means what it says
 TTL_S = 4 * 3600
 RUN_KIND = "mcp"
-#: what `abstain` may be charged to (PRD §E.3)
+#: what `abstain` may be charged to
 ABSTAIN_REASONS: tuple[str, ...] = ("not_measured", "outside_grid", "no_value", "out_of_scope")
 #: an MCP session shows every part: a client that wants a part off does not call for it
 ALL_ON = Switches(drillholes=True, label_context=True, oof_scores=True, effort_features=True, criteria=True)

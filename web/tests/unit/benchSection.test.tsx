@@ -75,7 +75,10 @@ const block = BenchBlock.parse({
       run_id: "20260920T181356Z-bench",
       mlflow_run_id: "4cbd562b",
       metrics: { f1: `${V1}:f1`, pr_auc: `${V1}:pr_auc`, abstain_rate: `${V1}:abstain_rate` },
-      extra: { gate_rejection_rate: `${V1}:gate_rejection_rate`, cost_usd_per_cell: `${V1}:cost_usd_per_cell` },
+      extra: {
+        gate_rejection_rate: `${V1}:gate_rejection_rate`,
+        cost_usd_per_cell: `${V1}:cost_usd_per_cell`,
+      },
       stages: {
         n_chains: `${V1}:stage:n_chains`,
         gate_rejection_rate: `${V1}:stage:gate_rejection_rate`,
@@ -155,7 +158,9 @@ describe("the analyst benchmark table with stage columns", () => {
       }
     }
     // arms first, baselines after, as before
-    const kinds = Array.from(el.querySelectorAll('[data-testid="bench-row"]')).map((r) => r.getAttribute("data-kind"));
+    const kinds = Array.from(el.querySelectorAll('[data-testid="bench-row"]')).map((r) =>
+      r.getAttribute("data-kind"),
+    );
     expect(kinds).toEqual(["arm", "arm", "baseline"]);
   });
 });

@@ -5,7 +5,7 @@ import { api, readKey, subscribeKey, writeKey } from "@/api/client";
 import { cn } from "@/lib/cn";
 
 /**
- * The API key, when the service has a key register (PRD §A.2: roles viewer, geologist, admin over one register
+ * The API key, when the service has a key register (roles viewer, geologist, admin over one register
  * shared with the MCP server). Kept in this browser's localStorage and sent as `X-Api-Key` on every call the
  * typed client makes. With no register the service answers a local page as `local` with every role, so most
  * of the time this dialog is not needed and says so; a key is checked against `/api/whoami` before it is

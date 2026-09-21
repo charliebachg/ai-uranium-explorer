@@ -1,4 +1,4 @@
-"""The review queue over HTTP (PRD §8.2 stage 4, §A.2): what the second family disagreed on, and who decided.
+"""The review queue over HTTP: what the second family disagreed on, and who decided.
 
 Two routes. `GET /api/review` lists items (open by default), paged and filterable by file, for the dashboard's
 review page; anyone who can reach the API may look. `POST /api/review/{queue_id}` records a decision and

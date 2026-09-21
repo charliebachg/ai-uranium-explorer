@@ -1,6 +1,6 @@
 """The run manifest: what a run was asked, of which models, against which store, for how much.
 
-PRD §8.1 asks that a run be replayable from its manifest and the call cache. That needs the manifest to name
+The rule is that a run is replayable from its manifest and the call cache. That needs the manifest to name
 everything the answer depended on — the prompt and schema hashes (the cache key covers the same texts), the
 model behind each role, the store hash and the snapshot it is, the git commit, the benchmark manifest and the
 score versions the agent saw, the retrieval blind-list, the seed — and everything the bill depended on: the

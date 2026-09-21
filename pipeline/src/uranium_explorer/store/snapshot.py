@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from ..paths import PATHS
-from . import TIER_BY_SCHEMA, connect, db_path
+from . import connect, db_path
 
 SNAPSHOT_VERSION = "snapshot/v1"
 
@@ -102,7 +102,7 @@ def feature_summary(con: Any) -> dict[str, dict[str, Any]]:
 
 def drift(snapshot_hash: str | None = None, path: Path | None = None,
           log: Callable[[str], None] = print) -> dict[str, Any]:
-    """Feature distributions now against the ones a snapshot recorded (PRD C.2.4: the drift check).
+    """Feature distributions now against the ones a snapshot recorded (the drift check).
 
     For every feature both sides know, the shift of each quantile is measured in units of the snapshot's
     interquartile range; a feature drifts when its median moves more than a quarter of that range, when a
@@ -299,7 +299,7 @@ def lineage(log: Callable[[str], None] = print) -> list[str]:
         elif pull.get("count") not in (None, row["n"]):
             problems.append(f"native.layer {key}: pull log count {pull.get('count')} differs from store {row['n']}")
     known = {norm(k) for k in layers} | scenes
-    for feature_key, from_tier, source_keys in specs:
+    for feature_key, _from_tier, source_keys in specs:
         keys = json.loads(source_keys or "[]")
         if not keys:
             problems.append(f"feature_spec {feature_key}: no source keys")
