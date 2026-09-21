@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { FORBIDDEN_PHRASES,  } from "@/config/wording";
+import { FORBIDDEN_PHRASES } from "@/config/wording";
 
 const SRC = resolve(__dirname, "../../src");
 
