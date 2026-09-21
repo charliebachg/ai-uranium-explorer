@@ -208,7 +208,7 @@ export const TOUR_STEPS: TourStep[] = [
     id: "limits",
     seconds: 40,
     screen: "Limits",
-    say: "Trusting this for drilling needs geologists to define which errors matter and label a sample. That is the first ask.",
+    say: "Trusting this for drilling needs geologists to define which errors matter and label a sample. Neither exists yet.",
     doing: "Each row gives a claim, whether public data supports it, and what it would take.",
     enter: (ctx) => {
       const s = store();

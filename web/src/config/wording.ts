@@ -9,7 +9,7 @@ export const WORDING = {
   noAssays: "Assay values: none in provincial tables",
   notRead: "Not in the files read here",
   opening:
-    "This system reads what old Saskatchewan assessment reports print, and measures how often it reads them wrongly. It makes no geological judgement, proposes no drill targets, and no geologist has checked it.",
+    "Public Saskatchewan data, read into a checked store and scored three ways beside a model of exploration effort. It makes no geological judgement, proposes no drill targets, and no geologist has checked it.",
   timelineCaption: "Where people drilled, by year",
 } as const;
 
