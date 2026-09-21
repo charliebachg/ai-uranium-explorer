@@ -2,7 +2,9 @@
 
 The shape of a turn is the one the API and the panel already read (`question`, `text`, `claims`, `published`,
 `problems`, `tools_used`, `cost_usd`); the agent adds the route it took, the abstention it recorded, the
-insight it wrote, the job it submitted, and any job that finished since the last turn with its assessment.
+insight it wrote, the job it submitted, and any job that finished since the last turn with its assessment. A
+finished job is also staged as a tool result of its own, so the answer call on that turn can read the verdict
+and cite the probability, the cost and the diff's counts by id like any other number.
 
 The gate is the same `check_claims` a published memo passes: every number in the answer, prose included,
 resolves to a value id a tool returned in this conversation. An answer that fails is sent back once with the
@@ -20,6 +22,7 @@ from typing import Any, Callable
 from ..backends.base import UsageLimitReached
 from ..prospect import tools as T
 from ..prospect.memo import check_claims
+from ..values import stat
 from . import actions as A
 from . import default_model
 from . import diff as D
@@ -120,9 +123,17 @@ def _label_expert(conv: Conversation, claims: list[dict[str, Any]]) -> list[str]
 
 
 def _answer_prompt(conv: Conversation, question: str, route: R.Route, files: list[str],
-                   feedback: list[str] | None) -> str:
+                   feedback: list[str] | None, jobs: list[str] | None = None) -> str:
     listing = "\n".join(f"  {c['file']}  <- {c['tool']}({json.dumps(c['args'])})" for c in conv.calls)
     fetched = "\n".join(f"  {f}" for f in files) or "  (nothing new: the opening evidence already holds it)"
+    finished = ""
+    if jobs:
+        # the job the conversation invoked has finished since the last turn: its result is staged like a tool
+        # result, and the model is told so, or it looks for the verdict in the cell's rows and abstains
+        finished = ("\n\nAn analyst job this conversation invoked has finished. Its result is staged in the file(s) "
+                    "below: the verdict as text, and the probability, the cost and the node counts of the diff "
+                    "against the stored chain each with a value id. Read it before answering a question about "
+                    "what the analyst decided or what changed:\n" + "\n".join(f"  {f}" for f in jobs))
     retry = ""
     if feedback:
         retry = ("\n\nYour previous answer was refused by the check:\n" + "\n".join(f"  - {p}" for p in feedback)
@@ -143,7 +154,7 @@ Read these first if you have not:
 The evidence for this question, fetched by the plan (read these before anything else):
 {fetched}
 Everything staged in this conversation:
-{listing}
+{listing}{finished}
 
 {GUIDANCE.get(route.kind, '')}
 
@@ -153,13 +164,14 @@ A reply with no answer object is refused. Every number needs the value id it cam
 
 
 def _answer_once(conv: Conversation, question: str, route: R.Route, files: list[str], backend: Any, model: str,
-                 effort: str, on_event: M.Event, feedback: list[str] | None) -> L.Outcome:
+                 effort: str, on_event: M.Event, feedback: list[str] | None,
+                 jobs: list[str] | None = None) -> L.Outcome:
     assert conv.stage is not None
     out = L.Outcome()
     step = 2 if feedback else 1
     on_event({"type": "thinking", "step": step, "of": 2})
     req = M.request(task="interface_answer", stage=conv.stage, system=L.SYSTEM,
-                    prompt=_answer_prompt(conv, question, route, files, feedback), schema=ANSWER_SCHEMA,
+                    prompt=_answer_prompt(conv, question, route, files, feedback, jobs), schema=ANSWER_SCHEMA,
                     prompt_version=ANSWER_PROMPT_VERSION, model=model, effort=effort,
                     salt="retry" if feedback else None)
     try:
@@ -205,9 +217,95 @@ def _execute(conv: Conversation, steps: list[R.Step], on_event: M.Event, log: Lo
 # ---------------------------------------------------------------- jobs that finished since the last turn
 
 
+#: the tool name a finished job is staged under, so the persisted turn and the stage listing name it
+JOB_RESULT = "job_result"
+
+
+def _job_values(conv: Conversation, job: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The numbers a finished job carries, each under an id the gate can resolve: the adjudicator's
+    probability, what the job spent, and the node counts of the diff. The verdict is a word and stays text.
+    The ids follow the MCP server's `job_status`, which mints `c:job:<job>:cost_usd` for the same figure."""
+    job_id = str(job["job_id"])
+    result = dict(job.get("result") or {})
+    diff = job.get("assessment") or {}
+    base = f"c:job:{job_id}"
+    values: dict[str, dict[str, Any]] = {}
+
+    def add(key: str, value: Any, fmt: str, note: str, unit: str | None = None) -> None:
+        if value is None:
+            return
+        vid = f"{base}:{key}"
+        values[vid] = stat(vid, value, fmt=fmt, note=note, unit=unit)
+
+    if result.get("probability") is not None:
+        add("probability", float(result["probability"]), "ratio3",
+            f"the adjudicator's probability for analyst job {job_id} on cell {conv.cell_id}: that the public "
+            "record labels this cell a known deposit or occurrence, a calibration figure and never a "
+            "probability that ore is present")
+    if result.get("cost_usd") is not None:
+        add("cost_usd", float(result["cost_usd"]), "m2", f"what analyst job {job_id} spent on live model calls",
+            unit="USD")
+    if diff:
+        add("n_nodes", len(diff.get("nodes") or []), "int",
+            f"nodes compared in the diff of analyst job {job_id}'s chain against the stored chain")
+        add("n_changed", int(diff.get("n_changed") or 0), "int",
+            f"nodes whose status differs between analyst job {job_id}'s chain and the stored chain")
+        add("n_leaning_on_expert", int(diff.get("n_leaning_on_expert") or 0), "int",
+            f"nodes of analyst job {job_id}'s chain that cite an expert-tier value")
+    return values
+
+
+def _stage_result(conv: Conversation, job: dict[str, Any]) -> str:
+    """The finished job staged as a tool result of its own, `tool_NN_job_result.json`, in the shape every
+    staged read has (`tool`, `rows`, `values`): one row with the verdict as text and each number beside its
+    id under a `*_id` key, and the values in the registry so a claim may cite them and pass the gate. The
+    handover file (`tool_NN_run_analyst.json`) is rewritten to say the job is reported and where, because a
+    model that reads `reported: false` there concludes nothing has come back and abstains."""
+    job_id = str(job["job_id"])
+    values = _job_values(conv, job)
+    result = dict(job.get("result") or {})
+    diff = job.get("assessment") or {}
+    row: dict[str, Any] = {"job_id": job_id, "cell_id": conv.cell_id, "status": job.get("status"),
+                           "verdict": result.get("verdict") or job.get("verdict") or "",
+                           "chain_id": result.get("chain_id") or "", "run_id": result.get("run_id") or "",
+                           "arm": result.get("arm") or "", "published": bool(result.get("published")),
+                           "problems": list(result.get("problems") or [])}
+    if job.get("error"):
+        row["error"] = str(job["error"])
+    for key in ("probability", "cost_usd", "n_nodes", "n_changed", "n_leaning_on_expert"):
+        vid = f"c:job:{job_id}:{key}"
+        if vid in values:
+            row[key], row[f"{key}_id"] = values[vid]["value"], vid
+    if diff:
+        verdict = dict(diff.get("verdict") or {})
+        row["diff"] = {
+            "baseline_chain_id": diff.get("baseline_chain_id"),
+            "verdict_before": verdict.get("before"), "verdict_after": verdict.get("after"),
+            "verdict_changed": bool(verdict.get("changed")),
+            "changed_nodes": [{k: n.get(k) for k in ("node_id", "criterion", "kind", "before", "after")}
+                              for n in (diff.get("nodes") or []) if n.get("changed")],
+            "expert_ids": list(diff.get("expert_ids") or []),
+            "note": diff.get("note") or "",
+        }
+    elif job.get("assessment_error"):
+        row["diff"] = {"note": f"no diff: {job['assessment_error']}"}
+    name = conv.record_action(JOB_RESULT, {"tool": JOB_RESULT, "job_id": job_id, "rows": [row], "values": values})
+    for call in conv.calls:
+        if call["tool"] == "run_analyst" and call["args"].get("job_id") == job_id:
+            path = conv.staging() / call["file"]
+            try:
+                handover = json.loads(path.read_text())
+            except (OSError, ValueError):
+                handover = {}
+            handover.update({"status": job.get("status"), "reported": True, "result_file": name})
+            path.write_text(json.dumps(handover, indent=1, default=str))
+    return name
+
+
 def report_jobs(conv: Conversation, on_event: M.Event) -> list[dict[str, Any]]:
     """Every job this conversation submitted that has since finished: its verdict and the diff against the
-    cell's stored chain without the insight (deterministic), each reported once."""
+    cell's stored chain without the insight (deterministic), each reported once and staged once, under
+    `result_file`, with the ids a claim may cite under `value_ids`."""
     done: list[dict[str, Any]] = []
     for job in conv.jobs:
         if job.get("reported") or "job_id" not in job:
@@ -233,6 +331,10 @@ def report_jobs(conv: Conversation, on_event: M.Event) -> list[dict[str, Any]]:
         else:
             continue
         job["reported"] = True
+        job["result_file"] = _stage_result(conv, job)
+        job["value_ids"] = sorted(f"c:job:{job['job_id']}:{k}" for k in ("probability", "cost_usd", "n_nodes",
+                                                                        "n_changed", "n_leaning_on_expert")
+                                  if f"c:job:{job['job_id']}:{k}" in conv.values)
         done.append(job)
         on_event({"type": "job", **job})
     return done
@@ -256,6 +358,8 @@ def ask(
     assert conv.stage is not None
     calls_before = len(conv.calls)
     jobs_done = report_jobs(conv, on_event)
+    # the files the finished jobs were staged under: read first by this turn's answer call
+    reported = [str(j["result_file"]) for j in jobs_done if j.get("result_file")]
 
     route, spent = R.route(conv, question, backend, model, ROUTER_EFFORT, on_event)
     steps = R.plan(route, question) if route.kind in PLANNED and not route.out_of_scope else []
@@ -338,8 +442,9 @@ def ask(
             return refuse("outside_grid", f"cell {missing[0]} is not on this grid")
 
     if route.kind in PLANNED:
-        files = _execute(conv, steps, on_event, log)
-        out = _answer_once(conv, question, route, files, backend, model, effort, on_event, feedback=None)
+        files = reported + _execute(conv, steps, on_event, log)
+        out = _answer_once(conv, question, route, files, backend, model, effort, on_event, feedback=None,
+                           jobs=reported)
     else:
         out = L.run(conv, question, backend, model, effort, on_event, log)
     spent += out.spent
@@ -356,7 +461,8 @@ def ask(
         # once more with the objections; the second refusal is final
         turn["retried"] = True
         on_event({"type": "refused", "problems": problems})
-        again = _answer_once(conv, question, route, [], backend, model, effort, on_event, feedback=problems)
+        again = _answer_once(conv, question, route, [], backend, model, effort, on_event, feedback=problems,
+                             jobs=reported)
         spent += again.spent
         if again.usage_limited:
             return finish(again, text=None, problems=problems + again.problems)
@@ -371,5 +477,5 @@ def ask(
                   cannot_answer=bool(answer.get("cannot_answer")), problems=problems)
 
 
-__all__ = ["ANSWER_PROMPT_VERSION", "ANSWER_SCHEMA", "GUIDANCE", "NO_ANSWER", "PLANNED", "REASON_SAID", "ask",
-           "check_answer", "gate", "report_jobs"]
+__all__ = ["ANSWER_PROMPT_VERSION", "ANSWER_SCHEMA", "GUIDANCE", "JOB_RESULT", "NO_ANSWER", "PLANNED", "REASON_SAID",
+           "ask", "check_answer", "gate", "report_jobs"]

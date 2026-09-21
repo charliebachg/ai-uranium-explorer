@@ -369,6 +369,79 @@ def test_invoking_on_an_enabled_cell_submits_with_the_experts_and_reports_when_d
     assert turn4["jobs_done"] == []
 
 
+def test_a_finished_job_is_staged_as_a_tool_result_the_next_turn_answers_from(
+        tmp_path: Path, world: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The fault seen on the recorded session: the next turn's `jobs_done` carried the verdict, but the answer
+    call saw only the handover file saying `reported: false` and abstained with not_measured when asked what
+    the analyst decided. The finished job is now a staged tool result the answer call reads and may cite."""
+    from uranium_explorer.api import jobs as J
+
+    monkeypatch.setattr(J, "submit_analyst", lambda *a, **k: "job-abc")
+    monkeypatch.setattr(A, "oof_score_ids", lambda cell: [])
+    monkeypatch.setattr(J, "get", lambda job_id: {
+        "job_id": job_id, "status": "done", "progress": [{"at": "t", "event": "stage:decide"}, {"at": "t", "event": "done"}],
+        "result": {"chain_id": "run:cell", "run_id": "run", "arm": "v1-openrouter", "verdict": "insufficient",
+                   "probability": 0.8, "published": False, "problems": ["the verifier faulted n02 three times"],
+                   "cost_usd": 0.0748}})
+    diff = {"chain_id": "run:cell", "baseline_chain_id": "stored:cell",
+            "verdict": {"before": "supports_closer_look", "after": "insufficient", "changed": True},
+            "nodes": [{"node_id": f"n{i:02d}", "criterion": "c", "kind": "criterion", "before": "met",
+                       "after": "unknown" if i <= 3 else "met", "expert_ids": [], "changed": i <= 3} for i in range(1, 18)],
+            "n_changed": 3, "n_leaning_on_expert": 0, "expert_ids": [], "note": "beside the stored run"}
+    monkeypatch.setattr(G.D, "assess", lambda cell, chain_id: diff)
+
+    conv = conversation(tmp_path)
+    G.ask(conv, "run the analyst", Scripted(interface_route=[route("run_analyst")]), model="fake")
+    handover = next(c for c in conv.calls if c["tool"] == "run_analyst")
+    assert json.loads((conv.stage / handover["file"]).read_text())["reported"] is False
+
+    base = "c:job:job-abc"
+    backend = Scripted(
+        interface_route=[route("lookup", topic="scores")],
+        interface_answer=[answer("The analyst decided insufficient, with probability 0.8, for 0.0748 USD; 3 of 17 "
+                                 "nodes changed status against the stored chain, and none leans on an insight.",
+                                 [{"text": "probability 0.8", "value_ids": [f"{base}:probability"]},
+                                  {"text": "0.0748 USD", "value_ids": [f"{base}:cost_usd"]},
+                                  {"text": "3 of 17 nodes changed", "value_ids": [f"{base}:n_changed", f"{base}:n_nodes"]}])],
+    )
+    events: list[dict[str, Any]] = []
+    turn = G.ask(conv, "what did the analyst decide?", backend, model="fake", on_event=events.append)
+    assert turn["published"] is True and turn["abstention"] is None
+    assert "insufficient" in turn["text"] and "0.0748" in turn["text"]
+    assert [c["value_ids"] for c in turn["claims"]][2] == [f"{base}:n_changed", f"{base}:n_nodes"]
+
+    done = turn["jobs_done"][0]
+    assert done["verdict"] == "insufficient" and done["result_file"].endswith("_job_result.json")
+    assert done["value_ids"] == sorted([f"{base}:{k}" for k in ("probability", "cost_usd", "n_nodes", "n_changed",
+                                                                 "n_leaning_on_expert")])
+    assert set(done["value_ids"]) <= set(conv.values), "the job's numbers are in the registry the gate reads"
+    assert "job_result" in turn["tools_used"], "the persisted turn names the staged result like a tool call"
+    # the staged file: the verdict as text, every number beside its id, the objections kept
+    staged = json.loads((conv.stage / done["result_file"]).read_text())
+    row = staged["rows"][0]
+    assert row["verdict"] == "insufficient" and row["published"] is False
+    assert row["probability"] == 0.8 and row["probability_id"] == f"{base}:probability"
+    assert row["n_changed"] == 3 and row["n_nodes"] == 17 and row["diff"]["verdict_before"] == "supports_closer_look"
+    assert [n["node_id"] for n in row["diff"]["changed_nodes"]] == ["n01", "n02", "n03"]
+    assert row["problems"] == ["the verifier faulted n02 three times"]
+    assert staged["values"][f"{base}:cost_usd"]["unit"] == "USD"
+    # the handover now says the job is reported and where
+    marked = json.loads((conv.stage / handover["file"]).read_text())
+    assert marked["reported"] is True and marked["status"] == "done" and marked["result_file"] == done["result_file"]
+    # the answer call was told to read the result first, and was sent the file
+    prompt = backend.requests[-1].user_prompt
+    assert "An analyst job this conversation invoked has finished" in prompt
+    assert prompt.index(done["result_file"]) < prompt.index("Everything staged in this conversation")
+    assert done["result_file"] in [name for _p, name in backend.requests[-1].stage_files]
+    # a number the job did not return is still refused
+    bad = Scripted(interface_route=[route("lookup", topic="scores")],
+                   interface_answer=[answer("It decided insufficient at probability 0.9.",
+                                            [{"text": "0.9", "value_ids": [f"{base}:probability"]}])] * 2)
+    turn2 = G.ask(conv, "and the probability again?", bad, model="fake")
+    assert turn2["published"] is False and any("0.9" in p for p in turn2["problems"])
+    assert turn2["jobs_done"] == [], "reported once"
+
+
 def test_a_session_budget_bounds_the_invocations(tmp_path: Path, world: dict, monkeypatch: pytest.MonkeyPatch) -> None:
     from uranium_explorer.api import jobs as J
 

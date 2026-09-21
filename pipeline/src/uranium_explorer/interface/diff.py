@@ -6,6 +6,12 @@ the geologist saw before they said anything. The nodes are matched by id, which 
 stable across runs of the same cell; a node one chain has and the other lacks is listed as such rather than
 matched by guesswork. Nothing here is a number: statuses and verdicts are words, and the counts are of rows in
 this very dict.
+
+What counts as an expert-tier id is decided here, not taken from the node. A node's `expert_ids_json` is the
+list the executor wrote ("the subset of value_ids the staged results mark as expert-tier"), and the node gate
+checks only that it is a subset of the node's value ids; a cheap executor has listed a cross-check id there
+on a run with no insight at all, which made the diff say the chain leaned on an insight it never saw. So both
+the diff and the baseline search keep only ids of the tier the expert tier actually mints.
 """
 
 from __future__ import annotations
@@ -14,6 +20,17 @@ from typing import Any
 
 from ..analyst import chains as CH
 from ..store import connect
+
+#: An expert-tier value id starts with this: `record_insight` (the MCP handler the interface agent shares)
+#: mints the numbers in a geologist's statement under `c:insight:<cell>:<insight>:<n>`, with the insight's own
+#: id under `e:`. Nothing else in the store mints under `insight`, so the prefix is the tier.
+EXPERT_PREFIX = "c:insight:"
+
+
+def expert_tier(ids: Any) -> list[str]:
+    """The ids of the expert tier among `ids`, sorted; anything under another prefix is a value the executor
+    mislabelled, and is left out rather than counted as an insight."""
+    return sorted({str(i) for i in (ids or []) if str(i).startswith(EXPERT_PREFIX)})
 
 
 def _current(chain: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -36,7 +53,7 @@ def chain_diff(before: dict[str, Any] | None, after: dict[str, Any]) -> dict[str
             "kind": (a or b or {}).get("kind"),
             "before": b.get("status") if b else None,
             "after": a.get("status") if a else None,
-            "expert_ids": sorted(a.get("expert_ids_json") or []) if a else [],
+            "expert_ids": expert_tier(a.get("expert_ids_json")) if a else [],
         }
         row["changed"] = row["before"] != row["after"]
         rows.append(row)
@@ -62,7 +79,7 @@ def baseline_chain(cell_id: str, con: Any = None, exclude: str | None = None) ->
         if not head.get("published") or head.get("chain_id") == exclude:
             continue
         chain = CH.load_chain(con, str(head["chain_id"]))
-        if not any(n.get("expert_ids_json") for n in CH.current_nodes(chain["nodes"])):
+        if not any(expert_tier(n.get("expert_ids_json")) for n in CH.current_nodes(chain["nodes"])):
             return chain
     return None
 
@@ -81,4 +98,4 @@ def assess(cell_id: str, chain_id: str, con: Any = None) -> dict[str, Any]:
             con.close()
 
 
-__all__ = ["assess", "baseline_chain", "chain_diff"]
+__all__ = ["EXPERT_PREFIX", "assess", "baseline_chain", "chain_diff", "expert_tier"]

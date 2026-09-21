@@ -5,6 +5,7 @@ import {
   Manifest,
   PagesIndex,
   Readiness,
+  RecordedChat,
   Report,
   ReportIndex,
   YearHistogram,
@@ -42,6 +43,7 @@ check("manifest.json", Manifest);
 check("context/datum_grid.json", DatumGrid);
 check("bulk/year_histogram.json", YearHistogram);
 check("prospect/readiness.json", Readiness);
+check("prospect/recorded_chat.json", RecordedChat);
 const index = check("reports/index.json", ReportIndex) as { reports?: { file_num: string }[] } | null;
 
 for (const r of index?.reports ?? []) {

@@ -48,6 +48,23 @@ def test_the_diff_compares_statuses_and_the_verdict_and_names_what_leans_on_an_i
     assert D.chain_diff(before, after) == d, "deterministic"
 
 
+def test_only_an_expert_tier_id_counts_as_leaning_on_an_insight() -> None:
+    """Seen on a recorded job with no insight at all: the cheap executor listed a cross-check id
+    (`c:x:...:min_sep_m`) under a node's expert_ids, and the diff reported the chain as leaning on an
+    insight. The node gate checks only that expert_ids is a subset of value_ids; the tier is decided here."""
+    stray = f"c:x:{CELL}:conductor_fault:min_sep_m"
+    insight = f"c:insight:{CELL}:ab12cd34ef:0"
+    after = chain("ch1", "supports_closer_look", [node("n09", "met", "conductor_fault", expert=[stray]),
+                                                   node("n02", "met", "fault", expert=[stray, insight])])
+    d = D.chain_diff(None, after)
+    by = {r["node_id"]: r for r in d["nodes"]}
+    assert by["n09"]["expert_ids"] == [], "a cross-check id is not an insight"
+    assert by["n02"]["expert_ids"] == [insight], "only the expert tier's own ids are kept"
+    assert d["n_leaning_on_expert"] == 1 and d["expert_ids"] == [insight]
+    assert D.expert_tier([stray, insight, "e:abc", None]) == [insight]
+    assert D.EXPERT_PREFIX == "c:insight:", "the prefix record_insight mints the numbers in a statement under"
+
+
 def test_a_node_is_read_at_its_last_attempt() -> None:
     after = chain("ch1", "insufficient", [node("n01", "not_met", "conductor", round_=1),
                                           node("n01", "met", "conductor", round_=2)])
@@ -68,5 +85,11 @@ def test_the_baseline_is_the_newest_published_chain_that_leans_on_no_insight(tmp
         d = D.assess(CELL, "job", con)
         assert d["baseline_chain_id"] == "older" and d["verdict"]["changed"] is True
         assert d["nodes"][0]["before"] == "unknown" and d["nodes"][0]["after"] == "met"
+        # a newer published chain whose executor mislabelled a cross-check id as expert-tier is still a run
+        # without an insight, and so the baseline
+        CH.store_chain(con, *[chain("mislabelled", "insufficient",
+                                    [node("n01", "unknown", "fault", expert=[f"c:x:{CELL}:conductor_fault:min_sep_m"])],
+                                    "2026-09-21T12:00:00")[k] for k in ("chain", "nodes", "verdicts", "decision")])
+        assert D.baseline_chain(CELL, con, exclude="job")["chain"]["chain_id"] == "mislabelled"
     finally:
         con.close()
