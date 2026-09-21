@@ -234,8 +234,8 @@ export function ChatPanel({
         {entries.length === 0 ? (
           <div>
             <p className="text-[12px] text-ink-3">
-              Every number is checked against the tool values before an answer is shown; one that fails is
-              withheld, with the objection in its place.
+              Every number is checked against the tool values. One that fails is withheld, with the objection
+              in its place.
             </p>
             <div className="mt-3 flex flex-col items-start gap-1.5">
               {SUGGESTIONS.map((s) => (

@@ -377,7 +377,7 @@ function Memos({ record }: { record: CellEvidence }) {
   return (
     <Block
       title="Stored memos"
-      note="Three agents argue the same evidence: one for, one against, one adjudicating. A memo whose claims did not check out against the tool values is kept and shown as rejected rather than deleted."
+      note="Three agents argue the same evidence: one for, one against, one adjudicating. A memo whose claims failed the check is kept and marked rejected, not deleted."
     >
       <div className="space-y-2">
         {record.memos.map((memo) => (
@@ -511,7 +511,7 @@ function Chains({ record }: { record: CellEvidence }) {
   return (
     <Block
       title="Analyst chain"
-      note="The staged analyst plans one node per criterion, executes each against the tools, has a verifier read the whole chain and send faulty nodes back, then decides twice: a weighted sum over node strengths and a model adjudicator. Every number a node states cites a value id; a node or decision that failed its gate is withheld and shown as such."
+      note="One node per criterion, each executed against the tools, with a verifier that sends faulty nodes back. Every number cites a value id, and a node or decision that failed its gate is shown withheld."
     >
       {record.chains.length > 1 ? (
         <label className="mb-2 flex items-center gap-2 text-[11px] text-ink-3">

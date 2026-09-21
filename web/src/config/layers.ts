@@ -779,7 +779,7 @@ export function layerGroups(
     {
       id: "reports",
       label: "Report footprints",
-      detail: "Areas covered by the assessment files read by this demo",
+      detail: "Areas covered by the assessment files read here",
       sourceId: null,
       countStat: "m:files_read",
       legend: { kind: "line", color: t.pass },

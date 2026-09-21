@@ -3,15 +3,12 @@ import { DEFAULT_CAMERA, useStore } from "@/state/store";
 import type { TourTargets } from "./targets";
 
 /**
- * The walkthrough, as data. Each step sets the app state it needs and carries the line to say out loud; the
- * HUD drives them and the e2e test walks the same list.
+ * The walkthrough, as data. Each step sets the app state it needs and carries its own line; the HUD drives
+ * them and the e2e test walks the same list.
  *
- * It tells the prototype's acceptance story: a person opens the dashboard, sees the data and how ready it
- * is, reads the scores against the null they must beat, inspects the model results on the Eval page and the
- * analyst's chains on an enabled cell, talks to the interface agent about that cell, and has it call the
- * analyst. The exchange with the agent is prerecorded (`ue prospect record`), so the room never waits on a
- * model, and the steps say so out loud. The reading pipeline that the earlier tour walked through is now one
- * line on the Eval page rather than three steps of its own.
+ * The order is the acceptance story: the data and its readiness, the scores against the null they must beat,
+ * the model results, the analyst's chains on an enabled cell, then the agent on that cell. The exchange with
+ * the agent is prerecorded (`ue prospect record`), so no step waits on a model call.
  */
 
 export type TourCtx = {
@@ -79,7 +76,7 @@ export const TOUR_STEPS: TourStep[] = [
     screen: "Title",
     say: WORDING.opening,
     doing:
-      "One system on public files: the data and how ready it is, three scores and the null they must beat, the model results, an analyst that argues from the record, and an agent that can only answer from it.",
+      "One system on public files, covering the data, the scores, the model results, the analyst and the agent.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -95,9 +92,9 @@ export const TOUR_STEPS: TourStep[] = [
     id: "data",
     seconds: 45,
     screen: "Data and readiness",
-    say: "Everything here is public. This page says what the grid actually covers, feature by feature: how much of the basin each one reaches, which are thin, and the geophysics that is not public at all. It is coverage, not a ranking of ground.",
+    say: "Everything here is public. The page gives each feature's coverage of the grid, which features are thin, and which geophysics is not public.",
     doing:
-      "The readiness gate at the bottom asks five things of every dataset: in the store, licensed for its use, coverage stated, servable, and versioned to a hashed pull. No agent phase starts until every row is green.",
+      "The readiness gate asks five things of every dataset, and no agent phase starts until every row is green.",
     enter: (ctx) => {
       const s = store();
       s.openValue(null);
@@ -109,9 +106,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "map",
     seconds: 45,
     screen: "The map",
-    say: "One district, with the evidence layers on: mapped conductors, faults, the graphitic host, lake geochemistry, and the collars of where people already drilled. The cell open in the rail is one of the enabled cells: its assessment files were read and its analyst chain was computed in advance.",
-    doing:
-      "Every layer loads only when it is switched on. The rail groups them by what they are evidence of, and names the grids this ground does not publish.",
+    say: "One district, with conductors, faults, the graphitic host, lake geochemistry and drill collars switched on. The cell open in the rail was read and its chain computed in advance.",
+    doing: "Each layer loads only when it is switched on, grouped by what it is evidence of.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -131,9 +127,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "scores",
     seconds: 45,
     screen: "Scoring the ground",
-    say: "Now the analysis cells, coloured by the knowledge-driven criteria score: conductor proximity, a mapped graphitic host, fault proximity, the unconformity depth window, lake geochemistry. Every threshold and weight is written down beside the paper it came from, and none of it is fitted to the answer.",
-    doing:
-      "This is the one layer allowed to colour by a value, so the banner changes to say so and a legend appears. A cell nobody could score is drawn as a ring, not as a low score.",
+    say: "The analysis cells, coloured by the knowledge-driven criteria score. Every threshold and weight is written down beside its source, and none is fitted to the answer.",
+    doing: "Only this layer colours by a value, and a cell nobody could score is drawn as a ring.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -151,9 +146,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "nullmodel",
     seconds: 45,
     screen: "The null model",
-    say: "Same ground, now showing the learned score minus the exploration-effort score. Blue is where a model trained on geology beats a model that knows nothing but where people have already drilled. Most of the basin is not blue.",
-    doing:
-      "The effort model sees drillhole counts, survey footprints and first-drilled years. No rock at all. It exists to be beaten, and on this grid it is not.",
+    say: "The same ground, now showing the learned score minus the exploration-effort score. Blue is where geology beats drilling history, and most of the basin is not blue.",
+    doing: "The effort model sees drillhole counts, survey footprints and first-drilled years, and no rock.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -166,9 +160,9 @@ export const TOUR_STEPS: TourStep[] = [
     id: "eval",
     seconds: 60,
     screen: "Eval",
-    say: "The Eval page. At the top, the reading pipeline's run statistics, and why they are not accuracy. Below them the score models: the model search, every candidate one tracked run scored out of fold against the null; the dated hindcast, labels and drilling frozen at a cutoff year and each later discovery reported as the share of the basin that scored at least as well; and the analyst benchmark, one row per arm on the same open cells, with the staged loop's columns per chain.",
+    say: "The Eval page. The reading run statistics sit on top, then the model search, the dated hindcast and the analyst benchmark.",
     doing:
-      "A candidate is validated only if its interval lies wholly above the null's, and the code applies that rule rather than a reader of the table. A cheaper stack sits beside the strong one on the same cells.",
+      "A candidate is validated only if its interval lies wholly above the null's, and the code applies that rule.",
     enter: (ctx) => {
       const s = store();
       s.openValue(null);
@@ -180,18 +174,17 @@ export const TOUR_STEPS: TourStep[] = [
     id: "chains",
     seconds: 50,
     screen: "The analyst's chains",
-    say: "Back on the enabled cell, the evidence tab. Under the scores and what each criterion contributed sits the chain the staged analyst computed offline: one node per criterion, each citing the values it read; a verifier that read the whole chain and sent faulty nodes back, round by round; and a verdict that tops out at supports a closer look.",
+    say: "Back on the enabled cell, the evidence tab. Under the scores sits the stored analyst chain, one node per criterion, each citing the values it read.",
     doing:
-      "The chain is stored, so it loads from the local service with no model call. A node or a decision that failed its gate is shown withheld, with the objection beside it.",
+      "The verdict tops out at supports a closer look, and a node that failed its gate is shown withheld.",
     enter: (ctx) => openRecordedCell(ctx, null),
   },
   {
     id: "ask",
     seconds: 60,
     screen: "Asking the agent",
-    say: "Now I ask the agent about this cell. Each question is routed first, and the line under the answer says what kind it was read as and which tools its plan fetched. Every number it states is a value id from those tools, shown as a chip; an answer citing a number they did not return is withheld, objection in its place. The question it must not answer, a grade, is declined with its reason.",
-    doing:
-      "This exchange was recorded on the cheap model, so the room never waits on a model call. The live panel is the same, with the local service running.",
+    say: "The agent answers about this cell, and each question is routed before any tool runs. Every number it states is a value id, and one without a citation is withheld.",
+    doing: "This exchange was recorded on the cheap model, so nothing waits on a model call.",
     enter: (ctx) => openRecordedCell(ctx, ctx.targets.recordedCell?.askTurns ?? 0),
   },
   {
@@ -203,20 +196,20 @@ export const TOUR_STEPS: TourStep[] = [
       const made = !cell?.chainId
         ? ""
         : cell.chainPublished
-          ? ", and its chain was published into the store"
-          : ", and the verifier withheld its chain, which is a result too";
-      return `The last question hands the cell to the analyst itself. The agent submits a job; the card shows the stages as the staged loop closed them, then the verdict and what it cost. The next turn reports the diff: the new chain's node statuses and verdict beside the stored chain's. This job ran for real when the session was recorded${made}.`;
+          ? ", and the new chain was published into the store"
+          : ", and the verifier withheld its chain";
+      return `The last question hands the cell to the analyst itself. The job card shows each stage, the verdict, the cost, and a diff against the stored chain${made}.`;
     },
     doing:
-      "The agent adds no signal of its own: it finds, explains and invokes. Recording a geologist's insight is the one action the tour does not take, because a recording has no geologist in it.",
+      "The agent finds, explains and invokes, but recording a geologist's insight is the one action it does not take.",
     enter: (ctx) => openRecordedCell(ctx, ctx.targets.recordedCell?.turns ?? 0),
   },
   {
     id: "limits",
     seconds: 40,
     screen: "Limits",
-    say: "To trust this for drilling, your geologists would define which errors matter and label a sample. That is my first ask.",
-    doing: "One line per row: what public data can support, what it cannot, and what each would take.",
+    say: "Trusting this for drilling needs geologists to define which errors matter and label a sample. That is the first ask.",
+    doing: "Each row gives a claim, whether public data supports it, and what it would take.",
     enter: (ctx) => {
       const s = store();
       s.openValue(null);

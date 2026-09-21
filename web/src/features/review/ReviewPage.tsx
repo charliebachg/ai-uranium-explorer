@@ -11,11 +11,10 @@ import { cn } from "@/lib/cn";
 import { type Decision, listReview, ReviewError, resolveReview } from "./service";
 
 /**
- * The review queue: every value the two reader families disagreed on, or that only one of
- * them found, with both readings side by side and the page cropped to the box the quote was located at. A
- * geologist accepts one reading or rejects both; the decision is recorded on the item with who made it, and
- * neither reading is ever rewritten. Readings are shown as printed text with the model that read them: they
- * are evidence about a page, not numbers this page computed.
+ * The review queue: every value the two reader families disagreed on, or that only one of them found, with
+ * both readings side by side and the page cropped to the box the quote was located at. A geologist accepts
+ * one reading or rejects both; the decision is recorded with who made it, and neither reading is rewritten.
+ * Readings are printed text with the model that read them: evidence about a page, not numbers computed here.
  */
 export function ReviewPage() {
   const [service, setService] = useState<ServiceState>("unknown");
@@ -66,8 +65,8 @@ export function ReviewPage() {
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[15px] text-ink">Review queue</h1>
             <span className="text-[12px] text-ink-3">
-              what the second reader disagreed with the first about; an accepted reading is filed with your
-              key's label, and the two readings stay as they were
+              Values the two readers disagreed on. An accepted reading is filed under the key's label, and
+              both readings stay as they were.
             </span>
             {data ? (
               <span className="ml-auto text-[12px] text-ink-3" data-chrome>
@@ -107,8 +106,8 @@ export function ReviewPage() {
             </button>
             {!hasKey ? (
               <span className="text-ink-3">
-                no API key set: decisions are accepted from this machine only when the service runs without a
-                key register
+                no API key set. Decisions are accepted from this machine only while the service runs without a
+                key register.
               </span>
             ) : null}
           </div>

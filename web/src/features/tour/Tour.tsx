@@ -108,7 +108,7 @@ export function Tour() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="glass pointer-events-auto w-[min(780px,calc(100vw-2rem))] overflow-hidden rounded-2xl shadow-2xl shadow-black/50"
+        className="glass-opaque pointer-events-auto w-[min(780px,calc(100vw-2rem))] overflow-hidden rounded-2xl shadow-2xl shadow-black/50"
         aria-label="Guided walkthrough"
       >
         <div className="flex items-center gap-3 border-line border-b px-4 py-2">

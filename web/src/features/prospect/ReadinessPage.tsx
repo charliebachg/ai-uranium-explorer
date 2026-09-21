@@ -425,6 +425,33 @@ function SourceRow({ source: s }: { source: ProspectSource }) {
 
 // ---------- gaps ----------
 
+/**
+ * Shorter WHY and WORKAROUND lines for the gaps the export carries, keyed by gap. Same facts and the same
+ * figures, said in fewer words; a gap the map does not name falls back to the export's own text.
+ */
+const GAP_TEXT: Record<string, { why: string; workaround: string }> = {
+  aeromagnetic_grids: {
+    why: "Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin.",
+    workaround:
+      "Mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy. Nothing stands in for radiometrics or gravity until the 200 m grid is pulled.",
+  },
+  discovery_dates: {
+    why: "Without dates there is no train-before, test-after split, which is the strongest test short of drilling.",
+    workaround:
+      "A hand-built table of about ten dated discoveries, each cited to a public technical report, used only as a hold-out. Leave-one-camp-out spatial folds need no dates.",
+  },
+  em_conductor_attributes: {
+    why: "The folklore that stronger conductors make better ground needs a conductance value to test.",
+    workaround:
+      "Criteria use distance and density only. The strength claims stay in the handbook as untested folklore, with weight zero.",
+  },
+  alteration_measurements: {
+    why: "Alteration is the largest expression of the system. The Cigar Lake halo reaches about 100 m below and 300 m above the unconformity.",
+    workaround:
+      "None. The handbook states the extents, so an agent can say what would settle a cell. The adjudicator names alteration as an unknown, never an absence.",
+  },
+};
+
 const GAP_STATUS: Record<ProspectGap["status"], { label: string; tone: "miss" | "flag" }> = {
   not_addressable: { label: "not addressable", tone: "miss" },
   not_published: { label: "not published", tone: "miss" },
@@ -453,7 +480,7 @@ function GateSection({ gate }: { gate?: ReadinessGate }) {
   return (
     <Section
       title="The readiness gate"
-      hint="Present in the store, licensed for how it is used, coverage stated, servable within its licence, and versioned to a hashed pull. No agent phase starts until every row is green."
+      hint="Five checks per dataset: present, licensed, coverage stated, servable, and versioned to a hashed pull. No agent phase starts until every row is green."
     >
       <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px]" data-testid="gate-verdict">
         <Chip tone={gate.green ? "pass" : "miss"}>{gate.green ? "gate green" : "gate red"}</Chip>
@@ -532,8 +559,8 @@ function GapsSection({ gaps, totalId }: { gaps: ProspectGap[]; totalId: string }
                   {g.key}
                 </span>
               </header>
-              <GapLine label="Why" text={g.why_it_matters} />
-              <GapLine label="Workaround" text={g.workaround} />
+              <GapLine label="Why" text={GAP_TEXT[g.key]?.why ?? g.why_it_matters} />
+              <GapLine label="Workaround" text={GAP_TEXT[g.key]?.workaround ?? g.workaround} />
               <details className="mt-1.5">
                 <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">evidence</summary>
                 <p className="mt-1 border-line border-l pl-3 text-[11.5px] text-ink-3" data-source-text>

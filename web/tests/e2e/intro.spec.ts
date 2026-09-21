@@ -8,7 +8,7 @@ test("intro holds the globe, then flies in and settles on backed counters", asyn
   await page.goto("/");
   const intro = page.getByTestId("intro");
   await expect(intro).toBeVisible();
-  await expect(intro).toContainText("It makes no geological judgement and proposes no drill targets.");
+  await expect(intro).toContainText("It makes no geological judgement, proposes no drill targets");
 
   // the camera waits on the globe, well outside the province
   await page.waitForFunction(

@@ -81,7 +81,7 @@ describe("tour steps", () => {
   });
 
   it("never says the words the wording rule forbids, whatever the verdict", () => {
-    // the frozen opening line is the one exception: it says what the demo does not propose
+    // the frozen opening line is the one exception: it says what the system does not propose
     for (const step of TOUR_STEPS.filter((s) => s.id !== "title")) {
       const text = `${sayOf(step, WITH_CELL)} ${step.doing ?? ""}`.toLowerCase();
       for (const phrase of ["high potential", "drill target", "prospective ground"])

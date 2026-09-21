@@ -82,7 +82,7 @@ export function EvalPage() {
           <Line label="from a provincial position" id={data.placement.from_provincial} />
           <Line label="not placed" id={data.placement.not_placed} />
           <p className="mt-2 text-[11.5px] text-ink-3">
-            Only the first row tests the reading; the rest say where the hole is, not how well it was read.
+            Only the first row tests the reading; the rest say where the hole is.
           </p>
         </Card>
         <Card title="Cross-check against provincial records" tone="plain">
@@ -145,7 +145,7 @@ export function EvalPage() {
 
       <Section
         title="What would turn these into accuracy"
-        hint="Until then: what was read and what the checks caught, not how often the reading is right."
+        hint="Until then the page shows what was read and what the checks caught."
       >
         <ol className="list-inside list-decimal space-y-1 text-[12.5px] text-ink-2">
           <li>Key whole pages by hand, blind to the model output.</li>
@@ -190,7 +190,7 @@ function GateSection({ readiness }: { readiness: Readiness | null }) {
   return (
     <Section
       title="The fabrication gate, put to the test"
-      hint="Real evidence packs, true claims, and the same claims corrupted the way a model plausibly would. No model involved, so it runs on every change."
+      hint="Real evidence packs, with true claims and the same claims corrupted. No model is involved, so the suite runs on every change."
     >
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="gate-cards">
         <Card title="Fabricated claims refused" tone="plain">
@@ -232,9 +232,8 @@ function GateSection({ readiness }: { readiness: Readiness | null }) {
       </table>
 
       <p className="mt-2.5 max-w-[86ch] text-[11.5px] text-ink-3">
-        This measures the check, not how often a model writes such a claim — that needs the model, and is the
-        denominator problem stated at the top. The claims that get through are small numbers that also appear
-        in text the agent may quote back.
+        This measures the check, not how often a model writes such a claim. The ones that get through are
+        small numbers that also appear in text the agent may quote back.
       </p>
     </Section>
   );
@@ -262,6 +261,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function ProvenanceStrip({ data }: { data: RunSummary }) {
+  const runs = data.run.run_ids;
   return (
     <div className="glass sticky top-0 z-10 rounded-2xl border-st-flag/30 px-4 py-3">
       <div className="flex flex-wrap items-center gap-3">
@@ -269,11 +269,25 @@ function ProvenanceStrip({ data }: { data: RunSummary }) {
           <FlaskConical className="size-3.5" /> No gold labels yet: these are run statistics, not accuracy
         </span>
         <span className="text-[12px] text-ink-3">
-          run <span data-ident>{data.run.run_ids.join(", ") || "none"}</span> · pipeline{" "}
-          <span data-ident>{data.pipeline_version}</span> · generated{" "}
+          pipeline <span data-ident>{data.pipeline_version}</span> · generated{" "}
           <span data-chrome>{data.generated_at.slice(0, 16).replace("T", " ")}</span>
         </span>
       </div>
+      {/* the run ids are the provenance, not the headline: a count on the line, the ids one click away */}
+      <details className="mt-1.5" data-testid="run-ids">
+        <summary className="cursor-pointer text-[11.5px] text-ink-3 hover:text-ink-2">
+          {runs.length ? (
+            <>
+              <span data-chrome>{runs.length}</span> tracked runs
+            </>
+          ) : (
+            "no tracked run"
+          )}
+        </summary>
+        <p className="mt-1.5 border-line border-l pl-3 text-[11.5px] text-ink-3" data-ident>
+          {runs.join(", ") || "none"}
+        </p>
+      </details>
       {data.caveats.length ? (
         <details className="mt-1.5">
           <summary className="cursor-pointer text-[11.5px] text-ink-3 hover:text-ink-2">

@@ -71,11 +71,11 @@ test("the analyst benchmark table is on the page when the export carries it", as
     await expect(row.locator("[data-ident]").last()).toBeVisible();
 });
 
-test("limits page states what the demo cannot claim", async ({ page }) => {
+test("limits page states what the system cannot claim", async ({ page }) => {
   await page.goto("/limits");
   const limits = page.locator('[data-strict="limits"]');
-  await expect(limits).toContainText("What this demo can and cannot claim");
+  await expect(limits).toContainText("What this system can and cannot claim");
   await expect(limits).toContainText("Drill here, or this saves holes");
-  await expect(limits).toContainText("I am not a geologist");
+  await expect(limits).toContainText("That takes geologist judgement and drill outcomes");
   await page.screenshot({ path: "test-results/limits-page.png", fullPage: true });
 });

@@ -164,7 +164,7 @@ export function Intro() {
             <div className="w-px bg-line" />
             <Counter delay={0.12} id="m:uranium_files" label="uranium-tagged assessment files" />
             <div className="w-px bg-line" />
-            <Counter delay={0.24} id="m:files_read" label="read, page by page, by this demo" />
+            <Counter delay={0.24} id="m:files_read" label="read here, page by page" />
           </motion.div>
         ) : null}
       </AnimatePresence>

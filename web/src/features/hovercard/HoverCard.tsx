@@ -11,7 +11,7 @@ const DATASET_LABEL = {
   occurrences: "Uranium occurrence",
   deposits: "Uranium deposit footprint",
   readHole: "Hole read from a report",
-  footprint: "Assessment file read by this demo",
+  footprint: "Assessment file read here",
   cell: "Analysis cell",
 } as const;
 

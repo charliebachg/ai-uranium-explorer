@@ -125,10 +125,8 @@ export function CoverageMap({
       ) : null}
       <p className="mt-3 max-w-[64ch] text-[11.5px] text-ink-3">
         One dot per grid cell (<V id={cellSizeId} /> across), shaded by how many of the{" "}
-        <V id={geoFeaturesId} /> geological features have an observation in that cell. It says where
-        measurements exist, not what is in the ground: a pale cell has been measured often, which is not an
-        assessment of it. Cells over the Athabasca sandstone are drawn solid, the buffer around the basin is
-        dimmed.
+        <V id={geoFeaturesId} /> geological features have an observation there. A pale cell has been measured
+        often, which is not an assessment of it.
       </p>
     </div>
   );

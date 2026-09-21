@@ -20,7 +20,7 @@ export function AttributionDialog() {
                 Data sources and licences
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-[12.5px] text-ink-3">
-                Every layer on the map, who publishes it, and whether this demo may redistribute it.
+                Every layer on the map, who publishes it, and whether it may be redistributed.
               </Dialog.Description>
             </div>
             <Dialog.Close
@@ -78,9 +78,8 @@ export function AttributionDialog() {
               />
             </li>
             <li className="rounded-xl border border-st-flag/25 bg-st-flag/[0.06] p-3.5 text-[12px] text-ink-2">
-              Assessment report PDFs carry no named licence (the province publishes them "as is"). This demo
-              reads them locally and never redistributes them; public builds show quotes and page references
-              only.
+              Assessment report PDFs carry no named licence, as the province publishes them "as is". They are
+              read locally and never redistributed, and public builds show quotes and page references only.
             </li>
           </ul>
         </Dialog.Content>

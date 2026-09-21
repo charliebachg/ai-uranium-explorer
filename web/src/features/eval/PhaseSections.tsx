@@ -94,7 +94,7 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
   return (
     <Section
       title="The re-test: does geology beat where people already drilled?"
-      hint="PR-AUC under spatial folds, out of fold, with bootstrap intervals. Effort is the null model that knows only the drilling history; the corrections remove the two ways the first comparison could have flattered it."
+      hint="PR-AUC under spatial folds, out of fold, with bootstrap intervals. Effort is the null model, knowing only drilling history, and the corrections remove two ways it was flattered."
     >
       <table className="w-full text-[12.5px]" data-testid="headline-table">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
@@ -197,7 +197,7 @@ export function SearchSection({ block }: { block?: SearchBlock }) {
   return (
     <Section
       title="The model search"
-      hint="Every arm is one tracked run, scored out of fold on the same cells as the null model. A candidate is validated only if its interval lies wholly above the null's; the decision is applied by the code, not read off the table."
+      hint="Every arm is one tracked run, scored out of fold on the same cells as the null. A candidate is validated only if its interval lies wholly above the null's, and the code applies that rule."
     >
       <table className="w-full text-[12.5px]" data-testid="search-table">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
@@ -330,7 +330,7 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
   return (
     <Section
       title="The dated hindcast"
-      hint="Labels and drilling frozen at the cutoff year; the grid scored; each later discovery reported as the share of basin area that scored at least as well. Smaller is better; a coin toss would put a discovery halfway down."
+      hint="Labels and drilling are frozen at the cutoff year, then the grid is scored. Each later discovery is reported as the share of basin area scoring at least as well, so smaller is better."
     >
       <table className="w-full text-[12.5px]" data-testid="hindcast-table">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
@@ -387,9 +387,9 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
         ) : null}
       </table>
       <p className="mt-2 max-w-[86ch] text-[11.5px] text-ink-3">
-        What cannot be frozen: the conductor, fault and geochemistry compilations are drawn as they stand
-        today, survey footprints carry no year, and occurrences carry no date. A discovery next to one already
-        known before the cutoff is ranked by proximity as much as by prediction.
+        Not frozen: the conductor, fault and geochemistry compilations stand as they are today, and survey
+        footprints and occurrences carry no date. A discovery beside one known before the cutoff is ranked by
+        proximity as much as by prediction.
       </p>
       <Naming block={block} />
     </Section>
@@ -412,8 +412,9 @@ const STAGE_COLUMNS: [BenchStage, string][] = [
  * The analyst benchmark: every arm and every baseline scored on the same open cells, arms first, each group
  * ranked by F1. A baseline row is muted: it is arithmetic on the fitted scores, not a run, and names none.
  * The second group of columns is the staged loop's per-stage metrics, per chain; a single-call arm and a
- * baseline have no stages and print a dash there. The table is wider than a phone, so it scrolls inside its
- * own container rather than the page.
+ * baseline have no stages and print a dash there. The shallow-path share and the refusals per leakage rule
+ * stay in the run summary, being the same in every arm so far. The table is wider than a phone, so it
+ * scrolls inside its own container rather than the page.
  */
 export function BenchSection({ block }: { block?: BenchBlock }) {
   if (!block?.rows.length) return null;
@@ -425,8 +426,24 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
   return (
     <Section
       title="The analyst benchmark"
-      hint="One row is one arm or one baseline on the same open cells of the frozen benchmark. Probe cells are not scored; an abstention is never a positive, so it counts against recall, and an answer the gate refused is an abstention too. Intervals are bootstraps over cells. The staged loop's columns are per chain, from the run's own rows: the node gate's refusals over executor attempts, the share of chains a verifier round validated, the share the verifier refused at least once, rounds over the chains that validated, nodes re-executed on the verifier's feedback, and how often the verifier's own label and the weighted-sum decider agreed with the final verdict. A single-call arm has no stages and shows none; the shallow-path share and the refusals per leakage rule stay in the run summary, being the same in every arm so far."
+      hint="One row is one arm or one baseline on the same open cells of the frozen benchmark. An abstention is never a positive, and an answer the gate refused counts as an abstention."
     >
+      {/* eight stage columns need eight definitions; they belong under the table, not across the top of it */}
+      <details className="mb-2" data-testid="bench-columns">
+        <summary className="cursor-pointer text-[11.5px] text-ink-3 hover:text-ink-2">
+          what the columns mean
+        </summary>
+        <ul className="mt-1.5 space-y-1 border-line border-l pl-3 text-[11.5px] text-ink-3">
+          <li>Probe cells are not scored. Intervals are bootstraps over cells.</li>
+          <li>Node gate: the gate's refusals over executor attempts.</li>
+          <li>Valid: the share of chains a verifier round validated.</li>
+          <li>Caught: the share the verifier refused at least once.</li>
+          <li>Rounds to valid: rounds over the chains that validated.</li>
+          <li>Re-executed: nodes re-run on the verifier's feedback.</li>
+          <li>Verifier agrees, deciders agree: how often each matched the final verdict.</li>
+          <li>A single-call arm has no stages and shows none.</li>
+        </ul>
+      </details>
       <div className="overflow-x-auto">
         <table className="w-full text-[12.5px]" data-testid="bench-table">
           <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">

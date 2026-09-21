@@ -20,7 +20,7 @@ from .conversation import Conversation
 from .sensitivity import TOOL as SENSITIVITY
 from .sensitivity import sensitivity
 
-PROMPT_VERSION = "prospect/chat/v3"
+PROMPT_VERSION = "prospect/chat/v4"
 SCHEMA_VERSION = M.SCHEMA_VERSION
 MAX_STEPS = 5
 #: what `abstain` may be charged to; the same tuple the MCP server takes
@@ -52,7 +52,9 @@ Absolute rules:
 7. A value in the expert tier (an id under `c:insight:`) is a geologist's own statement recorded in this
    conversation, not a measurement: cite it as such, and never present it as something the data shows.
 
-Answer in plain prose. Short is fine. When a number matters, put it in its own claim with its value id."""
+Answer in plain prose, at most five short sentences, the answer first. One idea per sentence, no lists of
+every criterion unless the question asks for them. A number that matters goes in its own claim with its
+value id; do not repeat the claims in the prose."""
 
 ANSWER_PROPERTIES: dict[str, Any] = {
     "answer": {

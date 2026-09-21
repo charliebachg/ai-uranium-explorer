@@ -56,7 +56,7 @@ export interface PaletteInput {
 const GO: { href: string; label: string; detail: string }[] = [
   { href: "/", label: "Map", detail: "Reports, holes and the provincial compilations" },
   { href: "/eval", label: "Eval", detail: "How often the reader reads a printed value wrongly" },
-  { href: "/limits", label: "Limits", detail: "What this demo does not claim to do" },
+  { href: "/limits", label: "Limits", detail: "What this system does not claim to do" },
 ];
 
 const SCAN_TEXT: Record<string, string> = { scanned: "scanned", text: "born-digital", mixed: "mixed" };
@@ -169,7 +169,7 @@ export function buildItems(input: PaletteInput): PaletteItem[] {
     {
       tool: "tour",
       title: "Start the guided tour",
-      detail: [{ text: "A short walk through what this demo reads" }],
+      detail: [{ text: "A short walk through what this system reads" }],
     },
     {
       tool: "attribution",

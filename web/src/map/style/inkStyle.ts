@@ -112,7 +112,13 @@ export function inkStyle(): StyleSpecification {
       type: "line",
       source: "ofm",
       "source-layer": "boundary",
-      filter: ["all", ["<=", ["get", "admin_level"], 4], ["!=", ["get", "maritime"], 1]],
+      // admin_level is absent on some boundary features, and comparing null to a number makes the whole
+      // filter fall back to false with a style warning; coalesce puts a number there before the comparison
+      filter: [
+        "all",
+        ["<=", ["to-number", ["coalesce", ["get", "admin_level"], 99]], 4],
+        ["!=", ["to-number", ["coalesce", ["get", "maritime"], 0]], 1],
+      ],
       paint: {
         "line-color": INK.boundary,
         "line-width": ["interpolate", ["linear"], ["zoom"], 2, 0.4, 8, 1.1],

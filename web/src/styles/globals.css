@@ -91,6 +91,15 @@ body,
   background: rgb(15 20 27 / 0.94);
 }
 
+/*
+ * The same surface, opaque. A panel that sits over a page of running text (the walkthrough card) cannot be
+ * translucent: at .glass's alpha the page reads through its own script. Same tokens, no backdrop filter.
+ */
+.glass-opaque {
+  background: var(--color-panel);
+  border: 1px solid var(--color-line);
+}
+
 /* MapLibre controls restyled to the dark chrome */
 .maplibregl-ctrl-group {
   background: rgb(15 20 27 / 0.72) !important;
