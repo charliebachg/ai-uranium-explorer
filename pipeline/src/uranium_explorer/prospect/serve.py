@@ -211,7 +211,8 @@ def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
     """Pick the backend the chat runs on, and the model name that goes with it.
 
     `openai` and `claude` are the chat's original two. `auto` is the interface agent's: a
-    `vendor/model` id goes to OpenRouter and a bare `claude-*` id to the CLI, and the model defaults to the
+    `vendor/model` id goes to OpenRouter, a bare `claude-*` id to OpenRouter's Anthropic listing, a `gpt-*` id
+    to OpenAI, never the CLI (that is `claude`, explicit), and the model defaults to the
     cheap interface model (`UE_INTERFACE_MODEL`, else `z-ai/glm-5.3-flash`). The caches never mix because
     the cache key carries the backend family.
     """
@@ -223,21 +224,10 @@ def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
         return CachedBackend(ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)), model or "claude-sonnet-5"
 
     if kind == "auto":
-        from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
-        from ..backends.router import RoutedBackend
+        from ..backends.router import api_first
         from ..interface import default_model
 
-        # The CLI is the default route only where its binary exists. A container has none, and a service
-        # whose chat runs on a vendor/model id must not fail at start over a route nothing will take.
-        from ..backends.router import cli_or_missing
-
-        def make_cli() -> Any:
-            from ..backends.claude_cli import ClaudeCliBackend
-
-            return ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)
-
-        routed = RoutedBackend([(is_openrouter_model, OpenRouterBackend(timeout_s=180))], default=cli_or_missing(make_cli))
-        return CachedBackend(routed), model or default_model()
+        return CachedBackend(api_first(timeout_s=180)), model or default_model()
 
     if kind != "openai":
         raise ValueError(f"unknown backend {kind!r}: use openai, claude or auto")

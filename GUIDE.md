@@ -67,7 +67,7 @@ copies `src`, `knowledge`, `configs`, the Alembic files and the built site, and 
 the pack at `UE_SEED_DIR` (the compose file points it at `/app/pipeline/data/seed/latest`, the mounted
 `pipeline/data/seed/latest`), pulling one from `UE_SEED_URL` first when there is none on disk (the compose
 file sets `s3://seeds/latest` on the compose MinIO); when a store is present it does nothing. Compose hands
-the container `pipeline/.env` as its env file (optional), which is where the OpenAI key and its ceiling go
+the container the repository's `.env` and `pipeline/.env` as env files (both optional), which is where the model keys and their spend ceilings go
 for the chat.
 
     docker compose up -d --build          # everything
@@ -123,9 +123,11 @@ Review page need `ue prospect serve`; when it is down each says so and names the
 erroring. Without a seed pack the store is built from the public services with the pipeline commands in
 section 12, in the order the data section describes.
 
-`ue prospect serve` picks the chat's backend with `--backend`: `openai` (the default; an OpenAI key),
-`claude` (the local Claude CLI) or `auto` (the interface agent's cheap model through OpenRouter for a
-`vendor/model` id, the CLI for a `claude-*` id). `--model` overrides the model, `--effort` the reasoning
+`ue prospect serve` picks the chat's backend with `--backend`: `auto` (the default, API first: a
+`vendor/model` id goes to OpenRouter, a bare `claude-*` id to OpenRouter's Anthropic listing, a `gpt-*` id
+to OpenAI, each adapter built on first use so the service starts with no key and only a call names the
+key it lacks), `openai` (the OpenAI adapter alone) or `claude` (the local Claude CLI, a developer's option
+that needs a login; never chosen by `auto`). `--model` overrides the model, `--effort` the reasoning
 effort, `--host 0.0.0.0` opens it inside a container, `--web-dist web/dist` serves the built site from the
 same process. Check `uv run ue openai models` (free) before choosing an OpenAI model and `uv run ue openai
 budget` or `uv run ue spend show` for what has been spent.
@@ -739,7 +741,7 @@ a fresh temporary directory outside the repository and the API-key variables rem
 `backends/openai_api.py` and `backends/openrouter.py` are API adapters that inline staged files and send
 images as parts; `backends/replay.py` serves recorded envelopes and raises on anything not recorded, and is
 what every test runs on; `backends/router.py` sends each request to the adapter its model id belongs to
-(`--backend auto`: a `vendor/model` id to OpenRouter, a `claude-*` id to the CLI), so a cheap executor beside
+(`--backend auto`: a `vendor/model` id to OpenRouter, a bare `claude-*` id to OpenRouter's Anthropic listing, a `gpt-*` id to OpenAI; never the CLI), so a cheap executor beside
 a strong verifier is one backend with two ledgers.
 
 **Cache keys.** `backends/cache.py` keeps every successful call under `pipeline/data/cache/calls/` and every
@@ -1133,7 +1135,7 @@ queued, and what it will spend. The first and only kind is `analyst`: the staged
 through the same `run_cells` that `ue arm chain` runs, so the chain lands in the agent tier exactly as an
 offline one does and the evidence panel lists it. Its arguments: `arm` (a v1 arm; default `v1-openrouter`,
 whose every role is a `vendor/model` id, so under the job's `--backend auto` routing every call goes to
-OpenRouter and none to the Claude CLI), `budget_usd` (default
+OpenRouter), `budget_usd` (default
 0.50, at most 2.00, refused when under the arm's per-call ceiling because no call could then be made),
 `reason` and `expert_ids`. The submission needs the admin role; a cell that is not enabled is refused with
 the scope rule's reason. The runner has a per-process budget across jobs (`UE_JOB_SESSION_BUDGET_USD`) that a

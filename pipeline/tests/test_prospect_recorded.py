@@ -304,20 +304,25 @@ def test_an_explicit_model_wins_over_the_default() -> None:
     assert model == "gpt-4.1-mini"
 
 
-def test_the_auto_backend_serves_without_the_claude_binary_and_refuses_only_its_own_route(monkeypatch) -> None:
-    """A container has no `claude`: the service must still start and route vendor/model ids to OpenRouter;
-    a bare claude-* request is refused with the fix, at call time, not at start."""
+def test_the_auto_backend_is_api_first_and_never_touches_the_cli(monkeypatch) -> None:
+    """A container has no `claude`, and a public artifact must not need one: the service starts with no key at
+    all, sends a bare claude-* id to OpenRouter's Anthropic listing, and refuses an id no API serves."""
     import shutil
 
     from uranium_explorer.backends.base import BackendConfigError
 
     monkeypatch.setattr(shutil, "which", lambda _name: None)
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key-never-used")
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
     backend, model = S.make_backend("auto", "")
-    assert "/" in model, "the default model is a vendor/model id, so it never touches the missing CLI"
+    assert "/" in model, "the default model is a vendor/model id"
     routed = backend.inner
-    req = SimpleNamespace(model="claude-sonnet-5")
-    with pytest.raises(BackendConfigError, match="does not have"):
-        routed.route(req).call(req)
-    assert routed.route(SimpleNamespace(model="z-ai/glm-5.3-flash")).family != "claude_cli"
+    from uranium_explorer.backends.base import ExtractionRequest
 
+    def req(model: str) -> ExtractionRequest:
+        return ExtractionRequest(task="t", model=model, system_prompt="s", user_prompt="u", schema={}, prompt_version="v",
+                                 effort="low", images=(), schema_version="1.0.0")
+
+    assert routed.route(req("claude-sonnet-5")).family == "openrouter"
+    assert routed.request_for(req("claude-sonnet-5")).model == "anthropic/claude-sonnet-5"
+    with pytest.raises(BackendConfigError, match="no API route"):
+        routed.route(req("sonnet"))

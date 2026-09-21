@@ -26,16 +26,13 @@ def _backend(kind: str, config: Any, second_timeout_s: int) -> Any:
 
         return ClaudeCliBackend(timeout_s=config.timeout_s, max_budget_usd=config.max_budget_usd)
     if kind == "auto":
-        # a vendor/model id goes to OpenRouter (the second family), a bare claude id to the CLI (the reader):
-        # one loop, two adapters, two ledgers, and each adapter keys the cache under its own family
-        from ..backends.claude_cli import ClaudeCliBackend
-        from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
-        from ..backends.router import RoutedBackend
+        # API first: the second family (a vendor/model id) through OpenRouter under its output cap, a bare claude-*
+        # reader through OpenRouter's Anthropic listing at the reader's own timeout; the CLI only as `--backend claude`
+        from ..backends.router import api_first
         from .loop import SECOND_MAX_TOKENS
 
-        return RoutedBackend(
-            [(is_openrouter_model, OpenRouterBackend(timeout_s=second_timeout_s, max_output_tokens=SECOND_MAX_TOKENS))],
-            default=ClaudeCliBackend(timeout_s=config.timeout_s, max_budget_usd=config.max_budget_usd))
+        return api_first(timeout_s=second_timeout_s, max_output_tokens=SECOND_MAX_TOKENS,
+                         anthropic_timeout_s=config.timeout_s)
     raise typer.BadParameter(f"--backend must be claude, auto or replay, not {kind!r}")
 
 

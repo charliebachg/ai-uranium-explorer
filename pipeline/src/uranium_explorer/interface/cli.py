@@ -36,12 +36,9 @@ def _backend(kind: str, budget_usd: float | None, refresh: bool) -> Any:
 
         inner = ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)
     elif kind == "auto":
-        from ..backends.claude_cli import ClaudeCliBackend
-        from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
-        from ..backends.router import RoutedBackend
+        from ..backends.router import api_first
 
-        inner = RoutedBackend([(is_openrouter_model, OpenRouterBackend(timeout_s=180))],
-                              default=ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20))
+        inner = api_first(timeout_s=180)
     else:
         raise typer.BadParameter(f"--backend must be openai, claude or auto, not {kind!r}")
     return CachedBackend(inner, refresh=refresh, run_budget=RunBudget(cap_usd=budget_usd), estimate_usd=ESTIMATE_USD)

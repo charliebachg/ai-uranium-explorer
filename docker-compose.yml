@@ -23,7 +23,7 @@ services:
       # the mounted data directory, so a pack the host keeps at pipeline/data/seed/latest is what the app sees
       UE_SEED_DIR: /app/pipeline/data/seed/latest
       # the chat and the analyst jobs run on a pay-per-token model through OpenRouter (OPENROUTER_API_KEY in .env);
-      # a vendor/model id routes there, a claude-* id to the CLI, anything else to OpenAI
+      # API first: a vendor/model id routes there, a claude-* id to OpenRouter's Anthropic listing, a gpt-* id to OpenAI
       UE_INTERFACE_MODEL: ${UE_INTERFACE_MODEL:-z-ai/glm-5.3-flash}
       # ...and when there is none there either, where `ue store seed ensure` pulls one from: the compose MinIO,
       # bucket `seeds`, prefix `latest` (what `ue store seed push <pack> --to s3://seeds/latest` writes, with

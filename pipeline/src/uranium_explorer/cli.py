@@ -640,7 +640,7 @@ def prospect_serve_cmd(
     model: str = typer.Option("", "--model", help="default: OPENAI_MODEL for openai, sonnet for claude, "
                                                    "UE_INTERFACE_MODEL for auto"),
     effort: str = typer.Option("medium", "--effort"),
-    backend: str = typer.Option("openai", "--backend", help="openai | claude | auto (vendor/model ids to OpenRouter)"),
+    backend: str = typer.Option("auto", "--backend", help="auto (API first: OpenRouter for vendor/model and claude-* ids, OpenAI for gpt-* ids; the default) | openai | claude (the local CLI)"),
     host: str = typer.Option("127.0.0.1", "--host", help="0.0.0.0 inside a container"),
     web_dist: str = typer.Option(None, "--web-dist", help="serve the built site (web/dist) from this process"),
 ) -> None:

@@ -37,9 +37,9 @@ Without Docker:
     cd ../web && npm install && npm run dev    # the site on http://localhost:5173 during development
 
 The map, the scores, the layers and the tour are static files and work with nothing running; the evidence
-panel and the chat need the service. The chat needs a model key in `pipeline/.env` (gitignored): an OpenAI key
-by default, or an OpenRouter key with `ue prospect serve --backend auto` for the interface agent's cheap
-default model. The public seed pack holds only redistributable tables, so document readings and analyst chains
+panel and the chat need the service. The chat needs a model key in the repository's `.env` (gitignored; see `.env.example`): an OpenRouter
+key for the default `auto` backend, which is API first (a `vendor/model` id to OpenRouter, a `claude-*` id
+to OpenRouter's Anthropic listing, a `gpt-*` id to OpenAI), or an OpenAI key with `--backend openai`. The public seed pack holds only redistributable tables, so document readings and analyst chains
 appear only when the private pack is unpacked instead.
 
 ## From your own MCP client
