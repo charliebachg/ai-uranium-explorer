@@ -27,9 +27,9 @@ function ScriptValue({ id }: { id: string }) {
 }
 
 /**
- * Guided walkthrough: the steps from research report 05 with their camera work, their scripted line and the
- * clock. It never advances by itself. The time shown is an instrument reading of how long this step has been
- * open against the budget in the script, so a rehearsal can see where it is running long.
+ * Guided walkthrough: the acceptance story's steps (`steps.ts`) with their camera work, their scripted line
+ * and the clock. It never advances by itself. The time shown is an instrument reading of how long this step
+ * has been open against the budget in the script, so a rehearsal can see where it is running long.
  */
 export function Tour() {
   const step = useStore((s) => s.tour.step);

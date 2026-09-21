@@ -1,4 +1,4 @@
-import type { Report } from "@/data/contract";
+import type { RecordedChat, Report } from "@/data/contract";
 import { loadRecordedChat } from "@/data/loader";
 import { resolveValue } from "@/data/registry";
 import { loadReport, loadReportIndex } from "@/data/reports";
@@ -27,8 +27,25 @@ export type FailureTarget = {
   message: string;
 };
 
-/** The cell the recorded conversation is about, so the walkthrough opens the one it has answers for. */
-export type RecordedCellTarget = { cellId: string; lon: number; lat: number; turns: number };
+/**
+ * The cell the recorded session is about, so the walkthrough opens the one it has answers for, and how the
+ * transcript splits: the questions up to the one that invoked the analyst are the agent step, the whole
+ * exchange is the analyst step. The chain and the verdict are the job's own result, read off the recording.
+ */
+export type RecordedCellTarget = {
+  cellId: string;
+  lon: number;
+  lat: number;
+  /** turns before the one that invoked the analyst; the agent step replays these */
+  askTurns: number;
+  /** every turn, the invocation and the follow-up that reports it included */
+  turns: number;
+  /** the chain the recorded job produced, or null when the recording ran no job */
+  chainId: string | null;
+  verdict: string | null;
+  /** whether the store published that chain; false means the verifier withheld it */
+  chainPublished: boolean | null;
+};
 
 export type TourTargets = {
   evidence: EvidenceTarget | null;
@@ -92,6 +109,23 @@ function firstFailure(rep: Report): FailureTarget | null {
   return fallback;
 }
 
+/** What the tour needs of a recording: where its cell is, where the analyst turn starts, what the job made. */
+export function recordedCellTarget(chat: RecordedChat): RecordedCellTarget {
+  const invoked = chat.turns.findIndex((t) => t.route?.kind === "run_analyst");
+  const result = chat.job?.result ?? null;
+  const chainId = typeof result?.chain_id === "string" ? result.chain_id : null;
+  return {
+    cellId: chat.cell_id,
+    lon: chat.lon ?? 0,
+    lat: chat.lat ?? 0,
+    askTurns: invoked < 0 ? chat.turns.length : invoked,
+    turns: chat.turns.length,
+    chainId,
+    verdict: typeof result?.verdict === "string" ? result.verdict : null,
+    chainPublished: chainId ? Boolean(result?.published) : null,
+  };
+}
+
 let cached: Promise<TourTargets> | null = null;
 
 export function resolveTourTargets(): Promise<TourTargets> {
@@ -101,13 +135,7 @@ export function resolveTourTargets(): Promise<TourTargets> {
       const out: TourTargets = { evidence: null, failure: null, district: null, recordedCell: null };
       try {
         const chat = await loadRecordedChat();
-        if (chat.lon !== null && chat.lat !== null)
-          out.recordedCell = {
-            cellId: chat.cell_id,
-            lon: chat.lon,
-            lat: chat.lat,
-            turns: chat.turns.length,
-          };
+        if (chat.lon !== null && chat.lat !== null) out.recordedCell = recordedCellTarget(chat);
       } catch {
         // no recording yet: the step still runs, it simply has nothing to replay
       }

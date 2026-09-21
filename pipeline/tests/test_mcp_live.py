@@ -23,7 +23,7 @@ from mcp_world import numbers_outside_vals
 
 pytestmark = pytest.mark.real_data
 
-#: the dashboard's default cell (`ue prospect record-chat`), an enabled cell with files read
+#: the dashboard's default cell (`ue prospect record`), an enabled cell with files read
 CELL = "0201_0072"
 
 

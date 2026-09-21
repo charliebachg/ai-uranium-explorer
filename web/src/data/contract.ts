@@ -735,7 +735,7 @@ export const BenchExtra = z.enum([
 export type BenchExtra = z.infer<typeof BenchExtra>;
 
 /**
- * The staged loop's per-stage columns (PRD §8.5), per chain: what only a staged arm reports. The node gate's
+ * The staged loop's per-stage columns, per chain: what only a staged arm reports. The node gate's
  * refusals over executor attempts; the share of chains a verifier round validated and the share the verifier
  * refused at least once; rounds over the chains that validated; nodes re-executed on the verifier's feedback;
  * and how often the verifier's own label and the weighted-sum decider agreed with the final verdict. A
@@ -879,7 +879,7 @@ export type Readiness = z.infer<typeof Readiness>;
 
 // ---------- prospect scores: what the three models say, and what they are worth
 
-// ---------- the analyst chain: what the staged loop produced over a cell (PRD §8.4 Stage 6, §9.4)
+// ---------- the analyst chain: what the staged loop produced over a cell
 
 /** The three-level verdict every decider speaks. The panel renders each level as words, never as a colour. */
 export const ChainVerdict = z.enum(["evidence_against", "insufficient", "supports_closer_look"]);
@@ -1013,21 +1013,6 @@ export const ChatTurn = z.object({
 });
 export type ChatTurn = z.infer<typeof ChatTurn>;
 
-/**
- * A conversation that actually happened, recorded so the walkthrough can show one without waiting on a model
- * or on a server being up. The turns are the gate's own record: a withheld one is kept, with its objection.
- */
-export const RecordedChat = z.object({
-  cell_id: z.string(),
-  lon: z.number().nullable(),
-  lat: z.number().nullable(),
-  recorded_at: z.string(),
-  model: z.string(),
-  turns: z.array(ChatTurn),
-  values: ValRegistry,
-});
-export type RecordedChat = z.infer<typeof RecordedChat>;
-
 export const ChatResponse = z.object({
   conversation_id: z.string(),
   cell_id: z.string(),
@@ -1088,7 +1073,7 @@ export const Candidate = z.object({
 });
 export type Candidate = z.infer<typeof Candidate>;
 
-// ---------------------------------------------------------------- the interface agent (PRD §8.3, Phase 4c)
+// ---------------------------------------------------------------- the interface agent
 
 /**
  * The kinds the intent router picks from. Each has a plan of tool calls written in Python: the model decides
@@ -1122,7 +1107,7 @@ export const ChatRoute = z.object({
 });
 export type ChatRoute = z.infer<typeof ChatRoute>;
 
-/** Why the agent declined: the four reasons the abstain tool takes (PRD §E.3), never a free-text shrug. */
+/** Why the agent declined: the four reasons the abstain tool takes, never a free-text shrug. */
 export const AbstainReason = z.enum(["not_measured", "outside_grid", "no_value", "out_of_scope"]);
 export type AbstainReason = z.infer<typeof AbstainReason>;
 
@@ -1212,7 +1197,7 @@ export type InterfaceTurn = z.infer<typeof InterfaceTurn>;
 export const InterfaceChatResponse = ChatResponse.extend({ turn: InterfaceTurn });
 export type InterfaceChatResponse = z.infer<typeof InterfaceChatResponse>;
 
-// ---------- background jobs (PRD §A.2): the service's `agent.job` rows, polled while one runs ----------
+// ---------- background jobs: the service's `agent.job` rows, polled while one runs ----------
 
 export const JobStatus = z.enum(["queued", "running", "done", "failed", "cancelled"]);
 export type JobStatus = z.infer<typeof JobStatus>;
@@ -1248,11 +1233,58 @@ export const Job = z.object({
 export type Job = z.infer<typeof Job>;
 export const CellJobs = z.object({ cell_id: z.string(), jobs: z.array(Job) });
 export type CellJobs = z.infer<typeof CellJobs>;
+
+// ---------- the recorded session (`ue prospect record`): what the walkthrough replays ----------
+
+/**
+ * The job a recording ran, as the runner's row ended: its stages as progress events, its result, and `error`
+ * null when there was none (the row says so; a live card only ever sees the string).
+ */
+export const RecordedJob = ChatJob.extend({
+  progress: z.array(JobEvent).default([]),
+  error: z.string().nullable().optional(),
+  run_id: z.string().nullable().optional(),
+  started_at: z.string().nullable().optional(),
+  finished_at: z.string().nullable().optional(),
+});
+export type RecordedJob = z.infer<typeof RecordedJob>;
+
+/** An interface turn as recorded: the same shape the API returns, its jobs in the recorded shape. */
+export const RecordedTurn = InterfaceTurn.extend({
+  job: RecordedJob.nullable().optional(),
+  jobs_done: z.array(RecordedJob).default([]),
+});
+export type RecordedTurn = z.infer<typeof RecordedTurn>;
+
+/**
+ * A session with the interface agent that actually happened, recorded so the walkthrough can show one
+ * without waiting on a model or on a server being up. The turns are the agent's own record, in the shape the
+ * live panel draws: the route each took, a refusal with its reason, a withheld answer with its objection, the
+ * analyst job with its progress and result, and the diff the follow-up turn reports. It is made on an
+ * enabled cell, and the job's chain is in the store; a recording never writes an insight.
+ */
+export const RecordedChat = z.object({
+  cell_id: z.string(),
+  lon: z.number().nullable(),
+  lat: z.number().nullable(),
+  recorded_at: z.string(),
+  model: z.string(),
+  effort: z.string().optional(),
+  requested_by: z.string().optional(),
+  /** the turns' own spend; the job's is in its result */
+  cost_usd: z.number().optional(),
+  tools_available: z.array(z.string()).default([]),
+  turns: z.array(RecordedTurn),
+  /** the job the recording ran to the end, or null when none was asked for or the analyst refused */
+  job: RecordedJob.nullable().default(null),
+  values: ValRegistry,
+});
+export type RecordedChat = z.infer<typeof RecordedChat>;
 /** Who the key resolves to, from `/api/whoami`: a label that is never the key, and the roles it holds. */
 export const Whoami = z.object({ name: z.string(), scopes: z.array(z.string()), roles: z.array(z.string()) });
 export type Whoami = z.infer<typeof Whoami>;
 
-// ---------- the extractor's review queue (PRD §8.2 stage 4): what the second reader disagreed on, served by /api/review
+// ---------- the extractor's review queue: what the second reader disagreed on, served by /api/review
 
 /** One reader's view of a value, as the comparer recorded it; `bbox` is the value's own located box, `row_bbox` its row's band. */
 export const ReviewReading = z

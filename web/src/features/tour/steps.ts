@@ -3,13 +3,15 @@ import { DEFAULT_CAMERA, useStore } from "@/state/store";
 import type { TourTargets } from "./targets";
 
 /**
- * The walkthrough from research report 05 (Table 5.3), as data. Each step sets the app state it needs and
- * carries the line to say out loud; the HUD drives them and the e2e test walks the same list.
+ * The walkthrough, as data. Each step sets the app state it needs and carries the line to say out loud; the
+ * HUD drives them and the e2e test walks the same list.
  *
- * Three departures from 05. The eval step reports run statistics rather than recall, because the run has no
- * gold labels yet. The script's single-value failure step is gone: it walked through one misread depth, which
- * is a reading-pipeline detail rather than anything this demo turns on. And a step was added for the agent,
- * which is the part the whole system exists to make trustworthy.
+ * It tells the prototype's acceptance story: a person opens the dashboard, sees the data and how ready it
+ * is, reads the scores against the null they must beat, inspects the model results on the Eval page and the
+ * analyst's chains on an enabled cell, talks to the interface agent about that cell, and has it call the
+ * analyst. The exchange with the agent is prerecorded (`ue prospect record`), so the room never waits on a
+ * model, and the steps say so out loud. The reading pipeline that the earlier tour walked through is now one
+ * line on the Eval page rather than three steps of its own.
  */
 
 export type TourCtx = {
@@ -26,7 +28,7 @@ export type TourCtx = {
 
 export type TourStep = {
   id: string;
-  /** budget in seconds from Table 5.3; the HUD shows time against it and never advances on its own */
+  /** budget in seconds; the HUD shows time against it and never advances on its own */
   seconds: number;
   screen: string;
   /** spoken line; {value-id} is replaced by the stored value. A function when the line depends on the export */
@@ -38,6 +40,38 @@ export type TourStep = {
 
 const store = () => useStore.getState();
 
+/** The camera over the enabled cell the recording is about, with the rail open beside it. */
+const CELL_ZOOM = 7.6;
+
+/**
+ * Open the recorded cell in the rail. The rail keeps its own tab; it switches itself to the conversation
+ * when a replay is set, and the tour asks for the evidence tab back the way a person would, by clicking it,
+ * because nothing else reaches that state from here.
+ */
+function openRecordedCell(ctx: TourCtx, replayTurns: number | null): void {
+  ctx.navigate("/");
+  const s = store();
+  s.openReport(null);
+  s.openValue(null);
+  s.toggleLayer("prospect", true);
+  s.setScoreModel("criteria");
+  const cell = ctx.targets.recordedCell;
+  if (!cell) {
+    s.setChatReplay(null);
+    return;
+  }
+  s.select({ dataset: "cell", id: -1, props: { cid: cell.cellId }, lngLat: [cell.lon, cell.lat] });
+  s.setChatReplay(replayTurns === null ? null : { cellId: cell.cellId, turns: replayTurns });
+  ctx.map?.flyToCamera({ center: [cell.lon, cell.lat], zoom: CELL_ZOOM }, { duration: 1400 });
+  if (replayTurns === null) {
+    window.setTimeout(() => {
+      document
+        .querySelector<HTMLButtonElement>('[data-testid="tab-evidence"][aria-selected="false"]')
+        ?.click();
+    }, 250);
+  }
+}
+
 export const TOUR_STEPS: TourStep[] = [
   {
     id: "title",
@@ -45,11 +79,12 @@ export const TOUR_STEPS: TourStep[] = [
     screen: "Title",
     say: WORDING.opening,
     doing:
-      "Getting data out of decades of fragmented sources is the step this tests, on files anyone can download.",
+      "One system on public files: the data and how ready it is, three scores and the null they must beat, the model results, an analyst that argues from the record, and an agent that can only answer from it.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
       s.openReport(null);
+      s.openValue(null);
       s.select(null);
       s.setTimeline({ open: false, yearMax: null, playing: false });
       s.setChatReplay(null);
@@ -57,35 +92,39 @@ export const TOUR_STEPS: TourStep[] = [
     },
   },
   {
-    id: "district",
+    id: "data",
     seconds: 45,
-    screen: "One district",
-    say: "The province publishes where holes were drilled and what the rock was, but no assay values: {m:compilation_collars} collars are on this map and not one of them carries a grade.",
+    screen: "Data and readiness",
+    say: "Everything here is public. This page says what the grid actually covers, feature by feature: how much of the basin each one reaches, which are thin, and the geophysics that is not public at all. It is coverage, not a ranking of ground.",
     doing:
-      "Click any provincial collar: length, azimuth, dip, lithology, and the assay line saying there is none.",
+      "The readiness gate at the bottom asks five things of every dataset: in the store, licensed for its use, coverage stated, servable, and versioned to a hashed pull. No agent phase starts until every row is green.",
+    enter: (ctx) => {
+      const s = store();
+      s.openValue(null);
+      s.setChatReplay(null);
+      ctx.navigate("/data");
+    },
+  },
+  {
+    id: "map",
+    seconds: 45,
+    screen: "The map",
+    say: "One district, with the evidence layers on: mapped conductors, faults, the graphitic host, lake geochemistry, and the collars of where people already drilled. The cell open in the rail is one of the enabled cells: its assessment files were read and its analyst chain was computed in advance.",
+    doing:
+      "Every layer loads only when it is switched on. The rail groups them by what they are evidence of, and names the grids this ground does not publish.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
       s.openReport(null);
-      const d = ctx.targets.district;
-      if (d) ctx.map?.flyToCamera({ center: d.center, zoom: d.zoom }, { duration: 1800 });
-      window.setTimeout(() => ctx.map?.selectNearestBulk(), 2000);
-    },
-  },
-  {
-    id: "evidence",
-    seconds: 75,
-    screen: "Hole panel and page",
-    say: "The grades are only inside the reports. Here is a hole read out of one: every value opens the page it came from, with the box, the verbatim quote, the model and the run that produced it.",
-    doing:
-      "The collar also carries its datum as printed and the named grid operation used to move it, so the shift is a stated number rather than an assumption.",
-    enter: (ctx) => {
-      ctx.navigate("/");
-      const t = ctx.targets.evidence;
-      if (!t) return;
-      const s = store();
-      s.openHole(t.file, t.hole);
-      if (t.valueId && t.page) s.openValue(t.valueId, { file: t.file, page: t.page });
+      s.openValue(null);
+      s.setChatReplay(null);
+      s.toggleLayer("prospect", false);
+      for (const id of ["conductors", "faults", "host", "lakeSediment", "compilation"] as const)
+        s.toggleLayer(id, true);
+      const cell = ctx.targets.recordedCell;
+      if (!cell) return;
+      s.select({ dataset: "cell", id: -1, props: { cid: cell.cellId }, lngLat: [cell.lon, cell.lat] });
+      ctx.map?.flyToCamera({ center: [cell.lon, cell.lat], zoom: 8.6 }, { duration: 1800 });
     },
   },
   {
@@ -110,7 +149,7 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: "nullmodel",
-    seconds: 50,
+    seconds: 45,
     screen: "The null model",
     say: "Same ground, now showing the learned score minus the exploration-effort score. Blue is where a model trained on geology beats a model that knows nothing but where people have already drilled. Most of the basin is not blue.",
     doing:
@@ -127,35 +166,50 @@ export const TOUR_STEPS: TourStep[] = [
     id: "eval",
     seconds: 60,
     screen: "Eval",
-    say: "No gold set has been labelled yet, so there is no accuracy figure and this page says so at the top. What it does report is how much was read, how much of it points back at a quote on the page, where a second reader disagrees, and what every check caught.",
+    say: "The Eval page. At the top, the reading pipeline's run statistics, and why they are not accuracy. Below them the score models: the model search, every candidate one tracked run scored out of fold against the null; the dated hindcast, labels and drilling frozen at a cutoff year and each later discovery reported as the share of the basin that scored at least as well; and the analyst benchmark, one row per arm on the same open cells, with the staged loop's columns per chain.",
     doing:
-      "Turning these into accuracy takes hand-keyed pages, a row count taken before the model output is seen, and a held-out split scored once.",
+      "A candidate is validated only if its interval lies wholly above the null's, and the code applies that rule rather than a reader of the table. A cheaper stack sits beside the strong one on the same cells.",
     enter: (ctx) => {
-      store().openValue(null);
+      const s = store();
+      s.openValue(null);
+      s.setChatReplay(null);
       ctx.navigate("/eval");
     },
   },
   {
-    id: "ask",
-    seconds: 55,
-    screen: "Asking the agent",
-    say: "Now I ask the agent about one cell. It can only read the tools this evidence came from, and every number it states carries the value id it came from. An answer that cites a number the tools did not return is withheld rather than shown, and the objection is shown in its place.",
+    id: "chains",
+    seconds: 50,
+    screen: "The analyst's chains",
+    say: "Back on the enabled cell, the evidence tab. Under the scores and what each criterion contributed sits the chain the staged analyst computed offline: one node per criterion, each citing the values it read; a verifier that read the whole chain and sent faulty nodes back, round by round; and a verdict that tops out at supports a closer look.",
     doing:
-      "This exchange is recorded rather than live, so the room is not waiting on a model call. The live version is the same panel with the local service running.",
-    enter: (ctx) => {
-      ctx.navigate("/");
-      const s = store();
-      s.openReport(null);
-      s.openValue(null);
-      s.toggleLayer("prospect", true);
-      s.setScoreModel("criteria");
-      s.toggleLayer("compilation", true);
-      const cell = ctx.targets.recordedCell;
-      if (!cell) return;
-      s.select({ dataset: "cell", id: -1, props: { cid: cell.cellId }, lngLat: [cell.lon, cell.lat] });
-      s.setChatReplay({ cellId: cell.cellId, turns: cell.turns });
-      ctx.map?.flyToCamera({ center: [cell.lon, cell.lat], zoom: 7.6 }, { duration: 1400 });
+      "The chain is stored, so it loads from the local service with no model call. A node or a decision that failed its gate is shown withheld, with the objection beside it.",
+    enter: (ctx) => openRecordedCell(ctx, null),
+  },
+  {
+    id: "ask",
+    seconds: 60,
+    screen: "Asking the agent",
+    say: "Now I ask the agent about this cell. Each question is routed first, and the line under the answer says what kind it was read as and which tools its plan fetched. Every number it states is a value id from those tools, shown as a chip; an answer citing a number they did not return is withheld, objection in its place. The question it must not answer, a grade, is declined with its reason.",
+    doing:
+      "This exchange was recorded on the cheap model, so the room never waits on a model call. The live panel is the same, with the local service running.",
+    enter: (ctx) => openRecordedCell(ctx, ctx.targets.recordedCell?.askTurns ?? 0),
+  },
+  {
+    id: "analyst",
+    seconds: 50,
+    screen: "Calling the analyst",
+    say: (t) => {
+      const cell = t.recordedCell;
+      const made = !cell?.chainId
+        ? ""
+        : cell.chainPublished
+          ? ", and its chain was published into the store"
+          : ", and the verifier withheld its chain, which is a result too";
+      return `The last question hands the cell to the analyst itself. The agent submits a job; the card shows the stages as the staged loop closed them, then the verdict and what it cost. The next turn reports the diff: the new chain's node statuses and verdict beside the stored chain's. This job ran for real when the session was recorded${made}.`;
     },
+    doing:
+      "The agent adds no signal of its own: it finds, explains and invokes. Recording a geologist's insight is the one action the tour does not take, because a recording has no geologist in it.",
+    enter: (ctx) => openRecordedCell(ctx, ctx.targets.recordedCell?.turns ?? 0),
   },
   {
     id: "limits",

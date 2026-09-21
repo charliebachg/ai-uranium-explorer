@@ -11,6 +11,8 @@ import type {
   ChatRoute,
   InterfaceTurn,
   RecordedChat,
+  RecordedJob,
+  RecordedTurn,
   StoredTurn,
 } from "@/data/contract";
 import { loadRecordedChat } from "@/data/loader";
@@ -67,7 +69,8 @@ function fromStored(t: StoredTurn): InterfaceTurn {
   };
 }
 
-type Entry = { turn: InterfaceTurn; conversationId: string; index: number };
+/** A turn to draw: live from the service, resumed from the store, or replayed from the recording. */
+type Entry = { turn: InterfaceTurn | RecordedTurn; conversationId: string; index: number };
 
 export function ChatPanel({
   cellId,
@@ -83,6 +86,13 @@ export function ChatPanel({
   useEffect(() => {
     if (replay && !recorded) loadRecordedChat().then(setRecorded, () => undefined);
   }, [replay, recorded]);
+  // the walkthrough lengthens the replay step by step; the newest turn shown is the one being talked about
+  const replayFoot = useRef<HTMLDivElement | null>(null);
+  const replayTurns = replay?.turns ?? 0;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the turn count is the trigger, not an input
+  useEffect(() => {
+    replayFoot.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [replayTurns, recorded]);
 
   const [entries, setEntries] = useState<Entry[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -163,9 +173,10 @@ export function ChatPanel({
 
   const last = entries[entries.length - 1];
 
-  // The walkthrough shows a conversation that already happened, rather than keeping a room waiting on a model
+  // The walkthrough shows a session that already happened, rather than keeping a room waiting on a model
   // call. It is labelled as recorded: a replayed answer is evidence of what the agent said once, not a promise
-  // about what it would say now.
+  // about what it would say now. The turns are the agent's own record, drawn exactly as a live one is: the
+  // route line, a refusal with its reason, the job card as its row ended, and the diff the follow-up reported.
   if (replay && recorded && replay.cellId === cellId) {
     const shown = recorded.turns.slice(0, Math.max(0, replay.turns));
     return (
@@ -175,24 +186,24 @@ export function ChatPanel({
             recorded
           </Chip>
           <span className="text-[11px] text-ink-3">
-            a real exchange, replayed; every number was checked against the tool values
+            a real session, replayed: every number was checked against the tool values, and the analyst job
+            ran to the end when it was recorded
           </span>
           <span className="ml-auto text-[11px] text-ink-3" data-chrome>
-            {recorded.recorded_at.slice(0, 10)}
+            {recorded.recorded_at.slice(0, 10)} · {recorded.model}
           </span>
         </div>
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-3" data-testid="chat-log">
           {shown.map((turn, i) => (
             <Exchange
               key={turn.question}
-              entry={{
-                turn: { ...turn, jobs_done: [], expert_ids: [], retried: false },
-                conversationId: `recorded-${recorded.cell_id}`,
-                index: i,
-              }}
+              entry={{ turn, conversationId: `recorded-${recorded.cell_id}`, index: i }}
               onCite={onCite}
+              cellId={cellId}
+              replay
             />
           ))}
+          <div ref={replayFoot} />
         </div>
       </div>
     );
@@ -587,26 +598,45 @@ function Assessment({ diff }: { diff: ChainDiff }) {
   );
 }
 
+/** The stages a job's row reports, as words: `stage:verify` reads as "verify". Numbers on the events stay there. */
+function stagesOf(progress: RecordedJob["progress"] | undefined): string[] {
+  return (progress ?? [])
+    .map((e) => e.event)
+    .filter((name) => name.startsWith("stage:"))
+    .map((name) => name.slice("stage:".length));
+}
+
 /**
  * An analyst job the conversation invoked, polled until it finishes. Done, its verdict and its cost are shown
  * (the cost as a value, registered from the row) and the evidence query is invalidated so the chains section
- * lists the new chain; the diff against the stored chain arrives with the next turn, which reports it.
+ * lists the new chain; the diff against the stored chain arrives with the next turn, which reports it. In a
+ * replay the row is the recording's, already final, and nothing is polled.
  */
-function JobCard({ job, cellId }: { job: ChatJob; cellId: string | null }) {
+function JobCard({
+  job,
+  cellId,
+  replay = false,
+}: {
+  job: ChatJob | RecordedJob;
+  cellId: string | null;
+  replay?: boolean;
+}) {
   const queryClient = useQueryClient();
   // the cost is registered once the row says done; the card re-renders when the registry gains it
   useSyncExternalStore(subscribeRegistry, registryVersion);
-  const live = useJob(job.job_id, !jobFinished(job.status));
+  const live = useJob(job.job_id, !replay && !jobFinished(job.status));
   const status = live.data?.status ?? job.status;
   const result = live.data?.result ?? job.result ?? null;
   const verdict = (result?.verdict as string | undefined) ?? job.verdict ?? null;
   const error = live.data?.error ?? job.error ?? null;
+  // the recorded row carries its progress on the job itself, where a live one is read off the poll
+  const stages = stagesOf(live.data?.progress ?? (job as Partial<RecordedJob>).progress);
   const finished = jobFinished(status);
   useEffect(() => {
     if (!finished) return;
     registerJobCost(job.job_id, result?.cost_usd);
-    if (cellId) void queryClient.invalidateQueries({ queryKey: keys.evidence(cellId) });
-  }, [finished, job.job_id, result, cellId, queryClient]);
+    if (cellId && !replay) void queryClient.invalidateQueries({ queryKey: keys.evidence(cellId) });
+  }, [finished, job.job_id, result, cellId, queryClient, replay]);
   return (
     <div
       className="mt-2 rounded-lg border border-line px-2.5 py-2"
@@ -634,6 +664,17 @@ function JobCard({ job, cellId }: { job: ChatJob; cellId: string | null }) {
           : "no insight"}
         {job.reason ? <span className="italic"> · "{job.reason}"</span> : null}
       </p>
+      {stages.length ? (
+        <p
+          className="mt-1 flex flex-wrap items-baseline gap-x-1.5 text-[10.5px] text-ink-3"
+          data-testid="chat-job-stages"
+        >
+          <span className="uppercase tracking-wider">stages</span>
+          <span className="font-mono" data-ident>
+            {stages.join(" · ")}
+          </span>
+        </p>
+      ) : null}
       {finished ? (
         <p className="mt-1 text-[11.5px] text-ink">
           {status === "done" ? (
@@ -661,10 +702,13 @@ function Exchange({
   entry,
   onCite,
   cellId = null,
+  replay = false,
 }: {
   entry: Entry;
   onCite?: CiteHandler;
   cellId?: string | null;
+  /** a recorded turn: its job card is drawn from the recording and never polls the service */
+  replay?: boolean;
 }) {
   const { turn } = entry;
   const costId = turnCostId(entry.conversationId, entry.index);
@@ -698,7 +742,7 @@ function Exchange({
           {turn.jobs_done.map((job) => (
             <div key={job.job_id} className="mb-2" data-testid="chat-job-done">
               <p className="text-[10.5px] text-ink-3 uppercase tracking-wider">the analyst finished</p>
-              <JobCard job={job} cellId={cellId} />
+              <JobCard job={job} cellId={cellId} replay={replay} />
             </div>
           ))}
           {declined ? (
@@ -737,7 +781,7 @@ function Exchange({
                 </ul>
               ) : null}
               {turn.insight ? <Insight insight={turn.insight} /> : null}
-              {turn.job ? <JobCard job={turn.job} cellId={cellId} /> : null}
+              {turn.job ? <JobCard job={turn.job} cellId={cellId} replay={replay} /> : null}
             </>
           ) : (
             <>

@@ -4,24 +4,38 @@ import { clockText, sayParts, TOUR_CLOCKS, TOUR_SECONDS, TOUR_STEPS } from "@/fe
 import type { TourTargets } from "@/features/tour/targets";
 
 const NO_TARGETS: TourTargets = { evidence: null, failure: null, district: null, recordedCell: null };
+const WITH_CELL: TourTargets = {
+  ...NO_TARGETS,
+  recordedCell: {
+    cellId: "0201_0072",
+    lon: -103.7,
+    lat: 58.2,
+    askTurns: 4,
+    turns: 6,
+    chainId: "run:0201_0072",
+    verdict: "insufficient",
+    chainPublished: false,
+  },
+};
 const sayOf = (step: (typeof TOUR_STEPS)[number], targets = NO_TARGETS) =>
   typeof step.say === "function" ? step.say(targets) : step.say;
 
 describe("tour steps", () => {
-  it("walks the whole process, in order, from the map to what it is worth", () => {
+  it("tells the acceptance story in order: data, map, scores, the null, eval, chains, the agent, the analyst", () => {
     expect(TOUR_STEPS.map((s) => s.id)).toEqual([
       "title",
-      "district",
-      "evidence",
+      "data",
+      "map",
       "scores",
       "nullmodel",
       "eval",
+      "chains",
       "ask",
+      "analyst",
       "limits",
     ]);
-    // report 05's script is five minutes. Dropping its single-value failure step and adding three of our own
-    // — the two score views and the agent — walks the whole process instead, and costs about a minute and a half
-    expect(TOUR_SECONDS).toBe(400);
+    // under eight minutes with a budget per step; the HUD shows time against it and never advances itself
+    expect(TOUR_SECONDS).toBe(470);
     expect(TOUR_STEPS[0] && sayOf(TOUR_STEPS[0])).toBe(WORDING.opening);
   });
 
@@ -32,18 +46,46 @@ describe("tour steps", () => {
     expect(TOUR_CLOCKS[1]).toBe(clockText(second));
   });
 
-  it("prints numbers in the script only through stored value ids", () => {
-    for (const step of TOUR_STEPS) {
-      const plain = sayParts(sayOf(step))
-        .filter((p) => "text" in p)
-        .map((p) => (p as { text: string }).text)
-        .join("");
-      expect(/\d/.test(plain), `bare digits in step ${step.id}`).toBe(false);
-      for (const part of sayParts(sayOf(step))) {
-        if ("valueId" in part) expect(part.valueId).toMatch(/^[a-z]:/);
+  it("prints numbers in the script only through stored value ids, with or without a recording", () => {
+    for (const targets of [NO_TARGETS, WITH_CELL]) {
+      for (const step of TOUR_STEPS) {
+        const plain = sayParts(sayOf(step, targets))
+          .filter((p) => "text" in p)
+          .map((p) => (p as { text: string }).text)
+          .join("");
+        expect(/\d/.test(plain), `bare digits in step ${step.id}`).toBe(false);
+        for (const part of sayParts(sayOf(step, targets))) {
+          if ("valueId" in part) expect(part.valueId).toMatch(/^[a-z]:/);
+        }
+        // the line under the script is prose only: no numbers there either
+        expect(/\d/.test(step.doing ?? ""), `bare digits in the note for ${step.id}`).toBe(false);
       }
-      // the line under the script is prose only: no numbers there either
-      expect(/\d/.test(step.doing ?? ""), `bare digits in the note for ${step.id}`).toBe(false);
+    }
+  });
+
+  it("says the exchange is recorded, and what became of the analyst's chain", () => {
+    const ask = TOUR_STEPS.find((s) => s.id === "ask");
+    expect(ask?.doing).toMatch(/recorded/);
+    const analyst = TOUR_STEPS.find((s) => s.id === "analyst");
+    expect(analyst && sayOf(analyst, WITH_CELL)).toMatch(/withheld its chain/);
+    expect(
+      analyst &&
+        sayOf(analyst, {
+          ...WITH_CELL,
+          recordedCell: { ...WITH_CELL.recordedCell!, chainPublished: true },
+        }),
+    ).toMatch(/published into the store/);
+    expect(analyst && sayOf(analyst, NO_TARGETS)).not.toMatch(/chain was/);
+    // the tour never puts a geologist's words into the store
+    expect(analyst?.doing).toMatch(/does not take/);
+  });
+
+  it("never says the words the wording rule forbids, whatever the verdict", () => {
+    // the frozen opening line is the one exception: it says what the demo does not propose
+    for (const step of TOUR_STEPS.filter((s) => s.id !== "title")) {
+      const text = `${sayOf(step, WITH_CELL)} ${step.doing ?? ""}`.toLowerCase();
+      for (const phrase of ["high potential", "drill target", "prospective ground"])
+        expect(text.includes(phrase), `${phrase} in ${step.id}`).toBe(false);
     }
   });
 
