@@ -7,21 +7,11 @@ same tools the scores were computed from: every number it states is checked agai
 is shown, and an answer that fails is withheld with the objection in its place. It is a prototype on public
 data; it gives no drilling advice, and no geologist has reviewed it.
 
-> Retrospective scoring of public data. No geologist has seen this, and the fold tests show how much of the
-> ranking is explained by where people already drilled.
-
 ![The dashboard: the score cells over the basin, an enabled cell selected, and the analyst's chain for it in the evidence rail](docs/screenshots/dashboard.png)
 
 *The dashboard on the Compose stack: the criteria score drawn over the basin, the enabled cell 0152_0083 selected, and the evidence rail showing its scores, its background jobs and the analyst's chain, node by node, with the values each node cites.*
 
-## The acceptance story
-
-One person opens the dashboard, sees the data and its readiness, inspects the model results on the Eval page
-and the analyst's chains on the enabled cells, talks to the interface agent about a cell, and has it call the
-analyst on that cell as a background job. Every model call in that story runs on a cheap pay-per-token model.
-The benchmark runs afterwards, once the story works end to end. PRD.md states it in full.
-
-## What is inside
+## Features
 
 - **A tiered store** (DuckDB locally, PostGIS for serving): `native` holds public layers as published,
   `read` holds what a model read out of scanned pages with the page, box and quote for every value,
@@ -46,6 +36,39 @@ The benchmark runs afterwards, once the story works end to end. PRD.md states it
 
 *The tour's replayed session: each turn shows the route it took, the values it cites as chips that open the
 stored value, and a refusal with its reason where the store cannot answer.*
+
+## Agentic design implementation
+
+![The evaluation flow: the system under test on one band, and what its answers are scored against on the other](docs/figures/evaluation-flow.svg)
+
+*What runs, and how it is judged. Dashed nodes are built and wait on the benchmark runs.*
+
+The agents are built as a system that can be scored, not as a chat to admire. The upper row is what runs for
+one cell; the lower row is what every answer is judged against. The pieces are in place; the benchmark runs
+come next, and every table lands on the Eval page with its run id and store snapshot.
+
+- **A frozen benchmark, UraniumBench**: a stratified subset of cells (known deposits thinned to one per
+  block, drilled occurrences, drilled negatives, never-drilled probes), each with a frozen evidence pack,
+  out-of-fold scores for its fold, its own label masked and its own files blind-listed, and a held-out
+  split opened only at the end. One hashed manifest before any prompt is tuned.
+- **The bar it must clear**: random, the criteria score, the learned model and the effort null on the
+  same rows. An agent that merely matches the effort null has read drilling history, not geology.
+- **Metrics with denominators**: PR-AUC, F1 and calibration with bootstrap intervals; the abstention rate
+  and the gate-rejection rate beside them, because an abstention is never a positive and an answer the
+  gate withheld counts against recall. Cost per chain sits on the same row.
+- **Per-stage metrics from the traces**: node-gate refusals per attempt, the verifier's catch rate and
+  rounds to valid, agreement between the two deciders and with the verifier's own label. They say where
+  a stack's capacity is spent, not only whether it won.
+- **The ablation matrix as arm files**: single call against the staged loop, template against model
+  planner, verifier off, rounds K, cheap executor under a strong verifier, segment-scoped views, and the
+  rest, all on the same frozen cells at matched budgets.
+- **The gate suite**: honest and deliberately corrupted claims over real evidence packs, no model in the
+  loop, so the fabrication check has a measured refusal rate and known holes.
+- **The interface tiers**: a deterministic tier with exact gold computed by code, including questions
+  whose right answer is a refusal, and an adversarial tier grown only from failures actually observed.
+
+What is deliberately absent from the prototype is a human rater: there is no geologist on the project, so
+the mechanical tiers, the gate suite and the second-reader agreement stand in, each with its denominator.
 
 ## Quick start
 
@@ -72,16 +95,6 @@ key for the default `auto` backend, which is API first (a `vendor/model` id to O
 to OpenRouter's Anthropic listing, a `gpt-*` id to OpenAI), or an OpenAI key with `--backend openai`. The public seed pack holds only redistributable tables, so document readings and analyst chains
 appear only when the private pack is unpacked instead.
 
-## From your own MCP client
-
-The same tools serve a stock client. Save this as `.mcp.json` in the repository root (Claude Code) or as
-`.cursor/mcp.json` (Cursor):
-
-    {"mcpServers": {"ai-uranium-explorer": {"command": "uv", "args": ["run", "--directory", "pipeline", "ue", "mcp", "serve", "--stdio"]}}}
-
-Without a key register a local client has every scope; GUIDE.md's section on the MCP server covers keys,
-scopes and the public-safe mode.
-
 ## The repository
 
     pipeline/             Python 3.13 with uv; the command is `uv run ue ...` (`ue --help` lists the groups)
@@ -103,38 +116,6 @@ licence, the NTS grid under the Open Government Licence - Canada, imagery from C
 basemap tiles from OpenFreeMap on OpenStreetMap data. Assessment report PDFs carry no named licence: they are
 read locally and never served, and their page images stay out of git. The public seed pack holds only
 redistributable tables.
-
-## How the reasoning model's performance will be understood
-
-![The evaluation flow: the system under test on one band, and what its answers are scored against on the other](docs/figures/evaluation-flow.svg)
-
-*What runs, and how it is judged. Dashed nodes are built and wait on the benchmark runs.*
-
-The agent is scored as a system, not admired as a chat. The pieces are in place; the runs come after the
-acceptance story, and every table lands on the Eval page with its run id and store snapshot.
-
-- **A frozen benchmark, UraniumBench**: a stratified subset of cells (known deposits thinned to one per
-  block, drilled occurrences, drilled negatives, never-drilled probes), each with a frozen evidence pack,
-  out-of-fold scores for its fold, its own label masked and its own files blind-listed, and a held-out
-  split opened only at the end. One hashed manifest before any prompt is tuned.
-- **The bar it must clear**: random, the criteria score, the learned model and the effort null on the
-  same rows. An agent that merely matches the effort null has read drilling history, not geology.
-- **Metrics with denominators**: PR-AUC, F1 and calibration with bootstrap intervals; the abstention rate
-  and the gate-rejection rate beside them, because an abstention is never a positive and an answer the
-  gate withheld counts against recall. Cost per chain sits on the same row.
-- **Per-stage metrics from the traces**: node-gate refusals per attempt, the verifier's catch rate and
-  rounds to valid, agreement between the two deciders and with the verifier's own label. They say where
-  a stack's capacity is spent, not only whether it won.
-- **The ablation matrix as arm files**: single call against the staged loop, template against model
-  planner, verifier off, rounds K, cheap executor under a strong verifier, segment-scoped views, and the
-  rest, all on the same frozen cells at matched budgets.
-- **The gate suite**: honest and deliberately corrupted claims over real evidence packs, no model in the
-  loop, so the fabrication check has a measured refusal rate and known holes.
-- **The interface tiers**: a deterministic tier with exact gold computed by code, including questions
-  whose right answer is a refusal, and an adversarial tier grown only from failures actually observed.
-
-What is deliberately absent from the prototype is a human rater: there is no geologist on the project, so
-the mechanical tiers, the gate suite and the second-reader agreement stand in, each with its denominator.
 
 ## Licence
 
