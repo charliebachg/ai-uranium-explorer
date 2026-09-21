@@ -94,16 +94,16 @@ def test_roles_are_sets_of_the_mcp_scopes() -> None:
         AUTH.has_role(Principal("k", frozenset()), "owner")
 
 
-def test_without_a_register_a_loopback_client_is_local_with_every_role_and_another_address_is_refused(
+def test_without_a_register_a_loopback_client_is_local_with_every_role_and_a_public_address_is_refused(
         tmp_path: Path, stubs: None) -> None:
     local = make_client(tmp_path, None)
     me = local.get("/api/whoami").json()
     assert me == {"name": "local", "scopes": ["read", "record", "run"], "roles": ["viewer", "geologist", "admin"]}
     r = local.post("/api/chat", json={"cell_id": CELL, "question": "q"})
     assert r.status_code == 200 and persist.load_conversation(r.json()["conversation_id"], local.db_path)["requested_by"] == "local"
-    remote = make_client(tmp_path / "remote", None, client=("10.0.0.7", 4000))
+    remote = make_client(tmp_path / "remote", None, client=("8.8.8.8", 4000))
     r = remote.get("/api/whoami")
-    assert r.status_code == 401 and "UE_MCP_KEYS is not configured" in r.json()["detail"] and "10.0.0.7" in r.json()["detail"]
+    assert r.status_code == 401 and "UE_MCP_KEYS is not configured" in r.json()["detail"] and "8.8.8.8" in r.json()["detail"]
     assert remote.post("/api/chat", json={"cell_id": CELL, "question": "q"}).status_code == 401
     assert remote.get("/api/health").status_code == 200, "health and the reads of the record need no principal"
     assert remote.get(f"/api/cell/{CELL}").status_code == 200
@@ -212,3 +212,14 @@ def test_the_openapi_document_names_the_job_routes_and_the_api_spec_needs_no_liv
         assert method in paths[path], (path, method)
     ok = paths["/api/jobs"]["post"]["responses"]["202"]["content"]["application/json"]["schema"]
     assert ok == {"$ref": "#/components/schemas/Job"}
+
+
+def test_without_a_register_the_container_network_is_local_and_a_public_address_is_not(app_factory=None) -> None:
+    """Inside Compose the browser reaches the app from Docker's gateway, not loopback; a public address never
+    gets the local principal."""
+    from uranium_explorer.mcp.auth import is_local
+
+    assert is_local("127.0.0.1") and is_local("::1") and is_local("localhost")
+    assert is_local("192.168.65.1") and is_local("172.18.0.1") and is_local("10.0.0.7")
+    assert not is_local("8.8.8.8") and not is_local("1.1.1.1") and not is_local("2606:4700::1111") and not is_local(None) and not is_local("garbage")
+

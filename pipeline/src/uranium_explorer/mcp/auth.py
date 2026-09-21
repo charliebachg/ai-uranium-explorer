@@ -86,6 +86,21 @@ def is_loopback(host: str | None) -> bool:
         return False
 
 
+def is_local(host: str | None) -> bool:
+    """A caller that counts as local when no key register is configured: the loopback interface, or a
+    private or link-local address. The second case is the container: inside Compose the browser's requests
+    arrive from Docker's gateway (192.168.65.x on Docker Desktop, 172.x on Linux), never from loopback, and
+    the Compose file binds the published port to the host's loopback so nothing beyond the machine reaches
+    it. A public address is never local."""
+    if is_loopback(host):
+        return True
+    try:
+        ip = ipaddress.ip_address(host or "")
+    except ValueError:
+        return False
+    return ip.is_private or ip.is_link_local
+
+
 class Keyring:
     """The configured keys, and the principal a caller resolves to."""
 
@@ -122,7 +137,7 @@ class Keyring:
         """An HTTP caller: loopback only when no register is configured, else the principal of the bearer key
         or, failing that, of the `X-Api-Key` header's key."""
         if not self.configured:
-            return Principal(LOCAL, ALL_SCOPES) if is_loopback(client_host) else None
+            return Principal(LOCAL, ALL_SCOPES) if is_local(client_host) else None
         if authorization:
             scheme, _, token = authorization.strip().partition(" ")
             if scheme.lower() == "bearer":

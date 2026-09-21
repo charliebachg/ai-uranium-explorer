@@ -205,7 +205,7 @@ A role is all of its scopes or none of it: a key minted with `run` but not `reco
 viewer. A caller presents the key as `Authorization: Bearer <key>` or `X-Api-Key: <key>` over HTTP; a stdio
 MCP client puts it in `UE_MCP_KEY`. `GET /api/whoami` says what a key holds.
 
-**The local rule.** With no register configured, a loopback HTTP client and a stdio or in-process client are
+**The local rule.** With no register configured, an HTTP client on the machine's own network (loopback, or a private address such as the Docker gateway the container sees a browser through) and a stdio or in-process client are
 the `local` principal with every scope and every role, and a client from any other address gets nothing. So a
 local prototype needs no key at all, and the site's Key button (section 3) is only needed when the service has
 a register. A refusal is a 401 (nobody could be resolved) or a 403 (a principal without the role) with a plain
@@ -1063,7 +1063,7 @@ the team: a passage's text is withheld (its citation, page and ids stay), `hole_
 HTTP, stateless JSON responses, with the job runner attached); `ue mcp serve --http` serves the same route
 alone on `:8788/mcp` when the API is not running (`--host`, `--port`, `--runs-dir`); `ue mcp serve --stdio`
 serves the client that launched the process on its stdin and stdout. Local only by default: with no register
-the HTTP route answers loopback addresses alone with DNS-rebinding protection on, and a stdio client holds
+the HTTP route answers loopback and private network addresses alone (the Compose file publishes the port on the host's loopback, so nothing beyond the machine reaches it) with DNS-rebinding protection on, and a stdio client holds
 every scope.
 
 **Connecting a stock client.** Put this in `.mcp.json` (Claude Code) or `.cursor/mcp.json` (Cursor) at the
