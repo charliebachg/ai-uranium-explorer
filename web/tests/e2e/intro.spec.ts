@@ -46,12 +46,12 @@ test("intro holds the globe, then flies in and settles on backed counters", asyn
 
   // the sequence ends on its own and the map is left interactive
   await expect(page.getByTestId("intro")).toHaveCount(0, { timeout: 20_000 });
-  await expect(page.getByTestId("honesty-banner")).toBeVisible();
+  await expect(page.getByTestId("map")).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test("a deep link skips the intro", async ({ page }) => {
   await page.goto("/?c=-106,57.5,5.4,0,0");
   await expect(page.getByTestId("intro")).toHaveCount(0);
-  await expect(page.getByTestId("honesty-banner")).toBeVisible();
+  await expect(page.getByTestId("map")).toBeVisible();
 });

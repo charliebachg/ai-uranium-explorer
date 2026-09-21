@@ -48,7 +48,6 @@ test("guided tour walks every step and leaves the app on the limits page", async
     }
     if (id === "scores") {
       await expect(page.getByTestId("score-legend")).toBeVisible({ timeout: 60_000 });
-      await expect(page.getByTestId("honesty-banner")).toHaveAttribute("data-scores", "");
     }
     if (id === "nullmodel") await expect(page.getByTestId("score-legend")).toContainText("effort leads");
     if (id === "eval") {

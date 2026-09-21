@@ -21,7 +21,6 @@ import { ReportPanel } from "@/features/report/ReportPanel";
 import { ReviewPage } from "@/features/review/ReviewPage";
 import { AttributionDialog } from "@/features/shell/AttributionDialog";
 import { ErrorBoundary } from "@/features/shell/ErrorBoundary";
-import { HonestyBanner } from "@/features/shell/HonestyBanner";
 import { ManifestContext } from "@/features/shell/ManifestContext";
 import { MapErrorToast } from "@/features/shell/MapErrorToast";
 import { TopBar } from "@/features/shell/TopBar";
@@ -159,12 +158,8 @@ function UraniumExplorer() {
       >
         <MapView />
 
-        {/* one row, never wrapping: a wrapped banner would fall behind the left rail */}
         <div className="pointer-events-none absolute inset-x-4 top-4 z-20 flex items-start gap-3">
           <TopBar ready={!!manifest} />
-          <div className="min-w-0 flex-1">
-            <HonestyBanner />
-          </div>
         </div>
 
         {/* one left-hand column: the rail shrinks so its basemap footer is never pushed under the legends */}

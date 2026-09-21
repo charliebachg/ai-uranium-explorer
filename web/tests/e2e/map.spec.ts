@@ -8,9 +8,6 @@ test("map loads real provincial data, hover and selection work", async ({ page }
     if (m.type() === "error" && !m.location().url.includes(":8787/")) errors.push(m.text());
   });
   await page.goto("/?intro=0"); // the opening sequence has its own spec
-  await expect(page.getByTestId("honesty-banner")).toHaveText(
-    "Hole locations from public reports and provincial compilations. Colour shows extraction status, not prospectivity.",
-  );
   await expect(page.getByTestId("coverage")).toContainText("5,822");
 
   await page.waitForFunction(

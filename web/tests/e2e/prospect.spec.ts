@@ -1,5 +1,4 @@
 import { expect, type Page, test } from "@playwright/test";
-import { prospectBanner } from "../../src/config/wording";
 
 /**
  * The score cells and the agent, on the one map. There is no separate prospect page any more: the question a
@@ -49,12 +48,7 @@ test("the score cells go on the map, and the banner changes to say colour now ca
   page.on("pageerror", (e) => errors.push(e.message));
 
   await page.goto("/?intro=0");
-  // with the cells off, the standing promise holds: colour is a source or a status
-  await expect(page.getByTestId("honesty-banner")).not.toHaveAttribute("data-scores", "");
-
   await page.getByTestId("show-scores").click();
-  await expect(page.getByTestId("honesty-banner")).toHaveAttribute("data-scores", "");
-  await expect(page.getByTestId("honesty-banner")).toContainText(prospectBanner);
 
   // the legend is what keeps the ramp from being read as good ground and bad ground
   const legend = page.getByTestId("score-legend");

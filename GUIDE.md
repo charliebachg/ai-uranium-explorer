@@ -352,19 +352,16 @@ a reduced-motion setting; `?intro=1` forces it and `?intro=0` suppresses it. `?m
 off, `?perf=lite` drops the backdrop blur, `?fixture=1` shows the evidence panel on a hand-keyed development
 fixture (the app shows a FIXTURE badge whenever it is used), and `?spike` opens the spike harness.
 
-### 3.7 The honesty banner and the colour rule
+### 3.7 The colour rule
 
-The banner at the top is never dismissible and never truncated. Normally it says that colour shows extraction
-status or data source, not prospectivity. The moment the score cells are switched on it changes to say that
-what is drawn is retrospective scoring of public data that no geologist has seen, because those cells are the
-one layer allowed to colour by a value. This is enforced in code: the layer declares itself with
-`metadata["ue:score"]`, and `honestyViolations` in `web/src/map/style/composeStyle.ts` refuses both an
+Colour shows extraction status or data source, never prospectivity. The score cells are the one layer allowed
+to colour by a value, and they carry their own legend. This is enforced in code: the layer declares itself
+with `metadata["ue:score"]`, and `honestyViolations` in `web/src/map/style/composeStyle.ts` refuses both an
 undeclared layer whose colour is driven by a computed field and a declared layer that colours by anything but
 the score fields; `tests/unit/composeStyle.test.ts` runs it over the composed style. Source and status hues
-(compilation, GeoDS, pass, flag, miss) never change with the theme, because a data source that changed colour
-with the theme would make the legend a lie; the score ramp flips between the dark and light themes so that a
-high score is always more ink. App copy is scanned by `tests/unit/wording.test.ts` for phrases that must
-never appear.
+(compilation, GeoDS, pass, flag, miss) never change with the theme; the score ramp flips between the dark and
+light themes so that a high score is always more ink. App copy is scanned by `tests/unit/wording.test.ts` for
+phrases that must never appear.
 
 ### 3.8 The value-id contract and the digit walk
 

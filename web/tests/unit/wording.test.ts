@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { FORBIDDEN_PHRASES, WORDING } from "@/config/wording";
+import { FORBIDDEN_PHRASES,  } from "@/config/wording";
 
 const SRC = resolve(__dirname, "../../src");
 
@@ -13,11 +13,6 @@ function files(dir: string): string[] {
 }
 
 describe("wording", () => {
-  it("keeps the banner sentence exactly as in the spec", () => {
-    expect(WORDING.banner).toBe(
-      "Hole locations from public reports and provincial compilations. Colour shows extraction status, not prospectivity.",
-    );
-  });
 
   it("contains no forbidden phrases anywhere in the app source", () => {
     for (const f of files(SRC)) {
