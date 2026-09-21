@@ -38,7 +38,11 @@ layout = ["docling[ocrmac]==2.128.0"]
 mlflow = ["mlflow==3.16.1"]
 
 [dependency-groups]
-dev = ["pytest==9.1.1", "moto==5.2.3"]   # moto: the S3 seed transport is tested against a fake bucket, no network
+dev = [
+    "pytest==9.1.1",
+    "moto==5.2.3",
+    "ruff==0.16.8",
+]   # moto: the S3 seed transport is tested against a fake bucket, no network
 
 [project.scripts]
 ue = "uranium_explorer.cli:app"
@@ -57,3 +61,10 @@ markers = [
   "backend: calls the real claude CLI",
   "real_data: runs against the live analytics store (data/ue.duckdb, or the unpacked seed); UE_REAL_DATA=1 to enable",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["F", "E9", "B006", "B007"]

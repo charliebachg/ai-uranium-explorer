@@ -21,7 +21,8 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY pipeline/src ./src
 COPY pipeline/knowledge ./knowledge
 COPY pipeline/configs ./configs
-COPY pipeline/alembic.ini pipeline/migrations ./
+COPY pipeline/alembic.ini ./
+COPY pipeline/migrations ./migrations
 RUN uv sync --frozen --no-dev
 COPY --from=web /web/dist /app/web/dist
 EXPOSE 8787

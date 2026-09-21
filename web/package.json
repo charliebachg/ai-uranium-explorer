@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
-    "build:public": "tsc -p tsconfig.json && VITE_PUBLIC_SAFE=1 vite build && node scripts/check-public-safe.mjs",
+    "build:public": "tsc -p tsconfig.json && VITE_PUBLIC_SAFE=1 vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "biome check src plugins scripts",

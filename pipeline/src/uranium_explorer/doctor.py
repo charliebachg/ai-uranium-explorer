@@ -37,16 +37,26 @@ def run_checks() -> list[Check]:
     checks: list[Check] = []
     checks.append(Check("python", sys.version_info[:2] == (3, 13), platform.python_version()))
 
+    # the CLI is a developer's option (`--backend claude`); the default backend is API first, so its absence
+    # is noted, never a failure
     claude = shutil.which("claude")
     if claude:
         code, out = _run([claude, "--version"])
         version = out.split()[0] if out else "?"
         detail = f"{version} at {claude}"
         if version != EXPECTED_CLAUDE:
-            detail += f" (plan was verified against {EXPECTED_CLAUDE}; re-run the backend probe)"
-        checks.append(Check("claude CLI", code == 0, detail))
+            detail += f" (last verified with {EXPECTED_CLAUDE})"
+        checks.append(Check("claude CLI (optional)", code == 0, detail, required=False))
     else:
-        checks.append(Check("claude CLI", False, "not on PATH"))
+        checks.append(Check("claude CLI (optional)", False, "not on PATH; only --backend claude needs it", required=False))
+
+    # the key the default backend needs, checked by name only: the value is never read here
+    from .backends.openai_api import load_dotenv
+
+    load_dotenv()
+    has_key = bool(os.environ.get("OPENROUTER_API_KEY", "").strip())
+    checks.append(Check("OPENROUTER_API_KEY", has_key, "set" if has_key else "not set: the chat and the analyst jobs need it (.env, see .env.example)",
+                        required=False))
 
     for tool in ("pdftoppm", "pdftotext", "pdfimages", "pdfinfo"):
         path = shutil.which(tool)

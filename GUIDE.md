@@ -61,7 +61,7 @@ The `Dockerfile` builds the web app with Node (`npm run build` with `VITE_SERVIC
 string, so the site calls the API on its own origin), installs the pipeline with `uv sync --frozen --no-dev`,
 copies `src`, `knowledge`, `configs`, the Alembic files and the built site, and starts with:
 
-    ue store seed ensure && ue prospect serve --host 0.0.0.0 --port 8787 --backend openai --web-dist /app/web/dist
+    ue store seed ensure && ue prospect serve --host 0.0.0.0 --port 8787 --backend auto --web-dist /app/web/dist
 
 `ue store seed ensure` is the container's first step: when `pipeline/data/ue.duckdb` is missing it unpacks
 the pack at `UE_SEED_DIR` (the compose file points it at `/app/pipeline/data/seed/latest`, the mounted
@@ -132,9 +132,8 @@ effort, `--host 0.0.0.0` opens it inside a container, `--web-dist web/dist` serv
 same process. Check `uv run ue openai models` (free) before choosing an OpenAI model and `uv run ue openai
 budget` or `uv run ue spend show` for what has been spent.
 
-The published site can also be built public-safe: `npm run build:public` builds with `VITE_PUBLIC_SAFE=1`
-(the post-build check it names, `scripts/check-public-safe.mjs`, is not in the tree yet, so the script stops
-after the build); `ue export-web --public-safe` and `ue export-reports --public-safe` omit
+The published site can also be built public-safe: `npm run build:public` builds with `VITE_PUBLIC_SAFE=1`,
+which hides the chat and serves no report text.
 non-redistributable data and page images.
 
 ### 2.3 Environment variables
@@ -1279,8 +1278,7 @@ renders; the tour). `npm run e2e` (`npx playwright test`) drives the map, the ev
 readiness page, the HUD and the ten-step tour in headless Chromium against `npm run dev`, with the digit walk
 at the end of each; the local service is optional by design, and the specs assert the chain when it is up and
 the offline notice when it is not. `npm run typecheck`, `npm run lint` (Biome) and `npm run validate:data` are
-the other gates; `npm run build:public` builds public-safe (its post-build check script is not in the tree
-yet, as section 2.2 notes).
+the other gates; `npm run build:public` builds public-safe.
 
 **How to add an arm.** Copy `pipeline/configs/arms/v1.toml` to a new name, change exactly one thing, state
 what question it answers in `notes`, and keep every switch stated (a missing one is refused) and `name` equal

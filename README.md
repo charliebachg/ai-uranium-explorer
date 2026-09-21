@@ -12,7 +12,8 @@ Status: prototype on public data. It gives no drilling advice. No geologist has 
 - Reads public GIS layers and scanned assessment reports into a store with five tiers: native, read, derived,
   agent, expert. Every read value keeps its page, box and quote.
 - Scores 2 km cells over the Athabasca Basin three ways: a criteria score, a learned model, and an effort model
-  built from where people already drilled. The gap between the last two is the headline.
+  built from where people already drilled. Measured under spatial folds on this grid, the effort model scores
+  PR-AUC 0.347 and the geology model 0.133; the run behind the number is on the Eval page.
 - Runs an analyst agent on a cell: plan, execute per criterion, gate every node, verify with repair rounds,
   decide, publish.
 - Answers questions through an interface agent. It routes each question to a fixed kind, refuses with a reason
@@ -27,7 +28,7 @@ Status: prototype on public data. It gives no drilling advice. No geologist has 
 
 ![What runs, and how it is judged](docs/figures/evaluation-flow.svg)
 
-Top row: what runs for one cell. Bottom row: what every answer is judged against.
+Benchmark runs are pending. Top row: what runs for one cell. Bottom row: what every answer will be judged against.
 
 - A frozen benchmark: stratified cells, labels masked, the cell's own files blind-listed, one hashed manifest.
 - Baselines on the same cells: random, criteria, learned, effort null. An agent that only matches the effort
@@ -37,12 +38,14 @@ Top row: what runs for one cell. Bottom row: what every answer is judged against
 - Per-stage metrics from traces: gate refusals, verifier catch rate, rounds to valid, decider agreement.
 - Ablations as arm files: single call against the staged loop, planner, verifier, rounds, model pairing.
 - A gate suite with no model in the loop, and interface tiers with gold computed by code.
-- No human rater yet. Benchmark runs are pending.
+- No human rater yet.
 
 ## Quick start
 
-Needs Docker, or Python 3.13 with uv and Node 22. The analytics store is not in git: place a seed pack at
-`pipeline/data/seed/latest`, or pull one from where it is published.
+Needs Docker, or Python 3.13 with uv and Node 22. The analytics store is not in git and no public seed pack
+is published yet, so a fresh clone runs the static site (the map, the scores, the Data, Eval and Limits
+pages, the tour) and both test suites; the evidence panel, the chat, the jobs and the analyst need a pack
+placed at `pipeline/data/seed/latest`.
 
     cd pipeline && uv sync && uv run ue store seed pull <url>
 

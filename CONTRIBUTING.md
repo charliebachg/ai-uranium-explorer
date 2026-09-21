@@ -9,6 +9,7 @@ The analytics store is not in git. Unpack a seed pack first (see README.md, Quic
 
 ## Run the checks
 
+    cd pipeline && uv run ruff check src tests      # lint, seconds
     cd pipeline && uv run pytest -q                 # about five minutes; needs no model and no key
     cd web && npm run typecheck && npm run lint && npm test && npm run validate:data
     cd web && npm run e2e                           # about three minutes
