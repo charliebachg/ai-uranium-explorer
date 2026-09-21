@@ -1,136 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="930" viewBox="0 0 1400 930">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
 <defs>
   <marker id="head" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-    <path d="M0,0 L8,4 L0,8 z" fill="#4b5563"/>
+    <path d="M0,0 L8,4 L0,8 z" fill="#5b6470"/>
   </marker>
 </defs>
-<rect width="1400" height="930" fill="#ffffff"/>
-<text x="40" y="40" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:18px;font-weight:700;fill:#1c2430">How the reasoning model's performance will be understood</text>
-<text x="40" y="62" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#4b5563">The system under test on the upper band; what its answers are scored against on the lower one. Built; the benchmark runs come after the acceptance story.</text>
-<rect x="28" y="96" width="1344" height="210" rx="12" ry="12" fill="none" stroke="#9aa4b2" stroke-width="0.8" stroke-dasharray="2 4"/>
-<text x="44" y="88" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:600;fill:#4b5563;letter-spacing:0.08em">THE SYSTEM UNDER TEST</text>
-<rect x="44" y="122" width="210" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="58" y="144" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Public data</text>
-<text x="58" y="164" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">provincial GIS layers, scanned</text>
-<text x="58" y="179" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">assessment files, imagery</text>
-<text x="58" y="194" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="58" y="209" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">a tiered store: native, read,</text>
-<text x="58" y="224" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">derived, agent, expert; every</text>
-<text x="58" y="239" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">value with its provenance</text>
-<rect x="290" y="122" width="250" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="304" y="144" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Evidence pack, one cell</text>
-<text x="304" y="164" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">features with observation counts</text>
-<text x="304" y="179" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">criteria memberships and coverage</text>
-<text x="304" y="194" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">out-of-fold scores for its fold</text>
-<text x="304" y="209" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">passages, own files blind-listed</text>
-<text x="304" y="224" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">unknown kept distinct from absent</text>
-<rect x="576" y="122" width="300" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="590" y="144" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">The agent</text>
-<text x="590" y="164" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">v0: one closed-book call</text>
-<text x="590" y="179" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">v1: plan, execute per criterion,</text>
-<text x="590" y="194" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">node gate, verify with repair rounds,</text>
-<text x="590" y="209" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">two deciders, publish</text>
-<text x="590" y="224" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="590" y="239" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">every switch is an arm file</text>
-<rect x="912" y="122" width="210" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#b7791f" stroke-width="1.6"/>
-<text x="926" y="144" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#b7791f">Fabrication gate</text>
-<text x="926" y="164" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">every number must resolve to</text>
-<text x="926" y="179" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">a stored value id returned</text>
-<text x="926" y="194" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">in this session</text>
-<text x="926" y="209" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="926" y="224" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">else the answer is withheld,</text>
-<text x="926" y="239" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">objection in its place</text>
-<rect x="1158" y="122" width="198" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="1172" y="144" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Chain or answer</text>
-<text x="1172" y="164" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">verdict and probability</text>
-<text x="1172" y="179" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">cited value ids</text>
-<text x="1172" y="194" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">unknown versus absent</text>
-<text x="1172" y="209" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">or an abstention with</text>
-<text x="1172" y="224" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">its reason</text>
-<line x1="254" y1="197" x2="288" y2="197" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<line x1="540" y1="197" x2="574" y2="197" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<line x1="876" y1="197" x2="910" y2="197" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<line x1="1122" y1="197" x2="1156" y2="197" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<rect x="28" y="352" width="1344" height="500" rx="12" ry="12" fill="none" stroke="#9aa4b2" stroke-width="0.8" stroke-dasharray="2 4"/>
-<text x="44" y="344" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:600;fill:#4b5563;letter-spacing:0.08em">WHAT IT IS SCORED AGAINST</text>
-<rect x="44" y="378" width="250" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="58" y="400" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Frozen benchmark</text>
-<text x="58" y="420" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">stratified cells: deposits thinned</text>
-<text x="58" y="435" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">to one per block, drilled</text>
-<text x="58" y="450" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">occurrences, drilled negatives,</text>
-<text x="58" y="465" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">never-drilled probes</text>
-<text x="58" y="480" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">labels masked, held-out split,</text>
-<text x="58" y="495" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">one hashed manifest</text>
-<rect x="330" y="378" width="250" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="344" y="400" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Baselines, the same cells</text>
-<text x="344" y="420" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">random</text>
-<text x="344" y="435" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">criteria score</text>
-<text x="344" y="450" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">learned model, spatial folds</text>
-<text x="344" y="465" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">effort null: drilling history alone</text>
-<text x="344" y="480" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="344" y="495" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">match the null: read history,</text>
-<text x="344" y="510" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">not geology</text>
-<rect x="616" y="378" width="300" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="630" y="400" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Scoring, with denominators</text>
-<text x="630" y="420" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">PR-AUC, F1, calibration with</text>
-<text x="630" y="435" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">bootstrap intervals</text>
-<text x="630" y="450" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">abstention rate, gate-rejection rate</text>
-<text x="630" y="465" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">cost per chain on the same row</text>
-<text x="630" y="480" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">an abstention is never a positive;</text>
-<text x="630" y="495" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">withheld counts against recall</text>
-<rect x="952" y="378" width="404" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="966" y="400" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Per-stage metrics from the traces</text>
-<text x="966" y="420" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">node-gate refusals per attempt</text>
-<text x="966" y="435" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">verifier catch rate and rounds to valid</text>
-<text x="966" y="450" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">agreement between the two deciders,</text>
-<text x="966" y="465" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">and with the verifier's own label</text>
-<text x="966" y="480" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="966" y="495" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">where a stack spends its capacity, not only whether it won</text>
-<rect x="44" y="574" width="300" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="58" y="596" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Ablation arms, one file each</text>
-<text x="58" y="616" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">single call against the staged loop</text>
-<text x="58" y="631" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">template against model planner</text>
-<text x="58" y="646" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">verifier off; rounds K</text>
-<text x="58" y="661" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">cheap executor under a strong verifier</text>
-<text x="58" y="676" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">segment-scoped views, batch executor</text>
-<text x="58" y="691" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">same frozen cells, matched budgets</text>
-<rect x="380" y="574" width="270" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="394" y="596" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Gate suite, no model</text>
-<text x="394" y="616" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">honest and deliberately corrupted</text>
-<text x="394" y="631" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">claims over real evidence packs</text>
-<text x="394" y="646" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="394" y="661" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">a measured refusal rate</text>
-<text x="394" y="676" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">and its known holes</text>
-<rect x="686" y="574" width="270" height="150" rx="8" ry="8" fill="#f5f7fa" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="700" y="596" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Interface tiers</text>
-<text x="700" y="616" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">deterministic: exact gold computed</text>
-<text x="700" y="631" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">by code, refusals included</text>
-<text x="700" y="646" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">adversarial: grown only from</text>
-<text x="700" y="661" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">failures actually observed</text>
-<text x="700" y="676" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563"></text>
-<text x="700" y="691" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">built, not yet run</text>
-<rect x="44" y="770" width="1312" height="60" rx="8" ry="8" fill="#f5f7fa" stroke="#9aa4b2" stroke-width="1.2"/>
-<text x="58" y="792" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:12.5px;font-weight:600;fill:#1c2430">Eval page</text>
-<text x="58" y="812" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#4b5563">every table with its run id and the store snapshot it read; no human rater in the prototype, so the mechanical tiers, the gate suite and second-reader agreement stand in, each with its denominator</text>
-<path d="M 260 378 L 260 300 L 415 300 L 415 274" fill="none" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<text x="272" y="316" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10px;font-weight:normal;fill:#4b5563;font-style:italic">packs are built from the frozen cells</text>
-<path d="M 1257 274 L 1257 310 L 766 310 L 766 376" fill="none" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<text x="1100" y="304" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10px;font-weight:normal;fill:#4b5563;font-style:italic">chains and answers, scored</text>
-<path d="M 860 274 L 860 336 L 1154 336 L 1154 376" fill="none" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)" stroke-dasharray="5 4"/>
-<text x="1060" y="330" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10px;font-weight:normal;fill:#4b5563;font-style:italic">spans of every call</text>
-<line x1="582" y1="453" x2="614" y2="453" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<path d="M 194 574 L 194 546 L 726 546 L 726 530" fill="none" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)" stroke-dasharray="5 4"/>
-<text x="460" y="540" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10px;font-weight:normal;fill:#4b5563;font-style:italic">each arm runs the loop with one switch changed</text>
-<path d="M 515 574 L 515 556 L 934 556 L 934 274" fill="none" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)" stroke-dasharray="5 4"/>
-<text x="944" y="560" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10px;font-weight:normal;fill:#4b5563;font-style:italic">the gate's own claim check</text>
-<path d="M 766 528 L 766 554 L 668 554 L 668 768" fill="none" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<line x1="1154" y1="530" x2="1154" y2="768" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<line x1="515" y1="724" x2="515" y2="768" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<line x1="821" y1="724" x2="821" y2="768" stroke="#4b5563" stroke-width="1.4" marker-end="url(#head)"/>
-<rect x="44" y="868" width="26" height="14" rx="4" fill="#f5f7fa" stroke="#6b7280" stroke-width="1.2" stroke-dasharray="6 4"/>
-<text x="78" y="879" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:normal;fill:#4b5563">dashed box: built, runs pending until the benchmark is finished</text>
-<rect x="470" y="868" width="26" height="14" rx="4" fill="#f5f7fa" stroke="#b7791f" stroke-width="1.6"/>
-<text x="504" y="879" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:normal;fill:#4b5563">the boundary a number cannot cross without a stored value behind it</text>
-<line x1="900" y1="875" x2="940" y2="875" stroke="#4b5563" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#head)"/>
-<text x="950" y="879" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:normal;fill:#4b5563">dashed arrow: traces and switches, not data</text>
+<rect width="1400" height="560" fill="#ffffff"/>
+<text x="40" y="48" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:600;fill:#5b6470;letter-spacing:0.1em">WHAT RUNS</text>
+<circle cx="180" cy="110" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(165,95) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></g>
+<text x="180" y="170" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Public data</text>
+<text x="180" y="188" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">layers, files, imagery</text>
+<circle cx="440" cy="110" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(425,95) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/><path d="M9 13h7M9 17h7"/></g>
+<text x="440" y="170" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Evidence pack</text>
+<text x="440" y="188" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">one cell, labels hidden</text>
+<circle cx="700" cy="110" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(685,95) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.3 7.3l2.6 8M15.7 7.3l-2.6 8M8.6 6h6.8"/></g>
+<text x="700" y="170" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Agent</text>
+<text x="700" y="188" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">one call, or the staged loop</text>
+<circle cx="960" cy="110" r="36" fill="#f1f4f8" stroke="#b7791f" stroke-width="1.8"/>
+<g transform="translate(945,95) scale(1.25)" fill="none" stroke="#b7791f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#b7791f"><path d="M12 2l8 3v6c0 5-3.4 8.6-8 11-4.6-2.4-8-6-8-11V5z"/><path d="M8.5 12.2l2.3 2.3 4.7-4.8"/></g>
+<text x="960" y="170" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#b7791f">Fabrication gate</text>
+<text x="960" y="188" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">no stored value, no number</text>
+<circle cx="1220" cy="110" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(1205,95) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M4 4h16v11H9l-5 4z"/><path d="M8.5 9.6l2.2 2.2 4.8-4.8"/></g>
+<text x="1220" y="170" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Answer</text>
+<text x="1220" y="188" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">verdict, cited values, or abstain</text>
+<line x1="226" y1="110" x2="392" y2="110" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="486" y1="110" x2="652" y2="110" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="746" y1="110" x2="912" y2="110" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="1006" y1="110" x2="1172" y2="110" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<text x="40" y="298" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:10.5px;font-weight:600;fill:#5b6470;letter-spacing:0.1em">HOW IT IS JUDGED</text>
+<circle cx="180" cy="360" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(165,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/><rect x="9.6" y="9.6" width="4.8" height="4.8" fill="currentColor" stroke="none"/></g>
+<text x="180" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Frozen benchmark</text>
+<text x="180" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">stratified cells, one hashed manifest</text>
+<circle cx="440" cy="360" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(425,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M12 3v18M4 21h16M12 6l-6 8h12z"/><path d="M6 14a3 3 0 0 0 6 0M12 14a3 3 0 0 0 6 0"/></g>
+<text x="440" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Baselines</text>
+<text x="440" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">random, criteria, learned, effort null</text>
+<circle cx="700" cy="360" r="36" fill="#f1f4f8" stroke="#8a93a0" stroke-width="1.3" stroke-dasharray="6 4"/>
+<g transform="translate(685,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="8"/><rect x="10.3" y="6" width="3.5" height="13"/><rect x="15.6" y="9" width="3.5" height="10"/></g>
+<text x="700" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Scores</text>
+<text x="700" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">PR-AUC, F1, abstain rate, cost</text>
+<circle cx="960" cy="360" r="36" fill="#f1f4f8" stroke="#8a93a0" stroke-width="1.3" stroke-dasharray="6 4"/>
+<g transform="translate(945,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.6" fill="white"/><circle cx="15" cy="17" r="2.6" fill="white"/></g>
+<text x="960" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Ablations</text>
+<text x="960" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">one switch per arm</text>
+<circle cx="1220" cy="360" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
+<g transform="translate(1205,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/><path d="M12 13h6M12 16.5h4"/></g>
+<text x="1220" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Eval page</text>
+<text x="1220" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">every number with its run</text>
+<line x1="226" y1="360" x2="392" y2="360" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="486" y1="360" x2="652" y2="360" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="746" y1="360" x2="912" y2="360" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<line x1="1006" y1="360" x2="1172" y2="360" stroke="#5b6470" stroke-width="1.5" marker-end="url(#head)"/>
+<path d="M 1220 198 L 1220 250 L 700 250 L 700 312" fill="none" stroke="#5b6470" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#head)"/>
+<text x="960.0" y="243" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">every answer, scored against the same cells</text>
+<circle cx="52" cy="512" r="7" fill="#f1f4f8" stroke="#8a93a0" stroke-width="1.3" stroke-dasharray="4 3"/>
+<text x="66" y="516" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">dashed: built, runs pending</text>
+<circle cx="262" cy="512" r="7" fill="#f1f4f8" stroke="#b7791f" stroke-width="1.8"/>
+<text x="276" y="516" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">amber: the line no number crosses without a stored value behind it</text>
 </svg>
