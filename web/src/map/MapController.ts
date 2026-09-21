@@ -75,7 +75,8 @@ export class MapController {
       fadeDuration: 150,
     });
     this.map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "bottom-right");
-    this.map.addControl(new maplibregl.ScaleControl({ unit: "metric", maxWidth: 110 }), "bottom-left");
+    // the top-right corner is the one clear of the rails, the legend and the cursor readout
+    this.map.addControl(new maplibregl.ScaleControl({ unit: "metric", maxWidth: 110 }), "top-right");
 
     this.map.on("error", (e) => {
       const msg = String(e.error?.message ?? e.error ?? "map error");

@@ -494,3 +494,21 @@ def test_the_quick_model_search_has_not_regressed_beyond_the_interval() -> None:
                              f"[{new_lo:.3f},{new_hi:.3f}] now")
     assert compared, "the quick arms must have stored counterparts"
     assert not regressed, "regression beyond the interval:\n  " + "\n  ".join(regressed)
+
+
+def test_ensure_replaces_a_schema_only_store_with_the_seed(store: Path, tmp_path: Path, monkeypatch) -> None:
+    """An earlier read-write connect leaves a store with the schema and no cells; ensure must not call that
+    present, because unpack would then refuse to overwrite it and the app would serve nothing."""
+    pack = SEED.pack(scope="private", out=tmp_path / "packs", path=store, log=lambda _m: None)
+    target = tmp_path / "fresh" / "ue.duckdb"
+    target.parent.mkdir()
+    connect(target).close()   # schema only, no rows
+    out = SEED.ensure(seed=Path(pack["dir"]), into=target, log=lambda _m: None)
+    assert out == "unpacked" and (target.parent / "ue.duckdb.empty").exists()
+    con = duckdb.connect(str(target), read_only=True)
+    try:
+        assert con.execute("select count(*) from derived.cell").fetchone()[0] == 2
+    finally:
+        con.close()
+    assert SEED.ensure(seed=Path(pack["dir"]), into=target, log=lambda _m: None) == "present"
+

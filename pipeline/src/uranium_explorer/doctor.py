@@ -78,7 +78,7 @@ def run_checks() -> list[Check]:
         except crs.CrsError as e:
             checks.append(Check("NTv2 grid", False, str(e)))
     else:
-        checks.append(Check("NTv2 grid", False, "missing; run `ue crs fetch-grid`"))
+        checks.append(Check("NTv2 grid", False, "missing; run `ue crs fetch-grid` (needed only to place old holes)", required=False))
 
     key_set = bool(os.environ.get("ANTHROPIC_API_KEY"))
     checks.append(Check(

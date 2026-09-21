@@ -167,6 +167,7 @@ export async function askStreaming(
 /** One job's row, for the transcript's job card to poll until the analyst has finished. */
 export async function job(jobId: string): Promise<Job> {
   const res = await fetch(`${SERVICE_ROOT}/api/jobs/${encodeURIComponent(jobId)}`, {
+    headers: authHeaders(), // the viewer role needs the key when a register is configured
     signal: AbortSignal.timeout(READ_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`/api/jobs/${jobId}: HTTP ${res.status}`);

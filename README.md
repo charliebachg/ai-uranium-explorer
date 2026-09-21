@@ -12,8 +12,9 @@ Status: prototype on public data. It gives no drilling advice. No geologist has 
 - Reads public GIS layers and scanned assessment reports into a store with five tiers: native, read, derived,
   agent, expert. Every read value keeps its page, box and quote.
 - Scores 2 km cells over the Athabasca Basin three ways: a criteria score, a learned model, and an effort model
-  built from where people already drilled. Measured under spatial folds on this grid, the effort model scores
-  PR-AUC 0.347 and the geology model 0.133; the run behind the number is on the Eval page.
+  built from where people already drilled. Measured on this grid under spatial folds, with negatives matched to
+  the positives' drilling effort and positives thinned to one per block, the effort model scores PR-AUC 0.178
+  and the geology model 0.111, intervals apart; the run is on the Eval page.
 - Runs an analyst agent on a cell: plan, execute per criterion, gate every node, verify with repair rounds,
   decide, publish.
 - Answers questions through an interface agent. It routes each question to a fixed kind, refuses with a reason

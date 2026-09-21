@@ -132,8 +132,6 @@ effort, `--host 0.0.0.0` opens it inside a container, `--web-dist web/dist` serv
 same process. Check `uv run ue openai models` (free) before choosing an OpenAI model and `uv run ue openai
 budget` or `uv run ue spend show` for what has been spent.
 
-The published site can also be built public-safe: `npm run build:public` builds with `VITE_PUBLIC_SAFE=1`,
-which hides the chat and serves no report text.
 non-redistributable data and page images.
 
 ### 2.3 Environment variables
@@ -1278,7 +1276,7 @@ renders; the tour). `npm run e2e` (`npx playwright test`) drives the map, the ev
 readiness page, the HUD and the ten-step tour in headless Chromium against `npm run dev`, with the digit walk
 at the end of each; the local service is optional by design, and the specs assert the chain when it is up and
 the offline notice when it is not. `npm run typecheck`, `npm run lint` (Biome) and `npm run validate:data` are
-the other gates; `npm run build:public` builds public-safe.
+the other gates.
 
 **How to add an arm.** Copy `pipeline/configs/arms/v1.toml` to a new name, change exactly one thing, state
 what question it answers in `notes`, and keep every switch stated (a missing one is refused) and `name` equal

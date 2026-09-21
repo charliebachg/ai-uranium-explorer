@@ -19,10 +19,20 @@ import {
 const ROOT = resolve(import.meta.dirname, "../public/data");
 let failures = 0;
 
-function check(path: string, schema: { safeParse: (x: unknown) => { success: boolean; error?: unknown } }) {
+function check(
+  path: string,
+  schema: { safeParse: (x: unknown) => { success: boolean; error?: unknown } },
+  opts: { optional?: boolean } = {},
+) {
   const full = join(ROOT, path);
   if (!existsSync(full)) {
-    console.log(`skip  ${path} (not exported)`);
+    // a required export that is not there is a failure, not a pass: the app would load nothing for it
+    if (opts.optional) {
+      console.log(`skip  ${path} (optional, not exported)`);
+      return null;
+    }
+    console.error(`FAIL  ${path}: not exported`);
+    failures += 1;
     return null;
   }
   const raw = JSON.parse(readFileSync(full, "utf8"));
@@ -57,7 +67,7 @@ for (const r of index?.reports ?? []) {
       }
     >;
   } | null;
-  check(`reports/${r.file_num}/pages.json`, PagesIndex);
+  check(`reports/${r.file_num}/pages.json`, PagesIndex, { optional: true }); // page images are not exported for every file
   if (!report) continue;
   // A value with printed text must carry its verbatim quote. A cell the page leaves empty ("not printed") has
   // nothing to quote, but must say so: quote_located false, and ideally a synthesised cell box.

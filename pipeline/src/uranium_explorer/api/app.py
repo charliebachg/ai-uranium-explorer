@@ -103,11 +103,18 @@ def _done_payload(conv: Conversation, cell_id: str, turn: dict[str, Any]) -> dic
             "values": _cited_values(conv, turn), "cost_usd": round(conv.cost_usd, 4)}
 
 
+#: the Vite dev server, the only page allowed to call the API from another origin
+DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+
 def create_app(backend_factory: Callable[[], Any], model: str, effort: str = "medium", backend_name: str = "openai",
                db_path: Path | None = None, web_dist: Path | None = None, warm: bool = False,
                keyring: AUTH.Keyring | None = None, jobs: JOBS.Runner | None = None) -> FastAPI:
     app = FastAPI(title="AI Uranium Explorer service", version="0.3.0")
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+    # The built site is served from this origin, so it needs no CORS; the Vite dev server is the one
+    # cross-origin caller. Anything else would let a page on any site drive a local instance that grants
+    # every scope to local callers, so the list is closed.
+    app.add_middleware(CORSMiddleware, allow_origins=DEV_ORIGINS, allow_methods=["*"], allow_headers=["*"])
     registry = Registry(db_path)
     app.state.registry = registry
     # one key register for the API and the MCP route (UE_MCP_KEYS); a test hands in its own

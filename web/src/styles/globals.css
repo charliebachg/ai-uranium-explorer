@@ -216,3 +216,18 @@ body,
     transform: none;
   }
 }
+
+/* the scale bar: the same panel as the other controls, in the corner the rails and the legend leave free */
+.maplibregl-ctrl-top-right {
+  top: 22px;
+  right: 18px;
+}
+.maplibregl-ctrl-scale {
+  background: var(--color-panel);
+  color: var(--color-ink-2);
+  border: 1px solid var(--color-line);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  font: 11px var(--font-mono, ui-monospace, monospace);
+  padding: 1px 6px;
+}

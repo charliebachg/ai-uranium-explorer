@@ -740,6 +740,21 @@ def pull(url: str, into: Path | None = None, log: Callable[[str], None] = print)
     return manifest
 
 
+def _has_rows(target: Path) -> bool:
+    """A store counts as present only when it holds cells; a file with the schema alone is what an earlier
+    read-write connect leaves behind and is not worth keeping."""
+    try:
+        con = duckdb.connect(str(target), read_only=True)
+    except duckdb.Error:
+        return True   # locked by a running service: treat as present rather than move it
+    try:
+        return con.execute("select count(*) from derived.cell").fetchone()[0] > 0
+    except duckdb.Error:
+        return False
+    finally:
+        con.close()
+
+
 def ensure(seed: Path | None = None, into: Path | None = None, log: Callable[[str], None] = print) -> str:
     """The container's first step: unpack the seed when there is no store. Returns what it did.
 
@@ -749,8 +764,14 @@ def ensure(seed: Path | None = None, into: Path | None = None, log: Callable[[st
     still starts and says what is missing."""
     target = into or db_path()
     if target.is_file():
-        log(f"  store present at {target}; seed not needed")
-        return "present"
+        if _has_rows(target):
+            log(f"  store present at {target}; seed not needed")
+            return "present"
+        # any command that connected read-write created an empty store with the schema and nothing in it;
+        # unpack refuses to overwrite, so the empty file is moved aside and the seed goes into its place
+        aside = target.with_name(target.name + ".empty")
+        target.replace(aside)
+        log(f"  store at {target} held no cells (moved to {aside.name}); unpacking the seed into its place")
     src = seed or seed_dir()
     if (src / MANIFEST).is_file():
         unpack(src, target, log=log)
