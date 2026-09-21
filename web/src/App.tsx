@@ -95,7 +95,10 @@ function GlobalKeys() {
         return;
       }
       if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === "g") setTour({ step: 0, startedAt: Date.now() });
+      if (e.key === "g") {
+        const running = useStore.getState().tour.step >= 0;
+        setTour(running ? { step: -1, startedAt: null } : { step: 0, startedAt: Date.now() });
+      }
       else if (e.key === "t") setTimeline({ open: !useStore.getState().timeline.open });
     };
     window.addEventListener("keydown", onKey);

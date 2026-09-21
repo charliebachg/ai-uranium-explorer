@@ -21,9 +21,10 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY pipeline/src ./src
 COPY pipeline/knowledge ./knowledge
 COPY pipeline/configs ./configs
+COPY pipeline/prompts ./prompts
 COPY pipeline/alembic.ini ./
 COPY pipeline/migrations ./migrations
 RUN uv sync --frozen --no-dev
 COPY --from=web /web/dist /app/web/dist
 EXPOSE 8787
-CMD ["sh", "-c", "uv run ue store seed ensure && exec uv run ue prospect serve --host 0.0.0.0 --port 8787 --backend auto --web-dist /app/web/dist"]
+CMD ["sh", "-c", "uv run --frozen --no-dev ue store seed ensure && exec uv run --frozen --no-dev ue prospect serve --host 0.0.0.0 --port 8787 --backend auto --web-dist /app/web/dist"]

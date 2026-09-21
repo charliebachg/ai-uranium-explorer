@@ -76,7 +76,7 @@ for a, b in zip(X, X[1:]):
 row_label(298, "how it is judged")
 node(X[0], Y2, "benchmark", "Frozen benchmark", "stratified cells, one hashed manifest")
 node(X[1], Y2, "baselines", "Baselines", "random, criteria, learned, effort null")
-node(X[2], Y2, "scores", "Scores", "PR-AUC, F1, abstain rate, cost", pending=True)
+node(X[2], Y2, "scores", "Scores", "PR-AUC, F1, abstain rate, cost", pending=False)
 node(X[3], Y2, "ablation", "Ablations", "one switch per arm", pending=True)
 node(X[4], Y2, "eval", "Eval page", "every number with its run")
 for a, b in zip(X, X[1:]):
@@ -89,7 +89,7 @@ text((X[2] + X[4]) / 2, 243, "every answer, scored against the same cells", size
 
 # legend
 parts.append(f'<circle cx="52" cy="512" r="7" fill="{FILL}" stroke="{PEND}" stroke-width="1.3" stroke-dasharray="4 3"/>')
-text(66, 516, "dashed: built, runs pending", size=11, fill=INK2, anchor="start")
+text(66, 516, "dashed: scored for some arms; the ablation matrix is not complete", size=11, fill=INK2, anchor="start")
 parts.append(f'<circle cx="262" cy="512" r="7" fill="{FILL}" stroke="{ACCENT}" stroke-width="1.8"/>')
 text(276, 516, "amber: the line no number crosses without a stored value behind it", size=11, fill=INK2, anchor="start")
 

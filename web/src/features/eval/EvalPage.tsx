@@ -278,7 +278,7 @@ function ProvenanceStrip({ data }: { data: RunSummary }) {
         <summary className="cursor-pointer text-[11.5px] text-ink-3 hover:text-ink-2">
           {runs.length ? (
             <>
-              <span data-chrome>{runs.length}</span> tracked runs
+              <span data-instrument>{runs.length}</span> tracked runs
             </>
           ) : (
             "no tracked run"

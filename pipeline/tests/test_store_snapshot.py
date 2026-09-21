@@ -87,6 +87,9 @@ def test_pin_without_a_hash_names_the_matching_snapshot_or_says_none_does(store:
 
 def test_lineage_on_the_real_store_names_every_break_or_none() -> None:
     """Runs against the analytics store as it is; the assertion is that the check itself is sound."""
+    from conftest import skip_without_store
+
+    skip_without_store()
     problems = SN.lineage(log=lambda *a: None)
     assert isinstance(problems, list)
     for p in problems:

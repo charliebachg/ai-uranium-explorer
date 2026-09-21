@@ -132,7 +132,6 @@ effort, `--host 0.0.0.0` opens it inside a container, `--web-dist web/dist` serv
 same process. Check `uv run ue openai models` (free) before choosing an OpenAI model and `uv run ue openai
 budget` or `uv run ue spend show` for what has been spent.
 
-non-redistributable data and page images.
 
 ### 2.3 Environment variables
 
@@ -156,7 +155,7 @@ Every `UE_*` variable the code reads, with its default and meaning. None of thei
 | `UE_TRACING_MLFLOW` | `1` | `0` turns the MLflow mirror of every span off. |
 | `UE_OTLP_ENDPOINT` | unset | An OTLP/HTTP endpoint every span is also exported to; a bare host gets `/v1/traces` appended. Unset, the OpenTelemetry exporter is not imported. |
 | `UE_OTLP_HEADERS` | unset | `name=value[,name=value]`: headers for a hosted trace backend. |
-| `UE_PG_DSN` | `postgresql://ue:ue@127.0.0.1:5432/ue` | The serving database; `ue store migrate`, `sync-pg` and `pg-audit`, and the API's candidate list when it is reachable. |
+| `UE_PG_DSN` | unset (the store commands fall back to `postgresql://ue:ue@127.0.0.1:5432/ue`) | The serving database. `ue store migrate`, `sync-pg` and `pg-audit` use the fallback when it is unset; the API reads its candidate list through PostGIS only when it is set and answers, and from DuckDB otherwise. |
 | `UE_SEED_DIR` | `pipeline/data/seed/latest` | The pack `ue store seed ensure` unpacks. |
 | `UE_SEED_URL` | unset | Where `ensure` pulls a pack from when there is no store and no pack on disk. |
 | `UE_S3_ENDPOINT` | unset (AWS) | The S3 endpoint for push, pull and ensure. |
@@ -196,7 +195,7 @@ The MCP server speaks in three scopes and the API in three roles, each role a se
 
 | Role | Scopes | What it opens |
 |---|---|---|
-| `viewer` | `read` | the evidence record, the stored conversations, a job's row |
+| `viewer` | `read` | the least a key can hold; the reads themselves (the record, the stored conversations, a job's row) need no key |
 | `geologist` | `read`, `record` | the chat and the review decisions; every turn records who asked |
 | `admin` | `read`, `record`, `run` | submitting and cancelling an `analyst` job |
 
@@ -335,7 +334,7 @@ insight: its conversation has no insight store.
 
 | Key | Does |
 |---|---|
-| `G` | start or leave the tour |
+| `G` | start the tour, or leave it while it runs |
 | `⌘K` / `Ctrl-K` | the command palette: views, reports, holes, layers, basemaps and tools; highlighting a report or hole peeks at it on the map and leaving restores the camera |
 | `T` | the timeline: one bar per year by data source, a scrubber that sets the latest year drawn, and playback |
 | `D` | the cursor datum lens |
@@ -365,13 +364,13 @@ phrases that must never appear.
 `web/src/data/contract.ts` is the schema for everything under `web/public/data`, checked by `npm run
 validate:data` before the app loads any of it. Its first rule: no bare numbers. Every numeric value shown to a
 person is a value id pointing at a `Val` record, except geometry coordinates, page boxes, array indices and the
-datum-grid arrays. Its second: the browser does no evidential maths; offsets, shifts, misread positions,
-feet-to-metre geometry, counts and metrics all arrive from the pipeline as values. Ids are namespaced by
-kind: `x` extracted, `d` derived, `p` provincial lithology, `s` bulk source property, `m` manifest stat, `e`
-eval metric, `c` cell and coverage value, `g` datum grid node, `h` histogram bin. An extracted value carries
-its lineage (file hash, page, box, verbatim quote, whether the quote was located, model, prompt version, run,
-validator outcomes); a derived value carries its derivation (operation, inputs, tool); a source value its
-source record.
+datum-grid arrays. The browser does no evidential maths: distances, shares, counts and metrics all arrive from
+the pipeline as values. The end-to-end sweep walks every text node inside a `data-strict` region and accepts a
+digit only under one of five marks: `data-vid` (a stored value), `data-ident` (an identifier: a cell id, a file
+number, a run id), `data-source-text` (a note or quote carried from the export as written), `data-instrument`
+(a readout of the screen itself: a count of the rows shown, a clock, an axis tick) or `data-chrome` (a step
+counter, a timestamp, a keyboard hint). A count the browser computes over what it is showing is an instrument
+readout, never evidence, and is marked as one.
 
 `<V id>` is the only way the app prints a stored number. It marks the element with `data-vid`, and fails
 loudly for an unknown id: it throws in development and renders an UNBACKED chip in a build, counted on
@@ -379,7 +378,7 @@ loudly for an unknown id: it throws in development and renders an UNBACKED chip 
 (the tour, the Eval page, the evidence panel, the HUD) walk every text node inside a `[data-strict]` region,
 and any digit that is not inside an element marked `data-vid` (a stored value), `data-ident` (an identifier
 such as a cell id or hole name), `data-instrument` (a readout such as the cursor position), `data-axis`,
-`data-chrome` (a keyboard hint) or `data-source-text` fails the test. The tour's lines are digit-free apart
+`data-chrome` (a step counter, a timestamp or a keyboard hint) or `data-source-text` fails the test. The tour's lines are digit-free apart
 from `{value-id}` tokens the HUD resolves through the registry.
 
 ---

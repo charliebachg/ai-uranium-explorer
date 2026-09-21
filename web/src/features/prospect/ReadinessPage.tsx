@@ -484,7 +484,7 @@ function GateSection({ gate }: { gate?: ReadinessGate }) {
     >
       <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px]" data-testid="gate-verdict">
         <Chip tone={gate.green ? "pass" : "miss"}>{gate.green ? "gate green" : "gate red"}</Chip>
-        <span className="text-ink-3" data-chrome>
+        <span className="text-ink-3" data-instrument>
           {failing} of {gate.rows.length} rows failing · store{" "}
           <span data-ident>{gate.store_sha256?.slice(0, 12) ?? "none"}</span>
           {gate.snapshot ? " (a named snapshot)" : " (no snapshot names it)"}
@@ -520,7 +520,7 @@ function GateSection({ gate }: { gate?: ReadinessGate }) {
                     <span className={cn("block", r[c].ok ? "text-st-ok" : "text-st-miss")}>
                       {r[c].ok ? "ok" : "not yet"}
                     </span>
-                    <span className="block max-w-[26ch] truncate text-[10.5px] text-ink-3" data-chrome>
+                    <span className="block max-w-[26ch] truncate text-[10.5px] text-ink-3" data-source-text>
                       {r[c].note}
                     </span>
                   </td>

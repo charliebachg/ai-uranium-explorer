@@ -144,6 +144,9 @@ def test_every_number_a_tool_shows_the_model_is_citable(tool: str) -> None:
     from uranium_explorer.prospect.memo import BARE_OK, _formatted
     from uranium_explorer.store import connect
 
+    from conftest import skip_without_store
+
+    skip_without_store()
     con = connect(read_only=True)
     try:
         row = con.execute("select cell_id from derived.cell_score where score is not null limit 1").fetchone()

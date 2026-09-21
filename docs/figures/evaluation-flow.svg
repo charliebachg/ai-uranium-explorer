@@ -39,7 +39,7 @@
 <g transform="translate(425,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M12 3v18M4 21h16M12 6l-6 8h12z"/><path d="M6 14a3 3 0 0 0 6 0M12 14a3 3 0 0 0 6 0"/></g>
 <text x="440" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Baselines</text>
 <text x="440" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">random, criteria, learned, effort null</text>
-<circle cx="700" cy="360" r="36" fill="#f1f4f8" stroke="#8a93a0" stroke-width="1.3" stroke-dasharray="6 4"/>
+<circle cx="700" cy="360" r="36" fill="#f1f4f8" stroke="#9aa4b2" stroke-width="1.3"/>
 <g transform="translate(685,345) scale(1.25)" fill="none" stroke="#1c2430" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="color:#1c2430"><path d="M3 21h18"/><rect x="5" y="11" width="3.5" height="8"/><rect x="10.3" y="6" width="3.5" height="13"/><rect x="15.6" y="9" width="3.5" height="10"/></g>
 <text x="700" y="420" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:13.5px;font-weight:600;fill:#1c2430">Scores</text>
 <text x="700" y="438" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11.5px;font-weight:normal;fill:#5b6470">PR-AUC, F1, abstain rate, cost</text>
@@ -58,7 +58,7 @@
 <path d="M 1220 198 L 1220 250 L 700 250 L 700 312" fill="none" stroke="#5b6470" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#head)"/>
 <text x="960.0" y="243" text-anchor="middle" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">every answer, scored against the same cells</text>
 <circle cx="52" cy="512" r="7" fill="#f1f4f8" stroke="#8a93a0" stroke-width="1.3" stroke-dasharray="4 3"/>
-<text x="66" y="516" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">dashed: built, runs pending</text>
+<text x="66" y="516" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">dashed: scored for some arms; the ablation matrix is not complete</text>
 <circle cx="262" cy="512" r="7" fill="#f1f4f8" stroke="#b7791f" stroke-width="1.8"/>
 <text x="276" y="516" text-anchor="start" style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;font-size:11px;font-weight:normal;fill:#5b6470">amber: the line no number crosses without a stored value behind it</text>
 </svg>

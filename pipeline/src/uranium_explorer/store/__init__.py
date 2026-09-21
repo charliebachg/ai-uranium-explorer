@@ -1,4 +1,4 @@
-"""The store: one DuckDB file, four provenance tiers that never mix.
+"""The store: one DuckDB file, five provenance tiers that never mix.
 
 `native` is what a public service returned, `read` is what OCR and the vision model made of a document page,
 `derived` is what this pipeline computed, `agent` is what a model argued. The distinction is the point: a

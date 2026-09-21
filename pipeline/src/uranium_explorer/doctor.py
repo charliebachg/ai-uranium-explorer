@@ -14,7 +14,7 @@ import pyproj
 from . import crs
 from .paths import PATHS
 
-EXPECTED_CLAUDE = "2.1.274"
+EXPECTED_CLAUDE = "2.1.276"
 
 
 @dataclass

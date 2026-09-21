@@ -251,7 +251,11 @@ def test_heldout_needs_an_unlock():
 
 
 def test_the_held_out_lock_still_matches_what_is_on_disk():
-    assert ex.check_heldout_lock() == []
+    """The lock names PDFs that are never in git; on a clone without them the check has nothing to compare."""
+    problems = ex.check_heldout_lock()
+    if problems and all("missing on disk" in p for p in problems):
+        pytest.skip("the held-out PDFs are not on this machine (they are never in git)")
+    assert problems == []
 
 
 def test_the_estimate_comes_from_recorded_usage(tmp_path):

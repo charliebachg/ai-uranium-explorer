@@ -1,7 +1,8 @@
 [project]
 name = "ai-uranium-explorer"
 version = "0.1.0"
-description = "Reads public Saskatchewan uranium assessment reports into drillhole tables with provenance, and measures how often the reading is wrong."
+description = "Uranium prospectivity over public Saskatchewan data, with agents that can only cite stored values"
+license = "MIT"
 requires-python = ">=3.13,<3.14"
 dependencies = [
   "pydantic==2.13.5",
@@ -57,8 +58,6 @@ packages = ["src/uranium_explorer"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-  "network: needs internet (grid download, live endpoints)",
-  "backend: calls the real claude CLI",
   "real_data: runs against the live analytics store (data/ue.duckdb, or the unpacked seed); UE_REAL_DATA=1 to enable",
 ]
 

@@ -641,7 +641,9 @@ def prospect_serve_cmd(
                                                    "UE_INTERFACE_MODEL for auto"),
     effort: str = typer.Option("medium", "--effort"),
     backend: str = typer.Option("auto", "--backend", help="auto (API first: OpenRouter for vendor/model and claude-* ids, OpenAI for gpt-* ids; the default) | openai | claude (the local CLI)"),
-    host: str = typer.Option("127.0.0.1", "--host", help="0.0.0.0 inside a container"),
+    host: str = typer.Option("127.0.0.1", "--host", help="0.0.0.0 inside a container. Beyond one machine it exposes the API: "
+                                                    "with no UE_MCP_KEYS register every caller on a private network holds every "
+                                                    "scope, so set a register before publishing the port"),
     web_dist: str = typer.Option(None, "--web-dist", help="serve the built site (web/dist) from this process"),
 ) -> None:
     """Serve the evidence record and the per-cell conversation to the web app, on localhost."""

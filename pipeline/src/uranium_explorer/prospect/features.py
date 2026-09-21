@@ -469,17 +469,20 @@ def build(
     """Build every feature into `derived.cell_feature`, recording coverage and inputs per value."""
     inv = load_inventory()
     labels = label_keys(inv)
+    specs = [s for s in SPECS if not only or s.key in only]
+    # the label rule is checked before the store is opened: a spec that reads a label layer is refused on
+    # any machine, store or no store
+    for spec in specs:
+        leaked = set(spec.source_keys) & labels
+        if leaked:
+            raise RuntimeError(f"{spec.key}: reads label layer(s) {sorted(leaked)}; labels are never features")
     cells = load_cells(grid_id)
     log(f"  {len(cells)} cells, {len(SPECS)} features")
-    specs = [s for s in SPECS if not only or s.key in only]
     now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
     written: dict[str, dict[str, Any]] = {}
     frames: list[pd.DataFrame] = []
 
     for spec in specs:
-        leaked = set(spec.source_keys) & labels
-        if leaked:
-            raise RuntimeError(f"{spec.key}: reads label layer(s) {sorted(leaked)}; labels are never features")
         builder = BUILDERS[spec.op]
         kwargs = dict(spec.params)
         if spec.op in ("distance_to_lines", "line_density", "point_stat", "idw", "polygon_class",

@@ -107,3 +107,17 @@ def ocred(tmp_path_factory, rendered) -> dict[tuple[str, int], dict]:
         cache = cache_path_for(row["pdf_sha256"], row["page_no"], row["image_sha256"], root)
         out[key] = ocr_image(row["image_abs"], row["image_sha256"], cache)
     return out
+
+
+def real_store_present() -> bool:
+    """The analytics store is not in git; a test that reads it skips on a clone rather than failing."""
+    from uranium_explorer.store import db_path
+
+    return db_path().is_file()
+
+
+def skip_without_store() -> None:
+    import pytest
+
+    if not real_store_present():
+        pytest.skip("no analytics store on this machine (pipeline/data/ue.duckdb): see README, Quick start")

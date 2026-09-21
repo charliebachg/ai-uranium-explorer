@@ -5,8 +5,7 @@ import type { Readiness } from "@/data/contract";
 import { loadReadiness } from "@/data/loader";
 
 /**
- * What public data can and cannot support, one row per claim. Each line is cited to its source; the honest
- * position is also the more persuasive one.
+ * What public data can and cannot support, one row per claim.
  */
 
 const ROWS: { claim: string; credible: boolean; evidence: string; needed: string; measured?: string }[] = [
@@ -122,7 +121,6 @@ export function LimitsPage() {
                       </span>
                     )}
                   </td>
-                  {/* the figures in this column are the cited source's, not this page's */}
                   <td className="px-4 py-3 text-ink-2">
                     <span data-source-text>{r.evidence}</span>
                     {r.measured === "ranks-ground" ? <Measured readiness={readiness} /> : null}
