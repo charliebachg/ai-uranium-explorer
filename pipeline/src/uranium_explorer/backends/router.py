@@ -37,3 +37,26 @@ class RoutedBackend:
             if streams(backend):
                 return backend.call(req, on_delta=on_delta)
         return backend.call(req)
+
+
+class MissingCliBackend:
+    """The default route on a host without the `claude` binary (a container, a CI runner): a request that
+    reaches it is refused with the fix named, and nothing fails at start over a route nothing may take."""
+
+    family = "claude_cli"
+
+    def call(self, req: Any) -> Any:
+        from .base import BackendConfigError
+
+        raise BackendConfigError(
+            f"model {req.model!r} routes to the Claude CLI, which this host does not have; name a vendor/model "
+            "id so the call goes to OpenRouter, or install the CLI and sign in"
+        )
+
+
+def cli_or_missing(make_cli: Callable[[], Any]) -> Any:
+    """The CLI adapter where its binary exists, else the refusing stand-in. The probe is the binary's
+    presence, not its login: a signed-out CLI still fails at call time with its own message."""
+    import shutil
+
+    return make_cli() if shutil.which("claude") else MissingCliBackend()

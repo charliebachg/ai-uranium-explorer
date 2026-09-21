@@ -207,21 +207,6 @@ def evidence(cell_id: str) -> dict[str, Any]:
     }
 
 
-class _NoClaudeCli:
-    """The auto backend's default route on a host without the `claude` binary: a request that reaches it is
-    refused with the fix, instead of the whole service refusing to start."""
-
-    family = "claude_cli"
-
-    def call(self, req: Any) -> Any:
-        from ..backends.base import BackendConfigError
-
-        raise BackendConfigError(
-            f"model {req.model!r} routes to the Claude CLI, which this host does not have; name a vendor/model "
-            "id so the call goes to OpenRouter, or install the CLI and sign in"
-        )
-
-
 def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
     """Pick the backend the chat runs on, and the model name that goes with it.
 
@@ -238,22 +223,20 @@ def make_backend(kind: str = "openai", model: str = "") -> tuple[Any, str]:
         return CachedBackend(ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)), model or "claude-sonnet-5"
 
     if kind == "auto":
-        import shutil
-
         from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
         from ..backends.router import RoutedBackend
         from ..interface import default_model
 
         # The CLI is the default route only where its binary exists. A container has none, and a service
         # whose chat runs on a vendor/model id must not fail at start over a route nothing will take.
-        default: Any
-        if shutil.which("claude"):
+        from ..backends.router import cli_or_missing
+
+        def make_cli() -> Any:
             from ..backends.claude_cli import ClaudeCliBackend
 
-            default = ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)
-        else:
-            default = _NoClaudeCli()
-        routed = RoutedBackend([(is_openrouter_model, OpenRouterBackend(timeout_s=180))], default=default)
+            return ClaudeCliBackend(timeout_s=600, max_budget_usd=1.20)
+
+        routed = RoutedBackend([(is_openrouter_model, OpenRouterBackend(timeout_s=180))], default=cli_or_missing(make_cli))
         return CachedBackend(routed), model or default_model()
 
     if kind != "openai":

@@ -27,13 +27,18 @@ def _factory(kind: str) -> Callable[[Any], Any]:
         return lambda arm: ClaudeCliBackend(timeout_s=arm.timeout_s, max_budget_usd=arm.max_budget_usd_per_call)
     if kind == "auto":
         # a vendor/model id goes to OpenRouter, a bare claude id to the CLI: one arm, two adapters, two ledgers
-        from ..backends.claude_cli import ClaudeCliBackend
         from ..backends.openrouter import OpenRouterBackend, is_openrouter_model
-        from ..backends.router import RoutedBackend
+        from ..backends.router import RoutedBackend, cli_or_missing
 
+        def make_cli(arm: Any) -> Any:
+            from ..backends.claude_cli import ClaudeCliBackend
+
+            return ClaudeCliBackend(timeout_s=arm.timeout_s, max_budget_usd=arm.max_budget_usd_per_call)
+
+        # the CLI route exists only where its binary does (a container has none); the stand-in refuses at call time
         return lambda arm: RoutedBackend(
             [(is_openrouter_model, OpenRouterBackend(timeout_s=arm.timeout_s))],
-            default=ClaudeCliBackend(timeout_s=arm.timeout_s, max_budget_usd=arm.max_budget_usd_per_call))
+            default=cli_or_missing(lambda: make_cli(arm)))
     raise typer.BadParameter(f"--backend must be claude, auto or replay, not {kind!r}")
 
 

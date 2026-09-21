@@ -94,7 +94,7 @@ export const Val = z
     value: z.union([z.number(), z.string()]).nullable(), // parsed, in the printed unit, never converted
     unit_as_printed: z.string().nullable(),
     fmt: Fmt.optional(), // formatter for non-extracted kinds
-    unit: z.string().optional(), // display unit for non-extracted kinds (m, %, deg)
+    unit: z.string().nullable().optional(), // display unit for non-extracted kinds (m, %, deg); the API sends null for a unitless stat
     status: Status.optional(),
     lineage: Lineage.optional(),
     derivation: Derivation.optional(),
