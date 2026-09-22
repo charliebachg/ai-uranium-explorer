@@ -3,6 +3,7 @@ import type {
   BenchBlock,
   BenchRow,
   BenchStage,
+  BenchTable,
   HeadlineBlock,
   HeadlineRow,
   HindcastBlock,
@@ -418,11 +419,6 @@ const STAGE_COLUMNS: [BenchStage, string][] = [
  */
 export function BenchSection({ block }: { block?: BenchBlock }) {
   if (!block?.rows.length) return null;
-  const byF1 = (a: BenchRow, b: BenchRow) => (numberOf(b.metrics.f1) ?? -1) - (numberOf(a.metrics.f1) ?? -1);
-  const rows = [
-    ...block.rows.filter((r) => r.kind === "arm").sort(byF1),
-    ...block.rows.filter((r) => r.kind === "baseline").sort(byF1),
-  ];
   return (
     <Section
       title="The analyst benchmark"
@@ -444,6 +440,22 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
           <li>A single-call arm has no stages and shows none.</li>
         </ul>
       </details>
+      {[block, ...block.earlier].map((table) => (
+        <BenchTableView key={table.version} table={table} />
+      ))}
+    </Section>
+  );
+}
+
+/** One version's table, arms first by F1, then the baselines, then the line naming what it was scored against. */
+function BenchTableView({ table }: { table: BenchTable }) {
+  const byF1 = (a: BenchRow, b: BenchRow) => (numberOf(b.metrics.f1) ?? -1) - (numberOf(a.metrics.f1) ?? -1);
+  const rows = [
+    ...table.rows.filter((r) => r.kind === "arm").sort(byF1),
+    ...table.rows.filter((r) => r.kind === "baseline").sort(byF1),
+  ];
+  return (
+    <div className="mt-3" data-testid="bench-version" data-version={table.version}>
       <div className="overflow-x-auto">
         <table className="w-full text-[12.5px]" data-testid="bench-table">
           <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
@@ -488,8 +500,8 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
           </tbody>
         </table>
       </div>
-      <BenchNaming block={block} />
-    </Section>
+      <BenchNaming table={table} />
+    </div>
   );
 }
 
@@ -563,32 +575,20 @@ function Metric({ id, ci }: { id?: string; ci?: [string, string] }) {
 }
 
 /** What the table was scored against: the benchmark version, its manifest, and when it was computed. */
-function BenchNaming({ block }: { block: BenchBlock }) {
+function BenchNaming({ table }: { table: BenchTable }) {
   return (
     <p className="mt-2 text-[11px] text-ink-3">
-      benchmark <span data-ident>{block.version}</span>
-      {block.manifest_sha256 ? (
+      benchmark <span data-ident>{table.version}</span>
+      {table.manifest_sha256 ? (
         <>
           {" "}
-          · manifest <RunId id={block.manifest_sha256} />
+          · manifest <RunId id={table.manifest_sha256} />
         </>
       ) : null}
-      {block.computed_at ? (
+      {table.computed_at ? (
         <>
           {" "}
-          · computed <span data-chrome>{block.computed_at.slice(0, 16).replace("T", " ")}</span>
-        </>
-      ) : null}
-      {block.versions.length ? (
-        <>
-          {" "}
-          · earlier tables not shown:{" "}
-          {block.versions.map((v, i) => (
-            <span key={v}>
-              {i ? ", " : ""}
-              <span data-ident>{v}</span>
-            </span>
-          ))}
+          · computed <span data-chrome>{table.computed_at.slice(0, 16).replace("T", " ")}</span>
         </>
       ) : null}
     </p>

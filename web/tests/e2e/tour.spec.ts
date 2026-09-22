@@ -55,7 +55,7 @@ test("guided tour walks every step and leaves the app on the limits page", async
       await expect(evalPage).toBeVisible();
       await expect(evalPage.locator('[data-testid="hindcast-table"]')).toBeVisible();
       if (carried.search) await expect(evalPage.locator('[data-testid="search-table"]')).toBeVisible();
-      if (carried.bench) await expect(evalPage.locator('[data-testid="bench-table"]')).toBeVisible();
+      if (carried.bench) await expect(evalPage.locator('[data-testid="bench-table"]').first()).toBeVisible();
     }
     if (id === "chains") {
       // the evidence tab on the recorded cell: the stored chain with the service up, the notice without it

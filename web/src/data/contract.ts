@@ -785,13 +785,22 @@ export const BenchRow = z.object({
 });
 export type BenchRow = z.infer<typeof BenchRow>;
 
-/** The analyst benchmark table for the highest benchmark version that has one; earlier versions are named. */
-export const BenchBlock = z.object({
+/** One benchmark version's table: the arms and baselines scored on its open cells. */
+export const BenchTable = z.object({
   version: z.string(),
   manifest_sha256: z.string().nullable(),
   computed_at: z.string().nullable(),
   rows: z.array(BenchRow),
+});
+export type BenchTable = z.infer<typeof BenchTable>;
+
+/**
+ * The analyst benchmark: the highest version's table, with every earlier version's table carried in full.
+ * The versions hold the same cells on different store snapshots, so a row is read against its own version.
+ */
+export const BenchBlock = BenchTable.extend({
   versions: z.array(z.string()),
+  earlier: z.array(BenchTable).default([]),
 });
 export type BenchBlock = z.infer<typeof BenchBlock>;
 

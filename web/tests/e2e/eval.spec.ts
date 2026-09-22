@@ -57,7 +57,8 @@ test("the analyst benchmark table is on the page when the export carries it", as
     return Boolean(doc.bench?.rows?.length);
   });
   test.skip(!carried, "the export does not carry the analyst benchmark block yet");
-  const table = evalPage.locator('[data-testid="bench-table"]');
+  // one table per benchmark version, the highest first; the assertions read the first
+  const table = evalPage.locator('[data-testid="bench-table"]').first();
   await expect(table).toBeVisible();
   await expect(evalPage).toContainText("The analyst benchmark");
   expect(await table.locator('[data-testid="bench-row"]').count()).toBeGreaterThan(0);

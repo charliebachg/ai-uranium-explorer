@@ -401,8 +401,10 @@ def _version_key(name: str) -> list[Any]:
 
 
 def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dict[str, Any] | None:
-    """The analyst benchmark table (`ue bench table`): every arm and every baseline scored on the same open
-    cells of the frozen benchmark, from the highest version that has a table.
+    """The analyst benchmark tables (`ue arm table`): every arm and every baseline scored on the same open
+    cells of the frozen benchmark. The highest version that has a table is the block; every earlier version's
+    table rides along in full under `earlier`, because the two versions hold the same cells on different
+    store snapshots and an arm scored on one is not re-run on the other for free.
 
     Every number becomes a value under `c:bench:<version>:<row>:<metric>` (`.lo`/`.hi` for an interval's
     bounds, `:<stratum>:<key>` for a stratum, `:stage:<key>` for one of the staged loop's per-stage columns),
@@ -414,9 +416,17 @@ def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dic
     if not tables:
         return None
     versions = sorted(tables, key=_version_key)
-    version = versions[-1]
+    blocks = [b for b in (_bench_table(v, tables[v], vals) for v in reversed(versions)) if b]
+    if not blocks:
+        return None
+    head, *earlier = blocks
+    return {**head, "versions": [b["version"] for b in earlier], "earlier": earlier}
+
+
+def _bench_table(version: str, path: Path, vals: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """One version's table as the page prints it, its numbers minted under `c:bench:<version>:...`."""
     try:
-        d = json.loads(tables[version].read_text())
+        d = json.loads(path.read_text())
     except json.JSONDecodeError:
         return None
     rows = []
@@ -494,8 +504,10 @@ def _bench_block(vals: list[dict[str, Any]], out_dir: Path | None = None) -> dic
         if strata:
             row["strata"] = strata
         rows.append(row)
+    if not rows:
+        return None
     return {"version": version, "manifest_sha256": d.get("manifest_sha256"), "computed_at": d.get("computed_at"),
-            "rows": rows, "versions": versions[:-1]}
+            "rows": rows}
 
 
 def _gate_block(vals: list[dict[str, Any]]) -> dict[str, Any] | None:

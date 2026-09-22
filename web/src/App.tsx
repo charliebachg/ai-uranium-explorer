@@ -98,8 +98,7 @@ function GlobalKeys() {
       if (e.key === "g") {
         const running = useStore.getState().tour.step >= 0;
         setTour(running ? { step: -1, startedAt: null } : { step: 0, startedAt: Date.now() });
-      }
-      else if (e.key === "t") setTimeline({ open: !useStore.getState().timeline.open });
+      } else if (e.key === "t") setTimeline({ open: !useStore.getState().timeline.open });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

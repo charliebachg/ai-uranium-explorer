@@ -242,7 +242,7 @@ def test_the_contract_refuses_an_arm_without_a_run_and_an_unbacked_number(tmp_pa
     assert any("rows[1].metrics.f1" in err and "unbacked" in err for err in check_readiness(_readiness_with(b, vals)))
 
 
-def test_bench_takes_the_highest_version_and_drops_a_row_scored_on_no_cells(tmp_path: Path) -> None:
+def test_bench_carries_every_version_highest_first_and_drops_a_row_scored_on_no_cells(tmp_path: Path) -> None:
     _bench_table(tmp_path, "v2", [BASELINE])
     _bench_table(tmp_path, "v10", [
         {"name": "v0", "kind": "arm", "model": "claude-opus-5", "n_cells": 0, "run_id": "r", "mlflow_run_id": None,
@@ -253,5 +253,7 @@ def test_bench_takes_the_highest_version_and_drops_a_row_scored_on_no_cells(tmp_
     b = X._bench_block(vals, tmp_path)
     assert b is not None
     assert b["version"] == "v10" and b["versions"] == ["v2"]
-    assert [r["name"] for r in b["rows"]] == ["random_expected"]
-    assert all(v["id"].startswith("c:bench:v10:") for v in vals)
+    assert [r["name"] for r in b["rows"]] == ["random_expected"], "the arm still running has nothing to print"
+    assert [e["version"] for e in b["earlier"]] == ["v2"], "an earlier version's table rides along in full"
+    assert [r["name"] for r in b["earlier"][0]["rows"]] == ["random_expected"]
+    assert {v["id"].split(":")[2] for v in vals} == {"v10", "v2"}, "each version's numbers are minted under its own ids"

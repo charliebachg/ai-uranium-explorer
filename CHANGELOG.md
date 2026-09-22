@@ -12,5 +12,6 @@ The prototype, in one piece:
 - The fabrication gate at every boundary, with its own measured suite.
 - The MCP server, the API with roles and background jobs, the dashboard with a ten-step tour.
 - The seed pack for a fresh clone, over S3 or a static host.
-- UraniumBench: the frozen analyst benchmark, with the single-call arms, the cheap staged arm and part of the
-  strong-stack run scored and the ablation matrix still incomplete; the interface tiers, built and not yet run.
+- UraniumBench: the frozen analyst benchmark, with the single-call arms, the cheap staged arm and the strong-stack
+  staged arm scored on every open cell and the ablation matrix still incomplete; the interface tiers, built
+  and not yet run.

@@ -29,7 +29,7 @@ Status: prototype on public data. It gives no drilling advice. No geologist has 
 
 ![What runs, and how it is judged](docs/figures/evaluation-flow.svg)
 
-The single-call arms, the cheap staged arm and part of the strong-stack run are scored on the Eval page; the
+The single-call arms, the cheap staged arm and the strong-stack staged arm are scored on the Eval page; the
 ablation matrix is not complete. Top row: what runs for one cell. Bottom row: what every answer is judged against.
 
 - A frozen benchmark: stratified cells, labels masked, the cell's own files blind-listed, one hashed manifest.

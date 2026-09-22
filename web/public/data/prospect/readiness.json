@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-20T22:22:02+00:00",
+ "generated_at": "2026-09-22T04:41:38+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -5849,691 +5849,100 @@
   ]
  },
  "bench": {
-  "version": "v1",
-  "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
-  "computed_at": "2026-09-20T20:22:06+00:00",
+  "version": "v2",
+  "manifest_sha256": "b50f71014eaf216a1acfea2386cfdec6302c7f8c9b1bce5d046c489528ab294c",
+  "computed_at": "2026-09-22T01:25:34+00:00",
   "rows": [
    {
-    "name": "v0-features",
+    "name": "v1",
     "kind": "arm",
     "model": "claude-opus-5",
     "effort": "medium",
-    "n": "c:bench:v1:v0-features:n",
-    "n_pos": "c:bench:v1:v0-features:n_pos",
-    "n_neg": "c:bench:v1:v0-features:n_neg",
-    "run_id": "20260920T074336Z-bench",
-    "mlflow_run_id": "8bf234e1534c4ef3a68ccd10a41a23f8",
+    "n": "c:bench:v2:v1:n",
+    "n_pos": "c:bench:v2:v1:n_pos",
+    "n_neg": "c:bench:v2:v1:n_neg",
+    "run_id": "20260921T204231Z-bench",
+    "mlflow_run_id": "871a946c5cce4314a8e73dcea43bf0df",
     "metrics": {
-     "f1": "c:bench:v1:v0-features:f1",
-     "precision": "c:bench:v1:v0-features:precision",
-     "recall": "c:bench:v1:v0-features:recall",
-     "pr_auc": "c:bench:v1:v0-features:pr_auc",
-     "roc_auc": "c:bench:v1:v0-features:roc_auc",
-     "pr_auc_all": "c:bench:v1:v0-features:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v0-features:roc_auc_all",
-     "ece": "c:bench:v1:v0-features:ece",
-     "abstain_rate": "c:bench:v1:v0-features:abstain_rate"
+     "f1": "c:bench:v2:v1:f1",
+     "precision": "c:bench:v2:v1:precision",
+     "recall": "c:bench:v2:v1:recall",
+     "pr_auc": "c:bench:v2:v1:pr_auc",
+     "roc_auc": "c:bench:v2:v1:roc_auc",
+     "pr_auc_all": "c:bench:v2:v1:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:v1:roc_auc_all",
+     "ece": "c:bench:v2:v1:ece",
+     "abstain_rate": "c:bench:v2:v1:abstain_rate"
     },
     "ci": {
      "f1": [
-      "c:bench:v1:v0-features:f1.lo",
-      "c:bench:v1:v0-features:f1.hi"
+      "c:bench:v2:v1:f1.lo",
+      "c:bench:v2:v1:f1.hi"
      ],
      "precision": [
-      "c:bench:v1:v0-features:precision.lo",
-      "c:bench:v1:v0-features:precision.hi"
+      "c:bench:v2:v1:precision.lo",
+      "c:bench:v2:v1:precision.hi"
      ],
      "recall": [
-      "c:bench:v1:v0-features:recall.lo",
-      "c:bench:v1:v0-features:recall.hi"
+      "c:bench:v2:v1:recall.lo",
+      "c:bench:v2:v1:recall.hi"
      ],
      "pr_auc": [
-      "c:bench:v1:v0-features:pr_auc.lo",
-      "c:bench:v1:v0-features:pr_auc.hi"
+      "c:bench:v2:v1:pr_auc.lo",
+      "c:bench:v2:v1:pr_auc.hi"
      ],
      "roc_auc": [
-      "c:bench:v1:v0-features:roc_auc.lo",
-      "c:bench:v1:v0-features:roc_auc.hi"
+      "c:bench:v2:v1:roc_auc.lo",
+      "c:bench:v2:v1:roc_auc.hi"
      ],
      "pr_auc_all": [
-      "c:bench:v1:v0-features:pr_auc_all.lo",
-      "c:bench:v1:v0-features:pr_auc_all.hi"
+      "c:bench:v2:v1:pr_auc_all.lo",
+      "c:bench:v2:v1:pr_auc_all.hi"
      ],
      "roc_auc_all": [
-      "c:bench:v1:v0-features:roc_auc_all.lo",
-      "c:bench:v1:v0-features:roc_auc_all.hi"
+      "c:bench:v2:v1:roc_auc_all.lo",
+      "c:bench:v2:v1:roc_auc_all.hi"
      ],
      "ece": [
-      "c:bench:v1:v0-features:ece.lo",
-      "c:bench:v1:v0-features:ece.hi"
+      "c:bench:v2:v1:ece.lo",
+      "c:bench:v2:v1:ece.hi"
      ],
      "abstain_rate": [
-      "c:bench:v1:v0-features:abstain_rate.lo",
-      "c:bench:v1:v0-features:abstain_rate.hi"
+      "c:bench:v2:v1:abstain_rate.lo",
+      "c:bench:v2:v1:abstain_rate.hi"
      ]
     },
     "extra": {
-     "gate_rejection_rate": "c:bench:v1:v0-features:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v0-features:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v0-features:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v0-features:latency_s_per_cell"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v0-features:deposit:n",
-      "accuracy": "c:bench:v1:v0-features:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v0-features:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v0-features:occurrence:n",
-      "accuracy": "c:bench:v1:v0-features:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v0-features:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v0-features:negative:n",
-      "accuracy": "c:bench:v1:v0-features:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v0-features:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v0-qwen38",
-    "kind": "arm",
-    "model": "qwen/qwen3.8-flash",
-    "effort": "medium",
-    "n": "c:bench:v1:v0-qwen38:n",
-    "n_pos": "c:bench:v1:v0-qwen38:n_pos",
-    "n_neg": "c:bench:v1:v0-qwen38:n_neg",
-    "run_id": "20260920T160038Z-bench",
-    "mlflow_run_id": "69c1da1892844aba803611dad5d97f52",
-    "metrics": {
-     "f1": "c:bench:v1:v0-qwen38:f1",
-     "precision": "c:bench:v1:v0-qwen38:precision",
-     "recall": "c:bench:v1:v0-qwen38:recall",
-     "pr_auc": "c:bench:v1:v0-qwen38:pr_auc",
-     "roc_auc": "c:bench:v1:v0-qwen38:roc_auc",
-     "pr_auc_all": "c:bench:v1:v0-qwen38:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v0-qwen38:roc_auc_all",
-     "ece": "c:bench:v1:v0-qwen38:ece",
-     "abstain_rate": "c:bench:v1:v0-qwen38:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v0-qwen38:f1.lo",
-      "c:bench:v1:v0-qwen38:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v0-qwen38:precision.lo",
-      "c:bench:v1:v0-qwen38:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v0-qwen38:recall.lo",
-      "c:bench:v1:v0-qwen38:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v0-qwen38:pr_auc.lo",
-      "c:bench:v1:v0-qwen38:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v0-qwen38:roc_auc.lo",
-      "c:bench:v1:v0-qwen38:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v0-qwen38:pr_auc_all.lo",
-      "c:bench:v1:v0-qwen38:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v0-qwen38:roc_auc_all.lo",
-      "c:bench:v1:v0-qwen38:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v0-qwen38:ece.lo",
-      "c:bench:v1:v0-qwen38:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v0-qwen38:abstain_rate.lo",
-      "c:bench:v1:v0-qwen38:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v0-qwen38:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v0-qwen38:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v0-qwen38:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v0-qwen38:latency_s_per_cell"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v0-qwen38:deposit:n",
-      "accuracy": "c:bench:v1:v0-qwen38:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v0-qwen38:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v0-qwen38:occurrence:n",
-      "accuracy": "c:bench:v1:v0-qwen38:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v0-qwen38:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v0-qwen38:negative:n",
-      "accuracy": "c:bench:v1:v0-qwen38:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v0-qwen38:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v0-retrieval",
-    "kind": "arm",
-    "model": "claude-opus-5",
-    "effort": "medium",
-    "n": "c:bench:v1:v0-retrieval:n",
-    "n_pos": "c:bench:v1:v0-retrieval:n_pos",
-    "n_neg": "c:bench:v1:v0-retrieval:n_neg",
-    "run_id": "20260920T092844Z-bench",
-    "mlflow_run_id": "58ab09b07c7c49b29a00055af38a592d",
-    "metrics": {
-     "f1": "c:bench:v1:v0-retrieval:f1",
-     "precision": "c:bench:v1:v0-retrieval:precision",
-     "recall": "c:bench:v1:v0-retrieval:recall",
-     "pr_auc": "c:bench:v1:v0-retrieval:pr_auc",
-     "roc_auc": "c:bench:v1:v0-retrieval:roc_auc",
-     "pr_auc_all": "c:bench:v1:v0-retrieval:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v0-retrieval:roc_auc_all",
-     "ece": "c:bench:v1:v0-retrieval:ece",
-     "abstain_rate": "c:bench:v1:v0-retrieval:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v0-retrieval:f1.lo",
-      "c:bench:v1:v0-retrieval:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v0-retrieval:precision.lo",
-      "c:bench:v1:v0-retrieval:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v0-retrieval:recall.lo",
-      "c:bench:v1:v0-retrieval:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v0-retrieval:pr_auc.lo",
-      "c:bench:v1:v0-retrieval:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v0-retrieval:roc_auc.lo",
-      "c:bench:v1:v0-retrieval:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v0-retrieval:pr_auc_all.lo",
-      "c:bench:v1:v0-retrieval:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v0-retrieval:roc_auc_all.lo",
-      "c:bench:v1:v0-retrieval:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v0-retrieval:ece.lo",
-      "c:bench:v1:v0-retrieval:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v0-retrieval:abstain_rate.lo",
-      "c:bench:v1:v0-retrieval:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v0-retrieval:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v0-retrieval:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v0-retrieval:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v0-retrieval:latency_s_per_cell"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v0-retrieval:deposit:n",
-      "accuracy": "c:bench:v1:v0-retrieval:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v0-retrieval:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v0-retrieval:occurrence:n",
-      "accuracy": "c:bench:v1:v0-retrieval:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v0-retrieval:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v0-retrieval:negative:n",
-      "accuracy": "c:bench:v1:v0-retrieval:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v0-retrieval:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v0-sonnet",
-    "kind": "arm",
-    "model": "claude-sonnet-5",
-    "effort": "medium",
-    "n": "c:bench:v1:v0-sonnet:n",
-    "n_pos": "c:bench:v1:v0-sonnet:n_pos",
-    "n_neg": "c:bench:v1:v0-sonnet:n_neg",
-    "run_id": "20260920T064823Z-bench",
-    "mlflow_run_id": "f51b55fbb0ec415eb11befc7d5ea3e13",
-    "metrics": {
-     "f1": "c:bench:v1:v0-sonnet:f1",
-     "precision": "c:bench:v1:v0-sonnet:precision",
-     "recall": "c:bench:v1:v0-sonnet:recall",
-     "pr_auc": "c:bench:v1:v0-sonnet:pr_auc",
-     "roc_auc": "c:bench:v1:v0-sonnet:roc_auc",
-     "pr_auc_all": "c:bench:v1:v0-sonnet:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v0-sonnet:roc_auc_all",
-     "ece": "c:bench:v1:v0-sonnet:ece",
-     "abstain_rate": "c:bench:v1:v0-sonnet:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v0-sonnet:f1.lo",
-      "c:bench:v1:v0-sonnet:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v0-sonnet:precision.lo",
-      "c:bench:v1:v0-sonnet:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v0-sonnet:recall.lo",
-      "c:bench:v1:v0-sonnet:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v0-sonnet:pr_auc.lo",
-      "c:bench:v1:v0-sonnet:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v0-sonnet:roc_auc.lo",
-      "c:bench:v1:v0-sonnet:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v0-sonnet:pr_auc_all.lo",
-      "c:bench:v1:v0-sonnet:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v0-sonnet:roc_auc_all.lo",
-      "c:bench:v1:v0-sonnet:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v0-sonnet:ece.lo",
-      "c:bench:v1:v0-sonnet:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v0-sonnet:abstain_rate.lo",
-      "c:bench:v1:v0-sonnet:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v0-sonnet:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v0-sonnet:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v0-sonnet:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v0-sonnet:latency_s_per_cell"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v0-sonnet:deposit:n",
-      "accuracy": "c:bench:v1:v0-sonnet:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v0-sonnet:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v0-sonnet:occurrence:n",
-      "accuracy": "c:bench:v1:v0-sonnet:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v0-sonnet:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v0-sonnet:negative:n",
-      "accuracy": "c:bench:v1:v0-sonnet:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v0-sonnet:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v0-text",
-    "kind": "arm",
-    "model": "claude-opus-5",
-    "effort": "medium",
-    "n": "c:bench:v1:v0-text:n",
-    "n_pos": "c:bench:v1:v0-text:n_pos",
-    "n_neg": "c:bench:v1:v0-text:n_neg",
-    "run_id": "20260920T074335Z-bench",
-    "mlflow_run_id": "a058dcf45d2d4aaea7b72ca20a91e4c6",
-    "metrics": {
-     "f1": "c:bench:v1:v0-text:f1",
-     "precision": "c:bench:v1:v0-text:precision",
-     "recall": "c:bench:v1:v0-text:recall",
-     "pr_auc": "c:bench:v1:v0-text:pr_auc",
-     "roc_auc": "c:bench:v1:v0-text:roc_auc",
-     "pr_auc_all": "c:bench:v1:v0-text:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v0-text:roc_auc_all",
-     "ece": "c:bench:v1:v0-text:ece",
-     "abstain_rate": "c:bench:v1:v0-text:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v0-text:f1.lo",
-      "c:bench:v1:v0-text:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v0-text:precision.lo",
-      "c:bench:v1:v0-text:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v0-text:recall.lo",
-      "c:bench:v1:v0-text:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v0-text:pr_auc.lo",
-      "c:bench:v1:v0-text:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v0-text:roc_auc.lo",
-      "c:bench:v1:v0-text:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v0-text:pr_auc_all.lo",
-      "c:bench:v1:v0-text:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v0-text:roc_auc_all.lo",
-      "c:bench:v1:v0-text:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v0-text:ece.lo",
-      "c:bench:v1:v0-text:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v0-text:abstain_rate.lo",
-      "c:bench:v1:v0-text:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v0-text:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v0-text:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v0-text:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v0-text:latency_s_per_cell"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v0-text:deposit:n",
-      "accuracy": "c:bench:v1:v0-text:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v0-text:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v0-text:occurrence:n",
-      "accuracy": "c:bench:v1:v0-text:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v0-text:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v0-text:negative:n",
-      "accuracy": "c:bench:v1:v0-text:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v0-text:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v0",
-    "kind": "arm",
-    "model": "claude-opus-5",
-    "effort": "medium",
-    "n": "c:bench:v1:v0:n",
-    "n_pos": "c:bench:v1:v0:n_pos",
-    "n_neg": "c:bench:v1:v0:n_neg",
-    "run_id": "20260920T063446Z-bench",
-    "mlflow_run_id": "3b30307c767145359af2e2743d2efc05",
-    "metrics": {
-     "f1": "c:bench:v1:v0:f1",
-     "precision": "c:bench:v1:v0:precision",
-     "recall": "c:bench:v1:v0:recall",
-     "pr_auc": "c:bench:v1:v0:pr_auc",
-     "roc_auc": "c:bench:v1:v0:roc_auc",
-     "pr_auc_all": "c:bench:v1:v0:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v0:roc_auc_all",
-     "ece": "c:bench:v1:v0:ece",
-     "abstain_rate": "c:bench:v1:v0:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v0:f1.lo",
-      "c:bench:v1:v0:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v0:precision.lo",
-      "c:bench:v1:v0:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v0:recall.lo",
-      "c:bench:v1:v0:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v0:pr_auc.lo",
-      "c:bench:v1:v0:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v0:roc_auc.lo",
-      "c:bench:v1:v0:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v0:pr_auc_all.lo",
-      "c:bench:v1:v0:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v0:roc_auc_all.lo",
-      "c:bench:v1:v0:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v0:ece.lo",
-      "c:bench:v1:v0:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v0:abstain_rate.lo",
-      "c:bench:v1:v0:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v0:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v0:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v0:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v0:latency_s_per_cell"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v0:deposit:n",
-      "accuracy": "c:bench:v1:v0:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v0:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v0:occurrence:n",
-      "accuracy": "c:bench:v1:v0:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v0:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v0:negative:n",
-      "accuracy": "c:bench:v1:v0:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v0:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v1-anthropic-or",
-    "kind": "arm",
-    "model": "anthropic/claude-opus-5",
-    "effort": "medium",
-    "n": "c:bench:v1:v1-anthropic-or:n",
-    "n_pos": "c:bench:v1:v1-anthropic-or:n_pos",
-    "n_neg": "c:bench:v1:v1-anthropic-or:n_neg",
-    "run_id": "20260920T190845Z-bench",
-    "mlflow_run_id": "f98e3ffc7f1a4ab2b1ca9b21624ed133",
-    "metrics": {
-     "f1": "c:bench:v1:v1-anthropic-or:f1",
-     "precision": "c:bench:v1:v1-anthropic-or:precision",
-     "recall": "c:bench:v1:v1-anthropic-or:recall",
-     "pr_auc": "c:bench:v1:v1-anthropic-or:pr_auc",
-     "roc_auc": "c:bench:v1:v1-anthropic-or:roc_auc",
-     "pr_auc_all": "c:bench:v1:v1-anthropic-or:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v1-anthropic-or:roc_auc_all",
-     "ece": "c:bench:v1:v1-anthropic-or:ece",
-     "abstain_rate": "c:bench:v1:v1-anthropic-or:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v1-anthropic-or:f1.lo",
-      "c:bench:v1:v1-anthropic-or:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v1-anthropic-or:precision.lo",
-      "c:bench:v1:v1-anthropic-or:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v1-anthropic-or:recall.lo",
-      "c:bench:v1:v1-anthropic-or:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v1-anthropic-or:pr_auc.lo",
-      "c:bench:v1:v1-anthropic-or:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v1-anthropic-or:roc_auc.lo",
-      "c:bench:v1:v1-anthropic-or:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v1-anthropic-or:pr_auc_all.lo",
-      "c:bench:v1:v1-anthropic-or:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v1-anthropic-or:roc_auc_all.lo",
-      "c:bench:v1:v1-anthropic-or:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v1-anthropic-or:ece.lo",
-      "c:bench:v1:v1-anthropic-or:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v1-anthropic-or:abstain_rate.lo",
-      "c:bench:v1:v1-anthropic-or:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v1-anthropic-or:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v1-anthropic-or:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v1-anthropic-or:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v1-anthropic-or:latency_s_per_cell"
+     "gate_rejection_rate": "c:bench:v2:v1:gate_rejection_rate",
+     "probe_abstain_rate": "c:bench:v2:v1:probe_abstain_rate",
+     "cost_usd_per_cell": "c:bench:v2:v1:cost_usd_per_cell",
+     "latency_s_per_cell": "c:bench:v2:v1:latency_s_per_cell"
     },
     "stages": {
-     "n_chains": "c:bench:v1:v1-anthropic-or:stage:n_chains",
-     "gate_rejection_rate": "c:bench:v1:v1-anthropic-or:stage:gate_rejection_rate",
-     "valid_rate": "c:bench:v1:v1-anthropic-or:stage:valid_rate",
-     "verifier_catch_rate": "c:bench:v1:v1-anthropic-or:stage:verifier_catch_rate",
-     "rounds_to_valid_mean": "c:bench:v1:v1-anthropic-or:stage:rounds_to_valid_mean",
-     "reexecuted_mean": "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean",
-     "verifier_agreement_rate": "c:bench:v1:v1-anthropic-or:stage:verifier_agreement_rate",
-     "decider_agreement_rate": "c:bench:v1:v1-anthropic-or:stage:decider_agreement_rate"
+     "n_chains": "c:bench:v2:v1:stage:n_chains",
+     "gate_rejection_rate": "c:bench:v2:v1:stage:gate_rejection_rate",
+     "valid_rate": "c:bench:v2:v1:stage:valid_rate",
+     "verifier_catch_rate": "c:bench:v2:v1:stage:verifier_catch_rate",
+     "rounds_to_valid_mean": "c:bench:v2:v1:stage:rounds_to_valid_mean",
+     "reexecuted_mean": "c:bench:v2:v1:stage:reexecuted_mean",
+     "verifier_agreement_rate": "c:bench:v2:v1:stage:verifier_agreement_rate",
+     "decider_agreement_rate": "c:bench:v2:v1:stage:decider_agreement_rate"
     },
     "strata": {
      "deposit": {
-      "n": "c:bench:v1:v1-anthropic-or:deposit:n",
-      "accuracy": "c:bench:v1:v1-anthropic-or:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v1-anthropic-or:deposit:abstain_rate"
+      "n": "c:bench:v2:v1:deposit:n",
+      "accuracy": "c:bench:v2:v1:deposit:accuracy",
+      "abstain_rate": "c:bench:v2:v1:deposit:abstain_rate"
      },
      "occurrence": {
-      "n": "c:bench:v1:v1-anthropic-or:occurrence:n",
-      "accuracy": "c:bench:v1:v1-anthropic-or:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v1-anthropic-or:occurrence:abstain_rate"
+      "n": "c:bench:v2:v1:occurrence:n",
+      "accuracy": "c:bench:v2:v1:occurrence:accuracy",
+      "abstain_rate": "c:bench:v2:v1:occurrence:abstain_rate"
      },
      "negative": {
-      "n": "c:bench:v1:v1-anthropic-or:negative:n",
-      "accuracy": "c:bench:v1:v1-anthropic-or:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v1-anthropic-or:negative:abstain_rate"
-     }
-    }
-   },
-   {
-    "name": "v1-openrouter",
-    "kind": "arm",
-    "model": "qwen/qwen3.8-flash",
-    "effort": "medium",
-    "n": "c:bench:v1:v1-openrouter:n",
-    "n_pos": "c:bench:v1:v1-openrouter:n_pos",
-    "n_neg": "c:bench:v1:v1-openrouter:n_neg",
-    "run_id": "20260920T181356Z-bench",
-    "mlflow_run_id": "4cbd562ba78e4bb989d94ddb4484ccc4",
-    "metrics": {
-     "f1": "c:bench:v1:v1-openrouter:f1",
-     "precision": "c:bench:v1:v1-openrouter:precision",
-     "recall": "c:bench:v1:v1-openrouter:recall",
-     "pr_auc": "c:bench:v1:v1-openrouter:pr_auc",
-     "roc_auc": "c:bench:v1:v1-openrouter:roc_auc",
-     "pr_auc_all": "c:bench:v1:v1-openrouter:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:v1-openrouter:roc_auc_all",
-     "ece": "c:bench:v1:v1-openrouter:ece",
-     "abstain_rate": "c:bench:v1:v1-openrouter:abstain_rate"
-    },
-    "ci": {
-     "f1": [
-      "c:bench:v1:v1-openrouter:f1.lo",
-      "c:bench:v1:v1-openrouter:f1.hi"
-     ],
-     "precision": [
-      "c:bench:v1:v1-openrouter:precision.lo",
-      "c:bench:v1:v1-openrouter:precision.hi"
-     ],
-     "recall": [
-      "c:bench:v1:v1-openrouter:recall.lo",
-      "c:bench:v1:v1-openrouter:recall.hi"
-     ],
-     "pr_auc": [
-      "c:bench:v1:v1-openrouter:pr_auc.lo",
-      "c:bench:v1:v1-openrouter:pr_auc.hi"
-     ],
-     "roc_auc": [
-      "c:bench:v1:v1-openrouter:roc_auc.lo",
-      "c:bench:v1:v1-openrouter:roc_auc.hi"
-     ],
-     "pr_auc_all": [
-      "c:bench:v1:v1-openrouter:pr_auc_all.lo",
-      "c:bench:v1:v1-openrouter:pr_auc_all.hi"
-     ],
-     "roc_auc_all": [
-      "c:bench:v1:v1-openrouter:roc_auc_all.lo",
-      "c:bench:v1:v1-openrouter:roc_auc_all.hi"
-     ],
-     "ece": [
-      "c:bench:v1:v1-openrouter:ece.lo",
-      "c:bench:v1:v1-openrouter:ece.hi"
-     ],
-     "abstain_rate": [
-      "c:bench:v1:v1-openrouter:abstain_rate.lo",
-      "c:bench:v1:v1-openrouter:abstain_rate.hi"
-     ]
-    },
-    "extra": {
-     "gate_rejection_rate": "c:bench:v1:v1-openrouter:gate_rejection_rate",
-     "probe_abstain_rate": "c:bench:v1:v1-openrouter:probe_abstain_rate",
-     "cost_usd_per_cell": "c:bench:v1:v1-openrouter:cost_usd_per_cell",
-     "latency_s_per_cell": "c:bench:v1:v1-openrouter:latency_s_per_cell"
-    },
-    "stages": {
-     "n_chains": "c:bench:v1:v1-openrouter:stage:n_chains",
-     "gate_rejection_rate": "c:bench:v1:v1-openrouter:stage:gate_rejection_rate",
-     "valid_rate": "c:bench:v1:v1-openrouter:stage:valid_rate",
-     "verifier_catch_rate": "c:bench:v1:v1-openrouter:stage:verifier_catch_rate",
-     "rounds_to_valid_mean": "c:bench:v1:v1-openrouter:stage:rounds_to_valid_mean",
-     "reexecuted_mean": "c:bench:v1:v1-openrouter:stage:reexecuted_mean",
-     "verifier_agreement_rate": "c:bench:v1:v1-openrouter:stage:verifier_agreement_rate",
-     "decider_agreement_rate": "c:bench:v1:v1-openrouter:stage:decider_agreement_rate"
-    },
-    "strata": {
-     "deposit": {
-      "n": "c:bench:v1:v1-openrouter:deposit:n",
-      "accuracy": "c:bench:v1:v1-openrouter:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:v1-openrouter:deposit:abstain_rate"
-     },
-     "occurrence": {
-      "n": "c:bench:v1:v1-openrouter:occurrence:n",
-      "accuracy": "c:bench:v1:v1-openrouter:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:v1-openrouter:occurrence:abstain_rate"
-     },
-     "negative": {
-      "n": "c:bench:v1:v1-openrouter:negative:n",
-      "accuracy": "c:bench:v1:v1-openrouter:negative:accuracy",
-      "abstain_rate": "c:bench:v1:v1-openrouter:negative:abstain_rate"
+      "n": "c:bench:v2:v1:negative:n",
+      "accuracy": "c:bench:v2:v1:negative:accuracy",
+      "abstain_rate": "c:bench:v2:v1:negative:abstain_rate"
      }
     }
    },
@@ -6542,21 +5951,21 @@
     "kind": "baseline",
     "model": "random",
     "effort": null,
-    "n": "c:bench:v1:random_expected:n",
+    "n": "c:bench:v2:random_expected:n",
     "n_pos": null,
     "n_neg": null,
     "run_id": null,
     "mlflow_run_id": null,
     "metrics": {
-     "f1": "c:bench:v1:random_expected:f1",
-     "precision": "c:bench:v1:random_expected:precision",
-     "recall": "c:bench:v1:random_expected:recall",
-     "pr_auc": "c:bench:v1:random_expected:pr_auc",
-     "roc_auc": "c:bench:v1:random_expected:roc_auc",
-     "pr_auc_all": "c:bench:v1:random_expected:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:random_expected:roc_auc_all",
-     "ece": "c:bench:v1:random_expected:ece",
-     "abstain_rate": "c:bench:v1:random_expected:abstain_rate"
+     "f1": "c:bench:v2:random_expected:f1",
+     "precision": "c:bench:v2:random_expected:precision",
+     "recall": "c:bench:v2:random_expected:recall",
+     "pr_auc": "c:bench:v2:random_expected:pr_auc",
+     "roc_auc": "c:bench:v2:random_expected:roc_auc",
+     "pr_auc_all": "c:bench:v2:random_expected:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:random_expected:roc_auc_all",
+     "ece": "c:bench:v2:random_expected:ece",
+     "abstain_rate": "c:bench:v2:random_expected:abstain_rate"
     },
     "note": "analytic expectation for a uniform random probability at a 0.5 threshold; no interval"
    },
@@ -6565,76 +5974,76 @@
     "kind": "baseline",
     "model": "random",
     "effort": null,
-    "n": "c:bench:v1:random:n",
-    "n_pos": "c:bench:v1:random:n_pos",
-    "n_neg": "c:bench:v1:random:n_neg",
+    "n": "c:bench:v2:random:n",
+    "n_pos": "c:bench:v2:random:n_pos",
+    "n_neg": "c:bench:v2:random:n_neg",
     "run_id": null,
     "mlflow_run_id": null,
     "metrics": {
-     "f1": "c:bench:v1:random:f1",
-     "precision": "c:bench:v1:random:precision",
-     "recall": "c:bench:v1:random:recall",
-     "pr_auc": "c:bench:v1:random:pr_auc",
-     "roc_auc": "c:bench:v1:random:roc_auc",
-     "pr_auc_all": "c:bench:v1:random:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:random:roc_auc_all",
-     "ece": "c:bench:v1:random:ece",
-     "abstain_rate": "c:bench:v1:random:abstain_rate"
+     "f1": "c:bench:v2:random:f1",
+     "precision": "c:bench:v2:random:precision",
+     "recall": "c:bench:v2:random:recall",
+     "pr_auc": "c:bench:v2:random:pr_auc",
+     "roc_auc": "c:bench:v2:random:roc_auc",
+     "pr_auc_all": "c:bench:v2:random:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:random:roc_auc_all",
+     "ece": "c:bench:v2:random:ece",
+     "abstain_rate": "c:bench:v2:random:abstain_rate"
     },
     "note": "one uniform draw, seed 0, 0.5 threshold",
     "ci": {
      "f1": [
-      "c:bench:v1:random:f1.lo",
-      "c:bench:v1:random:f1.hi"
+      "c:bench:v2:random:f1.lo",
+      "c:bench:v2:random:f1.hi"
      ],
      "precision": [
-      "c:bench:v1:random:precision.lo",
-      "c:bench:v1:random:precision.hi"
+      "c:bench:v2:random:precision.lo",
+      "c:bench:v2:random:precision.hi"
      ],
      "recall": [
-      "c:bench:v1:random:recall.lo",
-      "c:bench:v1:random:recall.hi"
+      "c:bench:v2:random:recall.lo",
+      "c:bench:v2:random:recall.hi"
      ],
      "pr_auc": [
-      "c:bench:v1:random:pr_auc.lo",
-      "c:bench:v1:random:pr_auc.hi"
+      "c:bench:v2:random:pr_auc.lo",
+      "c:bench:v2:random:pr_auc.hi"
      ],
      "roc_auc": [
-      "c:bench:v1:random:roc_auc.lo",
-      "c:bench:v1:random:roc_auc.hi"
+      "c:bench:v2:random:roc_auc.lo",
+      "c:bench:v2:random:roc_auc.hi"
      ],
      "pr_auc_all": [
-      "c:bench:v1:random:pr_auc_all.lo",
-      "c:bench:v1:random:pr_auc_all.hi"
+      "c:bench:v2:random:pr_auc_all.lo",
+      "c:bench:v2:random:pr_auc_all.hi"
      ],
      "roc_auc_all": [
-      "c:bench:v1:random:roc_auc_all.lo",
-      "c:bench:v1:random:roc_auc_all.hi"
+      "c:bench:v2:random:roc_auc_all.lo",
+      "c:bench:v2:random:roc_auc_all.hi"
      ],
      "ece": [
-      "c:bench:v1:random:ece.lo",
-      "c:bench:v1:random:ece.hi"
+      "c:bench:v2:random:ece.lo",
+      "c:bench:v2:random:ece.hi"
      ],
      "abstain_rate": [
-      "c:bench:v1:random:abstain_rate.lo",
-      "c:bench:v1:random:abstain_rate.hi"
+      "c:bench:v2:random:abstain_rate.lo",
+      "c:bench:v2:random:abstain_rate.hi"
      ]
     },
     "strata": {
      "deposit": {
-      "n": "c:bench:v1:random:deposit:n",
-      "accuracy": "c:bench:v1:random:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:random:deposit:abstain_rate"
+      "n": "c:bench:v2:random:deposit:n",
+      "accuracy": "c:bench:v2:random:deposit:accuracy",
+      "abstain_rate": "c:bench:v2:random:deposit:abstain_rate"
      },
      "occurrence": {
-      "n": "c:bench:v1:random:occurrence:n",
-      "accuracy": "c:bench:v1:random:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:random:occurrence:abstain_rate"
+      "n": "c:bench:v2:random:occurrence:n",
+      "accuracy": "c:bench:v2:random:occurrence:accuracy",
+      "abstain_rate": "c:bench:v2:random:occurrence:abstain_rate"
      },
      "negative": {
-      "n": "c:bench:v1:random:negative:n",
-      "accuracy": "c:bench:v1:random:negative:accuracy",
-      "abstain_rate": "c:bench:v1:random:negative:abstain_rate"
+      "n": "c:bench:v2:random:negative:n",
+      "accuracy": "c:bench:v2:random:negative:accuracy",
+      "abstain_rate": "c:bench:v2:random:negative:abstain_rate"
      }
     }
    },
@@ -6643,76 +6052,76 @@
     "kind": "baseline",
     "model": "learned",
     "effort": null,
-    "n": "c:bench:v1:copy_learned:n",
-    "n_pos": "c:bench:v1:copy_learned:n_pos",
-    "n_neg": "c:bench:v1:copy_learned:n_neg",
+    "n": "c:bench:v2:copy_learned:n",
+    "n_pos": "c:bench:v2:copy_learned:n_pos",
+    "n_neg": "c:bench:v2:copy_learned:n_neg",
     "run_id": null,
     "mlflow_run_id": null,
     "metrics": {
-     "f1": "c:bench:v1:copy_learned:f1",
-     "precision": "c:bench:v1:copy_learned:precision",
-     "recall": "c:bench:v1:copy_learned:recall",
-     "pr_auc": "c:bench:v1:copy_learned:pr_auc",
-     "roc_auc": "c:bench:v1:copy_learned:roc_auc",
-     "pr_auc_all": "c:bench:v1:copy_learned:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:copy_learned:roc_auc_all",
-     "ece": "c:bench:v1:copy_learned:ece",
-     "abstain_rate": "c:bench:v1:copy_learned:abstain_rate"
+     "f1": "c:bench:v2:copy_learned:f1",
+     "precision": "c:bench:v2:copy_learned:precision",
+     "recall": "c:bench:v2:copy_learned:recall",
+     "pr_auc": "c:bench:v2:copy_learned:pr_auc",
+     "roc_auc": "c:bench:v2:copy_learned:roc_auc",
+     "pr_auc_all": "c:bench:v2:copy_learned:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:copy_learned:roc_auc_all",
+     "ece": "c:bench:v2:copy_learned:ece",
+     "abstain_rate": "c:bench:v2:copy_learned:abstain_rate"
     },
     "note": "an analyst that copies the out-of-fold learned score and abstains where there is none",
     "ci": {
      "f1": [
-      "c:bench:v1:copy_learned:f1.lo",
-      "c:bench:v1:copy_learned:f1.hi"
+      "c:bench:v2:copy_learned:f1.lo",
+      "c:bench:v2:copy_learned:f1.hi"
      ],
      "precision": [
-      "c:bench:v1:copy_learned:precision.lo",
-      "c:bench:v1:copy_learned:precision.hi"
+      "c:bench:v2:copy_learned:precision.lo",
+      "c:bench:v2:copy_learned:precision.hi"
      ],
      "recall": [
-      "c:bench:v1:copy_learned:recall.lo",
-      "c:bench:v1:copy_learned:recall.hi"
+      "c:bench:v2:copy_learned:recall.lo",
+      "c:bench:v2:copy_learned:recall.hi"
      ],
      "pr_auc": [
-      "c:bench:v1:copy_learned:pr_auc.lo",
-      "c:bench:v1:copy_learned:pr_auc.hi"
+      "c:bench:v2:copy_learned:pr_auc.lo",
+      "c:bench:v2:copy_learned:pr_auc.hi"
      ],
      "roc_auc": [
-      "c:bench:v1:copy_learned:roc_auc.lo",
-      "c:bench:v1:copy_learned:roc_auc.hi"
+      "c:bench:v2:copy_learned:roc_auc.lo",
+      "c:bench:v2:copy_learned:roc_auc.hi"
      ],
      "pr_auc_all": [
-      "c:bench:v1:copy_learned:pr_auc_all.lo",
-      "c:bench:v1:copy_learned:pr_auc_all.hi"
+      "c:bench:v2:copy_learned:pr_auc_all.lo",
+      "c:bench:v2:copy_learned:pr_auc_all.hi"
      ],
      "roc_auc_all": [
-      "c:bench:v1:copy_learned:roc_auc_all.lo",
-      "c:bench:v1:copy_learned:roc_auc_all.hi"
+      "c:bench:v2:copy_learned:roc_auc_all.lo",
+      "c:bench:v2:copy_learned:roc_auc_all.hi"
      ],
      "ece": [
-      "c:bench:v1:copy_learned:ece.lo",
-      "c:bench:v1:copy_learned:ece.hi"
+      "c:bench:v2:copy_learned:ece.lo",
+      "c:bench:v2:copy_learned:ece.hi"
      ],
      "abstain_rate": [
-      "c:bench:v1:copy_learned:abstain_rate.lo",
-      "c:bench:v1:copy_learned:abstain_rate.hi"
+      "c:bench:v2:copy_learned:abstain_rate.lo",
+      "c:bench:v2:copy_learned:abstain_rate.hi"
      ]
     },
     "strata": {
      "deposit": {
-      "n": "c:bench:v1:copy_learned:deposit:n",
-      "accuracy": "c:bench:v1:copy_learned:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:copy_learned:deposit:abstain_rate"
+      "n": "c:bench:v2:copy_learned:deposit:n",
+      "accuracy": "c:bench:v2:copy_learned:deposit:accuracy",
+      "abstain_rate": "c:bench:v2:copy_learned:deposit:abstain_rate"
      },
      "occurrence": {
-      "n": "c:bench:v1:copy_learned:occurrence:n",
-      "accuracy": "c:bench:v1:copy_learned:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:copy_learned:occurrence:abstain_rate"
+      "n": "c:bench:v2:copy_learned:occurrence:n",
+      "accuracy": "c:bench:v2:copy_learned:occurrence:accuracy",
+      "abstain_rate": "c:bench:v2:copy_learned:occurrence:abstain_rate"
      },
      "negative": {
-      "n": "c:bench:v1:copy_learned:negative:n",
-      "accuracy": "c:bench:v1:copy_learned:negative:accuracy",
-      "abstain_rate": "c:bench:v1:copy_learned:negative:abstain_rate"
+      "n": "c:bench:v2:copy_learned:negative:n",
+      "accuracy": "c:bench:v2:copy_learned:negative:accuracy",
+      "abstain_rate": "c:bench:v2:copy_learned:negative:abstain_rate"
      }
     }
    },
@@ -6721,76 +6130,76 @@
     "kind": "baseline",
     "model": "learned",
     "effort": null,
-    "n": "c:bench:v1:learned:n",
-    "n_pos": "c:bench:v1:learned:n_pos",
-    "n_neg": "c:bench:v1:learned:n_neg",
+    "n": "c:bench:v2:learned:n",
+    "n_pos": "c:bench:v2:learned:n_pos",
+    "n_neg": "c:bench:v2:learned:n_neg",
     "run_id": null,
     "mlflow_run_id": null,
     "metrics": {
-     "f1": "c:bench:v1:learned:f1",
-     "precision": "c:bench:v1:learned:precision",
-     "recall": "c:bench:v1:learned:recall",
-     "pr_auc": "c:bench:v1:learned:pr_auc",
-     "roc_auc": "c:bench:v1:learned:roc_auc",
-     "pr_auc_all": "c:bench:v1:learned:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:learned:roc_auc_all",
-     "ece": "c:bench:v1:learned:ece",
-     "abstain_rate": "c:bench:v1:learned:abstain_rate"
+     "f1": "c:bench:v2:learned:f1",
+     "precision": "c:bench:v2:learned:precision",
+     "recall": "c:bench:v2:learned:recall",
+     "pr_auc": "c:bench:v2:learned:pr_auc",
+     "roc_auc": "c:bench:v2:learned:roc_auc",
+     "pr_auc_all": "c:bench:v2:learned:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:learned:roc_auc_all",
+     "ece": "c:bench:v2:learned:ece",
+     "abstain_rate": "c:bench:v2:learned:abstain_rate"
     },
     "note": "the out-of-fold learned score at a 0.5 threshold (spatial folds); a missing score is 0.5",
     "ci": {
      "f1": [
-      "c:bench:v1:learned:f1.lo",
-      "c:bench:v1:learned:f1.hi"
+      "c:bench:v2:learned:f1.lo",
+      "c:bench:v2:learned:f1.hi"
      ],
      "precision": [
-      "c:bench:v1:learned:precision.lo",
-      "c:bench:v1:learned:precision.hi"
+      "c:bench:v2:learned:precision.lo",
+      "c:bench:v2:learned:precision.hi"
      ],
      "recall": [
-      "c:bench:v1:learned:recall.lo",
-      "c:bench:v1:learned:recall.hi"
+      "c:bench:v2:learned:recall.lo",
+      "c:bench:v2:learned:recall.hi"
      ],
      "pr_auc": [
-      "c:bench:v1:learned:pr_auc.lo",
-      "c:bench:v1:learned:pr_auc.hi"
+      "c:bench:v2:learned:pr_auc.lo",
+      "c:bench:v2:learned:pr_auc.hi"
      ],
      "roc_auc": [
-      "c:bench:v1:learned:roc_auc.lo",
-      "c:bench:v1:learned:roc_auc.hi"
+      "c:bench:v2:learned:roc_auc.lo",
+      "c:bench:v2:learned:roc_auc.hi"
      ],
      "pr_auc_all": [
-      "c:bench:v1:learned:pr_auc_all.lo",
-      "c:bench:v1:learned:pr_auc_all.hi"
+      "c:bench:v2:learned:pr_auc_all.lo",
+      "c:bench:v2:learned:pr_auc_all.hi"
      ],
      "roc_auc_all": [
-      "c:bench:v1:learned:roc_auc_all.lo",
-      "c:bench:v1:learned:roc_auc_all.hi"
+      "c:bench:v2:learned:roc_auc_all.lo",
+      "c:bench:v2:learned:roc_auc_all.hi"
      ],
      "ece": [
-      "c:bench:v1:learned:ece.lo",
-      "c:bench:v1:learned:ece.hi"
+      "c:bench:v2:learned:ece.lo",
+      "c:bench:v2:learned:ece.hi"
      ],
      "abstain_rate": [
-      "c:bench:v1:learned:abstain_rate.lo",
-      "c:bench:v1:learned:abstain_rate.hi"
+      "c:bench:v2:learned:abstain_rate.lo",
+      "c:bench:v2:learned:abstain_rate.hi"
      ]
     },
     "strata": {
      "deposit": {
-      "n": "c:bench:v1:learned:deposit:n",
-      "accuracy": "c:bench:v1:learned:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:learned:deposit:abstain_rate"
+      "n": "c:bench:v2:learned:deposit:n",
+      "accuracy": "c:bench:v2:learned:deposit:accuracy",
+      "abstain_rate": "c:bench:v2:learned:deposit:abstain_rate"
      },
      "occurrence": {
-      "n": "c:bench:v1:learned:occurrence:n",
-      "accuracy": "c:bench:v1:learned:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:learned:occurrence:abstain_rate"
+      "n": "c:bench:v2:learned:occurrence:n",
+      "accuracy": "c:bench:v2:learned:occurrence:accuracy",
+      "abstain_rate": "c:bench:v2:learned:occurrence:abstain_rate"
      },
      "negative": {
-      "n": "c:bench:v1:learned:negative:n",
-      "accuracy": "c:bench:v1:learned:negative:accuracy",
-      "abstain_rate": "c:bench:v1:learned:negative:abstain_rate"
+      "n": "c:bench:v2:learned:negative:n",
+      "accuracy": "c:bench:v2:learned:negative:accuracy",
+      "abstain_rate": "c:bench:v2:learned:negative:abstain_rate"
      }
     }
    },
@@ -6799,76 +6208,76 @@
     "kind": "baseline",
     "model": "effort",
     "effort": null,
-    "n": "c:bench:v1:effort:n",
-    "n_pos": "c:bench:v1:effort:n_pos",
-    "n_neg": "c:bench:v1:effort:n_neg",
+    "n": "c:bench:v2:effort:n",
+    "n_pos": "c:bench:v2:effort:n_pos",
+    "n_neg": "c:bench:v2:effort:n_neg",
     "run_id": null,
     "mlflow_run_id": null,
     "metrics": {
-     "f1": "c:bench:v1:effort:f1",
-     "precision": "c:bench:v1:effort:precision",
-     "recall": "c:bench:v1:effort:recall",
-     "pr_auc": "c:bench:v1:effort:pr_auc",
-     "roc_auc": "c:bench:v1:effort:roc_auc",
-     "pr_auc_all": "c:bench:v1:effort:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:effort:roc_auc_all",
-     "ece": "c:bench:v1:effort:ece",
-     "abstain_rate": "c:bench:v1:effort:abstain_rate"
+     "f1": "c:bench:v2:effort:f1",
+     "precision": "c:bench:v2:effort:precision",
+     "recall": "c:bench:v2:effort:recall",
+     "pr_auc": "c:bench:v2:effort:pr_auc",
+     "roc_auc": "c:bench:v2:effort:roc_auc",
+     "pr_auc_all": "c:bench:v2:effort:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:effort:roc_auc_all",
+     "ece": "c:bench:v2:effort:ece",
+     "abstain_rate": "c:bench:v2:effort:abstain_rate"
     },
     "note": "the out-of-fold effort score at a 0.5 threshold (spatial folds); a missing score is 0.5",
     "ci": {
      "f1": [
-      "c:bench:v1:effort:f1.lo",
-      "c:bench:v1:effort:f1.hi"
+      "c:bench:v2:effort:f1.lo",
+      "c:bench:v2:effort:f1.hi"
      ],
      "precision": [
-      "c:bench:v1:effort:precision.lo",
-      "c:bench:v1:effort:precision.hi"
+      "c:bench:v2:effort:precision.lo",
+      "c:bench:v2:effort:precision.hi"
      ],
      "recall": [
-      "c:bench:v1:effort:recall.lo",
-      "c:bench:v1:effort:recall.hi"
+      "c:bench:v2:effort:recall.lo",
+      "c:bench:v2:effort:recall.hi"
      ],
      "pr_auc": [
-      "c:bench:v1:effort:pr_auc.lo",
-      "c:bench:v1:effort:pr_auc.hi"
+      "c:bench:v2:effort:pr_auc.lo",
+      "c:bench:v2:effort:pr_auc.hi"
      ],
      "roc_auc": [
-      "c:bench:v1:effort:roc_auc.lo",
-      "c:bench:v1:effort:roc_auc.hi"
+      "c:bench:v2:effort:roc_auc.lo",
+      "c:bench:v2:effort:roc_auc.hi"
      ],
      "pr_auc_all": [
-      "c:bench:v1:effort:pr_auc_all.lo",
-      "c:bench:v1:effort:pr_auc_all.hi"
+      "c:bench:v2:effort:pr_auc_all.lo",
+      "c:bench:v2:effort:pr_auc_all.hi"
      ],
      "roc_auc_all": [
-      "c:bench:v1:effort:roc_auc_all.lo",
-      "c:bench:v1:effort:roc_auc_all.hi"
+      "c:bench:v2:effort:roc_auc_all.lo",
+      "c:bench:v2:effort:roc_auc_all.hi"
      ],
      "ece": [
-      "c:bench:v1:effort:ece.lo",
-      "c:bench:v1:effort:ece.hi"
+      "c:bench:v2:effort:ece.lo",
+      "c:bench:v2:effort:ece.hi"
      ],
      "abstain_rate": [
-      "c:bench:v1:effort:abstain_rate.lo",
-      "c:bench:v1:effort:abstain_rate.hi"
+      "c:bench:v2:effort:abstain_rate.lo",
+      "c:bench:v2:effort:abstain_rate.hi"
      ]
     },
     "strata": {
      "deposit": {
-      "n": "c:bench:v1:effort:deposit:n",
-      "accuracy": "c:bench:v1:effort:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:effort:deposit:abstain_rate"
+      "n": "c:bench:v2:effort:deposit:n",
+      "accuracy": "c:bench:v2:effort:deposit:accuracy",
+      "abstain_rate": "c:bench:v2:effort:deposit:abstain_rate"
      },
      "occurrence": {
-      "n": "c:bench:v1:effort:occurrence:n",
-      "accuracy": "c:bench:v1:effort:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:effort:occurrence:abstain_rate"
+      "n": "c:bench:v2:effort:occurrence:n",
+      "accuracy": "c:bench:v2:effort:occurrence:accuracy",
+      "abstain_rate": "c:bench:v2:effort:occurrence:abstain_rate"
      },
      "negative": {
-      "n": "c:bench:v1:effort:negative:n",
-      "accuracy": "c:bench:v1:effort:negative:accuracy",
-      "abstain_rate": "c:bench:v1:effort:negative:abstain_rate"
+      "n": "c:bench:v2:effort:negative:n",
+      "accuracy": "c:bench:v2:effort:negative:accuracy",
+      "abstain_rate": "c:bench:v2:effort:negative:abstain_rate"
      }
     }
    },
@@ -6877,81 +6286,1185 @@
     "kind": "baseline",
     "model": "criteria",
     "effort": null,
-    "n": "c:bench:v1:criteria:n",
-    "n_pos": "c:bench:v1:criteria:n_pos",
-    "n_neg": "c:bench:v1:criteria:n_neg",
+    "n": "c:bench:v2:criteria:n",
+    "n_pos": "c:bench:v2:criteria:n_pos",
+    "n_neg": "c:bench:v2:criteria:n_neg",
     "run_id": null,
     "mlflow_run_id": null,
     "metrics": {
-     "f1": "c:bench:v1:criteria:f1",
-     "precision": "c:bench:v1:criteria:precision",
-     "recall": "c:bench:v1:criteria:recall",
-     "pr_auc": "c:bench:v1:criteria:pr_auc",
-     "roc_auc": "c:bench:v1:criteria:roc_auc",
-     "pr_auc_all": "c:bench:v1:criteria:pr_auc_all",
-     "roc_auc_all": "c:bench:v1:criteria:roc_auc_all",
-     "ece": "c:bench:v1:criteria:ece",
-     "abstain_rate": "c:bench:v1:criteria:abstain_rate"
+     "f1": "c:bench:v2:criteria:f1",
+     "precision": "c:bench:v2:criteria:precision",
+     "recall": "c:bench:v2:criteria:recall",
+     "pr_auc": "c:bench:v2:criteria:pr_auc",
+     "roc_auc": "c:bench:v2:criteria:roc_auc",
+     "pr_auc_all": "c:bench:v2:criteria:pr_auc_all",
+     "roc_auc_all": "c:bench:v2:criteria:roc_auc_all",
+     "ece": "c:bench:v2:criteria:ece",
+     "abstain_rate": "c:bench:v2:criteria:abstain_rate"
     },
     "note": "the out-of-fold criteria score at a 0.5 threshold (spatial folds); a missing score is 0.5",
     "ci": {
      "f1": [
-      "c:bench:v1:criteria:f1.lo",
-      "c:bench:v1:criteria:f1.hi"
+      "c:bench:v2:criteria:f1.lo",
+      "c:bench:v2:criteria:f1.hi"
      ],
      "precision": [
-      "c:bench:v1:criteria:precision.lo",
-      "c:bench:v1:criteria:precision.hi"
+      "c:bench:v2:criteria:precision.lo",
+      "c:bench:v2:criteria:precision.hi"
      ],
      "recall": [
-      "c:bench:v1:criteria:recall.lo",
-      "c:bench:v1:criteria:recall.hi"
+      "c:bench:v2:criteria:recall.lo",
+      "c:bench:v2:criteria:recall.hi"
      ],
      "pr_auc": [
-      "c:bench:v1:criteria:pr_auc.lo",
-      "c:bench:v1:criteria:pr_auc.hi"
+      "c:bench:v2:criteria:pr_auc.lo",
+      "c:bench:v2:criteria:pr_auc.hi"
      ],
      "roc_auc": [
-      "c:bench:v1:criteria:roc_auc.lo",
-      "c:bench:v1:criteria:roc_auc.hi"
+      "c:bench:v2:criteria:roc_auc.lo",
+      "c:bench:v2:criteria:roc_auc.hi"
      ],
      "pr_auc_all": [
-      "c:bench:v1:criteria:pr_auc_all.lo",
-      "c:bench:v1:criteria:pr_auc_all.hi"
+      "c:bench:v2:criteria:pr_auc_all.lo",
+      "c:bench:v2:criteria:pr_auc_all.hi"
      ],
      "roc_auc_all": [
-      "c:bench:v1:criteria:roc_auc_all.lo",
-      "c:bench:v1:criteria:roc_auc_all.hi"
+      "c:bench:v2:criteria:roc_auc_all.lo",
+      "c:bench:v2:criteria:roc_auc_all.hi"
      ],
      "ece": [
-      "c:bench:v1:criteria:ece.lo",
-      "c:bench:v1:criteria:ece.hi"
+      "c:bench:v2:criteria:ece.lo",
+      "c:bench:v2:criteria:ece.hi"
      ],
      "abstain_rate": [
-      "c:bench:v1:criteria:abstain_rate.lo",
-      "c:bench:v1:criteria:abstain_rate.hi"
+      "c:bench:v2:criteria:abstain_rate.lo",
+      "c:bench:v2:criteria:abstain_rate.hi"
      ]
     },
     "strata": {
      "deposit": {
-      "n": "c:bench:v1:criteria:deposit:n",
-      "accuracy": "c:bench:v1:criteria:deposit:accuracy",
-      "abstain_rate": "c:bench:v1:criteria:deposit:abstain_rate"
+      "n": "c:bench:v2:criteria:deposit:n",
+      "accuracy": "c:bench:v2:criteria:deposit:accuracy",
+      "abstain_rate": "c:bench:v2:criteria:deposit:abstain_rate"
      },
      "occurrence": {
-      "n": "c:bench:v1:criteria:occurrence:n",
-      "accuracy": "c:bench:v1:criteria:occurrence:accuracy",
-      "abstain_rate": "c:bench:v1:criteria:occurrence:abstain_rate"
+      "n": "c:bench:v2:criteria:occurrence:n",
+      "accuracy": "c:bench:v2:criteria:occurrence:accuracy",
+      "abstain_rate": "c:bench:v2:criteria:occurrence:abstain_rate"
      },
      "negative": {
-      "n": "c:bench:v1:criteria:negative:n",
-      "accuracy": "c:bench:v1:criteria:negative:accuracy",
-      "abstain_rate": "c:bench:v1:criteria:negative:abstain_rate"
+      "n": "c:bench:v2:criteria:negative:n",
+      "accuracy": "c:bench:v2:criteria:negative:accuracy",
+      "abstain_rate": "c:bench:v2:criteria:negative:abstain_rate"
      }
     }
    }
   ],
-  "versions": []
+  "versions": [
+   "v1"
+  ],
+  "earlier": [
+   {
+    "version": "v1",
+    "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
+    "computed_at": "2026-09-22T01:26:03+00:00",
+    "rows": [
+     {
+      "name": "v0-features",
+      "kind": "arm",
+      "model": "claude-opus-5",
+      "effort": "medium",
+      "n": "c:bench:v1:v0-features:n",
+      "n_pos": "c:bench:v1:v0-features:n_pos",
+      "n_neg": "c:bench:v1:v0-features:n_neg",
+      "run_id": "20260920T074336Z-bench",
+      "mlflow_run_id": "8bf234e1534c4ef3a68ccd10a41a23f8",
+      "metrics": {
+       "f1": "c:bench:v1:v0-features:f1",
+       "precision": "c:bench:v1:v0-features:precision",
+       "recall": "c:bench:v1:v0-features:recall",
+       "pr_auc": "c:bench:v1:v0-features:pr_auc",
+       "roc_auc": "c:bench:v1:v0-features:roc_auc",
+       "pr_auc_all": "c:bench:v1:v0-features:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v0-features:roc_auc_all",
+       "ece": "c:bench:v1:v0-features:ece",
+       "abstain_rate": "c:bench:v1:v0-features:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v0-features:f1.lo",
+        "c:bench:v1:v0-features:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v0-features:precision.lo",
+        "c:bench:v1:v0-features:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v0-features:recall.lo",
+        "c:bench:v1:v0-features:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v0-features:pr_auc.lo",
+        "c:bench:v1:v0-features:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v0-features:roc_auc.lo",
+        "c:bench:v1:v0-features:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v0-features:pr_auc_all.lo",
+        "c:bench:v1:v0-features:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v0-features:roc_auc_all.lo",
+        "c:bench:v1:v0-features:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v0-features:ece.lo",
+        "c:bench:v1:v0-features:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v0-features:abstain_rate.lo",
+        "c:bench:v1:v0-features:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v0-features:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v0-features:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v0-features:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v0-features:latency_s_per_cell"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v0-features:deposit:n",
+        "accuracy": "c:bench:v1:v0-features:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v0-features:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v0-features:occurrence:n",
+        "accuracy": "c:bench:v1:v0-features:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v0-features:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v0-features:negative:n",
+        "accuracy": "c:bench:v1:v0-features:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v0-features:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v0-qwen38",
+      "kind": "arm",
+      "model": "qwen/qwen3.8-flash",
+      "effort": "medium",
+      "n": "c:bench:v1:v0-qwen38:n",
+      "n_pos": "c:bench:v1:v0-qwen38:n_pos",
+      "n_neg": "c:bench:v1:v0-qwen38:n_neg",
+      "run_id": "20260920T160038Z-bench",
+      "mlflow_run_id": "69c1da1892844aba803611dad5d97f52",
+      "metrics": {
+       "f1": "c:bench:v1:v0-qwen38:f1",
+       "precision": "c:bench:v1:v0-qwen38:precision",
+       "recall": "c:bench:v1:v0-qwen38:recall",
+       "pr_auc": "c:bench:v1:v0-qwen38:pr_auc",
+       "roc_auc": "c:bench:v1:v0-qwen38:roc_auc",
+       "pr_auc_all": "c:bench:v1:v0-qwen38:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v0-qwen38:roc_auc_all",
+       "ece": "c:bench:v1:v0-qwen38:ece",
+       "abstain_rate": "c:bench:v1:v0-qwen38:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v0-qwen38:f1.lo",
+        "c:bench:v1:v0-qwen38:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v0-qwen38:precision.lo",
+        "c:bench:v1:v0-qwen38:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v0-qwen38:recall.lo",
+        "c:bench:v1:v0-qwen38:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v0-qwen38:pr_auc.lo",
+        "c:bench:v1:v0-qwen38:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v0-qwen38:roc_auc.lo",
+        "c:bench:v1:v0-qwen38:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v0-qwen38:pr_auc_all.lo",
+        "c:bench:v1:v0-qwen38:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v0-qwen38:roc_auc_all.lo",
+        "c:bench:v1:v0-qwen38:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v0-qwen38:ece.lo",
+        "c:bench:v1:v0-qwen38:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v0-qwen38:abstain_rate.lo",
+        "c:bench:v1:v0-qwen38:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v0-qwen38:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v0-qwen38:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v0-qwen38:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v0-qwen38:latency_s_per_cell"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v0-qwen38:deposit:n",
+        "accuracy": "c:bench:v1:v0-qwen38:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v0-qwen38:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v0-qwen38:occurrence:n",
+        "accuracy": "c:bench:v1:v0-qwen38:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v0-qwen38:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v0-qwen38:negative:n",
+        "accuracy": "c:bench:v1:v0-qwen38:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v0-qwen38:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v0-retrieval",
+      "kind": "arm",
+      "model": "claude-opus-5",
+      "effort": "medium",
+      "n": "c:bench:v1:v0-retrieval:n",
+      "n_pos": "c:bench:v1:v0-retrieval:n_pos",
+      "n_neg": "c:bench:v1:v0-retrieval:n_neg",
+      "run_id": "20260920T092844Z-bench",
+      "mlflow_run_id": "58ab09b07c7c49b29a00055af38a592d",
+      "metrics": {
+       "f1": "c:bench:v1:v0-retrieval:f1",
+       "precision": "c:bench:v1:v0-retrieval:precision",
+       "recall": "c:bench:v1:v0-retrieval:recall",
+       "pr_auc": "c:bench:v1:v0-retrieval:pr_auc",
+       "roc_auc": "c:bench:v1:v0-retrieval:roc_auc",
+       "pr_auc_all": "c:bench:v1:v0-retrieval:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v0-retrieval:roc_auc_all",
+       "ece": "c:bench:v1:v0-retrieval:ece",
+       "abstain_rate": "c:bench:v1:v0-retrieval:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v0-retrieval:f1.lo",
+        "c:bench:v1:v0-retrieval:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v0-retrieval:precision.lo",
+        "c:bench:v1:v0-retrieval:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v0-retrieval:recall.lo",
+        "c:bench:v1:v0-retrieval:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v0-retrieval:pr_auc.lo",
+        "c:bench:v1:v0-retrieval:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v0-retrieval:roc_auc.lo",
+        "c:bench:v1:v0-retrieval:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v0-retrieval:pr_auc_all.lo",
+        "c:bench:v1:v0-retrieval:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v0-retrieval:roc_auc_all.lo",
+        "c:bench:v1:v0-retrieval:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v0-retrieval:ece.lo",
+        "c:bench:v1:v0-retrieval:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v0-retrieval:abstain_rate.lo",
+        "c:bench:v1:v0-retrieval:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v0-retrieval:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v0-retrieval:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v0-retrieval:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v0-retrieval:latency_s_per_cell"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v0-retrieval:deposit:n",
+        "accuracy": "c:bench:v1:v0-retrieval:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v0-retrieval:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v0-retrieval:occurrence:n",
+        "accuracy": "c:bench:v1:v0-retrieval:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v0-retrieval:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v0-retrieval:negative:n",
+        "accuracy": "c:bench:v1:v0-retrieval:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v0-retrieval:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v0-sonnet",
+      "kind": "arm",
+      "model": "claude-sonnet-5",
+      "effort": null,
+      "n": "c:bench:v1:v0-sonnet:n",
+      "n_pos": "c:bench:v1:v0-sonnet:n_pos",
+      "n_neg": "c:bench:v1:v0-sonnet:n_neg",
+      "run_id": "20260920T064823Z-bench",
+      "mlflow_run_id": "f51b55fbb0ec415eb11befc7d5ea3e13",
+      "metrics": {
+       "f1": "c:bench:v1:v0-sonnet:f1",
+       "precision": "c:bench:v1:v0-sonnet:precision",
+       "recall": "c:bench:v1:v0-sonnet:recall",
+       "pr_auc": "c:bench:v1:v0-sonnet:pr_auc",
+       "roc_auc": "c:bench:v1:v0-sonnet:roc_auc",
+       "pr_auc_all": "c:bench:v1:v0-sonnet:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v0-sonnet:roc_auc_all",
+       "ece": "c:bench:v1:v0-sonnet:ece",
+       "abstain_rate": "c:bench:v1:v0-sonnet:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v0-sonnet:f1.lo",
+        "c:bench:v1:v0-sonnet:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v0-sonnet:precision.lo",
+        "c:bench:v1:v0-sonnet:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v0-sonnet:recall.lo",
+        "c:bench:v1:v0-sonnet:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v0-sonnet:pr_auc.lo",
+        "c:bench:v1:v0-sonnet:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v0-sonnet:roc_auc.lo",
+        "c:bench:v1:v0-sonnet:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v0-sonnet:pr_auc_all.lo",
+        "c:bench:v1:v0-sonnet:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v0-sonnet:roc_auc_all.lo",
+        "c:bench:v1:v0-sonnet:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v0-sonnet:ece.lo",
+        "c:bench:v1:v0-sonnet:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v0-sonnet:abstain_rate.lo",
+        "c:bench:v1:v0-sonnet:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v0-sonnet:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v0-sonnet:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v0-sonnet:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v0-sonnet:latency_s_per_cell"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v0-sonnet:deposit:n",
+        "accuracy": "c:bench:v1:v0-sonnet:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v0-sonnet:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v0-sonnet:occurrence:n",
+        "accuracy": "c:bench:v1:v0-sonnet:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v0-sonnet:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v0-sonnet:negative:n",
+        "accuracy": "c:bench:v1:v0-sonnet:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v0-sonnet:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v0-text",
+      "kind": "arm",
+      "model": "claude-opus-5",
+      "effort": "medium",
+      "n": "c:bench:v1:v0-text:n",
+      "n_pos": "c:bench:v1:v0-text:n_pos",
+      "n_neg": "c:bench:v1:v0-text:n_neg",
+      "run_id": "20260920T074335Z-bench",
+      "mlflow_run_id": "a058dcf45d2d4aaea7b72ca20a91e4c6",
+      "metrics": {
+       "f1": "c:bench:v1:v0-text:f1",
+       "precision": "c:bench:v1:v0-text:precision",
+       "recall": "c:bench:v1:v0-text:recall",
+       "pr_auc": "c:bench:v1:v0-text:pr_auc",
+       "roc_auc": "c:bench:v1:v0-text:roc_auc",
+       "pr_auc_all": "c:bench:v1:v0-text:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v0-text:roc_auc_all",
+       "ece": "c:bench:v1:v0-text:ece",
+       "abstain_rate": "c:bench:v1:v0-text:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v0-text:f1.lo",
+        "c:bench:v1:v0-text:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v0-text:precision.lo",
+        "c:bench:v1:v0-text:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v0-text:recall.lo",
+        "c:bench:v1:v0-text:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v0-text:pr_auc.lo",
+        "c:bench:v1:v0-text:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v0-text:roc_auc.lo",
+        "c:bench:v1:v0-text:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v0-text:pr_auc_all.lo",
+        "c:bench:v1:v0-text:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v0-text:roc_auc_all.lo",
+        "c:bench:v1:v0-text:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v0-text:ece.lo",
+        "c:bench:v1:v0-text:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v0-text:abstain_rate.lo",
+        "c:bench:v1:v0-text:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v0-text:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v0-text:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v0-text:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v0-text:latency_s_per_cell"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v0-text:deposit:n",
+        "accuracy": "c:bench:v1:v0-text:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v0-text:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v0-text:occurrence:n",
+        "accuracy": "c:bench:v1:v0-text:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v0-text:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v0-text:negative:n",
+        "accuracy": "c:bench:v1:v0-text:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v0-text:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v0",
+      "kind": "arm",
+      "model": "claude-opus-5",
+      "effort": null,
+      "n": "c:bench:v1:v0:n",
+      "n_pos": "c:bench:v1:v0:n_pos",
+      "n_neg": "c:bench:v1:v0:n_neg",
+      "run_id": "20260920T063446Z-bench",
+      "mlflow_run_id": "3b30307c767145359af2e2743d2efc05",
+      "metrics": {
+       "f1": "c:bench:v1:v0:f1",
+       "precision": "c:bench:v1:v0:precision",
+       "recall": "c:bench:v1:v0:recall",
+       "pr_auc": "c:bench:v1:v0:pr_auc",
+       "roc_auc": "c:bench:v1:v0:roc_auc",
+       "pr_auc_all": "c:bench:v1:v0:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v0:roc_auc_all",
+       "ece": "c:bench:v1:v0:ece",
+       "abstain_rate": "c:bench:v1:v0:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v0:f1.lo",
+        "c:bench:v1:v0:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v0:precision.lo",
+        "c:bench:v1:v0:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v0:recall.lo",
+        "c:bench:v1:v0:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v0:pr_auc.lo",
+        "c:bench:v1:v0:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v0:roc_auc.lo",
+        "c:bench:v1:v0:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v0:pr_auc_all.lo",
+        "c:bench:v1:v0:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v0:roc_auc_all.lo",
+        "c:bench:v1:v0:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v0:ece.lo",
+        "c:bench:v1:v0:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v0:abstain_rate.lo",
+        "c:bench:v1:v0:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v0:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v0:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v0:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v0:latency_s_per_cell"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v0:deposit:n",
+        "accuracy": "c:bench:v1:v0:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v0:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v0:occurrence:n",
+        "accuracy": "c:bench:v1:v0:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v0:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v0:negative:n",
+        "accuracy": "c:bench:v1:v0:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v0:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v1-anthropic-or",
+      "kind": "arm",
+      "model": "anthropic/claude-opus-5",
+      "effort": "medium",
+      "n": "c:bench:v1:v1-anthropic-or:n",
+      "n_pos": "c:bench:v1:v1-anthropic-or:n_pos",
+      "n_neg": "c:bench:v1:v1-anthropic-or:n_neg",
+      "run_id": "20260920T190845Z-bench",
+      "mlflow_run_id": "f98e3ffc7f1a4ab2b1ca9b21624ed133",
+      "metrics": {
+       "f1": "c:bench:v1:v1-anthropic-or:f1",
+       "precision": "c:bench:v1:v1-anthropic-or:precision",
+       "recall": "c:bench:v1:v1-anthropic-or:recall",
+       "pr_auc": "c:bench:v1:v1-anthropic-or:pr_auc",
+       "roc_auc": "c:bench:v1:v1-anthropic-or:roc_auc",
+       "pr_auc_all": "c:bench:v1:v1-anthropic-or:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v1-anthropic-or:roc_auc_all",
+       "ece": "c:bench:v1:v1-anthropic-or:ece",
+       "abstain_rate": "c:bench:v1:v1-anthropic-or:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v1-anthropic-or:f1.lo",
+        "c:bench:v1:v1-anthropic-or:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v1-anthropic-or:precision.lo",
+        "c:bench:v1:v1-anthropic-or:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v1-anthropic-or:recall.lo",
+        "c:bench:v1:v1-anthropic-or:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v1-anthropic-or:pr_auc.lo",
+        "c:bench:v1:v1-anthropic-or:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v1-anthropic-or:roc_auc.lo",
+        "c:bench:v1:v1-anthropic-or:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v1-anthropic-or:pr_auc_all.lo",
+        "c:bench:v1:v1-anthropic-or:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v1-anthropic-or:roc_auc_all.lo",
+        "c:bench:v1:v1-anthropic-or:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v1-anthropic-or:ece.lo",
+        "c:bench:v1:v1-anthropic-or:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v1-anthropic-or:abstain_rate.lo",
+        "c:bench:v1:v1-anthropic-or:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v1-anthropic-or:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v1-anthropic-or:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v1-anthropic-or:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v1-anthropic-or:latency_s_per_cell"
+      },
+      "stages": {
+       "n_chains": "c:bench:v1:v1-anthropic-or:stage:n_chains",
+       "gate_rejection_rate": "c:bench:v1:v1-anthropic-or:stage:gate_rejection_rate",
+       "valid_rate": "c:bench:v1:v1-anthropic-or:stage:valid_rate",
+       "reexecuted_mean": "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean",
+       "verifier_agreement_rate": "c:bench:v1:v1-anthropic-or:stage:verifier_agreement_rate",
+       "decider_agreement_rate": "c:bench:v1:v1-anthropic-or:stage:decider_agreement_rate"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v1-anthropic-or:deposit:n",
+        "accuracy": "c:bench:v1:v1-anthropic-or:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v1-anthropic-or:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v1-anthropic-or:occurrence:n",
+        "accuracy": "c:bench:v1:v1-anthropic-or:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v1-anthropic-or:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v1-anthropic-or:negative:n",
+        "accuracy": "c:bench:v1:v1-anthropic-or:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v1-anthropic-or:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "v1-openrouter",
+      "kind": "arm",
+      "model": "qwen/qwen3.8-flash",
+      "effort": "medium",
+      "n": "c:bench:v1:v1-openrouter:n",
+      "n_pos": "c:bench:v1:v1-openrouter:n_pos",
+      "n_neg": "c:bench:v1:v1-openrouter:n_neg",
+      "run_id": "20260920T181356Z-bench",
+      "mlflow_run_id": "4cbd562ba78e4bb989d94ddb4484ccc4",
+      "metrics": {
+       "f1": "c:bench:v1:v1-openrouter:f1",
+       "precision": "c:bench:v1:v1-openrouter:precision",
+       "recall": "c:bench:v1:v1-openrouter:recall",
+       "pr_auc": "c:bench:v1:v1-openrouter:pr_auc",
+       "roc_auc": "c:bench:v1:v1-openrouter:roc_auc",
+       "pr_auc_all": "c:bench:v1:v1-openrouter:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:v1-openrouter:roc_auc_all",
+       "ece": "c:bench:v1:v1-openrouter:ece",
+       "abstain_rate": "c:bench:v1:v1-openrouter:abstain_rate"
+      },
+      "ci": {
+       "f1": [
+        "c:bench:v1:v1-openrouter:f1.lo",
+        "c:bench:v1:v1-openrouter:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:v1-openrouter:precision.lo",
+        "c:bench:v1:v1-openrouter:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:v1-openrouter:recall.lo",
+        "c:bench:v1:v1-openrouter:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:v1-openrouter:pr_auc.lo",
+        "c:bench:v1:v1-openrouter:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:v1-openrouter:roc_auc.lo",
+        "c:bench:v1:v1-openrouter:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:v1-openrouter:pr_auc_all.lo",
+        "c:bench:v1:v1-openrouter:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:v1-openrouter:roc_auc_all.lo",
+        "c:bench:v1:v1-openrouter:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:v1-openrouter:ece.lo",
+        "c:bench:v1:v1-openrouter:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:v1-openrouter:abstain_rate.lo",
+        "c:bench:v1:v1-openrouter:abstain_rate.hi"
+       ]
+      },
+      "extra": {
+       "gate_rejection_rate": "c:bench:v1:v1-openrouter:gate_rejection_rate",
+       "probe_abstain_rate": "c:bench:v1:v1-openrouter:probe_abstain_rate",
+       "cost_usd_per_cell": "c:bench:v1:v1-openrouter:cost_usd_per_cell",
+       "latency_s_per_cell": "c:bench:v1:v1-openrouter:latency_s_per_cell"
+      },
+      "stages": {
+       "n_chains": "c:bench:v1:v1-openrouter:stage:n_chains",
+       "gate_rejection_rate": "c:bench:v1:v1-openrouter:stage:gate_rejection_rate",
+       "valid_rate": "c:bench:v1:v1-openrouter:stage:valid_rate",
+       "reexecuted_mean": "c:bench:v1:v1-openrouter:stage:reexecuted_mean",
+       "verifier_agreement_rate": "c:bench:v1:v1-openrouter:stage:verifier_agreement_rate",
+       "decider_agreement_rate": "c:bench:v1:v1-openrouter:stage:decider_agreement_rate"
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:v1-openrouter:deposit:n",
+        "accuracy": "c:bench:v1:v1-openrouter:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:v1-openrouter:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:v1-openrouter:occurrence:n",
+        "accuracy": "c:bench:v1:v1-openrouter:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:v1-openrouter:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:v1-openrouter:negative:n",
+        "accuracy": "c:bench:v1:v1-openrouter:negative:accuracy",
+        "abstain_rate": "c:bench:v1:v1-openrouter:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "random_expected",
+      "kind": "baseline",
+      "model": "random",
+      "effort": null,
+      "n": "c:bench:v1:random_expected:n",
+      "n_pos": null,
+      "n_neg": null,
+      "run_id": null,
+      "mlflow_run_id": null,
+      "metrics": {
+       "f1": "c:bench:v1:random_expected:f1",
+       "precision": "c:bench:v1:random_expected:precision",
+       "recall": "c:bench:v1:random_expected:recall",
+       "pr_auc": "c:bench:v1:random_expected:pr_auc",
+       "roc_auc": "c:bench:v1:random_expected:roc_auc",
+       "pr_auc_all": "c:bench:v1:random_expected:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:random_expected:roc_auc_all",
+       "ece": "c:bench:v1:random_expected:ece",
+       "abstain_rate": "c:bench:v1:random_expected:abstain_rate"
+      },
+      "note": "analytic expectation for a uniform random probability at a 0.5 threshold; no interval"
+     },
+     {
+      "name": "random",
+      "kind": "baseline",
+      "model": "random",
+      "effort": null,
+      "n": "c:bench:v1:random:n",
+      "n_pos": "c:bench:v1:random:n_pos",
+      "n_neg": "c:bench:v1:random:n_neg",
+      "run_id": null,
+      "mlflow_run_id": null,
+      "metrics": {
+       "f1": "c:bench:v1:random:f1",
+       "precision": "c:bench:v1:random:precision",
+       "recall": "c:bench:v1:random:recall",
+       "pr_auc": "c:bench:v1:random:pr_auc",
+       "roc_auc": "c:bench:v1:random:roc_auc",
+       "pr_auc_all": "c:bench:v1:random:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:random:roc_auc_all",
+       "ece": "c:bench:v1:random:ece",
+       "abstain_rate": "c:bench:v1:random:abstain_rate"
+      },
+      "note": "one uniform draw, seed 0, 0.5 threshold",
+      "ci": {
+       "f1": [
+        "c:bench:v1:random:f1.lo",
+        "c:bench:v1:random:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:random:precision.lo",
+        "c:bench:v1:random:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:random:recall.lo",
+        "c:bench:v1:random:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:random:pr_auc.lo",
+        "c:bench:v1:random:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:random:roc_auc.lo",
+        "c:bench:v1:random:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:random:pr_auc_all.lo",
+        "c:bench:v1:random:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:random:roc_auc_all.lo",
+        "c:bench:v1:random:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:random:ece.lo",
+        "c:bench:v1:random:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:random:abstain_rate.lo",
+        "c:bench:v1:random:abstain_rate.hi"
+       ]
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:random:deposit:n",
+        "accuracy": "c:bench:v1:random:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:random:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:random:occurrence:n",
+        "accuracy": "c:bench:v1:random:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:random:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:random:negative:n",
+        "accuracy": "c:bench:v1:random:negative:accuracy",
+        "abstain_rate": "c:bench:v1:random:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "copy_learned",
+      "kind": "baseline",
+      "model": "learned",
+      "effort": null,
+      "n": "c:bench:v1:copy_learned:n",
+      "n_pos": "c:bench:v1:copy_learned:n_pos",
+      "n_neg": "c:bench:v1:copy_learned:n_neg",
+      "run_id": null,
+      "mlflow_run_id": null,
+      "metrics": {
+       "f1": "c:bench:v1:copy_learned:f1",
+       "precision": "c:bench:v1:copy_learned:precision",
+       "recall": "c:bench:v1:copy_learned:recall",
+       "pr_auc": "c:bench:v1:copy_learned:pr_auc",
+       "roc_auc": "c:bench:v1:copy_learned:roc_auc",
+       "pr_auc_all": "c:bench:v1:copy_learned:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:copy_learned:roc_auc_all",
+       "ece": "c:bench:v1:copy_learned:ece",
+       "abstain_rate": "c:bench:v1:copy_learned:abstain_rate"
+      },
+      "note": "an analyst that copies the out-of-fold learned score and abstains where there is none",
+      "ci": {
+       "f1": [
+        "c:bench:v1:copy_learned:f1.lo",
+        "c:bench:v1:copy_learned:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:copy_learned:precision.lo",
+        "c:bench:v1:copy_learned:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:copy_learned:recall.lo",
+        "c:bench:v1:copy_learned:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:copy_learned:pr_auc.lo",
+        "c:bench:v1:copy_learned:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:copy_learned:roc_auc.lo",
+        "c:bench:v1:copy_learned:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:copy_learned:pr_auc_all.lo",
+        "c:bench:v1:copy_learned:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:copy_learned:roc_auc_all.lo",
+        "c:bench:v1:copy_learned:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:copy_learned:ece.lo",
+        "c:bench:v1:copy_learned:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:copy_learned:abstain_rate.lo",
+        "c:bench:v1:copy_learned:abstain_rate.hi"
+       ]
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:copy_learned:deposit:n",
+        "accuracy": "c:bench:v1:copy_learned:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:copy_learned:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:copy_learned:occurrence:n",
+        "accuracy": "c:bench:v1:copy_learned:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:copy_learned:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:copy_learned:negative:n",
+        "accuracy": "c:bench:v1:copy_learned:negative:accuracy",
+        "abstain_rate": "c:bench:v1:copy_learned:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "learned",
+      "kind": "baseline",
+      "model": "learned",
+      "effort": null,
+      "n": "c:bench:v1:learned:n",
+      "n_pos": "c:bench:v1:learned:n_pos",
+      "n_neg": "c:bench:v1:learned:n_neg",
+      "run_id": null,
+      "mlflow_run_id": null,
+      "metrics": {
+       "f1": "c:bench:v1:learned:f1",
+       "precision": "c:bench:v1:learned:precision",
+       "recall": "c:bench:v1:learned:recall",
+       "pr_auc": "c:bench:v1:learned:pr_auc",
+       "roc_auc": "c:bench:v1:learned:roc_auc",
+       "pr_auc_all": "c:bench:v1:learned:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:learned:roc_auc_all",
+       "ece": "c:bench:v1:learned:ece",
+       "abstain_rate": "c:bench:v1:learned:abstain_rate"
+      },
+      "note": "the out-of-fold learned score at a 0.5 threshold (spatial folds); a missing score is 0.5",
+      "ci": {
+       "f1": [
+        "c:bench:v1:learned:f1.lo",
+        "c:bench:v1:learned:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:learned:precision.lo",
+        "c:bench:v1:learned:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:learned:recall.lo",
+        "c:bench:v1:learned:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:learned:pr_auc.lo",
+        "c:bench:v1:learned:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:learned:roc_auc.lo",
+        "c:bench:v1:learned:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:learned:pr_auc_all.lo",
+        "c:bench:v1:learned:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:learned:roc_auc_all.lo",
+        "c:bench:v1:learned:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:learned:ece.lo",
+        "c:bench:v1:learned:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:learned:abstain_rate.lo",
+        "c:bench:v1:learned:abstain_rate.hi"
+       ]
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:learned:deposit:n",
+        "accuracy": "c:bench:v1:learned:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:learned:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:learned:occurrence:n",
+        "accuracy": "c:bench:v1:learned:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:learned:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:learned:negative:n",
+        "accuracy": "c:bench:v1:learned:negative:accuracy",
+        "abstain_rate": "c:bench:v1:learned:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "effort",
+      "kind": "baseline",
+      "model": "effort",
+      "effort": null,
+      "n": "c:bench:v1:effort:n",
+      "n_pos": "c:bench:v1:effort:n_pos",
+      "n_neg": "c:bench:v1:effort:n_neg",
+      "run_id": null,
+      "mlflow_run_id": null,
+      "metrics": {
+       "f1": "c:bench:v1:effort:f1",
+       "precision": "c:bench:v1:effort:precision",
+       "recall": "c:bench:v1:effort:recall",
+       "pr_auc": "c:bench:v1:effort:pr_auc",
+       "roc_auc": "c:bench:v1:effort:roc_auc",
+       "pr_auc_all": "c:bench:v1:effort:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:effort:roc_auc_all",
+       "ece": "c:bench:v1:effort:ece",
+       "abstain_rate": "c:bench:v1:effort:abstain_rate"
+      },
+      "note": "the out-of-fold effort score at a 0.5 threshold (spatial folds); a missing score is 0.5",
+      "ci": {
+       "f1": [
+        "c:bench:v1:effort:f1.lo",
+        "c:bench:v1:effort:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:effort:precision.lo",
+        "c:bench:v1:effort:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:effort:recall.lo",
+        "c:bench:v1:effort:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:effort:pr_auc.lo",
+        "c:bench:v1:effort:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:effort:roc_auc.lo",
+        "c:bench:v1:effort:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:effort:pr_auc_all.lo",
+        "c:bench:v1:effort:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:effort:roc_auc_all.lo",
+        "c:bench:v1:effort:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:effort:ece.lo",
+        "c:bench:v1:effort:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:effort:abstain_rate.lo",
+        "c:bench:v1:effort:abstain_rate.hi"
+       ]
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:effort:deposit:n",
+        "accuracy": "c:bench:v1:effort:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:effort:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:effort:occurrence:n",
+        "accuracy": "c:bench:v1:effort:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:effort:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:effort:negative:n",
+        "accuracy": "c:bench:v1:effort:negative:accuracy",
+        "abstain_rate": "c:bench:v1:effort:negative:abstain_rate"
+       }
+      }
+     },
+     {
+      "name": "criteria",
+      "kind": "baseline",
+      "model": "criteria",
+      "effort": null,
+      "n": "c:bench:v1:criteria:n",
+      "n_pos": "c:bench:v1:criteria:n_pos",
+      "n_neg": "c:bench:v1:criteria:n_neg",
+      "run_id": null,
+      "mlflow_run_id": null,
+      "metrics": {
+       "f1": "c:bench:v1:criteria:f1",
+       "precision": "c:bench:v1:criteria:precision",
+       "recall": "c:bench:v1:criteria:recall",
+       "pr_auc": "c:bench:v1:criteria:pr_auc",
+       "roc_auc": "c:bench:v1:criteria:roc_auc",
+       "pr_auc_all": "c:bench:v1:criteria:pr_auc_all",
+       "roc_auc_all": "c:bench:v1:criteria:roc_auc_all",
+       "ece": "c:bench:v1:criteria:ece",
+       "abstain_rate": "c:bench:v1:criteria:abstain_rate"
+      },
+      "note": "the out-of-fold criteria score at a 0.5 threshold (spatial folds); a missing score is 0.5",
+      "ci": {
+       "f1": [
+        "c:bench:v1:criteria:f1.lo",
+        "c:bench:v1:criteria:f1.hi"
+       ],
+       "precision": [
+        "c:bench:v1:criteria:precision.lo",
+        "c:bench:v1:criteria:precision.hi"
+       ],
+       "recall": [
+        "c:bench:v1:criteria:recall.lo",
+        "c:bench:v1:criteria:recall.hi"
+       ],
+       "pr_auc": [
+        "c:bench:v1:criteria:pr_auc.lo",
+        "c:bench:v1:criteria:pr_auc.hi"
+       ],
+       "roc_auc": [
+        "c:bench:v1:criteria:roc_auc.lo",
+        "c:bench:v1:criteria:roc_auc.hi"
+       ],
+       "pr_auc_all": [
+        "c:bench:v1:criteria:pr_auc_all.lo",
+        "c:bench:v1:criteria:pr_auc_all.hi"
+       ],
+       "roc_auc_all": [
+        "c:bench:v1:criteria:roc_auc_all.lo",
+        "c:bench:v1:criteria:roc_auc_all.hi"
+       ],
+       "ece": [
+        "c:bench:v1:criteria:ece.lo",
+        "c:bench:v1:criteria:ece.hi"
+       ],
+       "abstain_rate": [
+        "c:bench:v1:criteria:abstain_rate.lo",
+        "c:bench:v1:criteria:abstain_rate.hi"
+       ]
+      },
+      "strata": {
+       "deposit": {
+        "n": "c:bench:v1:criteria:deposit:n",
+        "accuracy": "c:bench:v1:criteria:deposit:accuracy",
+        "abstain_rate": "c:bench:v1:criteria:deposit:abstain_rate"
+       },
+       "occurrence": {
+        "n": "c:bench:v1:criteria:occurrence:n",
+        "accuracy": "c:bench:v1:criteria:occurrence:accuracy",
+        "abstain_rate": "c:bench:v1:criteria:occurrence:abstain_rate"
+       },
+       "negative": {
+        "n": "c:bench:v1:criteria:negative:n",
+        "accuracy": "c:bench:v1:criteria:negative:accuracy",
+        "abstain_rate": "c:bench:v1:criteria:negative:abstain_rate"
+       }
+      }
+     }
+    ]
+   }
+  ]
  },
  "sources": [
   {
@@ -6968,9 +7481,9 @@
    "verified": true,
    "verified_at": "2026-09-18",
    "record_count": 28458,
-   "notes": "Graphitic basement units are \"the source of most significant conductors in the Athabasca Basin, and are key empirical locators for U deposits\" (Jefferson et al. 2007, via research report 02 section 1.1.3). This is the single most valuable public feature here.",
+   "notes": "Graphitic basement units are \"the source of most significant conductors in the Athabasca Basin, and are key empirical locators for U deposits\" (Jefferson et al. 2007). This is the single most valuable public feature here.",
    "caveats": [
-    "Conductor traces plot up-dip of blind ore, so a buffer must extend down-dip rather than being symmetric (report 02, 1.1.3).",
+    "Conductor traces plot up-dip of blind ore, so a buffer must extend down-dip rather than being symmetric.",
     "Silicification can turn graphitic gneiss from a conductor into a resistor, so absence is not evidence of absence.",
     "The Wolverine Point Formation is itself a conductor and hinders detection of graphitic units beneath it.",
     "Attribute list not yet confirmed: do not assume a conductance field exists.",
@@ -6991,7 +7504,7 @@
    "verified": true,
    "verified_at": "2026-09-18",
    "record_count": 17571,
-   "notes": "The trap element: \"the unconformity offset where footwall faults meet the P2 fault hosts the McArthur River ore pods\" (report 02, 1.1.5). Fault intersections matter more than fault proximity alone.",
+   "notes": "The trap element: \"the unconformity offset where footwall faults meet the P2 fault hosts the McArthur River ore pods\". Fault intersections matter more than fault proximity alone.",
    "caveats": [
     "YEAR was 0 in every sampled row: treat it as unpopulated, not as a compilation date.",
     "A 1:250,000 line has map-scale position error far larger than an ore body."
@@ -7011,7 +7524,7 @@
    "verified": true,
    "verified_at": "2026-09-18",
    "record_count": 9596,
-   "notes": "Magnetic lows mark \"pelitic-psammopelitic gneiss, the host of graphitic conductors\" (report 02, 1.1.2); with no public magnetic grid, the mapped lithology is the only way to reach that element. LITHOLOGY carries the graphitic and pelitic descriptors a criterion can key on.",
+   "notes": "Magnetic lows mark \"pelitic-psammopelitic gneiss, the host of graphitic conductors\"; with no public magnetic grid, the mapped lithology is the only way to reach that element. LITHOLOGY carries the graphitic and pelitic descriptors a criterion can key on.",
    "caveats": [
     "Better than the 1:1,000,000 compilation already pulled, but still a regional map."
    ]
@@ -7069,7 +7582,7 @@
    "verified": true,
    "verified_at": "2026-09-18",
    "record_count": 3001,
-   "notes": "Collected 1975-1978 around the Athabasca sandstone, before most mining: a pre-mining baseline (report 02, 1.2).",
+   "notes": "Collected 1975-1978 around the Athabasca sandstone, before most mining: a pre-mining baseline.",
    "caveats": [
     "Same lake-limited sampling frame; carries its own year field, so it can be used in a dated hindcast."
    ]
@@ -7107,7 +7620,7 @@
    "verified": true,
    "verified_at": "2026-09-18",
    "record_count": 6591,
-   "notes": "A boulder train is a vector, not a location: at Patterson Lake the discovery hole cut over 1% U3O8 3.8 km up-ice of the boulders (report 02, 1.2). The only layer here with a populated year, so it also dates exploration effort.",
+   "notes": "A boulder train is a vector, not a location: at Patterson Lake the discovery hole cut over 1% U3O8 3.8 km up-ice of the boulders. The only layer here with a populated year, so it also dates exploration effort.",
    "caveats": [
     "The source lies up-ice, so the criterion is a corridor in the ice-flow direction, not a buffer.",
     "Zircon in till travelled over 100 km up-ice in one study: transport distance is not fixed."
@@ -7130,7 +7643,7 @@
    "notes": "Interpreted domain polygons: the nearest public stand-in for a magnetic grid, which is not published by URL.",
    "caveats": [
     "An interpretation, not a measurement.",
-    "Report 02 records that the magnetic signature is contested: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign."
+    "The magnetic signature is contested in the literature: most deposits sit on magnetic lows, yet others 'lack characteristic magnetic signatures'. A criterion must not assume a fixed sign."
    ]
   },
   {
@@ -7284,7 +7797,7 @@
    "notes": "COGs on the public sentinel-cogs bucket; a SWIR asset returned HTTP 200 unauthenticated and a 0.5 by 0.3 degree box over the basin matched 27 scenes under 10% cloud in one summer. Jobs: a lake and wetland mask (the sampling frame for the lake geochemistry), cover versus outcrop, and true-colour and SWIR chips for each candidate cell.",
    "caveats": [
     "Athabasca deposits sit 100 to 900 m down under 1 to 2 km of sandstone: no optical sensor sees them, and this layer is never an ore detector here.",
-    "A frontier model scored 0.369 on geological map understanding (report 02, 4.4), so an agent may describe ground context from a chip but must not claim alteration from it.",
+    "A frontier model scored 0.369 on geological map understanding, so an agent may describe ground context from a chip but must not claim alteration from it.",
     "Clay alteration is detectable by SWIR only where it reaches the surface; in this basin it generally does not."
    ]
   },
@@ -15234,6 +15747,2311 @@
    "fmt": "int",
    "note": "n for the learned model over every cutoff and later discovery"
   },
+  "c:bench:v2:v1:n": {
+   "id": "c:bench:v2:v1:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:n_pos": {
+   "id": "c:bench:v2:v1:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:n_neg": {
+   "id": "c:bench:v2:v1:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:f1": {
+   "id": "c:bench:v2:v1:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5496,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:f1.lo": {
+   "id": "c:bench:v2:v1:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4688,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:f1.hi": {
+   "id": "c:bench:v2:v1:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.625,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:precision": {
+   "id": "c:bench:v2:v1:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4444,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:precision.lo": {
+   "id": "c:bench:v2:v1:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3827,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:precision.hi": {
+   "id": "c:bench:v2:v1:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.506,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:recall": {
+   "id": "c:bench:v2:v1:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.72,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:recall.lo": {
+   "id": "c:bench:v2:v1:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.58,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:recall.hi": {
+   "id": "c:bench:v2:v1:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.84,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:pr_auc": {
+   "id": "c:bench:v2:v1:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5159,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:pr_auc.lo": {
+   "id": "c:bench:v2:v1:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4095,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:pr_auc.hi": {
+   "id": "c:bench:v2:v1:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6678,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:roc_auc": {
+   "id": "c:bench:v2:v1:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.533,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:roc_auc.lo": {
+   "id": "c:bench:v2:v1:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4034,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:roc_auc.hi": {
+   "id": "c:bench:v2:v1:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6579,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:pr_auc_all": {
+   "id": "c:bench:v2:v1:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4912,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:pr_auc_all.lo": {
+   "id": "c:bench:v2:v1:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4163,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:pr_auc_all.hi": {
+   "id": "c:bench:v2:v1:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6106,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:roc_auc_all": {
+   "id": "c:bench:v2:v1:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5147,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:roc_auc_all.lo": {
+   "id": "c:bench:v2:v1:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.407,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:roc_auc_all.hi": {
+   "id": "c:bench:v2:v1:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6247,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:ece": {
+   "id": "c:bench:v2:v1:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1613,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:ece.lo": {
+   "id": "c:bench:v2:v1:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1342,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:ece.hi": {
+   "id": "c:bench:v2:v1:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2156,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:abstain_rate": {
+   "id": "c:bench:v2:v1:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2807,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:abstain_rate.lo": {
+   "id": "c:bench:v2:v1:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2018,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:abstain_rate.hi": {
+   "id": "c:bench:v2:v1:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3596,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:gate_rejection_rate": {
+   "id": "c:bench:v2:v1:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0846,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "gate_rejection_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:probe_abstain_rate": {
+   "id": "c:bench:v2:v1:probe_abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.75,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "probe_abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:cost_usd_per_cell": {
+   "id": "c:bench:v2:v1:cost_usd_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.3524,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "cost_usd_per_cell; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:latency_s_per_cell": {
+   "id": "c:bench:v2:v1:latency_s_per_cell",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 248.2338,
+   "unit_as_printed": null,
+   "fmt": "m1",
+   "unit": "s",
+   "note": "latency_s_per_cell; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:n_chains": {
+   "id": "c:bench:v2:v1:stage:n_chains",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 130,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "chains the staged loop ran; the denominator of the other stage columns; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:gate_rejection_rate": {
+   "id": "c:bench:v2:v1:stage:gate_rejection_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0684,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "node gate refusals over executor attempts; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:valid_rate": {
+   "id": "c:bench:v2:v1:stage:valid_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9154,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains a verifier round validated; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:verifier_catch_rate": {
+   "id": "c:bench:v2:v1:stage:verifier_catch_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2538,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains the verifier refused at least once; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:rounds_to_valid_mean": {
+   "id": "c:bench:v2:v1:stage:rounds_to_valid_mean",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.2689,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "verifier rounds per chain, over the chains that validated; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:reexecuted_mean": {
+   "id": "c:bench:v2:v1:stage:reexecuted_mean",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7462,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "nodes re-executed on the verifier's feedback, per chain; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:verifier_agreement_rate": {
+   "id": "c:bench:v2:v1:stage:verifier_agreement_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8538,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains whose verifier label matched the final verdict; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:stage:decider_agreement_rate": {
+   "id": "c:bench:v2:v1:stage:decider_agreement_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8455,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "share of chains where the weighted sum and the adjudicator fell on the same side of the threshold; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:deposit:n": {
+   "id": "c:bench:v2:v1:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:deposit:accuracy": {
+   "id": "c:bench:v2:v1:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8889,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:deposit:abstain_rate": {
+   "id": "c:bench:v2:v1:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1111,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:occurrence:n": {
+   "id": "c:bench:v2:v1:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:occurrence:accuracy": {
+   "id": "c:bench:v2:v1:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.625,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:occurrence:abstain_rate": {
+   "id": "c:bench:v2:v1:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3438,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:negative:n": {
+   "id": "c:bench:v2:v1:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:negative:accuracy": {
+   "id": "c:bench:v2:v1:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:v1:negative:abstain_rate": {
+   "id": "c:bench:v2:v1:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2969,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:n": {
+   "id": "c:bench:v2:random_expected:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:f1": {
+   "id": "c:bench:v2:random_expected:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4673,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:precision": {
+   "id": "c:bench:v2:random_expected:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4386,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:recall": {
+   "id": "c:bench:v2:random_expected:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:pr_auc": {
+   "id": "c:bench:v2:random_expected:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4386,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:roc_auc": {
+   "id": "c:bench:v2:random_expected:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:pr_auc_all": {
+   "id": "c:bench:v2:random_expected:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4386,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:roc_auc_all": {
+   "id": "c:bench:v2:random_expected:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:ece": {
+   "id": "c:bench:v2:random_expected:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2523,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random_expected:abstain_rate": {
+   "id": "c:bench:v2:random_expected:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; baseline random_expected (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:n": {
+   "id": "c:bench:v2:random:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:n_pos": {
+   "id": "c:bench:v2:random:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:n_neg": {
+   "id": "c:bench:v2:random:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:f1": {
+   "id": "c:bench:v2:random:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4956,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:f1.lo": {
+   "id": "c:bench:v2:random:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3894,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:f1.hi": {
+   "id": "c:bench:v2:random:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5812,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:precision": {
+   "id": "c:bench:v2:random:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4444,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:precision.lo": {
+   "id": "c:bench:v2:random:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3621,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:precision.hi": {
+   "id": "c:bench:v2:random:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5246,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:recall": {
+   "id": "c:bench:v2:random:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.56,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:recall.lo": {
+   "id": "c:bench:v2:random:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.42,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:recall.hi": {
+   "id": "c:bench:v2:random:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:pr_auc": {
+   "id": "c:bench:v2:random:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4244,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:pr_auc.lo": {
+   "id": "c:bench:v2:random:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3695,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:pr_auc.hi": {
+   "id": "c:bench:v2:random:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5244,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:roc_auc": {
+   "id": "c:bench:v2:random:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4941,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:roc_auc.lo": {
+   "id": "c:bench:v2:random:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3869,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:roc_auc.hi": {
+   "id": "c:bench:v2:random:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6047,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:pr_auc_all": {
+   "id": "c:bench:v2:random:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4244,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:pr_auc_all.lo": {
+   "id": "c:bench:v2:random:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3695,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:pr_auc_all.hi": {
+   "id": "c:bench:v2:random:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5244,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:roc_auc_all": {
+   "id": "c:bench:v2:random:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4941,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:roc_auc_all.lo": {
+   "id": "c:bench:v2:random:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3869,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:roc_auc_all.hi": {
+   "id": "c:bench:v2:random:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6047,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:ece": {
+   "id": "c:bench:v2:random:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2751,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:ece.lo": {
+   "id": "c:bench:v2:random:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2124,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:ece.hi": {
+   "id": "c:bench:v2:random:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3818,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:abstain_rate": {
+   "id": "c:bench:v2:random:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:abstain_rate.lo": {
+   "id": "c:bench:v2:random:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:abstain_rate.hi": {
+   "id": "c:bench:v2:random:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:deposit:n": {
+   "id": "c:bench:v2:random:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:deposit:accuracy": {
+   "id": "c:bench:v2:random:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5556,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:deposit:abstain_rate": {
+   "id": "c:bench:v2:random:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:occurrence:n": {
+   "id": "c:bench:v2:random:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:occurrence:accuracy": {
+   "id": "c:bench:v2:random:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5625,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:occurrence:abstain_rate": {
+   "id": "c:bench:v2:random:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:negative:n": {
+   "id": "c:bench:v2:random:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:negative:accuracy": {
+   "id": "c:bench:v2:random:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4531,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:random:negative:abstain_rate": {
+   "id": "c:bench:v2:random:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; baseline random (random) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:n": {
+   "id": "c:bench:v2:copy_learned:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:n_pos": {
+   "id": "c:bench:v2:copy_learned:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:n_neg": {
+   "id": "c:bench:v2:copy_learned:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:f1": {
+   "id": "c:bench:v2:copy_learned:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2258,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:f1.lo": {
+   "id": "c:bench:v2:copy_learned:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0968,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:f1.hi": {
+   "id": "c:bench:v2:copy_learned:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3582,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:precision": {
+   "id": "c:bench:v2:copy_learned:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5833,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:precision.lo": {
+   "id": "c:bench:v2:copy_learned:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2727,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:precision.hi": {
+   "id": "c:bench:v2:copy_learned:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8462,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:recall": {
+   "id": "c:bench:v2:copy_learned:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.14,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:recall.lo": {
+   "id": "c:bench:v2:copy_learned:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.06,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:recall.hi": {
+   "id": "c:bench:v2:copy_learned:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.24,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:pr_auc": {
+   "id": "c:bench:v2:copy_learned:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4967,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:pr_auc.lo": {
+   "id": "c:bench:v2:copy_learned:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4049,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:pr_auc.hi": {
+   "id": "c:bench:v2:copy_learned:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6092,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:roc_auc": {
+   "id": "c:bench:v2:copy_learned:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5084,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:roc_auc.lo": {
+   "id": "c:bench:v2:copy_learned:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3978,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:roc_auc.hi": {
+   "id": "c:bench:v2:copy_learned:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6131,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:pr_auc_all": {
+   "id": "c:bench:v2:copy_learned:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4967,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:pr_auc_all.lo": {
+   "id": "c:bench:v2:copy_learned:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4049,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:pr_auc_all.hi": {
+   "id": "c:bench:v2:copy_learned:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6092,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:roc_auc_all": {
+   "id": "c:bench:v2:copy_learned:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5084,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:roc_auc_all.lo": {
+   "id": "c:bench:v2:copy_learned:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3978,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:roc_auc_all.hi": {
+   "id": "c:bench:v2:copy_learned:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6131,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:ece": {
+   "id": "c:bench:v2:copy_learned:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2123,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:ece.lo": {
+   "id": "c:bench:v2:copy_learned:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1772,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:ece.hi": {
+   "id": "c:bench:v2:copy_learned:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3079,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:abstain_rate": {
+   "id": "c:bench:v2:copy_learned:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:abstain_rate.lo": {
+   "id": "c:bench:v2:copy_learned:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:abstain_rate.hi": {
+   "id": "c:bench:v2:copy_learned:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:deposit:n": {
+   "id": "c:bench:v2:copy_learned:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:deposit:accuracy": {
+   "id": "c:bench:v2:copy_learned:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1111,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:deposit:abstain_rate": {
+   "id": "c:bench:v2:copy_learned:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:occurrence:n": {
+   "id": "c:bench:v2:copy_learned:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:occurrence:accuracy": {
+   "id": "c:bench:v2:copy_learned:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1562,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:occurrence:abstain_rate": {
+   "id": "c:bench:v2:copy_learned:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:negative:n": {
+   "id": "c:bench:v2:copy_learned:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:negative:accuracy": {
+   "id": "c:bench:v2:copy_learned:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9219,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:copy_learned:negative:abstain_rate": {
+   "id": "c:bench:v2:copy_learned:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; baseline copy_learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:n": {
+   "id": "c:bench:v2:learned:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:n_pos": {
+   "id": "c:bench:v2:learned:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:n_neg": {
+   "id": "c:bench:v2:learned:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:f1": {
+   "id": "c:bench:v2:learned:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2258,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:f1.lo": {
+   "id": "c:bench:v2:learned:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0968,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:f1.hi": {
+   "id": "c:bench:v2:learned:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3582,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:precision": {
+   "id": "c:bench:v2:learned:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5833,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:precision.lo": {
+   "id": "c:bench:v2:learned:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2727,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:precision.hi": {
+   "id": "c:bench:v2:learned:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.8462,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:recall": {
+   "id": "c:bench:v2:learned:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.14,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:recall.lo": {
+   "id": "c:bench:v2:learned:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.06,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:recall.hi": {
+   "id": "c:bench:v2:learned:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.24,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:pr_auc": {
+   "id": "c:bench:v2:learned:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4967,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:pr_auc.lo": {
+   "id": "c:bench:v2:learned:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4049,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:pr_auc.hi": {
+   "id": "c:bench:v2:learned:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6092,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:roc_auc": {
+   "id": "c:bench:v2:learned:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5084,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:roc_auc.lo": {
+   "id": "c:bench:v2:learned:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3978,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:roc_auc.hi": {
+   "id": "c:bench:v2:learned:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6131,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:pr_auc_all": {
+   "id": "c:bench:v2:learned:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4967,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:pr_auc_all.lo": {
+   "id": "c:bench:v2:learned:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4049,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:pr_auc_all.hi": {
+   "id": "c:bench:v2:learned:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6092,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:roc_auc_all": {
+   "id": "c:bench:v2:learned:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5084,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:roc_auc_all.lo": {
+   "id": "c:bench:v2:learned:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3978,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:roc_auc_all.hi": {
+   "id": "c:bench:v2:learned:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6131,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:ece": {
+   "id": "c:bench:v2:learned:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2123,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:ece.lo": {
+   "id": "c:bench:v2:learned:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1772,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:ece.hi": {
+   "id": "c:bench:v2:learned:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3079,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:abstain_rate": {
+   "id": "c:bench:v2:learned:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:abstain_rate.lo": {
+   "id": "c:bench:v2:learned:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:abstain_rate.hi": {
+   "id": "c:bench:v2:learned:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:deposit:n": {
+   "id": "c:bench:v2:learned:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:deposit:accuracy": {
+   "id": "c:bench:v2:learned:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1111,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:deposit:abstain_rate": {
+   "id": "c:bench:v2:learned:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:occurrence:n": {
+   "id": "c:bench:v2:learned:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:occurrence:accuracy": {
+   "id": "c:bench:v2:learned:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1562,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:occurrence:abstain_rate": {
+   "id": "c:bench:v2:learned:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:negative:n": {
+   "id": "c:bench:v2:learned:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:negative:accuracy": {
+   "id": "c:bench:v2:learned:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.9219,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:learned:negative:abstain_rate": {
+   "id": "c:bench:v2:learned:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; baseline learned (learned) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:n": {
+   "id": "c:bench:v2:effort:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:n_pos": {
+   "id": "c:bench:v2:effort:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:n_neg": {
+   "id": "c:bench:v2:effort:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:f1": {
+   "id": "c:bench:v2:effort:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5682,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:f1.lo": {
+   "id": "c:bench:v2:effort:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.439,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:f1.hi": {
+   "id": "c:bench:v2:effort:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6889,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:precision": {
+   "id": "c:bench:v2:effort:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6579,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:precision.lo": {
+   "id": "c:bench:v2:effort:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5366,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:precision.hi": {
+   "id": "c:bench:v2:effort:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7931,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:recall": {
+   "id": "c:bench:v2:effort:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:recall.lo": {
+   "id": "c:bench:v2:effort:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.36,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:recall.hi": {
+   "id": "c:bench:v2:effort:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.64,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:pr_auc": {
+   "id": "c:bench:v2:effort:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6593,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:pr_auc.lo": {
+   "id": "c:bench:v2:effort:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5557,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:pr_auc.hi": {
+   "id": "c:bench:v2:effort:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7757,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:roc_auc": {
+   "id": "c:bench:v2:effort:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6675,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:roc_auc.lo": {
+   "id": "c:bench:v2:effort:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.559,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:roc_auc.hi": {
+   "id": "c:bench:v2:effort:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7644,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:pr_auc_all": {
+   "id": "c:bench:v2:effort:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6593,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:pr_auc_all.lo": {
+   "id": "c:bench:v2:effort:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5557,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:pr_auc_all.hi": {
+   "id": "c:bench:v2:effort:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7757,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:roc_auc_all": {
+   "id": "c:bench:v2:effort:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6675,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:roc_auc_all.lo": {
+   "id": "c:bench:v2:effort:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.559,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:roc_auc_all.hi": {
+   "id": "c:bench:v2:effort:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7644,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:ece": {
+   "id": "c:bench:v2:effort:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.17,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:ece.lo": {
+   "id": "c:bench:v2:effort:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1255,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:ece.hi": {
+   "id": "c:bench:v2:effort:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2631,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:abstain_rate": {
+   "id": "c:bench:v2:effort:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:abstain_rate.lo": {
+   "id": "c:bench:v2:effort:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:abstain_rate.hi": {
+   "id": "c:bench:v2:effort:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:deposit:n": {
+   "id": "c:bench:v2:effort:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:deposit:accuracy": {
+   "id": "c:bench:v2:effort:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7778,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:deposit:abstain_rate": {
+   "id": "c:bench:v2:effort:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:occurrence:n": {
+   "id": "c:bench:v2:effort:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:occurrence:accuracy": {
+   "id": "c:bench:v2:effort:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3438,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:occurrence:abstain_rate": {
+   "id": "c:bench:v2:effort:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:negative:n": {
+   "id": "c:bench:v2:effort:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:negative:accuracy": {
+   "id": "c:bench:v2:effort:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7969,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:effort:negative:abstain_rate": {
+   "id": "c:bench:v2:effort:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; baseline effort (effort) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:n": {
+   "id": "c:bench:v2:criteria:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 114,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "labelled open cells scored; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:n_pos": {
+   "id": "c:bench:v2:criteria:n_pos",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 50,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "positive cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:n_neg": {
+   "id": "c:bench:v2:criteria:n_neg",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "negative cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:f1": {
+   "id": "c:bench:v2:criteria:f1",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5811,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "f1; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:f1.lo": {
+   "id": "c:bench:v2:criteria:f1.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5278,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; f1; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:f1.hi": {
+   "id": "c:bench:v2:criteria:f1.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6275,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; f1; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:precision": {
+   "id": "c:bench:v2:criteria:precision",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4388,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "precision; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:precision.lo": {
+   "id": "c:bench:v2:criteria:precision.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4021,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; precision; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:precision.hi": {
+   "id": "c:bench:v2:criteria:precision.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4742,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; precision; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:recall": {
+   "id": "c:bench:v2:criteria:recall",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.86,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "recall; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:recall.lo": {
+   "id": "c:bench:v2:criteria:recall.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.76,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; recall; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:recall.hi": {
+   "id": "c:bench:v2:criteria:recall.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.94,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; recall; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:pr_auc": {
+   "id": "c:bench:v2:criteria:pr_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4453,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:pr_auc.lo": {
+   "id": "c:bench:v2:criteria:pr_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3827,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:pr_auc.hi": {
+   "id": "c:bench:v2:criteria:pr_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5574,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:roc_auc": {
+   "id": "c:bench:v2:criteria:roc_auc",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4919,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:roc_auc.lo": {
+   "id": "c:bench:v2:criteria:roc_auc.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3797,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:roc_auc.hi": {
+   "id": "c:bench:v2:criteria:roc_auc.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6005,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:pr_auc_all": {
+   "id": "c:bench:v2:criteria:pr_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4453,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:pr_auc_all.lo": {
+   "id": "c:bench:v2:criteria:pr_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3827,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:pr_auc_all.hi": {
+   "id": "c:bench:v2:criteria:pr_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5574,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:roc_auc_all": {
+   "id": "c:bench:v2:criteria:roc_auc_all",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4919,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:roc_auc_all.lo": {
+   "id": "c:bench:v2:criteria:roc_auc_all.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3797,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:roc_auc_all.hi": {
+   "id": "c:bench:v2:criteria:roc_auc_all.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6005,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:ece": {
+   "id": "c:bench:v2:criteria:ece",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2997,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "ece; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:ece.lo": {
+   "id": "c:bench:v2:criteria:ece.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.267,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; ece; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:ece.hi": {
+   "id": "c:bench:v2:criteria:ece.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3867,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; ece; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:abstain_rate": {
+   "id": "c:bench:v2:criteria:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:abstain_rate.lo": {
+   "id": "c:bench:v2:criteria:abstain_rate.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; abstain_rate; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:abstain_rate.hi": {
+   "id": "c:bench:v2:criteria:abstain_rate.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; abstain_rate; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:deposit:n": {
+   "id": "c:bench:v2:criteria:deposit:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 18,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the deposit cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:deposit:accuracy": {
+   "id": "c:bench:v2:criteria:deposit:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the deposit cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:deposit:abstain_rate": {
+   "id": "c:bench:v2:criteria:deposit:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the deposit cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:occurrence:n": {
+   "id": "c:bench:v2:criteria:occurrence:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 32,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the occurrence cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:occurrence:accuracy": {
+   "id": "c:bench:v2:criteria:occurrence:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7812,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the occurrence cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:occurrence:abstain_rate": {
+   "id": "c:bench:v2:criteria:occurrence:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the occurrence cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:negative:n": {
+   "id": "c:bench:v2:criteria:negative:n",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 64,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "n over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:negative:accuracy": {
+   "id": "c:bench:v2:criteria:negative:accuracy",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1406,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "accuracy over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
+  "c:bench:v2:criteria:negative:abstain_rate": {
+   "id": "c:bench:v2:criteria:negative:abstain_rate",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "abstain_rate over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v2"
+  },
   "c:bench:v1:v0-features:n": {
    "id": "c:bench:v1:v0-features:n",
    "kind": "stat",
@@ -17896,24 +20714,6 @@
    "fmt": "ratio3",
    "note": "share of chains a verifier round validated; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
   },
-  "c:bench:v1:v1-anthropic-or:stage:verifier_catch_rate": {
-   "id": "c:bench:v1:v1-anthropic-or:stage:verifier_catch_rate",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.7237,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "share of chains the verifier refused at least once; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
-  },
-  "c:bench:v1:v1-anthropic-or:stage:rounds_to_valid_mean": {
-   "id": "c:bench:v1:v1-anthropic-or:stage:rounds_to_valid_mean",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 1.7593,
-   "unit_as_printed": null,
-   "fmt": "m2",
-   "note": "verifier rounds per chain, over the chains that validated; over 76 chains; arm v1-anthropic-or (anthropic/claude-opus-5) on 67 open cells of benchmark v1"
-  },
   "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean": {
    "id": "c:bench:v1:v1-anthropic-or:stage:reexecuted_mean",
    "kind": "stat",
@@ -18355,24 +21155,6 @@
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "share of chains a verifier round validated; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
-  },
-  "c:bench:v1:v1-openrouter:stage:verifier_catch_rate": {
-   "id": "c:bench:v1:v1-openrouter:stage:verifier_catch_rate",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.7308,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "share of chains the verifier refused at least once; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
-  },
-  "c:bench:v1:v1-openrouter:stage:rounds_to_valid_mean": {
-   "id": "c:bench:v1:v1-openrouter:stage:rounds_to_valid_mean",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 1.6032,
-   "unit_as_printed": null,
-   "fmt": "m2",
-   "note": "verifier rounds per chain, over the chains that validated; over 130 chains; arm v1-openrouter (qwen/qwen3.8-flash) on 114 open cells of benchmark v1"
   },
   "c:bench:v1:v1-openrouter:stage:reexecuted_mean": {
    "id": "c:bench:v1:v1-openrouter:stage:reexecuted_mean",
@@ -20328,5 +23110,5 @@
    "note": "abstain_rate over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
   }
  },
- "build_id": "f1c1a3a8d0ed"
+ "build_id": "addc8f9f3d03"
 }
