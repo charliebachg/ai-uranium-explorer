@@ -111,3 +111,80 @@ def interface_show_cmd(version: str = typer.Option("v1", "--version")) -> None:
     from .interface.build import show
 
     _plain(show, version, log=typer.echo)
+
+
+@bench_app.command("leak")
+def leak_cmd(version: str = typer.Option("v3", "--version")) -> None:
+    """Can the passages alone rank the cells? Text-only and count-only models out of fold; no model call."""
+    from .leak import audit, write
+
+    result = audit(version)
+    path = write(version, result)
+    for view in ("redacted", "raw"):
+        r = result.get(view) or {}
+        if "pr_auc" in r:
+            typer.echo(f"  {view:<9} text-only PR-AUC {r['pr_auc']:.3f} [{r['pr_auc_ci'][0]:.3f}, "
+                       f"{r['pr_auc_ci'][1]:.3f}]  ROC {r['roc_auc']:.3f}  on {r['cells_with_text']} cells with text")
+            typer.echo(f"            toward positive: {', '.join(r['toward_positive'][:12])}")
+    c = result["count_only"]
+    typer.echo(f"  count-only PR-AUC {c['pr_auc_passages']:.3f} (passages), {c['pr_auc_chars']:.3f} (characters); "
+               f"base rate {result['base_rate']:.3f}")
+    typer.echo(f"  wrote {path}")
+
+
+@bench_app.command("recognise")
+def recognise_cmd(
+    version: str = typer.Option("v3", "--version"),
+    backend: str = typer.Option("claude", "--backend", help="claude (the subscription CLI) or auto"),
+    budget_usd: float = typer.Option(30.0, "--budget-usd"),
+    workers: int = typer.Option(3, "--workers"),
+) -> None:
+    """Ask, cell by cell, which ground the redacted passages describe; score the guesses against the names near
+    each cell. Exits 75 on a usage limit (resumable)."""
+    import json
+
+    from ..analyst.score import out_dir
+    from ..backends.base import UsageLimitReached
+    from .recognise import EFFORT, MODEL, run
+
+    if backend == "claude":
+        from ..backends.claude_cli import ClaudeCliBackend
+
+        inner = ClaudeCliBackend(timeout_s=600, max_budget_usd=0.50)
+    else:
+        from ..backends.router import api_first
+
+        inner = api_first(timeout_s=600)
+    path = out_dir(version) / "recognise.jsonl"
+    typer.echo(f"  recognition probe on {version}: {MODEL} at {EFFORT}, budget ${budget_usd:.2f}")
+    try:
+        result = run(version, inner, budget_usd, path, workers=workers, log=typer.echo)
+    except UsageLimitReached as err:
+        typer.echo(f"  usage limit: {err}")
+        raise typer.Exit(75) from err
+    (out_dir(version) / "recognise.json").write_text(json.dumps(result, indent=1) + "\n")
+    for stratum, s in sorted(result["by_stratum"].items()):
+        typer.echo(f"  {stratum:<11} {s['cells']:>4} cells, said recognised {s['said_recognised']}, "
+                   f"named correctly {s['named_correctly']}")
+    typer.echo(f"  cost ${result['cost_usd']:.2f}")
+
+
+@bench_app.command("oof-seeds")
+def oof_seeds_cmd(version: str = typer.Option("v3", "--version"), seeds: int = typer.Option(5, "--seeds")) -> None:
+    """The fitted models' out-of-fold scores for a benchmark's cells under several fold draws, averaged in the
+    table as `<model>-avg<N>`: the pre-registered comparison, since one draw moves PR-AUC by 0.02 to 0.05."""
+    from .oof import SEEDS_FILE, seed_scores
+
+    table = seed_scores(version, n_seeds=seeds, log=typer.echo)
+    typer.echo(f"  wrote {len(table):,} rows to data/bench/{version}/{SEEDS_FILE}")
+
+
+@bench_app.command("pilot")
+def pilot_cmd(version: str = typer.Option("v3", "--version")) -> None:
+    """Draw the pilot's cells by the pre-registered rule and write them beside the results."""
+    from .pilot import draw, write
+
+    got = draw(version)
+    path = write(version, got)
+    typer.echo(f"  {len(got['cells'])} cells ({got['eligible']}): {','.join(got['cells'])}")
+    typer.echo(f"  wrote {path}")

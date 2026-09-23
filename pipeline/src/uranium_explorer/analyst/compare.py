@@ -45,7 +45,17 @@ CONTRASTS: tuple[tuple[str, str, str], ...] = (
     ("d2-fitted", "d2", "fitted weights over the four readings against the model's own ranking"),
     ("d2", "effort", "the multi-agent LLM against where people drilled"),
     ("d1", "effort", "the single-shot LLM against where people drilled"),
+    # benchmark v3, pre-registered in configs/bench/prereg-v3.toml: the primary, then S2, S3 and the placebo
+    ("d3", "extended-avg5", "primary: the LLM reading the cell's report text against the fitted model (five fold draws)"),
+    ("d3", "d2", "S2: does the report text help the LLM"),
+    ("d3", "criteria", "S3: the text arm against the published criteria"),
+    ("d3", "d3-swap", "placebo: text about the ground against text about other ground"),
+    ("d2", "extended-avg5", "the readers without text against the fitted model (five fold draws)"),
+    ("d3", "effort-avg5", "the text arm against where people drilled (five fold draws)"),
 )
+
+#: contrasts that also carry S1, the incremental-information test of the first row's rank over the second's score
+INCREMENTAL = {("d3", "extended-avg5"), ("d2", "extended-avg5"), ("d2", "extended")}
 
 
 def run_cells(summary: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -166,6 +176,28 @@ def holm(ps: list[float]) -> list[float]:
         running = max(running, min(1.0, (len(ps) - rank) * ps[i]))
         out[i] = running
     return out
+
+
+def incremental(y: np.ndarray, llm: np.ndarray, fitted: np.ndarray) -> dict[str, Any]:
+    """S1: does the LLM's ranking add information to the fitted score? A likelihood-ratio test of a logistic
+    model on the fitted score's rank against the same model plus the LLM's rank (Pepe, Kerr, Longton and Wang
+    2013: the efficient test of added information). One-sided on the LLM's coefficient."""
+    from scipy.stats import chi2, rankdata
+    from sklearn.linear_model import LogisticRegression
+
+    f = rankdata(np.where(np.isfinite(fitted), fitted, np.nanmedian(fitted))) / len(fitted)
+    a = rankdata(np.where(np.isfinite(llm), llm, 0.5)) / len(llm)
+
+    def loglik(x: np.ndarray) -> tuple[float, np.ndarray]:
+        m = LogisticRegression(C=1e6, max_iter=5000).fit(x, y)
+        p = np.clip(m.predict_proba(x)[:, 1], 1e-12, 1 - 1e-12)
+        return float(np.sum(y * np.log(p) + (1 - y) * np.log(1 - p))), m.coef_[0]
+
+    l0, _ = loglik(f[:, None])
+    l1, coef = loglik(np.c_[f, a])
+    stat = max(0.0, 2 * (l1 - l0))
+    p_two = float(chi2.sf(stat, 1))
+    return {"lr": stat, "coef_llm": float(coef[1]), "p": p_two / 2 if coef[1] > 0 else 1 - p_two / 2}
 
 
 def mcnemar(right_a: np.ndarray, right_b: np.ndarray) -> dict[str, Any]:
@@ -329,8 +361,11 @@ def extras(version: str, summaries: list[dict[str, Any]], boot: int, seed: int, 
     contrasts = []
     for a, b, question in CONTRASTS:
         if a in views and b in views:
-            contrasts.append({"first": a, "second": b, "question": question,
-                              **contrast(y, views[a], views[b], boot, seed, own.get(a), own.get(b), perms=perms)})
+            c = {"first": a, "second": b, "question": question,
+                 **contrast(y, views[a], views[b], boot, seed, own.get(a), own.get(b), perms=perms)}
+            if (a, b) in INCREMENTAL:
+                c["incremental"] = incremental(y, own[a]["p"], views[b]["p"])
+            contrasts.append(c)
     tested = [c for c in contrasts if "own" in c]
     for c, adj in zip(tested, holm([c["own"]["perm_p"] for c in tested]), strict=True):
         c["own"]["holm_p"] = adj

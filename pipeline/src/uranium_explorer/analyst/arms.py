@@ -92,6 +92,9 @@ class LoopSpec:
                           segment_scoped=self.segment_scoped, prompt_version=prompt_version)
 
 
+PASSAGE_VIEWS = ("own", "swapped")
+
+
 @dataclass(frozen=True)
 class ArmConfig:
     name: str
@@ -106,6 +109,8 @@ class ArmConfig:
     workers: int
     notes: str
     loop: LoopSpec | None = None   # required for agent v1, refused for v0
+    #: which cell's passages the arm reads: its own, or (a placebo) another cell's, by a fixed derangement
+    passages_view: str = "own"
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -145,7 +150,7 @@ def parse_arm(raw: dict[str, Any]) -> ArmConfig:
     if not isinstance(arm, dict):
         raise ValueError("an arm file has one [arm] table")
     scalar = {f.name for f in fields(ArmConfig)} - {"inputs", "switches", "loop"}
-    missing = scalar - set(arm)
+    missing = scalar - set(arm) - {"passages_view"}
     extra = set(arm) - scalar - {"inputs", "switches", "loop"}
     if missing or extra:
         raise ValueError(f"[arm]: missing {sorted(missing)}, unknown {sorted(extra)}")
@@ -160,11 +165,15 @@ def parse_arm(raw: dict[str, Any]) -> ArmConfig:
         raise ValueError(f"effort {arm['effort']!r} is not one of {EFFORTS}")
     if not str(arm["notes"]).strip():
         raise ValueError("an arm must say in `notes` which question it answers")
+    view = str(arm.get("passages_view", "own"))
+    if view not in PASSAGE_VIEWS:
+        raise ValueError(f"passages_view {view!r} is not one of {PASSAGE_VIEWS}")
     return ArmConfig(
         name=str(arm["name"]), agent=str(arm["agent"]), model=str(arm["model"]), effort=str(arm["effort"]),
         inputs=_table(arm, "inputs", Inputs), switches=_table(arm, "switches", Switches),
         prompt_version=str(arm["prompt_version"]), max_budget_usd_per_call=float(arm["max_budget_usd_per_call"]),
         timeout_s=int(arm["timeout_s"]), workers=int(arm["workers"]), notes=str(arm["notes"]), loop=loop,
+        passages_view=view,
     )
 
 

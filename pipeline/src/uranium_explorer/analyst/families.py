@@ -81,6 +81,36 @@ FAMILIES: tuple[Family, ...] = (
            "domain boundaries"),
 )
 
+#: the fifth reader, for an arm that reads report text (`inputs.passages`): the passages about this ground, with
+#: outcomes, numbers and names already removed (`bench.celltext`); its claims cite passage ids
+REPORTS = Family("reports", (), (), (),
+                 "the report text written about this ground: what the reports describe of alteration, structure, "
+                 "host rocks and the cover, near the cell. Outcomes, numbers and names were removed before you read "
+                 "it, so read what is described, not what was found; cite the passage id for anything you take "
+                 "from a passage")
+PASSAGES_SHARE = "passages.md"
+COUNT_WORD = {4: "Four", 5: "Five"}
+
+
+def passage_values(bench_id: str, passages: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """Each passage as a citable text value, `b:<bench id>:pass:<n>`."""
+    from ..values import stat
+
+    return {f"b:{bench_id}:pass:{i}": stat(f"b:{bench_id}:pass:{i}", str(p.get("text") or ""), fmt="text",
+                                          note=f"report passage {i} about this ground ({p.get('family', '?')})")
+            for i, p in enumerate(passages, start=1)}
+
+
+def render_report_passages(bench_id: str, passages: list[dict[str, Any]]) -> str:
+    lines = ["# Report text about this ground", "",
+             "Passages from the assessment reports on this cell and around it. Outcomes, numbers and names were "
+             "removed: [n] stands for a number, [redacted] for a name.", ""]
+    for i, p in enumerate(passages, start=1):
+        lines += [f"## b:{bench_id}:pass:{i}  ({p.get('family', '?')}, about {p.get('distance_km', '?')} km from "
+                  "the cell centre)", str(p.get("text") or "").strip(), ""]
+    return "\n".join(lines)
+
+
 READING_SCHEMA: dict[str, Any] = {
     "type": "object",
     "additionalProperties": False,
@@ -222,10 +252,16 @@ def read_family(backend: Any, shown: dict[str, Any], family: Family, arm: ArmCon
                 sample: int = 0) -> dict[str, Any]:
     """One reader, gated, with one retry told what failed. Returns the reading and its accounting."""
     bench_id = str(shown.get("bench_id", "?"))
-    part = share(shown, family)
     d = stage / family.name
     d.mkdir(parents=True, exist_ok=True)
-    (d / V0.PACK_FILE).write_text(V0.pack_text(part))
+    if family is REPORTS:
+        passages = list(shown.get("passages") or [])
+        part = {"bench_id": bench_id, "version": shown.get("version"), "tools": {},
+                "values": passage_values(bench_id, passages)}
+        (d / V0.PACK_FILE).write_text(render_report_passages(bench_id, passages))
+    else:
+        part = share(shown, family)
+        (d / V0.PACK_FILE).write_text(V0.pack_text(part))
     system = stage_system(family, arm.switches)
     out: dict[str, Any] = {"family": family.name, "attempts": 0, "cost_usd": 0.0, "duration_s": 0.0,
                            "from_cache": True, "answer": None, "problems": [], "published": False,
@@ -253,8 +289,8 @@ def read_family(backend: Any, shown: dict[str, Any], family: Family, arm: ArmCon
 def readings_text(readings: list[dict[str, Any]]) -> str:
     """The four readings as the ranking call sees them. A refused reading is named and left empty: nothing it
     said may be used."""
-    lines = ["# Four readings of this cell's evidence, one per family", "",
-             "Each reader saw only its own family. They can be wrong; check them against the pack."]
+    lines = [f"# {COUNT_WORD.get(len(readings), str(len(readings)))} readings of this cell's evidence, one per family",
+             "", "Each reader saw only its own family. They can be wrong; check them against the pack."]
     for r in readings:
         a = r.get("answer") or {}
         lines.append("")
@@ -270,28 +306,38 @@ def readings_text(readings: list[dict[str, Any]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def rank_user(bench_id: str, card: bool) -> str:
+def rank_user(bench_id: str, card: bool, n_readings: int = 4) -> str:
     """v0's instruction with the readings file listed beside the pack."""
     lines = V0.user_prompt(bench_id, card=card, pack=True, passages=False).split("\n")
     at = next(i for i, line in enumerate(lines) if line.startswith("Then answer")) - 1
-    lines.insert(at, f"  {{STAGE_DIR}}/{READINGS_FILE}   four readings of the evidence, one per family; check "
+    word = COUNT_WORD.get(n_readings, str(n_readings)).lower()
+    lines.insert(at, f"  {{STAGE_DIR}}/{READINGS_FILE}   {word} readings of the evidence, one per family; check "
                      "them against the pack")
     return "\n".join(lines)
 
 
 def run_cell(backend: Any, pack: dict[str, Any], card_path: Path | None, arm: ArmConfig,
-             stage: Path | None = None, sample: int = 0) -> dict[str, Any]:
-    """Four readings, then the ranking call and v0's gate. Backend errors propagate, as in v0."""
+             stage: Path | None = None, sample: int = 0, passages: list[dict[str, Any]] | None = None
+             ) -> dict[str, Any]:
+    """Four readings (five when the arm reads report text and the cell has some), then the ranking call and
+    v0's gate. Backend errors propagate, as in v0."""
     own_stage = stage is None
     stage = stage or Path(tempfile.mkdtemp(prefix="ue_analyst_v2_"))
     try:
         shown = V0.apply_switches(pack, arm.switches)
         bench_id = str(shown.get("bench_id", "?"))
-        readings = [read_family(backend, shown, f, arm, stage, sample) for f in FAMILIES]
-        (stage / V0.PACK_FILE).write_text(V0.pack_text(shown))
+        families = list(FAMILIES)
+        if arm.inputs.passages and passages:
+            families.append(REPORTS)
+            # the ranking call never sees the passages, only the reading; it may cite a passage the reading cited
+            shown = {**shown, "passages": list(passages),
+                     "values": {**(shown.get("values") or {}), **passage_values(bench_id, list(passages))}}
+        readings = [read_family(backend, shown, f, arm, stage, sample) for f in families]
+        (stage / V0.PACK_FILE).write_text(V0.pack_text({k: v for k, v in shown.items() if k != "passages"}))
         (stage / READINGS_FILE).write_text(readings_text(readings))
         images = (card_path,) if arm.inputs.card and card_path else ()
-        req = _request(TASK_RANK, V0.system_for(arm.switches), rank_user(bench_id, bool(images)), V0.ANSWER_SCHEMA,
+        req = _request(TASK_RANK, V0.system_for(arm.switches), rank_user(bench_id, bool(images), len(readings)),
+                       V0.ANSWER_SCHEMA,
                        [(stage / V0.PACK_FILE, V0.PACK_FILE), (stage / READINGS_FILE, READINGS_FILE)], images, arm,
                        {"bench_id": bench_id, "readings": sha256_json([r.get("answer") for r in readings]),
                         **({"sample": int(sample)} if sample else {})})

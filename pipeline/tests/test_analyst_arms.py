@@ -12,8 +12,9 @@ from uranium_explorer.analyst import arms as A
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
 V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter", "v1-anthropic-or",
       "v1-skipunmeasured", "v1-batch", "v1-scoped", "v1-scoped-batch"]
-#: the information ladder on benchmark v2: D1 is a v0 arm, D2 the family-staged v2 agent
-LADDER = {"d1": "v0", "d2": "v2"}
+#: the information ladder: D1 is a v0 arm, D2 the family-staged v2 agent; on v3, D3 adds the report-text reader
+#: and D3-swap is its placebo
+LADDER = {"d1": "v0", "d2": "v2", "d3": "v2", "d3-swap": "v2"}
 ALL = V0 + V1 + list(LADDER)
 
 
@@ -198,3 +199,12 @@ def test_an_unknown_switch_is_still_refused_when_the_later_ones_are_optional(tmp
     raw["arm"]["switches"]["imagery"] = True
     with pytest.raises(ValueError, match="unknown"):
         A.parse_arm(raw)
+
+
+def test_d3_is_d2_with_report_text_and_its_placebo_differs_only_in_whose_text() -> None:
+    d2, d3, swap = A.load_arm("d2"), A.load_arm("d3"), A.load_arm("d3-swap")
+    assert d3.switches == d2.switches and d3.model == d2.model and d3.effort == d2.effort
+    assert asdict(d3.inputs) == {**asdict(d2.inputs), "passages": True}
+    assert (d3.passages_view, swap.passages_view) == ("own", "swapped")
+    assert swap.inputs == d3.inputs and swap.switches == d3.switches
+    assert d2.passages_view == "own", "an arm file without the key reads its own passages"

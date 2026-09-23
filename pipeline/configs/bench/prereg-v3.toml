@@ -47,6 +47,17 @@ final_cells = 300            # one pre-drawn, hashed batch; held-out cells untou
 final_z = 1.966
 growth = "new positives one per 10 km block from drilled occurrences; drilled negatives matched on effort at 1.3 per positive"
 
+[pilot]
+cells = "30 open labelled cells that have passages: 15 positives and 15 negatives, drawn with numpy's default_rng(20260924) from each class in bench-id order"
+arms = ["d3 sample 0", "d3 sample 1", "d3-swap sample 0"]
+purpose = "process gates and the test-retest correlation of d3's probabilities; never efficacy"
+main = "d3 sample 0 on the other open cells, d2 on all open cells of v3, d3-swap extended to all open cells if d3 - d2 on the pilot cells is positive"
+
+[checks]
+recognition = "ue bench recognise on every open cell with passages, before the pilot; a cell is recognised when a naming word of the guess matches a label within 10 km or a property with holes within 5 km; the primary is also reported on the cells not recognised"
+leak = "ue bench leak before the pilot: text-only models out of fold on the redacted and raw views, and a count-only model"
+placebo = "d3 - d3-swap: text about the ground against text about other ground, same reader, same tokens"
+
 [gates]
 # process gates on the 30-cell pilot (two samples); a failed gate stops the run for a fix, never for a result
 refusals_max = 0.10          # share of readings and answers refused by the number gate

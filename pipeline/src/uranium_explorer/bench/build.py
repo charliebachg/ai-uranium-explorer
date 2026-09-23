@@ -24,6 +24,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Callable
 
@@ -44,10 +45,12 @@ from .oof import COLUMNS as OOF_COLUMNS
 from .oof import oof_scores
 from .pack import FORBIDDEN_KEYS, NORTHING, PATTERNS, name_pattern, build_pack, forbidden_strings, KEEP_TEXT
 from .sample import assign_bench_ids, sample_cells, shortfalls
-from .spec import LATER_PACK_SWITCHES, STRATA, load_spec
+from .spec import LATER_PACK_SWITCHES, STRATA, load_spec, spec_path
 
 MANIFEST_VERSION = "bench-manifest/v1"
 SUBDIRS = ("packs", "cards", "cards_drillholes", "blind", "passages")
+#: a benchmark with cell-level text also keeps its raw view and its sources, for the audit only
+TEXT_SUBDIRS = ("passages_raw", "sources")
 #: keys an answer key has and a pack must not
 KEY_FIELDS = ("label", "stratum", "split", "heldout")
 
@@ -111,8 +114,13 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
     through `ue bench oof-scores --write`. `fit` and `con` exist for tests on synthetic stores."""
     spec = load_spec(version)
     out = bench_dir(version, root)
-    for sub in SUBDIRS:
+    for sub in SUBDIRS + (TEXT_SUBDIRS if spec.text else ()):
         (out / sub).mkdir(parents=True, exist_ok=True)
+    # the pre-registration, when there is one, is part of the benchmark: hashed with it, so a result can only
+    # report what was fixed before the first call
+    prereg = spec_path(f"prereg-{version}")
+    if prereg.is_file():
+        _write_if_changed(out / "prereg.toml", prereg.read_bytes())
     manifest_path = out / "manifest.json"
     previous: dict[str, str] = {}
     if manifest_path.is_file():
@@ -159,6 +167,12 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
         geoms = {cid: wkb.loads(bytes(g)) for cid, g in con.execute(
             f"select cell_id, geom_wkb from derived.cell where cell_id in ({placeholders})", ids).fetchall()}
 
+        texts = None
+        if spec.text:
+            from .celltext import build_texts
+
+            texts = build_texts([(str(r.bench_id), str(r.cell_id)) for r in cells.itertuples(index=False)],
+                                spec.text, con, forbidden, log=log)
         written = {"packs": 0, "cards": 0, "cards_drillholes": 0, "blind": 0, "passages": 0}
         before = _previous_cells(out, previous)
         moved = sum(before.get(str(r.bench_id)) != str(r.cell_id) for r in cells.itertuples(index=False))
@@ -192,7 +206,18 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
                                                     "files": files}).encode()):
                 written["blind"] += 1
             pass_path = out / "passages" / f"{bid}.json"
-            if not _fresh(pass_path, kept, f"passages/{bid}.json"):
+            if texts is not None:
+                # cell-level report text, redacted: the view arms read; the raw view and the sources are for the
+                # leak audit, and no arm is given either
+                for sub, view in (("passages", "redacted"), ("passages_raw", "raw"), ("sources", "sources")):
+                    path = out / sub / f"{bid}.json"
+                    rows_ = texts[bid][view]
+                    if rows_:
+                        if _write_if_changed(path, _dump({"bench_id": bid, "passages": rows_}).encode()):
+                            written["passages"] += sub == "passages"
+                    elif path.is_file():
+                        path.unlink()
+            elif not _fresh(pass_path, kept, f"passages/{bid}.json"):
                 found = passages(cid, spec, files, con, forbidden=forbidden)
                 if found:
                     pass_path.write_text(_dump({"bench_id": bid, "passages": found}))
@@ -294,7 +319,8 @@ def audit(version: str, root: Path | None = None, con: Any = None) -> list[str]:
 
         names = set(names) | set(PLACE_NAMES)
     name_pat = name_pattern(frozenset(names))
-    for sub in ("packs", "passages"):
+    has_text = bool((manifest.get("spec") or {}).get("text"))
+    for sub in ("packs", "passages", *(("passages_raw",) if has_text else ())):
         for p in sorted((out / sub).glob("*.json")):
             try:
                 payload = json.loads(p.read_text())
@@ -303,7 +329,24 @@ def audit(version: str, root: Path | None = None, con: Any = None) -> list[str]:
                 continue
             rel = f"{sub}/{p.name}"
             problems += [f"{rel}: {why}" for why in leaks(payload, cell_ids, name_pat, sub == "packs")]
+            if has_text and sub == "passages":
+                problems += [f"{rel}: {why}" for why in outcome_leaks(payload)]
     return problems
+
+
+def outcome_leaks(payload: dict[str, Any]) -> list[str]:
+    """Pure: in the redacted view, any passage that still states an outcome or carries a digit."""
+    from .celltext import OUTCOME
+
+    found = []
+    for r in payload.get("passages") or []:
+        text = str(r.get("text") or "")
+        m = OUTCOME.search(text)
+        if m:
+            found.append(f"{r.get('passage_id')}: outcome word {m.group(0)!r}")
+        if re.search(r"\d", text):
+            found.append(f"{r.get('passage_id')}: a digit survived redaction")
+    return found
 
 
 def _store_names(con: Any) -> set[str] | None:

@@ -84,3 +84,38 @@ def read_oof_scores(con: Any, cell_ids: list[str] | None = None) -> pd.DataFrame
                            f"where cell_id in ({placeholders}) order by cell_id, model", cell_ids).df()
     return con.execute("select cell_id, model, fold_kind, fold, score from derived.cell_score_oof "
                        "order by cell_id, model").df()
+
+
+SEEDS_FILE = "oof_seeds.csv"
+
+
+def seed_scores(version: str, n_seeds: int = 5, log: Callable[[str], None] = print,
+                fit: Fit | None = None, df: pd.DataFrame | None = None) -> pd.DataFrame:
+    """The fitted models' out-of-fold scores for a benchmark's cells under `n_seeds` fold draws: the spec's seed
+    and the next `n_seeds - 1`. One fold draw moves the extended model's PR-AUC on the benchmark cells by 0.02 to
+    0.05; the pre-registered comparison is against the mean over draws. Written beside the benchmark."""
+    import json
+
+    from ..prospect import extended as X
+    from .build import bench_dir
+    from .spec import load_spec
+
+    spec = load_spec(version)
+    out = bench_dir(version)
+    cells = [json.loads(line) for line in (out / "cells.jsonl").read_text().splitlines() if line.strip()]
+    bench_of = {c["cell_id"]: c["bench_id"] for c in cells}
+    extended = spec.pack.extended_features
+    if df is None:
+        df = load_frame(extra=X.EXTENDED_FEATURES if extended else ())
+    frames = []
+    for k in range(n_seeds):
+        seed = spec.seed + k
+        got = oof_scores(seed, df=df.copy(), fold_km=spec.fold_km, n_folds=spec.n_folds, fit=fit, extended=extended)
+        got = got[got["cell_id"].isin(bench_of)].assign(seed=seed)
+        frames.append(got)
+        log(f"  seed {seed}: {got['score'].notna().sum()} scores for the benchmark cells")
+    table = pd.concat(frames, ignore_index=True)
+    table["bench_id"] = table["cell_id"].map(bench_of)
+    table = table[["bench_id", "model", "seed", "fold", "score"]].sort_values(["bench_id", "model", "seed"])
+    (out / SEEDS_FILE).write_text(table.to_csv(index=False, lineterminator="\n"))
+    return table

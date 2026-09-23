@@ -251,6 +251,8 @@ describe("the plain names", () => {
     expect(rowLabel("d1~s3")).toBe("Single call · rich · sample 3");
     expect(rowLabel("extended")).toBe("Extended model");
     expect(rowLabel("d1+extended")).toBe("Single call · rich + extended · rank average");
+    expect(rowLabel("extended-avg5")).toBe("Extended model · mean of 5 fold draws");
+    expect(rowLabel("d3-swap")).toBe("Evidence readers · another cell's text");
     expect(rowLabel("v0-qwen38")).toBe("v0-qwen38");
   });
 });

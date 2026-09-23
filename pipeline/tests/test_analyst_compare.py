@@ -112,3 +112,14 @@ def test_the_own_rule_keeps_a_refused_answers_probability() -> None:
     p, _v, abstained = CMP.cell_view_own(refused)
     assert p == 0.2 and abstained
     assert math.isnan(CMP.cell_view_own({"published": False, "answer": None})[0]), "no answer, no probability"
+
+
+def test_the_incremental_test_finds_added_information_and_not_its_absence() -> None:
+    rng = np.random.default_rng(1)
+    y = np.array([1] * 50 + [0] * 64)
+    fitted = rng.random(114) + 0.3 * y
+    adds = 0.8 * y + rng.random(114)
+    assert CMP.incremental(y, adds, fitted)["p"] < 0.01
+    noise = rng.random(114)
+    assert CMP.incremental(y, noise, fitted)["p"] > 0.05
+    assert CMP.incremental(y, 1 - adds, fitted)["p"] > 0.5, "one-sided: an LLM that ranks backwards adds nothing"

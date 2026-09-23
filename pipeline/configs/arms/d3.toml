@@ -1,0 +1,28 @@
+# Rung D3: D2 plus a fifth reader over the cell's own report text (benchmark v3's redacted passages: outcomes,
+# numbers and names removed). The primary arm of the v3 pre-registration: does an LLM reading what was written
+# about the ground rank it better than the fitted model given the same evidence? Everything else is D2's.
+[arm]
+name = "d3"
+agent = "v2"
+model = "claude-opus-5"
+effort = "medium"
+prompt_version = "analyst/v2/v1"
+max_budget_usd_per_call = 1.50
+timeout_s = 600
+workers = 2
+notes = "D3: D2's four family readers plus a fifth over the cell's redacted report text, then one ranking call that sees D1's pack and the five readings; the primary arm of benchmark v3."
+
+[arm.inputs]
+card = true
+pack = true
+passages = true
+
+[arm.switches]
+drillholes = false
+label_context = false
+oof_scores = false
+effort_features = false
+criteria = true
+evidence = true
+region = true
+extended_features = true

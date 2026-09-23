@@ -1,0 +1,63 @@
+# UraniumBench v3, analyst track: v2's cells, seed, folds and packs (rebuilt with the fixed name scrub and the
+# citable surficial class), plus report text about each cell itself: the reports on the ground, redacted of
+# outcomes, numbers and names (`bench.celltext`). Pre-registered in prereg-v3.toml, hashed with the build.
+# Change a number here and the next build is a different benchmark; keep the version in step with the filename.
+
+version = "v3"
+seed = 20260920
+
+# spatial folds (whole blocks of this size held out together) and the share of each stratum held out
+fold_km = 30
+n_folds = 5
+held_out_share = 0.20
+
+[strata]
+# deposit cells are thinned to one per block so a camp of adjacent cells counts once
+deposit = 40
+thin_block_m = 10000
+# occurrences must have been drilled: an undrilled occurrence is a rumour with a point
+occurrence = 40
+# negatives are unlabelled cells with at least min_holes holes, drawn to match the positives' effort profile
+negative = 80
+min_holes = 5
+# probes are never-drilled unlabelled cells; they are not scored, they are watched
+probe = 20
+
+[card]
+window_km = 20
+size_px = 1000
+layers = [
+  "em_conductors", "faults_250k", "graphitic_host", "lake_sediment_gsc", "lake_sediment_sgs",
+  "radioactive_boulders", "survey_footprints_ground", "survey_footprints_airborne",
+]
+drillholes = false
+drillholes_variant = true
+
+[pack]
+label_context = true
+oof_scores = true
+effort_features = true
+# added for v2: arms switch each of these on or off; the packs carry them all
+evidence = true
+region = true
+extended_features = true
+
+[blind]
+radius_km = 10
+
+[retrieval]
+k = 6
+radius_km = 40
+query = "uranium mineralization drilling graphitic conductor unconformity alteration"
+
+[text]
+# the report files whose holes lie within radius_km of the cell centre (else fallback_km), at most
+# files_per_cell, ranked by holes in reach; their first max_pages pages; passages of about passage_chars,
+# redacted, and at most `passages` of them per cell, chosen in turn by evidence family
+radius_km = 2.0
+fallback_km = 5.0
+files_per_cell = 3
+max_pages = 30
+passages = 12
+passage_chars = 500
+min_chars = 150

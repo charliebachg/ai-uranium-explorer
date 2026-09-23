@@ -228,7 +228,7 @@ def regate_run(version: str, run_id: str, log: Callable[[str], None] = print, bo
         if isinstance(answer, dict) and not row.get("chain"):  # a v1 chain is re-gated by re-running its loop
             arm = load_arm(str(row["arm"]))
             shown = V0.apply_switches(bench.pack(bench_id), arm.switches)
-            passages = bench.passages(bench_id) if arm.inputs.passages else None
+            passages = bench.passages(bench_id, arm.passages_view) if arm.inputs.passages else None
             problems = V0.gate(answer, shown, context=V0.gate_context(shown, passages))
             if problems != (row.get("problems") or []) or bool(row.get("published")) != (not problems):
                 changed += 1
@@ -363,9 +363,12 @@ def run_arm(
                     row = _run_staged(backend, bench, cell, arm, cfg, criteria, rd, run_id, shared,
                                       session_factory=session_factory)
                 elif arm.agent == "v2":
-                    row = FAM.run_cell(backend, bench.pack(bench_id), card, arm, sample=sample)
+                    row = FAM.run_cell(backend, bench.pack(bench_id), card, arm, sample=sample,
+                                       passages=bench.passages(bench_id, arm.passages_view) if arm.inputs.passages
+                                       else None)
                 else:
-                    row = V0.run_cell(backend, bench.pack(bench_id), card, bench.passages(bench_id), arm, sample=sample)
+                    row = V0.run_cell(backend, bench.pack(bench_id), card,
+                                      bench.passages(bench_id, arm.passages_view), arm, sample=sample)
         except (BudgetExhausted, UsageLimitReached) as signal:
             stop.set()
             with lock:

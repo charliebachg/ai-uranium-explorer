@@ -68,3 +68,15 @@ def test_the_later_pack_switches_leave_an_older_spec_as_it_was_and_are_carried_w
     assert v2.pack.later() and {"evidence", "region", "extended_features"} <= set(v2.pack.switches())
     # v2 is v1's benchmark with richer packs: the same seed, strata, folds and cards
     assert (v2.seed, v2.strata, v2.fold_km, v2.n_folds, v2.card) == (v1.seed, v1.strata, v1.fold_km, v1.n_folds, v1.card)
+
+
+def test_the_text_section_is_v3s_and_absent_from_the_manifests_before_it() -> None:
+    from uranium_explorer.bench.spec import TextSpec
+
+    v3 = S.load_spec("v3")
+    assert v3.text == TextSpec(radius_km=2.0, fallback_km=5.0, files_per_cell=3, max_pages=30, passages=12,
+                               passage_chars=500, min_chars=150)
+    assert v3.as_dict()["text"]["passages"] == 12
+    assert "text" not in S.load_spec("v2").as_dict(), "v2's manifest spec, and so its build, is unchanged"
+    with pytest.raises(S.SpecError, match="unknown"):
+        S.parse_spec({**raw(), "text": {"radius": 2.0}}, "v1")

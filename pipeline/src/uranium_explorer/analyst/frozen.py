@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from typing import Any
 
@@ -87,13 +88,29 @@ class Bench:
         p = self.dir / "cards" / f"{bench_id}.png"
         return p if p.is_file() else None
 
-    def passages(self, bench_id: str) -> list[dict[str, Any]]:
-        """The builder writes `{"bench_id", "passages": [...]}`; a bare list is accepted too."""
+    def passages(self, bench_id: str, view: str = "own") -> list[dict[str, Any]]:
+        """The builder writes `{"bench_id", "passages": [...]}`; a bare list is accepted too. The `swapped` view
+        is the placebo: another cell's passages, by a derangement fixed by the benchmark's seed, so an arm that
+        reads text about the wrong ground can be told apart from one that reads the right ground."""
+        if view == "swapped":
+            other = self.swap_map().get(bench_id)
+            return self.passages(other) if other else []
         p = self.dir / "passages" / f"{bench_id}.json"
         if not p.is_file():
             return []
         raw = json.loads(p.read_text())
         return list(raw.get("passages") or []) if isinstance(raw, dict) else list(raw)
+
+    @cached_property
+    def _swap(self) -> dict[str, str]:
+        from ..bench.celltext import swapped
+
+        have = {p.stem: [1] for p in (self.dir / "passages").glob("*.json")}
+        return swapped(have, int(self.manifest.get("seed") or 0))
+
+    def swap_map(self) -> dict[str, str]:
+        """Which cell's passages each cell is given in the placebo view (`celltext.swapped`)."""
+        return self._swap
 
     def blind(self, bench_id: str) -> list[Any]:
         p = self.dir / "blind" / f"{bench_id}.json"

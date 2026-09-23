@@ -189,3 +189,42 @@ def test_a_sample_is_asked_again_and_scored_as_its_own_row(monkeypatch, tmp_path
     arms = SC.out_dir(bench.version) / "arms"
     assert {p.stem for p in arms.glob("*.json")} == {"d2", "d2~s1"}
     assert SC.arm_row(second)["name"] == "d2~s1"
+
+
+class ReportsBackend(ReadingBackend):
+    """ReadingBackend whose fifth reader cites the first report passage, as an honest one would."""
+
+    def reading(self, family: str, bench_id: str, shown: str | None = None) -> dict:
+        if family == "reports":
+            return {"assessment": "for", "strength": 0.6, "unknowns": [], "summary": "Clay alteration described.",
+                    "claims": [{"text": "The reports describe illite in the bleached sandstone.",
+                                "value_ids": [f"b:{bench_id}:pass:1"]}]}
+        return super().reading(family, bench_id, shown)
+
+
+PASSAGES = [{"passage_id": "p-01", "family": "alteration", "distance_km": 0.4,
+             "text": "The sandstone is bleached and illite altered above the unconformity."},
+            {"passage_id": "p-02", "family": "structure", "distance_km": 0.4,
+             "text": "A graphitic shear zone offsets the unconformity by [n] m."}]
+
+
+def test_an_arm_that_reads_report_text_adds_a_fifth_reader_whose_claims_cite_passages(tmp_path) -> None:
+    backend = ReportsBackend()
+    row = FAM.run_cell(backend, rich_pack(), None, A.load_arm("d3"), stage=tmp_path, passages=PASSAGES)
+    assert [r.task for r in backend.requests] == [FAM.TASK_STAGE] * 5 + [FAM.TASK_RANK]
+    reports = row["readings"]["reports"]
+    assert reports["published"] and reports["claim_list"][0]["value_ids"] == ["b:b01:pass:1"]
+    staged = (tmp_path / "reports" / "pack.md").read_text()
+    assert "## b:b01:pass:2  (structure, about 0.4 km from the cell centre)" in staged
+    assert (tmp_path / FAM.READINGS_FILE).read_text().startswith("# Five readings")
+    assert "five readings of the evidence" in backend.requests[-1].user_prompt
+    assert "b:b01:pass" not in (tmp_path / "pack.md").read_text(), "the ranking call sees the reading, not the text"
+
+
+def test_a_cell_without_report_text_keeps_the_four_readers_and_their_prompts(tmp_path) -> None:
+    four = ReadingBackend()
+    FAM.run_cell(four, rich_pack(), None, A.load_arm("d3"), stage=tmp_path, passages=[])
+    d2 = ReadingBackend()
+    FAM.run_cell(d2, rich_pack(), None, d2_arm(), stage=tmp_path / "d2")
+    assert len(four.requests) == 5 and (tmp_path / FAM.READINGS_FILE).read_text().startswith("# Four readings")
+    assert four.requests[-1].user_prompt == d2.requests[-1].user_prompt, "d2's ranking prompt is unchanged"

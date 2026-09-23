@@ -447,6 +447,8 @@ const ROW_LABEL: Record<string, string> = {
   d1: "Single call · rich",
   v1: "Staged loop · basic",
   d2: "Evidence readers · rich",
+  d3: "Evidence readers · report text",
+  "d3-swap": "Evidence readers · another cell's text",
   extended: "Extended model",
   learned: "Learned model",
   criteria: "Criteria score",
@@ -460,6 +462,8 @@ export function rowLabel(name: string): string {
   if (vote) return `${rowLabel(vote[1] ?? "")} · vote of ${vote[2] ?? ""}`;
   const fitted = /^(.+)-fitted$/.exec(name);
   if (fitted) return `${rowLabel(fitted[1] ?? "")} · fitted weights`;
+  const avg = /^(.+)-avg(\d+)$/.exec(name);
+  if (avg) return `${rowLabel(avg[1] ?? "")} · mean of ${avg[2] ?? ""} fold draws`;
   const blend = /^(.+)\+extended$/.exec(name);
   if (blend) return `${rowLabel(blend[1] ?? "")} + extended · rank average`;
   const sample = /^(.+)~s(\d+)$/.exec(name);

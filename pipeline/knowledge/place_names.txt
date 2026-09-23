@@ -80,7 +80,17 @@ Bolger
 Hab
 Cenex
 Eldorado
-# regional structures and domains that place a cell
+# regional structures and domains that place a cell (the evidence tools already leave domain names out)
+Clearwater
+Western Granulite
+Lloyd Domain
+Tantato
+Zemlak
+Wathaman
+Peter Lake
+Train Lake
+Careen Lake
+Great Slave Lake
 Snowbird
 Tabbernor
 Mudjatik

@@ -100,6 +100,20 @@ class RetrievalSpec:
 
 
 @dataclass(frozen=True)
+class TextSpec:
+    """Report text about the cell itself (`celltext`): files within `radius_km` of the cell centre (else
+    `fallback_km`), at most `files_per_cell`, their first `max_pages` pages, redacted, cut into passages of
+    about `passage_chars`, and `passages` of them chosen by family."""
+    radius_km: float = 2.0
+    fallback_km: float = 5.0
+    files_per_cell: int = 3
+    max_pages: int = 30
+    passages: int = 12
+    passage_chars: int = 500
+    min_chars: int = 150
+
+
+@dataclass(frozen=True)
 class BenchSpec:
     version: str
     seed: int
@@ -111,18 +125,26 @@ class BenchSpec:
     pack: PackSpec = field(default_factory=PackSpec)
     blind: BlindSpec = field(default_factory=lambda: BlindSpec(10.0))
     retrieval: RetrievalSpec = field(default_factory=lambda: RetrievalSpec(6, 40.0))
+    #: report text about the cell itself (v3 on): the passages come from `celltext`, not from the blind-listed
+    #: retrieval; absent from the manifests of the benchmarks built before it
+    text: TextSpec | None = None
 
     def as_dict(self) -> dict[str, Any]:
-        """The spec as plain data, for the manifest; pack switches added later appear only when on."""
-        return {**asdict(self), "pack": self.pack.switches()}
+        """The spec as plain data, for the manifest; pack switches added later appear only when on, and the
+        text section only where there is one."""
+        out = {**asdict(self), "pack": self.pack.switches()}
+        if self.text is None:
+            out.pop("text")
+        return out
 
 
 # ---------------------------------------------------------------- loading
 
 
-_TOP = {"version", "seed", "strata", "fold_km", "n_folds", "held_out_share", "card", "pack", "blind", "retrieval"}
+_TOP = {"version", "seed", "strata", "fold_km", "n_folds", "held_out_share", "card", "pack", "blind", "retrieval",
+        "text"}
 _SECTIONS: dict[str, type] = {"strata": Strata, "card": CardSpec, "pack": PackSpec, "blind": BlindSpec,
-                              "retrieval": RetrievalSpec}
+                              "retrieval": RetrievalSpec, "text": TextSpec}
 
 
 def spec_path(version: str) -> Path:
@@ -163,7 +185,7 @@ def parse_spec(raw: dict[str, Any], version: str | None = None) -> BenchSpec:
     spec = BenchSpec(
         version=str(raw["version"]), seed=int(raw["seed"]), strata=sections["strata"],
         fold_km=float(raw["fold_km"]), n_folds=int(raw["n_folds"]), held_out_share=float(raw["held_out_share"]),
-        card=_card(sections["card"]), **{k: v for k, v in sections.items() if k in ("pack", "blind", "retrieval")},
+        card=_card(sections["card"]), **{k: v for k, v in sections.items() if k in ("pack", "blind", "retrieval", "text")},
     )
     _validate(spec, version)
     return spec

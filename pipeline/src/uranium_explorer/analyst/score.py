@@ -362,6 +362,16 @@ def bench_oof_scores(version: str, cell_ids: list[str]) -> tuple[dict[str, dict[
         cid = cell_of.get(str(bid))
         if cid in wanted and score == score:
             out.setdefault(str(model), {})[cid] = float(score)
+    seeds = bench.dir / "oof_seeds.csv"
+    if seeds.is_file():
+        # the fitted models averaged over fold draws (`ue bench oof-seeds`): the pre-registered comparison
+        sd = pd.read_csv(seeds)
+        k = sd["seed"].nunique()
+        for (bid, model), g in sd.groupby(["bench_id", "model"]):
+            cid = cell_of.get(str(bid))
+            vals = g["score"].dropna()
+            if cid in wanted and len(vals) and model != "criteria":
+                out.setdefault(f"{model}-avg{k}", {})[cid] = float(vals.mean())
     return out, None if out else f"{path} holds no scores for these cells"
 
 
