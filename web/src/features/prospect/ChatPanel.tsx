@@ -741,24 +741,31 @@ function Exchange({
             <>
               <AnswerText text={turn.text ?? ""} onCite={onCite} />
               {turn.claims.length ? (
-                <ul className="mt-2 space-y-1.5 border-line border-l pl-2.5">
-                  {turn.claims.map((claim) => (
-                    <li key={claim.text} className="text-[11px] text-ink-3">
-                      <span data-source-text>{claim.text}</span>
-                      {claim.value_ids.some(hasValue) ? (
-                        <span className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
-                          {claim.value_ids.filter(hasValue).map((id) => (
-                            <V
-                              key={id}
-                              id={id}
-                              className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10.5px] text-ink-2"
-                            />
-                          ))}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                // the prose already carries every cited value as a chip; the claims are the audit trail
+                <details className="group mt-2" data-testid="chat-claims">
+                  <summary className="cursor-pointer list-none text-[11px] text-ink-3 hover:text-ink-2">
+                    <span className="mr-1 inline-block transition-transform group-open:rotate-90">›</span>
+                    Cited values · <span data-instrument>{turn.claims.length}</span>
+                  </summary>
+                  <ul className="mt-1.5 space-y-1.5 border-line border-l pl-2.5">
+                    {turn.claims.map((claim) => (
+                      <li key={claim.text} className="text-[11px] text-ink-3">
+                        <span data-source-text>{claim.text}</span>
+                        {claim.value_ids.some(hasValue) ? (
+                          <span className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
+                            {claim.value_ids.filter(hasValue).map((id) => (
+                              <V
+                                key={id}
+                                id={id}
+                                className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10.5px] text-ink-2"
+                              />
+                            ))}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </details>
               ) : null}
               {turn.caveats.length ? (
                 <ul className="mt-2 space-y-1">

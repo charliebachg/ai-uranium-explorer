@@ -603,8 +603,10 @@ function ChainNodes({ chain }: { chain: AnalystChain }) {
           <div key={kind}>
             <h5 className="text-[10.5px] text-ink-3 uppercase tracking-wider">{title}</h5>
             <ul className="mt-1 space-y-1.5">
-              {nodes.map((node) => (
-                <NodeRow key={node.node_id} chainId={chain.chain_id} node={node} />
+              {/* a node the verifier sent back is listed again when re-executed, under the same id */}
+              {nodes.map((node, i) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: a re-executed node repeats its id; its place tells the two apart
+                <NodeRow key={`${node.node_id}-${i}`} chainId={chain.chain_id} node={node} />
               ))}
             </ul>
           </div>
@@ -709,8 +711,9 @@ function ChainRounds({ chain }: { chain: AnalystChain }) {
             ) : null}
             {v.faulty.length ? (
               <ul className="mt-0.5 ml-3 space-y-0.5">
-                {v.faulty.map((f) => (
-                  <li key={f.node_id} className="text-ink-2">
+                {v.faulty.map((f, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: the verifier can fault the same node twice in a round
+                  <li key={`${f.node_id}-${i}`} className="text-ink-2">
                     <span className="font-mono text-[10.5px] text-ink-3" data-ident>
                       {f.node_id}
                     </span>{" "}

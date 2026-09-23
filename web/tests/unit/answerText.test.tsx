@@ -71,3 +71,17 @@ describe("AnswerText with the interface agent's ids", () => {
     expect(el.textContent).toContain("If the fault were measured and met the score would be 0.75");
   });
 });
+
+describe("a typed number and its chip", () => {
+  it("prints the cited value once: the chip replaces the same number typed before it, and nothing else", () => {
+    const el = mount(`If the fault were measured and met the score would be 0.75 (${IF_MET}), within 5 km (${INSIGHT}).`);
+    const text = el.textContent ?? "";
+    // 0.75 typed, then its chip 0.750: printed once, as the chip
+    expect(text).toContain("would be 0.750");
+    expect(text).not.toContain("0.75 0.750");
+    expect(text.match(/0\.75/g)?.length).toBe(1);
+    // "5 km" is not the cited 600: it stays as written, beside the chip
+    expect(text).toContain("within 5 km");
+    expect(el.querySelector(`[data-vid="${INSIGHT}"]`)?.textContent).toBe("600");
+  });
+});

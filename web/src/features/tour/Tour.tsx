@@ -66,6 +66,8 @@ export function Tour() {
 
   const exit = useCallback(() => {
     lastRun.current = -1;
+    // the recorded session is the tour's: leaving the tour hands the chat back to the live agent
+    useStore.getState().setChatReplay(null);
     setTour({ step: -1, startedAt: null });
   }, [setTour]);
 

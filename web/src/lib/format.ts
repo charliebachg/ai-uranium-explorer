@@ -30,12 +30,15 @@ export function formatVal(v: Val): string {
   if (v.kind === "extracted") return v.as_printed ?? "not printed";
   if (v.value === null) return "none";
   if (typeof v.value === "string") return v.value;
+  // a year is a year whatever fmt it was minted with: "2007", never "2,007 year"
+  if (v.unit === "year") return formatNumber(v.value, "year");
   return formatNumber(v.value, v.fmt ?? "text");
 }
 
 /** Unit suffix for a stored value, or null. Extracted values carry the unit as printed. */
 export function unitOf(v: Val): string | null {
   if (v.kind === "extracted") return v.unit_as_printed;
+  if (v.unit === "year") return null;
   return v.unit ?? null;
 }
 

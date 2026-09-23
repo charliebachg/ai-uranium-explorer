@@ -1,5 +1,5 @@
 import { V } from "@/components/values/V";
-import { hasValue } from "@/data/registry";
+import { hasValue, resolveValue } from "@/data/registry";
 
 /**
  * The agent writes its answer with value ids inline, because that is what the gate checks. Printed raw it
@@ -27,6 +27,36 @@ const CELL_IN_ID = /^c:[a-z]+:(\d{4}_\d{4})\b/;
 
 export type CiteHandler = (id: string, cellId: string | null) => void;
 
+/** A number the agent typed just before its citation, with the unit it wrote after it. */
+const TYPED_BEFORE = /(-?\d[\d,]*(?:\.\d+)?)(\s*(?:%|°|m|km|km2|km²|ppm|cps|USD|years?|metres|meters))?\s*$/;
+
+/** Whether a typed number is the stored value a chip will print: equal at the precision it was typed. */
+function sameNumber(typed: string, id: string): boolean {
+  const v = resolveValue(id)?.value;
+  if (typeof v !== "number") return false;
+  const t = Number(typed.replace(/,/g, ""));
+  const decimals = typed.split(".")[1]?.length ?? 0;
+  return Number.isFinite(t) && Math.abs(t - v) <= 0.5 * 10 ** -decimals + 1e-9;
+}
+
+/**
+ * The agent writes "0.9013 (id)": the number, then its citation. The chip prints the stored value, so the
+ * typed number before it is dropped when it is that same value, or every figure reads twice. A number that is
+ * not the cited value ("within 5 km (year id)") stays as written.
+ */
+function dedupe(out: Piece[]): Piece[] {
+  for (let i = 1; i < out.length; i++) {
+    const cur = out[i];
+    const prev = out[i - 1];
+    if (!cur || !prev || !("ids" in cur) || !("text" in prev)) continue;
+    const m = TYPED_BEFORE.exec(prev.text);
+    const typed = m?.[1];
+    if (!m || !typed || !cur.ids.some((id) => hasValue(id) && sameNumber(typed, id))) continue;
+    prev.text = prev.text.slice(0, m.index);
+  }
+  return out;
+}
+
 type Piece = { text: string } | { ids: string[] };
 
 function pieces(text: string): Piece[] {
@@ -52,7 +82,7 @@ function pieces(text: string): Piece[] {
     }
     if (last < chunk.length) out.push({ text: chunk.slice(last) });
   }
-  return out;
+  return dedupe(out);
 }
 
 /** Split a paragraph the agent wrote as a run-on list back into the list it meant. */
