@@ -1,6 +1,9 @@
+import { useState } from "react";
+import { Tip } from "@/components/ui/Tip";
 import { V } from "@/components/values/V";
 import type {
   BenchBlock,
+  BenchContrast,
   BenchRow,
   BenchStage,
   BenchTable,
@@ -11,26 +14,26 @@ import type {
   SearchRow,
 } from "@/data/contract";
 import { resolveValue } from "@/data/registry";
-import { Section } from "@/features/eval/EvalPage";
+import { Disclosure, Section } from "@/features/eval/EvalPage";
 import { cn } from "@/lib/cn";
 
 /**
- * The three tracked evaluations behind the map's scores, each row naming the tracker run it came from. Nothing
- * here is typed in: every figure is a stored value from the run's own JSON, and the run id beside it is the
- * MLflow run that holds the parameters, the fold assignments and the fitted model.
+ * The tracked evaluations behind the map's scores and the analyst benchmark. Nothing here is typed in: every
+ * figure is a stored value from a run's own JSON, and the run id beside it names the MLflow run that holds the
+ * parameters, the folds and the fitted model.
  */
 
 const CORRECTION_LABEL = {
   naive: "as labelled",
   matched: "matched background",
   thinned: "thinned positives",
-  "matched+thinned": "both corrections",
+  "matched+thinned": "both",
 } as const;
 
 const FOLD_LABEL: Record<string, string> = {
-  random: "random folds",
-  spatial: "spatial folds",
-  camp: "camp folds",
+  random: "random",
+  spatial: "spatial",
+  camp: "camp",
   spatial20: "20 km blocks",
   spatial50: "50 km blocks",
 };
@@ -38,12 +41,14 @@ const FOLD_LABEL: Record<string, string> = {
 const ARM_LABEL: Record<string, string> = {
   histgb: "gradient boosting",
   random_forest: "random forest",
-  logistic_spatial: "logistic with spatial terms",
+  logistic_spatial: "logistic + spatial terms",
   bagging_pu: "bagging PU",
-  criteria_prior: "boosting + criteria score as a prior",
-  effort: "effort (null model)",
+  criteria_prior: "boosting + criteria prior",
+  effort: "effort (null)",
   "learned+effort": "geology + effort",
 };
+
+const SEARCH_SHOWN = 10;
 
 function RunId({ id }: { id: string | null | undefined }) {
   if (!id) return null;
@@ -66,7 +71,7 @@ function Naming({
         <>
           {" "}
           · store <RunId id={block.store_sha256} />
-          {block.snapshot ? " (a named snapshot)" : " (no snapshot names it)"}
+          {block.snapshot ? " · snapshot" : ""}
         </>
       ) : null}
     </p>
@@ -77,8 +82,22 @@ function Interval({ ci }: { ci?: [string, string] }) {
   if (!ci) return null;
   return (
     <span className="ml-1 text-[10.5px] text-ink-3">
-      <V id={ci[0]} /> to <V id={ci[1]} />
+      <V id={ci[0]} />–<V id={ci[1]} />
     </span>
+  );
+}
+
+function Th({ children, title, left }: { children: React.ReactNode; title?: string; left?: boolean }) {
+  return (
+    <th className={cn("py-1.5 font-normal", left ? "text-left" : "text-right")}>
+      {title ? (
+        <Tip text={title} className="border-line-strong border-b border-dotted">
+          {children}
+        </Tip>
+      ) : (
+        children
+      )}
+    </th>
   );
 }
 
@@ -93,18 +112,20 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
       if (pr.has(`learned.${positives}.${correction}.spatial`)) lines.push({ positives, correction });
   const mt = new Map(block.minetrace.map((m) => [`${m.feature_set}.${m.metric}`, m.value_id]));
   return (
-    <Section
-      title="The re-test: does geology beat where people already drilled?"
-      hint="PR-AUC under spatial folds, out of fold, with bootstrap intervals. Effort is the null model, knowing only drilling history, and the corrections remove two ways it was flattered."
-    >
+    <Section title="Geology vs effort" hint="PR-AUC under spatial folds, with bootstrap intervals.">
       <table className="w-full text-[12.5px]" data-testid="headline-table">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
           <tr>
-            <th className="py-1.5 text-left font-normal">Positives</th>
-            <th className="py-1.5 text-left font-normal">Correction</th>
-            <th className="py-1.5 text-right font-normal">Geology</th>
-            <th className="py-1.5 text-right font-normal">Effort</th>
-            <th className="py-1.5 text-right font-normal">run</th>
+            <Th left>Positives</Th>
+            <Th
+              left
+              title="Matched background and thinned positives remove two ways the effort model is flattered."
+            >
+              Correction
+            </Th>
+            <Th>Geology</Th>
+            <Th title="The null model: drilling and survey history only.">Effort</Th>
+            <Th>Run</Th>
           </tr>
         </thead>
         <tbody>
@@ -118,9 +139,9 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
                 data-testid="headline-row"
               >
                 <td className="py-1.5 text-ink-2">
-                  {positives === "all" ? "deposits + occurrences" : "deposits only"}
+                  {positives === "all" ? "deposits + occurrences" : "deposits"}
                 </td>
-                <td className="py-1.5 text-ink-2">{CORRECTION_LABEL[correction]}</td>
+                <td className="py-1.5 text-ink-3">{CORRECTION_LABEL[correction]}</td>
                 <td className="py-1.5 text-right">
                   {learned ? (
                     <>
@@ -128,7 +149,7 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
                       <Interval ci={learned.ci} />
                     </>
                   ) : (
-                    <span className="text-ink-3">not measurable</span>
+                    <span className="text-ink-3">–</span>
                   )}
                 </td>
                 <td className="py-1.5 text-right">
@@ -138,7 +159,7 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
                       <Interval ci={effort.ci} />
                     </>
                   ) : (
-                    <span className="text-ink-3">not measurable</span>
+                    <span className="text-ink-3">–</span>
                   )}
                 </td>
                 <td className="py-1.5 text-right">
@@ -151,26 +172,25 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
       </table>
       {mt.has("learned.roc_auc_mean") && mt.has("effort.roc_auc_mean") ? (
         <p className="mt-2 text-[11.5px] text-ink-3">
-          MineTRACE's own protocol (ROC-AUC on deposits, a fixed draw of positives against background cells,
-          repeated): geology <V id={mt.get("learned.roc_auc_mean") ?? ""} className="text-ink-2" />
+          MineTRACE protocol, ROC-AUC on deposits: geology{" "}
+          <V id={mt.get("learned.roc_auc_mean") ?? ""} className="text-ink-2" />
           {mt.has("learned.roc_auc_sd") ? (
             <>
               {" "}
-              ± <V id={mt.get("learned.roc_auc_sd") ?? ""} className="text-ink-2" />
+              ± <V id={mt.get("learned.roc_auc_sd") ?? ""} />
             </>
-          ) : null}
-          , effort <V id={mt.get("effort.roc_auc_mean") ?? ""} className="text-ink-2" />
+          ) : null}{" "}
+          · effort <V id={mt.get("effort.roc_auc_mean") ?? ""} className="text-ink-2" />
           {mt.has("effort.roc_auc_sd") ? (
             <>
               {" "}
-              ± <V id={mt.get("effort.roc_auc_sd") ?? ""} className="text-ink-2" />
+              ± <V id={mt.get("effort.roc_auc_sd") ?? ""} />
             </>
           ) : null}
-          .
         </p>
       ) : null}
       {block.verdict ? (
-        <p className="mt-2 max-w-[86ch] text-[11.5px] text-ink-2" data-testid="headline-verdict">
+        <p className="mt-1 text-[11.5px] text-ink-2" data-testid="headline-verdict">
           Verdict: {block.verdict}
         </p>
       ) : null}
@@ -181,6 +201,7 @@ export function HeadlineSection({ block }: { block?: HeadlineBlock }) {
 
 /** The candidates, the ablations and the block sizes, against the same null and the same folds. */
 export function SearchSection({ block }: { block?: SearchBlock }) {
+  const [all, setAll] = useState(false);
   if (!block?.rows.length) return null;
   const byArm = new Map<string, Partial<Record<string, SearchRow>>>();
   for (const r of block.rows) {
@@ -190,37 +211,38 @@ export function SearchSection({ block }: { block?: SearchBlock }) {
   }
   const arms = [...byArm.entries()]
     .map(([arm, metrics]) => ({ arm, metrics, pr: numberOf(metrics.pr_auc?.value_id) }))
+    .filter((a) => a.metrics.pr_auc)
     .sort((a, b) => (b.pr ?? -1) - (a.pr ?? -1));
+  const shown = all ? arms : arms.slice(0, SEARCH_SHOWN);
   const label = (r: SearchRow) =>
     r.name.startsWith("ablation-")
-      ? `boosting without ${r.name.slice("ablation-".length)}`
+      ? `boosting − ${r.name.slice("ablation-".length)}`
       : (ARM_LABEL[r.name] ?? r.name);
   return (
     <Section
-      title="The model search"
-      hint="Every arm is one tracked run, scored out of fold on the same cells as the null. A candidate is validated only if its interval lies wholly above the null's, and the code applies that rule."
+      title="Model search"
+      hint="A candidate is validated only if its interval clears the effort null's."
     >
       <table className="w-full text-[12.5px]" data-testid="search-table">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
           <tr>
-            <th className="py-1.5 text-left font-normal">Arm</th>
-            <th className="py-1.5 text-left font-normal">Held out by</th>
-            <th className="py-1.5 text-right font-normal">PR-AUC</th>
-            <th className="py-1.5 text-right font-normal">
+            <Th left>Arm</Th>
+            <Th left>Folds</Th>
+            <Th>PR-AUC</Th>
+            <Th title="Share of labelled cells in the top-scoring tenth of the grid.">
               <span data-chrome>capture@10%</span>
-            </th>
-            <th className="py-1.5 text-right font-normal">run</th>
+            </Th>
+            <Th>Run</Th>
           </tr>
         </thead>
         <tbody>
-          {arms.map(({ arm, metrics }) => {
+          {shown.map(({ arm, metrics }) => {
             const pr = metrics.pr_auc;
             if (!pr) return null;
-            const isNull = pr.name === "effort";
             return (
               <tr
                 key={arm}
-                className={cn("border-line border-t", isNull && "bg-white/[0.03]")}
+                className={cn("border-line border-t", pr.name === "effort" && "bg-white/[0.03]")}
                 data-testid="search-row"
                 data-arm={arm}
               >
@@ -246,6 +268,22 @@ export function SearchSection({ block }: { block?: SearchBlock }) {
           })}
         </tbody>
       </table>
+      {arms.length > SEARCH_SHOWN ? (
+        <button
+          type="button"
+          onClick={() => setAll((v) => !v)}
+          className="mt-1 text-[11.5px] text-ink-3 hover:text-ink-2"
+          data-testid="search-more"
+        >
+          {all ? (
+            "Show fewer"
+          ) : (
+            <>
+              Show all <span data-instrument>{arms.length}</span>
+            </>
+          )}
+        </button>
+      ) : null}
       {block.decision ? <Decision block={block} /> : null}
       <Naming block={block} />
     </Section>
@@ -261,49 +299,54 @@ function Decision({ block }: { block: SearchBlock }) {
     (r) => r.metric === "pr_auc" && r.name === "effort" && r.fold === "spatial" && r.positives === "all",
   );
   return (
-    <p className="mt-2 max-w-[86ch] text-[11.5px] text-ink-2" data-testid="search-decision" title={d.reason}>
-      Registry: <span data-ident>{d.model ?? "none"}</span> at stage{" "}
-      <span data-ident>{d.stage ?? "none"}</span>, served <span data-ident>{d.served ? "yes" : "no"}</span>.
-      {best && nul ? (
-        <>
-          {" "}
-          The best geology-only candidate reached <V id={best.value_id} />
-          <Interval ci={best.ci} /> against the effort null's <V id={nul.value_id} />
-          <Interval ci={nul.ci} /> under spatial folds
-          {d.stage === "validated" ? ": validated." : ": not validated, so nothing is served."}
-        </>
-      ) : null}
+    <div className="mt-2 text-[11.5px] text-ink-2" data-testid="search-decision" title={d.reason}>
+      <p>
+        Registry: <span data-ident>{d.model ?? "none"}</span> · <span data-ident>{d.stage ?? "none"}</span> ·{" "}
+        {d.served ? "served" : "not served"}
+        {best && nul ? (
+          <>
+            . Best geology <V id={best.value_id} />
+            <Interval ci={best.ci} /> vs effort <V id={nul.value_id} />
+            <Interval ci={nul.ci} />: {d.stage === "validated" ? "validated" : "not validated"}
+          </>
+        ) : null}
+      </p>
       {d.card ? <ModelCard card={d.card} /> : null}
-    </p>
+    </div>
   );
 }
 
 /** What the registered model was fitted on, from the tracker: the card a reader would ask for before trusting it. */
 function ModelCard({ card }: { card: NonNullable<NonNullable<SearchBlock["decision"]>["card"]> }) {
   return (
-    <span className="mt-1 block text-[11px] text-ink-3" data-testid="model-card">
-      Model card: <span data-ident>{card.name}</span> on the <span data-ident>{card.feature_set}</span>{" "}
-      feature set, held out by <span data-chrome>{FOLD_LABEL[card.fold] ?? card.fold}</span>
-      {card.matched ? ", matched background" : ""}
-      {card.thinned ? ", thinned positives" : ""}
-      {card.scored && card.n_pos ? (
-        <>
-          ; <V id={card.scored} /> cells scored with <V id={card.n_pos} /> positives
-        </>
-      ) : null}
-      {card.features.length ? (
-        <>
-          ; features:{" "}
-          {card.features.map((f, i) => (
-            <span key={f}>
-              {i ? ", " : ""}
-              <span data-ident>{f}</span>
-            </span>
-          ))}
-        </>
-      ) : null}
-      .
-    </span>
+    <Disclosure label="Model card" testId="model-card">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[11.5px]">
+        <dt className="text-ink-3">model</dt>
+        <dd data-ident>{card.name}</dd>
+        <dt className="text-ink-3">features</dt>
+        <dd data-ident>{card.feature_set}</dd>
+        <dt className="text-ink-3">folds</dt>
+        <dd data-chrome>
+          {FOLD_LABEL[card.fold] ?? card.fold}
+          {card.matched ? ", matched background" : ""}
+          {card.thinned ? ", thinned positives" : ""}
+        </dd>
+        {card.scored && card.n_pos ? (
+          <>
+            <dt className="text-ink-3">cells</dt>
+            <dd>
+              <V id={card.scored} /> scored, <V id={card.n_pos} /> positive
+            </dd>
+          </>
+        ) : null}
+        {card.features.length ? (
+          <>
+            <dt className="text-ink-3">inputs</dt>
+            <dd data-ident>{card.features.join(", ")}</dd>
+          </>
+        ) : null}
+      </dl>
+    </Disclosure>
   );
 }
 
@@ -330,17 +373,18 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
   const models = ["learned", "effort", "criteria"] as const;
   return (
     <Section
-      title="The dated hindcast"
-      hint="Labels and drilling are frozen at the cutoff year, then the grid is scored. Each later discovery is reported as the share of basin area scoring at least as well, so smaller is better."
+      id="hindcast"
+      title="Hindcast"
+      hint="Share of the basin scoring at least as high as each later discovery. Lower is better."
     >
       <table className="w-full text-[12.5px]" data-testid="hindcast-table">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
           <tr>
-            <th className="py-1.5 text-left font-normal">Discovery</th>
-            <th className="py-1.5 text-right font-normal">Cutoff</th>
-            <th className="py-1.5 text-right font-normal">Geology</th>
-            <th className="py-1.5 text-right font-normal">Effort</th>
-            <th className="py-1.5 text-right font-normal">Criteria</th>
+            <Th left>Discovery</Th>
+            <Th title="Labels and drilling frozen at this year.">Cutoff</Th>
+            <Th>Geology</Th>
+            <Th>Effort</Th>
+            <Th>Criteria</Th>
           </tr>
         </thead>
         <tbody>
@@ -374,7 +418,7 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
           <tfoot>
             <tr className="border-line border-t text-ink-2" data-testid="hindcast-summary">
               <td className="py-1.5" colSpan={2}>
-                median over the rows above
+                median
               </td>
               {models.map((m) => (
                 <td key={m} className="py-1.5 text-right">
@@ -387,212 +431,223 @@ export function HindcastSection({ block }: { block?: HindcastBlock }) {
           </tfoot>
         ) : null}
       </table>
-      <p className="mt-2 max-w-[86ch] text-[11.5px] text-ink-3">
-        Not frozen: the conductor, fault and geochemistry compilations stand as they are today, and survey
-        footprints and occurrences carry no date. A discovery beside one known before the cutoff is ranked by
-        proximity as much as by prediction.
+      <p className="mt-2 text-[11.5px] text-ink-3">
+        Not frozen: the compilations are as of today, and footprints and occurrences carry no date.
       </p>
       <Naming block={block} />
     </Section>
   );
 }
 
-/** The staged loop's per-stage columns in the order the table prints them, each with its heading. */
-const STAGE_COLUMNS: [BenchStage, string][] = [
-  ["n_chains", "Chains"],
-  ["gate_rejection_rate", "Node gate"],
-  ["valid_rate", "Valid"],
-  ["verifier_catch_rate", "Caught"],
-  ["rounds_to_valid_mean", "Rounds to valid"],
-  ["reexecuted_mean", "Re-executed"],
-  ["verifier_agreement_rate", "Verifier agrees"],
-  ["decider_agreement_rate", "Deciders agree"],
+// ---------------------------------------------------------------- the analyst benchmark
+
+/** Plain names for the benchmark's rows. A name this map does not know prints as it is. */
+const ROW_LABEL: Record<string, string> = {
+  v0: "Single call · basic",
+  d1: "Single call · rich",
+  v1: "Staged loop · basic",
+  d2: "Evidence readers · rich",
+  extended: "ML · extended",
+  learned: "ML · learned",
+  criteria: "Criteria",
+  effort: "Effort (null)",
+  random: "Random",
+};
+
+/** A row's plain name, including the rows derived from an arm (votes, fitted weights, samples). */
+export function rowLabel(name: string): string {
+  const vote = /^(.+)-vote(\d+)$/.exec(name);
+  if (vote) return `${rowLabel(vote[1] ?? "")} · vote of ${vote[2] ?? ""}`;
+  const fitted = /^(.+)-fitted$/.exec(name);
+  if (fitted) return `${rowLabel(fitted[1] ?? "")} · fitted weights`;
+  const sample = /^(.+)~s(\d+)$/.exec(name);
+  if (sample) return `${rowLabel(sample[1] ?? "")} · sample ${sample[2] ?? ""}`;
+  return ROW_LABEL[name] ?? name;
+}
+
+const KIND_LABEL: Record<BenchRow["kind"], string> = { arm: "LLM", derived: "derived", baseline: "baseline" };
+
+/** A baseline hidden when it prints the same numbers as another row: `copy_learned` is `learned` whenever
+ * every cell has a learned score. */
+const SAME_AS: Record<string, string> = { copy_learned: "learned" };
+
+/** The 2×2 the benchmark was run for: one call or several, on the basic pack or the rich one. */
+const ABLATION: { label: string; basic: string; rich: string; design?: [string, string] }[] = [
+  { label: "Single call", basic: "v0", rich: "d1" },
+  { label: "Multi-agent", basic: "v1", rich: "d2", design: ["staged loop", "evidence readers"] },
+];
+
+/** The staged loop's per-chain columns, each with its heading and what it counts. */
+const STAGE_COLUMNS: [BenchStage, string, string][] = [
+  ["n_chains", "Chains", "Chains the staged loop ran."],
+  ["gate_rejection_rate", "Node gate", "The gate's refusals over executor attempts."],
+  ["valid_rate", "Valid", "Share of chains a verifier round validated."],
+  ["verifier_catch_rate", "Caught", "Share the verifier refused at least once."],
+  ["rounds_to_valid_mean", "Rounds", "Verifier rounds, over the chains that validated."],
+  ["reexecuted_mean", "Re-run", "Nodes re-run on the verifier's feedback."],
+  ["verifier_agreement_rate", "Verifier agrees", "How often the verifier matched the final verdict."],
+  ["decider_agreement_rate", "Deciders agree", "How often the deciders matched the final verdict."],
 ];
 
 /**
- * The analyst benchmark: every arm and every baseline scored on the same open cells, arms first, each group
- * ranked by F1. A baseline row is muted: it is arithmetic on the fitted scores, not a run, and names none.
- * The second group of columns is the staged loop's per-stage metrics, per chain; a single-call arm and a
- * baseline have no stages and print a dash there. The shallow-path share and the refusals per leakage rule
- * stay in the run summary, being the same in every arm so far. The table is wider than a phone, so it
- * scrolls inside its own container rather than the page.
+ * The analyst benchmark: one ranked table of every LLM arm, derived row and baseline on the same open cells,
+ * the 2×2 ablation, and the comparisons fixed before the runs. The staged loop's per-chain numbers and the
+ * earlier benchmark versions sit closed under the table.
  */
 export function BenchSection({ block }: { block?: BenchBlock }) {
   if (!block?.rows.length) return null;
+  const n = block.rows[0]?.n;
+  const npos = block.rows.find((r) => r.n_pos)?.n_pos;
   return (
     <Section
-      title="The analyst benchmark"
-      hint="Every row on the same open cells of the frozen benchmark. Ranked by the model's own probability over every cell; a refused answer ranks in the middle, as a coin flip."
+      id="benchmark"
+      title={
+        <>
+          Analyst benchmark <span data-ident>{block.version}</span>
+        </>
+      }
+      aside={
+        n ? (
+          <span>
+            <V id={n} /> scored cells
+            {npos ? (
+              <>
+                {" "}
+                · <V id={npos} /> positive
+              </>
+            ) : null}
+          </span>
+        ) : null
+      }
+      hint="Ranked by the model's own probability over every cell; a refusal counts as a coin flip."
     >
-      {/* eight stage columns need eight definitions; they belong under the table, not across the top of it */}
-      <details className="mb-2" data-testid="bench-columns">
-        <summary className="cursor-pointer text-[11.5px] text-ink-3 hover:text-ink-2">
-          what the columns mean
-        </summary>
-        <ul className="mt-1.5 space-y-1 border-line border-l pl-3 text-[11.5px] text-ink-3">
-          <li>Probe cells are not scored. Intervals are bootstraps over cells.</li>
-          <li>Rank PR-AUC: every cell ranked by the stated probability, whatever the verdict.</li>
-          <li>Coverage: share of cells with a usable probability. Brier: squared error of it.</li>
-          <li>Derived: no model call; a vote over an arm's samples, or weights fitted over its readings.</li>
-          <li>Node gate: the gate's refusals over executor attempts.</li>
-          <li>Valid: the share of chains a verifier round validated.</li>
-          <li>Caught: the share the verifier refused at least once.</li>
-          <li>Rounds to valid: rounds over the chains that validated.</li>
-          <li>Re-executed: nodes re-run on the verifier's feedback.</li>
-          <li>Verifier agrees, deciders agree: how often each matched the final verdict.</li>
-          <li>A single-call arm has no stages and shows none.</li>
-        </ul>
-      </details>
-      {[block, ...block.earlier].map((table) => (
-        <BenchTableView key={table.version} table={table} />
+      <BenchTableView table={block} />
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[300px_1fr]">
+        <Ablation table={block} />
+        <BenchContrasts table={block} />
+      </div>
+      <StageDetail table={block} />
+      {block.earlier.map((table) => (
+        <Disclosure
+          key={table.version}
+          label={
+            <>
+              Earlier: benchmark <span data-ident>{table.version}</span>
+            </>
+          }
+          testId="bench-earlier"
+        >
+          <BenchTableView table={table} />
+          <BenchContrasts table={table} />
+          <StageDetail table={table} />
+        </Disclosure>
       ))}
+      <BenchNaming table={block} />
     </Section>
   );
 }
 
-/** One version's table, arms first by F1, then the baselines, then the line naming what it was scored against. */
+function rankOf(r: BenchRow): number | null {
+  return numberOf(r.metrics.pr_auc_rank);
+}
+
+function signature(r: BenchRow): string {
+  return JSON.stringify(
+    (["pr_auc_rank", "f1", "brier", "coverage"] as const).map((m) => numberOf(r.metrics[m])),
+  );
+}
+
+/** The rows a table prints, best first: by rank PR-AUC, then F1 for a row scored before ranking existed. */
+function ranked(table: BenchTable): BenchRow[] {
+  const ranks = table.rows.some((r) => rankOf(r) !== null);
+  const byName = new Map(table.rows.map((r) => [r.name, r]));
+  const rows = table.rows.filter((r) => {
+    if (r.kind !== "baseline") return true;
+    if (ranks && rankOf(r) === null) return false; // an analytic F1 with no ranking: nothing to rank it by
+    const twin = SAME_AS[r.name] ? byName.get(SAME_AS[r.name] ?? "") : undefined;
+    return !(twin && signature(twin) === signature(r));
+  });
+  const key = (r: BenchRow): [number, number] => {
+    const rank = rankOf(r);
+    return rank !== null ? [1, rank] : [0, numberOf(r.metrics.f1) ?? -1];
+  };
+  return rows.sort((a, b) => {
+    const [ha, va] = key(a);
+    const [hb, vb] = key(b);
+    return hb - ha || vb - va;
+  });
+}
+
+/** One version's ranked table. The model is named once above it when every LLM row ran on the same one. */
 function BenchTableView({ table }: { table: BenchTable }) {
-  // the job is ranking, so rows sort by the ranking metric; a table scored before it existed sorts by F1
-  const rank = (r: BenchRow) => numberOf(r.metrics.pr_auc_rank) ?? numberOf(r.metrics.f1) ?? -1;
-  const byRank = (a: BenchRow, b: BenchRow) => rank(b) - rank(a);
-  const rows = [
-    ...table.rows.filter((r) => r.kind === "arm").sort(byRank),
-    ...table.rows.filter((r) => r.kind === "derived").sort(byRank),
-    ...table.rows.filter((r) => r.kind === "baseline").sort(byRank),
-  ];
+  const rows = ranked(table);
+  const arms = rows.filter((r) => r.kind === "arm");
+  const models = new Set(arms.map((r) => [r.model, r.effort].filter(Boolean).join(" · ")));
+  const oneModel = models.size === 1 ? [...models][0] : null;
   return (
-    <div className="mt-3" data-testid="bench-version" data-version={table.version}>
+    <div className="mt-1" data-testid="bench-version" data-version={table.version}>
+      {oneModel ? (
+        <p className="mb-1 text-[11px] text-ink-3">
+          LLM rows: <span data-ident>{oneModel}</span>
+        </p>
+      ) : null}
       <div className="overflow-x-auto">
         <table className="w-full text-[12.5px]" data-testid="bench-table">
           <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
             <tr>
-              <th colSpan={12} className="py-1 text-left font-normal">
-                against the labels
-              </th>
-              <th
-                colSpan={STAGE_COLUMNS.length}
-                className="border-line border-l py-1 pl-3 text-left font-normal"
-              >
-                the staged loop, per chain
-              </th>
-            </tr>
-            <tr>
-              <th className="py-1.5 text-left font-normal">Row</th>
-              <th className="py-1.5 text-left font-normal">Kind</th>
-              <th className="py-1.5 text-left font-normal">Model</th>
-              <th className="py-1.5 text-right font-normal">n</th>
-              <th className="py-1.5 text-right font-normal">Rank PR-AUC</th>
-              <th className="py-1.5 text-right font-normal">
+              <Th left>Row</Th>
+              <Th left>Type</Th>
+              {oneModel ? null : <Th left>Model</Th>}
+              <Th title="Every cell ranked by the stated probability, whatever the verdict; a refusal counts as a coin flip. Interval: bootstrap over cells.">
+                Rank PR-AUC
+              </Th>
+              <Th title="F1 of the verdicts.">
                 <span data-chrome>F1</span>
-              </th>
-              <th className="py-1.5 text-right font-normal">Coverage</th>
-              <th className="py-1.5 text-right font-normal">Brier</th>
-              <th className="py-1.5 text-right font-normal">Abstain</th>
-              <th className="py-1.5 text-right font-normal">Gate rejected</th>
-              <th className="py-1.5 text-right font-normal">$ per cell</th>
-              <th className="py-1.5 text-right font-normal">run</th>
-              {STAGE_COLUMNS.map(([key, label], i) => (
-                <th
-                  key={key}
-                  className={cn("py-1.5 pl-3 text-right font-normal", i === 0 && "border-line border-l")}
-                >
-                  {label}
-                </th>
-              ))}
+              </Th>
+              <Th title="Share of cells with a usable probability.">Coverage</Th>
+              <Th title="Squared error of the probability.">Brier</Th>
+              <Th title="Share of cells answered as insufficient evidence.">Abstain</Th>
+              <Th title="Share of answers the fabrication gate refused.">Gate</Th>
+              <Th title="Cost per cell at list price.">$/cell</Th>
+              <Th>Run</Th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <BenchLine key={`${r.kind}.${r.name}`} row={r} />
+              <BenchLine key={`${r.kind}.${r.name}`} row={r} showModel={!oneModel} />
             ))}
           </tbody>
         </table>
       </div>
-      <BenchContrasts table={table} />
-      <BenchNaming table={table} />
     </div>
   );
 }
 
-/** The comparisons fixed before the runs: a paired difference in rank PR-AUC, and McNemar on verdicts. */
-function BenchContrasts({ table }: { table: BenchTable }) {
-  if (!table.contrasts.length) return null;
-  return (
-    <div className="mt-3 overflow-x-auto">
-      <table className="w-full text-[12.5px]" data-testid="bench-contrasts">
-        <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
-          <tr>
-            <th className="py-1.5 text-left font-normal">Comparison, fixed before the runs</th>
-            <th className="py-1.5 text-left font-normal">Rows</th>
-            <th className="py-1.5 text-right font-normal">Δ rank PR-AUC</th>
-            <th className="py-1.5 text-right font-normal">Only first right</th>
-            <th className="py-1.5 text-right font-normal">Only second right</th>
-            <th className="py-1.5 text-right font-normal">McNemar p</th>
-          </tr>
-        </thead>
-        <tbody>
-          {table.contrasts.map((c) => (
-            <tr key={`${c.first}~${c.second}`} className="border-line border-t" data-testid="bench-contrast">
-              <td className="py-1.5">{c.question}</td>
-              <td className="py-1.5">
-                <span data-ident>{c.first}</span>
-                <span className="text-ink-3" data-chrome>
-                  {" vs "}
-                </span>
-                <span data-ident>{c.second}</span>
-              </td>
-              <td className="py-1.5 text-right">
-                <Metric id={c.diff} ci={c.diff_ci} />
-              </td>
-              <td className="py-1.5 text-right">
-                <Metric id={c.mcnemar?.b} />
-              </td>
-              <td className="py-1.5 text-right">
-                <Metric id={c.mcnemar?.c} />
-              </td>
-              <td className="py-1.5 text-right">
-                <Metric id={c.mcnemar?.p} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function BenchLine({ row }: { row: BenchRow }) {
-  const baseline = row.kind === "baseline";
+function BenchLine({ row, showModel }: { row: BenchRow; showModel: boolean }) {
+  const llm = row.kind !== "baseline";
   const runId = row.mlflow_run_id ?? row.run_id;
   return (
     <tr
-      className={cn("border-line border-t", baseline && "text-ink-3")}
+      className={cn("border-line border-t", !llm && "text-ink-3")}
       data-testid="bench-row"
       data-kind={row.kind}
       data-row={row.name}
       title={row.note}
     >
-      <td className={cn("py-1.5", !baseline && "text-ink-2")}>
-        <span data-ident>{row.name}</span>
+      <td className={cn("py-1.5", llm && "text-ink")}>
+        <span data-ident>{rowLabel(row.name)}</span>
       </td>
-      <td className="py-1.5">{row.kind}</td>
-      <td className="py-1.5">
-        <span data-ident>{row.model ?? "–"}</span>
-        {row.effort ? (
-          <span className="text-ink-3" data-chrome>
-            {" "}
-            · {row.effort}
-          </span>
-        ) : null}
-      </td>
-      <td className="py-1.5 text-right">
-        <V id={row.n} />
-      </td>
+      <td className="py-1.5">{KIND_LABEL[row.kind]}</td>
+      {showModel ? (
+        <td className="py-1.5">
+          <span data-ident>{[row.model, row.effort].filter(Boolean).join(" · ") || "–"}</span>
+        </td>
+      ) : null}
       <td className="py-1.5 text-right">
         <Metric id={row.metrics.pr_auc_rank} ci={row.ci?.pr_auc_rank} />
       </td>
       <td className="py-1.5 text-right">
-        <Metric id={row.metrics.f1} ci={row.ci?.f1} />
+        <Metric id={row.metrics.f1} />
       </td>
       <td className="py-1.5 text-right">
         <Metric id={row.metrics.coverage} />
@@ -612,16 +667,160 @@ function BenchLine({ row }: { row: BenchRow }) {
       <td className="py-1.5 text-right">
         {runId ? <RunId id={runId} /> : <span className="text-ink-3">–</span>}
       </td>
-      {STAGE_COLUMNS.map(([key], i) => (
-        <td
-          key={key}
-          className={cn("py-1.5 pl-3 text-right", i === 0 && "border-line border-l")}
-          data-stage={key}
-        >
-          <Metric id={row.stages?.[key]} />
-        </td>
-      ))}
     </tr>
+  );
+}
+
+/** The 2×2 ablation as a grid of rank PR-AUC, drawn when at least three of its four arms ran. */
+function Ablation({ table }: { table: BenchTable }) {
+  const byName = new Map(table.rows.map((r) => [r.name, r]));
+  const present = ABLATION.flatMap((a) => [a.basic, a.rich]).filter((n) => byName.has(n)).length;
+  if (present < 3) return null;
+  const cell = (name: string, design?: string) => {
+    const r = byName.get(name);
+    return (
+      <td className="rounded-lg bg-black/25 px-3 py-2 text-right" data-testid="ablation-cell" data-row={name}>
+        <div className="text-[18px] text-ink leading-none">
+          <Metric id={r?.metrics.pr_auc_rank} />
+        </div>
+        {design ? <div className="mt-1 text-[10.5px] text-ink-3">{design}</div> : null}
+      </td>
+    );
+  };
+  return (
+    <div data-testid="ablation">
+      <h3 className="mb-1.5 text-[12px] text-ink-2">LLM ablation · rank PR-AUC</h3>
+      <table className="w-full border-separate border-spacing-1 text-[12px]">
+        <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+          <tr>
+            <th />
+            <th className="text-right font-normal">
+              <Tip
+                text="The benchmark's first evidence pack."
+                className="border-line-strong border-b border-dotted"
+              >
+                Basic
+              </Tip>
+            </th>
+            <th className="text-right font-normal">
+              <Tip
+                text="Adds evidence tools, the region and the extended features."
+                className="border-line-strong border-b border-dotted"
+              >
+                Rich
+              </Tip>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {ABLATION.map((a) => (
+            <tr key={a.label}>
+              <td className="pr-2 text-ink-3">{a.label}</td>
+              {cell(a.basic, a.design?.[0])}
+              {cell(a.rich, a.design?.[1])}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The comparisons fixed before the runs: a paired difference in rank PR-AUC, and McNemar on verdicts. */
+function BenchContrasts({ table }: { table: BenchTable }) {
+  if (!table.contrasts.length) return null;
+  return (
+    <div className="overflow-x-auto">
+      <h3 className="mb-1.5 text-[12px] text-ink-2">Paired comparisons</h3>
+      <table className="w-full text-[12px]" data-testid="bench-contrasts">
+        <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+          <tr>
+            <Th left>A vs B</Th>
+            <Th title="Rank PR-AUC of A minus B on the same cells, with a paired bootstrap interval.">Δ</Th>
+            <Th title="Cells only A got right, and only B.">Only A · B</Th>
+            <Th title="McNemar's exact test on which cells each got right.">p</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {table.contrasts.map((c) => (
+            <ContrastLine key={`${c.first}~${c.second}`} c={c} />
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ContrastLine({ c }: { c: BenchContrast }) {
+  const lo = numberOf(c.diff_ci?.[0]);
+  const hi = numberOf(c.diff_ci?.[1]);
+  const tone = lo !== null && lo > 0 ? "text-st-pass" : hi !== null && hi < 0 ? "text-st-miss" : "text-ink-2";
+  return (
+    <tr className="border-line border-t" data-testid="bench-contrast" title={c.question}>
+      <td className="py-1.5">
+        <span data-ident className="text-ink-2">
+          {rowLabel(c.first)}
+        </span>
+        <span className="text-ink-3"> vs </span>
+        <span data-ident className="text-ink-2">
+          {rowLabel(c.second)}
+        </span>
+      </td>
+      <td className="py-1.5 text-right">
+        <V id={c.diff} className={tone} />
+        <Interval ci={c.diff_ci} />
+      </td>
+      <td className="py-1.5 text-right text-ink-3">
+        {c.mcnemar ? (
+          <>
+            <V id={c.mcnemar.b} /> · <V id={c.mcnemar.c} />
+          </>
+        ) : (
+          "–"
+        )}
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={c.mcnemar?.p} />
+      </td>
+    </tr>
+  );
+}
+
+/** The staged loop's per-chain numbers, for the rows that have stages; closed until asked for. */
+function StageDetail({ table }: { table: BenchTable }) {
+  const staged = table.rows.filter((r) => r.stages && Object.keys(r.stages).length);
+  if (!staged.length) return null;
+  return (
+    <Disclosure label="Staged loop, per chain" testId="bench-stages">
+      <div className="overflow-x-auto">
+        <table className="w-full text-[12px]" data-testid="stage-table">
+          <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+            <tr>
+              <Th left>Row</Th>
+              {STAGE_COLUMNS.map(([key, label, title]) => (
+                <Th key={key} title={title}>
+                  {label}
+                </Th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {staged.map((r) => (
+              <tr key={r.name} className="border-line border-t" data-testid="stage-row" data-row={r.name}>
+                <td className="py-1.5 text-ink-2">
+                  <span data-ident>{rowLabel(r.name)}</span>
+                </td>
+                {STAGE_COLUMNS.map(([key]) => (
+                  <td key={key} className="py-1.5 text-right" data-stage={key}>
+                    <Metric id={r.stages?.[key]} />
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Disclosure>
   );
 }
 
@@ -639,7 +838,7 @@ function Metric({ id, ci }: { id?: string; ci?: [string, string] }) {
 /** What the table was scored against: the benchmark version, its manifest, and when it was computed. */
 function BenchNaming({ table }: { table: BenchTable }) {
   return (
-    <p className="mt-2 text-[11px] text-ink-3">
+    <p className="mt-3 text-[11px] text-ink-3">
       benchmark <span data-ident>{table.version}</span>
       {table.manifest_sha256 ? (
         <>
@@ -650,7 +849,7 @@ function BenchNaming({ table }: { table: BenchTable }) {
       {table.computed_at ? (
         <>
           {" "}
-          · computed <span data-chrome>{table.computed_at.slice(0, 16).replace("T", " ")}</span>
+          · <span data-chrome>{table.computed_at.slice(0, 16).replace("T", " ")}</span>
         </>
       ) : null}
     </p>

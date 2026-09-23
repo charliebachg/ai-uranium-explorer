@@ -10,46 +10,41 @@ import { loadReadiness } from "@/data/loader";
 
 const ROWS: { claim: string; credible: boolean; evidence: string; needed: string; measured?: string }[] = [
   {
-    claim: "It reads collars and assay intervals as printed",
+    claim: "Reads collars and assays as printed",
     credible: true,
-    evidence:
-      "The province publishes no assay values, so grades exist only in the assessment files. No published accuracy figure exists for reading them, so a measured one would be new.",
-    needed: "A gold set keyed by hand; a geologist only for interpretive fields.",
+    evidence: "Grades exist only in the assessment files; the province publishes none.",
+    needed: "A gold set keyed by hand.",
   },
   {
-    claim: "This grade or log means X",
+    claim: "Says what a grade or log means",
     credible: false,
-    evidence:
-      "A downhole gamma log misreads uranium that is out of balance with the decay products emitting the gamma rays. Frontier models also score poorly at reading geological maps.",
-    needed: "A geologist, plus the company's own quality-control data.",
+    evidence: "Gamma logs misread uranium out of equilibrium; models read geological maps poorly.",
+    needed: "A geologist and the company's QC data.",
   },
   {
-    claim: "This map ranks ground",
+    claim: "Ranks ground",
     credible: false,
-    evidence:
-      "Known deposits sit where people looked, so a model trained on public labels learns exploration history. Scores fall sharply once folds stop nearby cells leaking between training and test.",
-    needed: "Drill outcomes, geologist-chosen negatives, and folds fixed before modelling.",
+    evidence: "Public labels sit where people looked, so a model learns exploration history.",
+    needed: "Drill outcomes and geologist-chosen negatives.",
     measured: "ranks-ground",
   },
   {
-    claim: "Drill here, or this saves holes",
+    claim: "Says where to drill",
     credible: false,
-    evidence:
-      "The one quantified planner result is on synthetic two-dimensional deposits. It wrongly abandoned about a third of profitable multi-body cases. Developed uranium discoveries waited 14.1 years on average.",
-    needed: "Years of predictions logged before drilling.",
+    evidence: "The only quantified planner result is on synthetic deposits.",
+    needed: "Predictions logged before drilling, over years.",
   },
   {
     claim: "An LLM judge checked it",
     credible: false,
-    evidence:
-      "Across 21 judges, agreement corrected for chance ran far below raw agreement. A judge that looks accurate can be agreeing by chance.",
-    needed: "Geologist-to-geologist agreement measured first, then the judge scored against it.",
+    evidence: "Judge agreement falls far below raw agreement once chance is removed.",
+    needed: "Geologist agreement measured first.",
   },
   {
-    claim: "Anything about a company's own ground",
+    claim: "Anything on a company's own ground",
     credible: false,
-    evidence: "Saskatchewan assessment files can stay confidential for three years from submission.",
-    needed: "Their data, and their permission.",
+    evidence: "Assessment files can stay confidential for three years.",
+    needed: "Their data and permission.",
   },
 ];
 
@@ -60,19 +55,10 @@ function Measured({ readiness }: { readiness: Readiness | null }) {
     rows.find((r) => r.model === model && r.fold === fold && r.metric === metric)?.value_id ?? null;
   const learned = find("learned", "spatial", "pr_auc");
   const effort = find("effort", "spatial", "pr_auc");
-  const criteriaRoc = find("criteria", "none", "roc_auc");
-  const criteriaCapture = find("criteria", "none", "capture_top10");
   if (!learned || !effort) return null;
   return (
-    <div className="mt-2 rounded-lg border border-st-flag/25 bg-st-flag/[0.06] px-3 py-2 text-[12px]">
-      <div className="mb-1 text-[10.5px] text-st-flag uppercase tracking-wider">Measured here</div>
-      <p className="text-ink-2 leading-relaxed">
-        Under spatial folds the geology model scores <V id={learned} /> PR-AUC, against <V id={effort} /> for
-        drilling history alone. The criteria score, fitted to no labels, reaches{" "}
-        {criteriaRoc ? <V id={criteriaRoc} /> : null} ROC-AUC and captures{" "}
-        {criteriaCapture ? <V id={criteriaCapture} /> : null} of known positives in the top tenth of the area.
-        Exploration history predicts the labels better than geology does.
-      </p>
+    <div className="mt-1 text-[11.5px] text-st-flag" data-testid="limits-measured">
+      Measured: geology <V id={learned} /> vs drilling history <V id={effort} /> PR-AUC, spatial folds.
     </div>
   );
 }
@@ -85,15 +71,9 @@ export function LimitsPage() {
   return (
     <div className="h-full overflow-y-auto bg-ground" data-strict="limits">
       <div className="mx-auto max-w-[1000px] space-y-4 px-6 py-6">
-        <header className="glass rounded-2xl p-5">
-          <h1 className="font-semibold text-[18px] text-ink tracking-tight">
-            What this system can and cannot claim
-          </h1>
-          <p className="mt-1.5 max-w-[74ch] text-[13px] text-ink-2">
-            Public records can be turned into checked, traceable tables, and the reading can be measured. They
-            cannot show that the geology is right. That takes geologist judgement and drill outcomes, and
-            neither is public.
-          </p>
+        <header className="glass rounded-2xl px-4 py-2">
+          <h1 className="font-semibold text-[15px] text-ink">Limits</h1>
+          <p className="mt-0.5 text-[12px] text-ink-3">What public data can and cannot support.</p>
         </header>
 
         <section className="glass overflow-hidden rounded-2xl">
@@ -101,16 +81,16 @@ export function LimitsPage() {
             <thead className="bg-white/[0.03] text-[10.5px] text-ink-3 uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-2 text-left font-normal">Claim</th>
-                <th className="px-2 py-2 text-left font-normal">On public data</th>
+                <th className="whitespace-nowrap px-2 py-2 text-left font-normal">Public data</th>
                 <th className="px-4 py-2 text-left font-normal">Why</th>
-                <th className="px-4 py-2 text-left font-normal">What it would take</th>
+                <th className="px-4 py-2 text-left font-normal">Needs</th>
               </tr>
             </thead>
             <tbody>
               {ROWS.map((r) => (
                 <tr key={r.claim} className="border-line border-t align-top">
-                  <td className="px-4 py-3 text-ink">{r.claim}</td>
-                  <td className="px-2 py-3">
+                  <td className="px-4 py-2 text-ink">{r.claim}</td>
+                  <td className="px-2 py-2">
                     {r.credible ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-src-geods/15 px-2 py-0.5 text-[11px] text-src-geods">
                         <Check className="size-3" /> yes
@@ -121,11 +101,11 @@ export function LimitsPage() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-ink-2">
+                  <td className="px-4 py-2 text-ink-2">
                     <span data-source-text>{r.evidence}</span>
                     {r.measured === "ranks-ground" ? <Measured readiness={readiness} /> : null}
                   </td>
-                  <td className="px-4 py-3 text-ink-3">{r.needed}</td>
+                  <td className="px-4 py-2 text-ink-3">{r.needed}</td>
                 </tr>
               ))}
             </tbody>

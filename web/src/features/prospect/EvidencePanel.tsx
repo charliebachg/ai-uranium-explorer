@@ -1,6 +1,7 @@
 import { CircleDashed, CircleSlash, MapPin, ShieldQuestion } from "lucide-react";
 import { useState } from "react";
 import { Chip } from "@/components/ui/StatusMark";
+import { Tip } from "@/components/ui/Tip";
 import { V } from "@/components/values/V";
 import type { AnalystChain, CellEvidence, ChainNode, ChainVerdict } from "@/data/contract";
 import { hasValue } from "@/data/registry";
@@ -52,14 +53,9 @@ export function EvidencePanel({
       </header>
 
       {state !== "up" ? (
-        <OfflineNotice
-          state={state}
-          what="The evidence record, the memos and the chat all come from that process."
-        />
+        <OfflineNotice state={state} />
       ) : !cellId ? (
-        <p className="mt-3 text-[12.5px] text-ink-3">
-          Click a cell on the map, or pick one of the ranked cells above it, to see what is recorded there.
-        </p>
+        <p className="mt-3 text-[12.5px] text-ink-3">Click a cell to see its evidence.</p>
       ) : error ? (
         <p className="mt-3 text-[12.5px] text-st-miss">{error}</p>
       ) : loading || !record ? (
@@ -84,9 +80,7 @@ function Block({ title, note, children }: { title: string; note?: string; childr
       {note ? (
         // the tool's own note: kept in full, folded away, because a rail is for scanning
         <details className="mt-0.5 mb-1.5">
-          <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">
-            why this matters
-          </summary>
+          <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">note</summary>
           <p className="mt-1 text-[11.5px] text-ink-3" data-source-text>
             {note}
           </p>
@@ -105,13 +99,20 @@ function Scores({ record }: { record: CellEvidence }) {
   const part = record.parts.cell_scores;
   if (!part) return null;
   return (
-    <Block title="What each model says here" note={part.note}>
+    <Block title="Scores" note={part.note}>
       <table className="w-full text-[12.5px]">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
           <tr>
             <th className="py-1 text-left font-normal">Model</th>
             <th className="w-[80px] py-1 text-right font-normal">Score</th>
-            <th className="w-[104px] py-1 pr-4 text-right font-normal">Known share</th>
+            <th className="w-[116px] py-1 pr-4 pl-3 text-right font-normal">
+              <Tip
+                text="Share of the labelled neighbourhood already known before scoring. A high score beside a high known share restates the record."
+                className="border-line-strong border-b border-dotted"
+              >
+                Known share
+              </Tip>
+            </th>
             <th className="w-[150px] py-1 text-left font-normal">Applicability</th>
           </tr>
         </thead>
@@ -132,25 +133,21 @@ function Scores({ record }: { record: CellEvidence }) {
                   />
                 </td>
                 <td className="py-1.5 text-[11.5px] text-ink-3">
-                  {applicable ? "inside the area of applicability" : "outside the area of applicability"}
+                  {str(row, "model_note") ? (
+                    <Tip text={str(row, "model_note")} className="border-line-strong border-b border-dotted">
+                      {applicable ? "inside" : "outside"}
+                    </Tip>
+                  ) : applicable ? (
+                    "inside"
+                  ) : (
+                    "outside"
+                  )}
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      {part.rows.map((row) =>
-        str(row, "model_note") ? (
-          <p key={`${str(row, "model")}-note`} className="mt-1.5 text-[11px] text-ink-3">
-            <span className="text-ink-2">{str(row, "model")}</span>:{" "}
-            <span data-source-text>{str(row, "model_note")}</span>
-          </p>
-        ) : null,
-      )}
-      <p className="mt-1.5 text-[11px] text-ink-3">
-        Known share is how much of this cell's labelled neighbourhood was already known before any of this was
-        scored. A high score beside a high known share is a restatement of the record, not a finding.
-      </p>
     </Block>
   );
 }
@@ -167,7 +164,7 @@ function Criteria({ record }: { record: CellEvidence }) {
   const part = record.parts.criteria_breakdown;
   if (!part) return null;
   return (
-    <Block title="What each criterion contributed" note={part.note}>
+    <Block title="Criteria" note={part.note}>
       <StateKey />
       <ul className="mt-2 space-y-1.5">
         {part.rows.map((row) => (
@@ -182,17 +179,17 @@ function StateKey() {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-ink-3">
       <span className="flex items-center gap-1.5">
-        <span className="block h-2 w-8 rounded-full bg-st-pass" /> met: measured here and above the threshold
+        <span className="block h-2 w-8 rounded-full bg-st-pass" /> met
       </span>
       <span className="flex items-center gap-1.5">
         <span className="block h-2 w-8 rounded-full bg-white/[0.08]">
           <span className="block h-2 w-2 rounded-full bg-ink-3" />
         </span>
-        not met: measured here and below it
+        not met
       </span>
       <span className="flex items-center gap-1.5">
-        <span className="block h-2 w-8 rounded-full border border-st-flag/70 border-dashed" /> unknown: never
-        measured here, which is not a failure
+        <span className="block h-2 w-8 rounded-full border border-st-flag/70 border-dashed" /> unknown (not
+        measured)
       </span>
     </div>
   );
@@ -232,7 +229,12 @@ function CriterionRow({ row, cellId }: { row: Row; cellId: string }) {
         <MembershipBar unknown={unknown} membership={membership} folklore={folklore} />
         <span className="w-[86px] text-right text-[11.5px]">
           {unknown ? (
-            <V id={null} emptyText="not measured" />
+            <Tip
+              text={str(row, "note") || "No value here: unknown, not absent."}
+              className="border-st-flag/50 border-b border-dotted"
+            >
+              <V id={null} emptyText="not measured" />
+            </Tip>
           ) : (
             <V id={idAt(row, "membership_id")} className="text-ink-2" />
           )}
@@ -242,24 +244,15 @@ function CriterionRow({ row, cellId }: { row: Row; cellId: string }) {
         </span>
       </div>
 
-      {unknown ? (
-        <p className="mt-1 flex items-center gap-1.5 text-[11.5px] text-st-flag">
-          <ShieldQuestion className="size-3.5 shrink-0" aria-hidden="true" />
-          <span data-source-text>{str(row, "note") || "no value for this criterion here"}</span>
-        </p>
-      ) : null}
       {folklore ? (
         <p className="mt-1 flex items-center gap-1.5 text-[11.5px] text-ink-3">
           <CircleSlash className="size-3.5 shrink-0" aria-hidden="true" />
-          Carried at weight zero: named in the handbook as personal communication with no published test, so
-          it contributes nothing to the score whatever its membership.
+          Folklore: weight zero.
         </p>
       ) : null}
       {str(row, "evidence") || str(row, "caveat") ? (
         <details className="mt-1">
-          <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">
-            Where this criterion comes from
-          </summary>
+          <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">source</summary>
           <div className="mt-1 space-y-1 border-line border-l pl-3">
             {str(row, "evidence") ? (
               <p className="text-[11.5px] text-ink-2" data-source-text>
@@ -370,14 +363,14 @@ function Memos({ record }: { record: CellEvidence }) {
   if (!record.memos.length) {
     return (
       <Block title="Stored memos">
-        <p className="text-[12px] text-ink-3">No memo has been written for this cell.</p>
+        <p className="text-[12px] text-ink-3">None for this cell.</p>
       </Block>
     );
   }
   return (
     <Block
       title="Stored memos"
-      note="Three agents argue the same evidence: one for, one against, one adjudicating. A memo whose claims failed the check is kept and marked rejected, not deleted."
+      note="Proponent, skeptic, adjudicator. A memo that fails the number check is kept, marked rejected."
     >
       <div className="space-y-2">
         {record.memos.map((memo) => (
@@ -426,10 +419,7 @@ function Memos({ record }: { record: CellEvidence }) {
                 ))}
               </ol>
             ) : (
-              <p className="mt-1.5 text-[11.5px] text-ink-3">
-                This memo failed the check that every number it cites came from a tool, so its claims are not
-                shown here. It is kept as a record of what the agent tried to say, not offered as argument.
-              </p>
+              <p className="mt-1.5 text-[11.5px] text-ink-3">Failed the number check; claims withheld.</p>
             )}
           </article>
         ))}
@@ -501,7 +491,7 @@ function Chains({ record }: { record: CellEvidence }) {
     return (
       <Block title="Analyst chain">
         <p className="text-[12px] text-ink-3" data-testid="chain-empty">
-          No chain computed for this cell yet.
+          None for this cell yet.
         </p>
       </Block>
     );
@@ -511,7 +501,7 @@ function Chains({ record }: { record: CellEvidence }) {
   return (
     <Block
       title="Analyst chain"
-      note="One node per criterion, each executed against the tools, with a verifier that sends faulty nodes back. Every number cites a value id, and a node or decision that failed its gate is shown withheld."
+      note="One node per criterion, checked by a verifier. A node or decision that fails its gate is withheld."
     >
       {record.chains.length > 1 ? (
         <label className="mb-2 flex items-center gap-2 text-[11px] text-ink-3">
@@ -824,18 +814,14 @@ function Decision({ chain }: { chain: AnalystChain }) {
               ))}
             </ol>
           ) : (
-            <p className="mt-1.5 text-[11.5px] text-ink-3">
-              The decision failed the check that every number it cites came from a tool, so its claims are not
-              shown here. It is kept as a record of what the adjudicator tried to say, not offered as
-              argument.
-            </p>
+            <p className="mt-1.5 text-[11.5px] text-ink-3">Failed the number check; claims withheld.</p>
           )}
           <div className="mt-2 grid gap-2 text-[11.5px] sm:grid-cols-2">
             <CriteriaList title="Unknown: never measured here" items={d.unknown_criteria} />
             <CriteriaList title="Absent: measured here and not found" items={d.absent_criteria} />
           </div>
           <p className="mt-2 text-[11.5px] text-ink-2" data-testid="chain-observation">
-            <span className="text-ink-3">The one observation that would change this reading: </span>
+            <span className="text-ink-3">Would change it: </span>
             <span data-source-text>{d.next_observation || "none named"}</span>
           </p>
           {d.rationale ? (
@@ -852,7 +838,7 @@ function Decision({ chain }: { chain: AnalystChain }) {
       ) : null}
       {chain.majority_label !== null ? (
         <p className="mt-2 text-[11.5px] text-ink-2">
-          Majority over the rounds' candidate labels: {VERDICT_WORDING[chain.majority_label]}
+          Majority over rounds: {VERDICT_WORDING[chain.majority_label]}
         </p>
       ) : null}
     </div>

@@ -27,7 +27,12 @@ test("data readiness page reports coverage, not a ranking of ground", async ({ p
   await expect(readiness).toContainText("What is missing");
   await expect(readiness).toContainText("Airborne magnetic, radiometric and gravity grids");
   await expect(readiness).toContainText("Open Government Licence");
-  // the five-column gate is on the page, with a verdict and one row per dataset
+  // the five-column gate is on the page, with a verdict and one row per dataset; a green gate keeps its rows
+  // closed until asked for
+  await expect(readiness.locator('[data-testid="gate-verdict"]')).toBeVisible();
+  const gateRows = readiness.locator('[data-testid="gate-rows"]');
+  if (!(await gateRows.evaluate((el) => (el as HTMLDetailsElement).open)))
+    await gateRows.locator("summary").click();
   await expect(readiness.locator('[data-testid="gate-table"]')).toBeVisible();
   await expect(readiness.locator('[data-testid="gate-verdict"]')).toContainText(/gate (green|red)/);
   expect(await readiness.locator('[data-testid="gate-row"]').count()).toBeGreaterThan(10);

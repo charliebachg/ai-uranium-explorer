@@ -218,9 +218,7 @@ function Empty({
   const select = useStore((s) => s.select);
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3" data-testid="agent-empty">
-      <p className="text-[12.5px] text-ink-2">
-        Click a cell on the map to see its evidence and ask about it.
-      </p>
+      <p className="text-[12.5px] text-ink-2">Click a cell to see its evidence.</p>
       {!scoresOn ? (
         <button
           type="button"
@@ -238,7 +236,7 @@ function Empty({
             Highest criteria score
           </div>
           <p className="mb-2 text-[11.5px] text-ink-3">
-            Mostly ground that is already known — a check on the ranking, not a shortlist.
+            Mostly known ground: a check on the ranking, not a shortlist.
           </p>
           <div className="flex flex-wrap gap-1.5">
             {ranked.map((c) => (

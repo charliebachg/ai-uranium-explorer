@@ -261,7 +261,7 @@ describe("the Chains section", () => {
   it("shows the empty state in the memo section's style when no chain exists", () => {
     const el = mount({ ...record, chains: [] });
     expect(el.querySelector('[data-testid="chain-empty"]')?.textContent).toBe(
-      "No chain computed for this cell yet.",
+      "None for this cell yet.",
     );
     expect(el.querySelector('[data-testid="chain"]')).toBeNull();
   });

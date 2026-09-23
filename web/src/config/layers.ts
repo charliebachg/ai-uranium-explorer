@@ -182,7 +182,7 @@ export function layerGroups(
     {
       id: "prospect",
       label: "Prospect scores",
-      detail: "Retrospective scores over 2 km cells. Colour is a score here, not a data source.",
+      detail: "Retrospective scores, 2 km cells",
       sourceId: null,
       // the cell count lives in the readiness export, not the manifest this rail reads
       countStat: null,
@@ -242,7 +242,7 @@ export function layerGroups(
     {
       id: "conductors",
       label: "EM conductors",
-      detail: "Mapped electromagnetic conductors: the pathway criterion's own input",
+      detail: "Pathway criterion input",
       sourceId: "em_conductors",
       countStat: null,
       legend: { kind: "line", color: t.ice },
@@ -268,7 +268,7 @@ export function layerGroups(
     {
       id: "faults",
       label: "Faults and lineaments",
-      detail: "Mapped structure from the provincial bedrock sheet; the trap criterion's input",
+      detail: "Trap criterion input",
       sourceId: "faults_250k",
       countStat: null,
       legend: { kind: "line", color: COLORS.neutral },
@@ -295,7 +295,7 @@ export function layerGroups(
     {
       id: "host",
       label: "Graphitic or pelitic host",
-      detail: "Bedrock units whose mapped lithology names the host rock",
+      detail: "Host rock named in mapped bedrock",
       sourceId: "bedrock_250k",
       countStat: null,
       legend: { kind: "fill", color: COLORS.neutral },
@@ -322,7 +322,7 @@ export function layerGroups(
     {
       id: "lakeSediment",
       label: "Lake sediment samples",
-      detail: "Where the lake-sediment survey sampled. Size is uranium; colour stays the source's.",
+      detail: "Sample sites; size is uranium",
       sourceId: "lake_sediment_sgs",
       countStat: null,
       legend: { kind: "dot", color: COLORS.geods },
@@ -356,7 +356,7 @@ export function layerGroups(
     {
       id: "lakeWater",
       label: "Lake water samples",
-      detail: "Thin coverage: this survey reaches a small fraction of the grid",
+      detail: "Thin coverage",
       sourceId: "lake_water_sgs",
       countStat: null,
       legend: { kind: "dot", color: t.pass },
@@ -381,7 +381,7 @@ export function layerGroups(
     {
       id: "boulders",
       label: "Radioactive boulders",
-      detail: "Boulders found at surface. The source lies up-ice, not underneath.",
+      detail: "Surface finds; source lies up-ice",
       sourceId: "radioactive_boulders",
       countStat: null,
       legend: { kind: "dot", color: COLORS.flag },
@@ -406,7 +406,7 @@ export function layerGroups(
     {
       id: "surveysAir",
       label: "Airborne survey footprints",
-      detail: "Where somebody flew a survey. Exploration effort, not rock.",
+      detail: "Effort, not rock",
       sourceId: "assessment_surveys",
       countStat: null,
       legend: { kind: "hollow", color: COLORS.compilation },
@@ -427,7 +427,7 @@ export function layerGroups(
     {
       id: "surveysGround",
       label: "Ground survey footprints",
-      detail: "Where somebody walked a survey. Exploration effort, not rock.",
+      detail: "Effort, not rock",
       sourceId: "assessment_surveys",
       countStat: null,
       legend: { kind: "hollow", color: COLORS.geods },
@@ -448,7 +448,7 @@ export function layerGroups(
     {
       id: "relief",
       label: "Relief shading",
-      detail: "Hillshade from Mapzen Terrain Tiles; monochrome, not data",
+      detail: "Hillshade, not data",
       sourceId: null,
       countStat: null,
       legend: { kind: "relief", color: COLORS.neutral },
@@ -501,7 +501,7 @@ export function layerGroups(
     {
       id: "basin",
       label: "Athabasca Basin",
-      detail: "Athabasca Supergroup, 1:1,000,000 bedrock geology",
+      detail: "Athabasca Supergroup outline",
       sourceId: "basin_geology",
       countStat: null,
       legend: { kind: "line", color: t.ice },
@@ -546,7 +546,7 @@ export function layerGroups(
     {
       id: "nts",
       label: "NTS map sheets",
-      detail: "National Topographic System 1:250,000 and 1:50,000 sheets",
+      detail: "NTS 1:250k and 1:50k",
       sourceId: "nts_50k",
       countStat: null,
       legend: { kind: "grid", color: COLORS.neutral },
@@ -601,7 +601,7 @@ export function layerGroups(
     {
       id: "deposits",
       label: "Uranium deposit footprints",
-      detail: "Known deposit outlines compiled by the Saskatchewan Geological Survey",
+      detail: "Saskatchewan Geological Survey",
       sourceId: "uranium_deposit_footprints",
       countStat: "m:uranium_deposit_footprints",
       legend: { kind: "fill", color: COLORS.neutral },
@@ -640,7 +640,7 @@ export function layerGroups(
     {
       id: "occurrences",
       label: "Uranium occurrences",
-      detail: "Saskatchewan Mineral Deposit Index, uranium as a primary commodity",
+      detail: "SMDI, uranium primary",
       sourceId: "mineral_deposits_uranium",
       countStat: "m:uranium_occurrences",
       legend: { kind: "hollow", color: COLORS.neutral },
@@ -666,7 +666,7 @@ export function layerGroups(
     {
       id: "geods",
       label: "GeoDS drillholes",
-      detail: "Holes compiled from assessment files (Geoscience Data System); shown from zoom 7",
+      detail: "From assessment files; zoom 7+",
       sourceId: "geods_holes",
       countStat: "m:geods_holes",
       legend: { kind: "dot", color: COLORS.geods },
@@ -735,7 +735,7 @@ export function layerGroups(
     {
       id: "compilation",
       label: "Compilation collars",
-      detail: "Minerals and Quaternary Drillhole Compilation, province-wide",
+      detail: "Provincial drillhole compilation",
       sourceId: "compilation",
       countStat: "m:compilation_collars",
       legend: { kind: "dot", color: COLORS.compilation },
@@ -779,7 +779,7 @@ export function layerGroups(
     {
       id: "reports",
       label: "Report footprints",
-      detail: "Areas covered by the assessment files read here",
+      detail: "Files read here",
       sourceId: null,
       countStat: "m:files_read",
       legend: { kind: "line", color: t.pass },
@@ -795,7 +795,7 @@ export function layerGroups(
     {
       id: "readHoles",
       label: "Holes read from reports",
-      detail: "Colour and shape show extraction status: pass, flag, miss",
+      detail: "Colour is extraction status",
       sourceId: null,
       countStat: null,
       legend: { kind: "dot", color: t.pass },
@@ -808,8 +808,7 @@ export function layerGroups(
     {
       id: "datumField",
       label: "NAD27 to NAD83 shift field",
-      detail:
-        "Arrows show where a NAD27 coordinate lands in NAD83 (computed with PROJ and the NRCan NTv2 grid)",
+      detail: "NAD27 to NAD83, NTv2 grid",
       sourceId: "ntv2_grid",
       countStat: null,
       legend: { kind: "line", color: t.ice },

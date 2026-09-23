@@ -5,9 +5,8 @@ test("eval page reports run statistics and refuses to call them accuracy", async
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/eval");
   const evalPage = page.locator('[data-strict="eval"]');
-  await expect(evalPage).toContainText("No gold labels yet: these are run statistics, not accuracy");
+  await expect(evalPage).toContainText("No gold set: counts, not accuracy");
   await expect(evalPage).toContainText("V01");
-  await expect(evalPage).toContainText("What would turn these into accuracy");
   // the tracked evaluations: every row of the hindcast names its run, and the table is on the page
   await expect(evalPage.locator('[data-testid="hindcast-table"]')).toBeVisible();
   expect(await evalPage.locator('[data-testid="hindcast-row"]').count()).toBeGreaterThan(5);
@@ -34,7 +33,8 @@ test("eval page reports run statistics and refuses to call them accuracy", async
   });
   expect(unbacked).toEqual([]);
 
-  // a flagged example jumps to the page it came from
+  // a flagged example jumps to the page it came from; the examples open under their check
+  await evalPage.locator('[data-testid="check-row"][data-check="V01"] summary').click();
   await evalPage
     .getByRole("button", { name: /74H09-0039/ })
     .first()
@@ -60,14 +60,14 @@ test("the analyst benchmark table is on the page when the export carries it", as
   // one table per benchmark version, the highest first; the assertions read the first
   const table = evalPage.locator('[data-testid="bench-table"]').first();
   await expect(table).toBeVisible();
-  await expect(evalPage).toContainText("The analyst benchmark");
+  await expect(evalPage).toContainText("Analyst benchmark");
   expect(await table.locator('[data-testid="bench-row"]').count()).toBeGreaterThan(0);
-  // arms come first, and every arm names its run; baselines follow, muted, naming none
+  // one ranked table, LLM arms and baselines together, and every arm names its run
   const kinds = await table
     .locator('[data-testid="bench-row"]')
     .evaluateAll((rows) => rows.map((r) => r.getAttribute("data-kind")));
-  const firstBaseline = kinds.indexOf("baseline");
-  expect(firstBaseline === -1 || kinds.slice(firstBaseline).every((k) => k === "baseline")).toBe(true);
+  expect(kinds).toContain("arm");
+  expect(kinds).toContain("baseline");
   for (const row of await table.locator('[data-testid="bench-row"][data-kind="arm"]').all())
     await expect(row.locator("[data-ident]").last()).toBeVisible();
 });
@@ -75,8 +75,8 @@ test("the analyst benchmark table is on the page when the export carries it", as
 test("limits page states what the system cannot claim", async ({ page }) => {
   await page.goto("/limits");
   const limits = page.locator('[data-strict="limits"]');
-  await expect(limits).toContainText("What this system can and cannot claim");
-  await expect(limits).toContainText("Drill here, or this saves holes");
-  await expect(limits).toContainText("That takes geologist judgement and drill outcomes");
+  await expect(limits).toContainText("What public data can and cannot support");
+  await expect(limits).toContainText("Says where to drill");
+  await expect(limits).toContainText("Ranks ground");
   await page.screenshot({ path: "test-results/limits-page.png", fullPage: true });
 });

@@ -220,15 +220,17 @@ The app has five views, all under the same top bar: **Map** (`/`), **Data** (`/d
 `m:files_read` and `m:uranium_files` stats from the manifest, read "of ... uranium-tagged files read"; at
 the current export, 22 of 5,822), the view links, **Search**, **Tour** and **Key**.
 
-**The map.** The layer rail on the left is grouped the way MineTRACE groups evidence, with one deliberate
-addition. At the top, *Scores* holds the *Prospect scores* layer and a four-way picker: **Criteria**,
+**The map.** The layer rail on the left opens with *Reports read*, a dropdown: closed it is one line with the
+count and the open report; open it lists every file read, with a filter over file number, company and era. A
+report's *Province* link is its own report PDF on the province's object store. Below it the layers are grouped
+the way MineTRACE groups evidence, with one deliberate addition. At the top, *Scores* holds the *Prospect scores* layer and a four-way picker: **Criteria**,
 **Learned**, **Effort** and **Learned − effort**. Then *Pathway and trap* (EM conductors; faults and
 lineaments; graphitic or pelitic host), *Geochemistry* (lake sediment samples; lake water samples;
 radioactive boulders), *Where people already looked* (airborne and ground survey footprints, GeoDS
 drillholes, compilation collars; the group exists because separating the rock from the exploration history is
 the argument this system makes), *Known uranium* (uranium deposit footprints; uranium occurrences) and *Base*
 (the Athabasca Basin outline, NTS map sheets, relief shading). *Geophysics* is a group with no layers:
-magnetics, gravity and radiometrics are listed struck through with "no public grid for Saskatchewan", because
+magnetics, gravity and radiometrics are listed struck through with "no public grid", because
 a gap you can see beats a smooth map that quietly omits it. The footer holds the basemap picker and the theme
 toggle. Each evidence layer is fetched the first time it is switched on. A cell the chosen model could not
 score is drawn as an outline with no fill, a hole in the picture rather than a low score. Clicking a cell
@@ -237,23 +239,27 @@ whenever the cells are on. The datum tools (`D`, `M`) and the timeline (`T`) are
 reading pipeline: the NAD27 to NAD83 shift and where collars would land if it were skipped, and where people
 drilled by year.
 
-**Data** (`/data`) is the readiness scorecard: where the observations are (one dot per grid cell, from the
-exported cell file, a coverage map and not a prospectivity map), the totals (sources, verified features,
-redistributable sources, recorded gaps), coverage by feature with the thin ones named, the sources with their
-licences and verification dates, the five-column readiness gate as `ue prospect gate` last scored it, and what
-is missing.
+**Data** (`/data`) is the readiness scorecard: the totals (sources, verified features, redistributable
+sources, recorded gaps), coverage by feature with the thin ones named (one line per feature; its note is on the
+info mark), where the observations are (one dot per grid cell, a coverage map and not a prospectivity map), the
+five-column readiness gate as `ue prospect gate` last scored it (one verdict chip; the rows open on request,
+and open by themselves when the gate is red), the sources with their licences, and what is missing.
 
-**Eval** (`/eval`) opens on the reading pipeline's run statistics and says at the top that they are run
-statistics, not accuracy, because no gold page has been keyed: what was read, values with a quote on the page,
-the second reader (OCR), what the checks flagged, where the holes came from, the cross-check against
-provincial records, per file, what the run cost, and what would turn these into accuracy. Below sit the score
-models: what the map's scores are worth (the fold metrics), the re-test, the model search with its registry
-decision and model card, the dated hindcast, the analyst benchmark with the staged loop's per-stage columns,
-and the fabrication gate put to the test. Section 6.8 says where each table's numbers come from.
+**Eval** (`/eval`) puts results first, with a section bar at the top. **Benchmark**: one table of every LLM
+arm, derived row and baseline on the benchmark's open cells, ranked by rank PR-AUC and named in words (single
+call or staged loop or evidence readers, basic or rich pack; ML extended, ML learned, criteria, effort, random),
+the 2×2 LLM ablation as a grid, and the comparisons fixed before the runs; the staged loop's per-chain numbers
+and earlier benchmark versions sit closed under it. **Map scores**: the fold metrics, geology against effort
+after the corrections, and the model search with its registry decision (the model card closed). **Hindcast**,
+then the **fabrication gate** put to the test. **Reading** comes last and is marked as counts, not accuracy,
+because no gold page has been keyed: pages, located quotes, the OCR second reader, the checks (one line each,
+examples on click), hole positions, the provincial cross-check and the run's cost; per file, the tracked runs
+and the notes are closed. What a column means is on its header: hover or focus it. Section 6.8 says where
+each table's numbers come from.
 
-**Limits** (`/limits`) is one row per claim (a grade or log means something; the map ranks ground; drill here;
-an LLM judge checked it; anything about a company's own ground): what public data can support, what it cannot,
-and what each would take, each line cited to its source.
+**Limits** (`/limits`) is one row per claim (reads as printed; says what a grade or log means; ranks ground;
+says where to drill; an LLM judge checked it; anything on a company's own ground): whether public data supports
+it, why in one line, and what it would take. The ranks-ground row carries this system's own measurement.
 
 **Review** (`/review`) is the extractor's review queue (section 5.3).
 

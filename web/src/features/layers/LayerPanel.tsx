@@ -24,7 +24,7 @@ const SECTIONS: { title: string; note?: string; ids: LayerGroupId[] }[] = [
   { title: "Geochemistry", ids: ["lakeSediment", "lakeWater", "boulders"] },
   {
     title: "Where people already looked",
-    note: "Effort, not rock. Under spatial folds these predict known deposits better than the geology does.",
+    note: "Effort, not rock. Ranks known deposits better than geology.",
     ids: ["compilation", "geods", "surveysAir", "surveysGround"],
   },
   { title: "Known uranium", ids: ["deposits", "occurrences"] },
@@ -34,9 +34,9 @@ const SECTIONS: { title: string; note?: string; ids: LayerGroupId[] }[] = [
 /** The geophysics MineTRACE shows and this ground does not publish. Named, because a silent omission reads
  * as "nothing there" when it means "nobody published it". */
 const GEOPHYSICS_GAPS: { label: string; why: string }[] = [
-  { label: "Magnetics", why: "no public grid for Saskatchewan" },
-  { label: "Gravity", why: "no public grid for Saskatchewan" },
-  { label: "Radiometrics", why: "no public grid for Saskatchewan" },
+  { label: "Magnetics", why: "no public grid" },
+  { label: "Gravity", why: "no public grid" },
+  { label: "Radiometrics", why: "no public grid" },
 ];
 
 const SCORE_MODELS: { id: ScoreModel; label: string; hint: string }[] = [
@@ -139,9 +139,6 @@ export function LayerPanel() {
           <div className="px-2 pt-2 pb-1 text-[10.5px] text-ink-3 uppercase tracking-[0.12em]">
             Geophysics
           </div>
-          <p className="px-2 pb-1 text-[11px] text-ink-3">
-            The three layers a prospectivity map usually leans on. None is published as a grid here.
-          </p>
           {GEOPHYSICS_GAPS.map((gap) => (
             <div
               key={gap.label}

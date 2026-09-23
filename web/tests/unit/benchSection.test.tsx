@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
 import { BenchBlock, type ValRegistry, type ValueId } from "@/data/contract";
 import { registerValues } from "@/data/registry";
-import { BenchSection } from "@/features/eval/PhaseSections";
+import { BenchSection, rowLabel } from "@/features/eval/PhaseSections";
 
 /**
  * The analyst benchmark table with the staged loop's per-stage columns, rendered against a block shaped as
@@ -127,41 +127,32 @@ afterEach(() => {
 });
 
 describe("the analyst benchmark table with stage columns", () => {
-  it("prints every stage number of a staged arm through <V>, and a dash where an arm has no stage", () => {
+  it("prints every stage number of a staged arm through <V>, in its own table under the ranking", () => {
     const el = mount();
     const table = el.querySelector('[data-testid="bench-table"]');
     expect(table?.parentElement?.className).toContain("overflow-x-auto");
-    expect(table?.textContent).toContain("the staged loop, per chain");
-    for (const label of ["Chains", "Node gate", "Valid", "Caught", "Rounds to valid", "Re-executed"])
-      expect(table?.textContent).toContain(label);
+    const stages = el.querySelector('[data-testid="stage-table"]');
+    for (const label of ["Chains", "Node gate", "Valid", "Caught", "Rounds", "Re-run"])
+      expect(stages?.textContent).toContain(label);
 
-    const staged = el.querySelector('[data-testid="bench-row"][data-row="v1-openrouter"]');
+    const staged = el.querySelector('[data-testid="stage-row"][data-row="v1-openrouter"]');
     expect(staged).not.toBeNull();
     for (const key of Object.keys(block.rows[1]?.stages ?? {})) {
       const cell = staged?.querySelector(`[data-stage="${key}"]`);
       expect(cell?.querySelector(`[data-vid="${V1}:stage:${key}"]`), key).not.toBeNull();
     }
-    // the digits the stage cells print all sit under a value id: nothing is typed in
-    for (const cell of Array.from(staged?.querySelectorAll("[data-stage]") ?? []))
-      for (const digit of cell.textContent?.match(/\d/g) ?? []) expect(digit).toBeTruthy();
     expect(staged?.querySelector('[data-stage="valid_rate"]')?.textContent).toBe("0.485");
     expect(staged?.querySelector('[data-stage="n_chains"]')?.textContent).toBe("130");
 
-    // the single-call arm and the baseline have no stages: a dash, never a number
-    for (const name of ["v0", "random_expected"]) {
-      const row = el.querySelector(`[data-testid="bench-row"][data-row="${name}"]`);
-      const cells = Array.from(row?.querySelectorAll("[data-stage]") ?? []);
-      expect(cells.length).toBe(8);
-      for (const cell of cells) {
-        expect(cell.textContent).toBe("–");
-        expect(cell.querySelector("[data-vid]")).toBeNull();
-      }
-    }
-    // arms first, baselines after, as before
-    const kinds = Array.from(el.querySelectorAll('[data-testid="bench-row"]')).map((r) =>
-      r.getAttribute("data-kind"),
+    // a single-call arm and a baseline have no stages, so they have no row there at all
+    expect(el.querySelectorAll('[data-testid="stage-row"]').length).toBe(1);
+    // with no ranking metric in the table, the rows rank by F1, arms and baselines together
+    const order = Array.from(el.querySelectorAll('[data-testid="bench-row"]')).map((r) =>
+      r.getAttribute("data-row"),
     );
-    expect(kinds).toEqual(["arm", "arm", "baseline"]);
+    expect(order).toEqual(["v0", "random_expected", "v1-openrouter"]);
+    // two models among the arms: the table carries a model column
+    expect(table?.textContent).toContain("qwen/qwen3.8-flash · medium");
   });
 });
 
@@ -221,7 +212,7 @@ describe("the ranking columns, the derived rows and the comparisons fixed before
     ],
   });
 
-  it("orders arms, then derived rows, then baselines, and prints each comparison through <V>", () => {
+  it("ranks every row by rank PR-AUC and prints each comparison through <V>", () => {
     registerValues(values, { notify: false });
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -233,17 +224,30 @@ describe("the ranking columns, the derived rows and the comparisons fixed before
     const order = Array.from(el.querySelectorAll('[data-testid="bench-row"]')).map((r) =>
       r.getAttribute("data-row"),
     );
-    expect(order).toEqual(["d1", "d1-vote5", "extended"]);
+    expect(order).toEqual(["d1-vote5", "d1", "extended"]);
+    expect(el.querySelector('[data-row="d1-vote5"]')?.textContent).toContain("Single call · rich · vote of 5");
     const d1 = el.querySelector('[data-testid="bench-row"][data-row="d1"]');
     expect(d1?.querySelector(`[data-vid="${D1}:pr_auc_rank"]`)?.textContent).toBe("0.610");
     expect(d1?.querySelector(`[data-vid="${D1}:coverage"]`)).not.toBeNull();
     const c = el.querySelector('[data-testid="bench-contrast"]');
-    expect(c?.textContent).toContain("the single-shot LLM against the fitted model");
+    expect(c?.textContent).toContain("Single call · rich vs ML · extended");
+    expect(c?.getAttribute("title")).toBe("the single-shot LLM against the fitted model");
     for (const id of [`${C}:diff`, `${C}:mcnemar_b`, `${C}:mcnemar_c`, `${C}:mcnemar_p`])
       expect(c?.querySelector(`[data-vid="${id}"]`), id).not.toBeNull();
   });
 
   it("a table from before the comparisons existed parses with none", () => {
     expect(block.contrasts).toEqual([]);
+  });
+});
+
+describe("the plain names", () => {
+  it("names the arms, the rows derived from them and the baselines in words", () => {
+    expect(rowLabel("v0")).toBe("Single call · basic");
+    expect(rowLabel("d2")).toBe("Evidence readers · rich");
+    expect(rowLabel("d2-fitted")).toBe("Evidence readers · rich · fitted weights");
+    expect(rowLabel("d1~s3")).toBe("Single call · rich · sample 3");
+    expect(rowLabel("extended")).toBe("ML · extended");
+    expect(rowLabel("v0-qwen38")).toBe("v0-qwen38");
   });
 });

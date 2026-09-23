@@ -1,6 +1,7 @@
-import { AlertTriangle, ArrowUpRight, Check, Layers, X } from "lucide-react";
+import { ArrowUpRight, Check, ChevronRight, Info, Layers, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Chip } from "@/components/ui/StatusMark";
+import { Tip } from "@/components/ui/Tip";
 import { V } from "@/components/values/V";
 import type { ProspectFeature, ProspectGap, ProspectSource, Readiness, ReadinessGate } from "@/data/contract";
 import { loadReadiness } from "@/data/loader";
@@ -45,7 +46,7 @@ export function ReadinessPage() {
       <HeaderStrip data={data} />
       <Totals data={data} />
       <FeatureSection data={data} />
-      <Section title="Where the observations are" hint="One dot per grid cell, from the exported cell file.">
+      <Section title="Where the observations are" hint="One dot per grid cell.">
         <CoverageMap
           cellMetres={numberOf(data.grid.cell_m, 2000)}
           cellSizeId={data.grid.cell_m}
@@ -94,21 +95,21 @@ function HeaderStrip({ data }: { data: Readiness }) {
         </span>
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-3">
           <Fact label="cells" id={data.grid.cells} />
-          <Fact label="cell size" id={data.grid.cell_m} />
+          <Fact label="cell" id={data.grid.cell_m} />
           <Fact label="area" id={data.grid.area_km2} />
-          <Fact label="over the sandstone" id={data.grid.in_basin} />
-          <Fact label="buffer beyond the basin outline" id={data.grid.buffer_km} />
+          <Fact label="in the basin" id={data.grid.in_basin} />
+          <Fact label="buffer" id={data.grid.buffer_km} />
         </span>
-        <span className="text-[12px] text-ink-3">
-          grid <span data-ident>{data.grid.grid_id}</span> · <span data-ident>EPSG:{data.grid.epsg}</span> ·
-          generated <span data-chrome>{data.generated_at.slice(0, 16).replace("T", " ")}</span>
+        <span className="ml-auto text-[11.5px] text-ink-3">
+          grid <span data-ident>{data.grid.grid_id}</span> · <span data-ident>EPSG:{data.grid.epsg}</span> ·{" "}
+          <span data-chrome>{data.generated_at.slice(0, 16).replace("T", " ")}</span>
         </span>
       </div>
       {data.caveats.length ? (
-        <details className="mt-1.5">
-          <summary className="cursor-pointer text-[11.5px] text-ink-3 hover:text-ink-2">
-            <AlertTriangle className="-mt-0.5 mr-1.5 inline size-3" aria-hidden="true" />
-            What these numbers do not say
+        <details className="group mt-1.5">
+          <summary className="flex cursor-pointer list-none items-center gap-1 text-[11.5px] text-ink-3 hover:text-ink-2">
+            <ChevronRight className="size-3 transition-transform group-open:rotate-90" />
+            Notes
           </summary>
           <ul className="mt-1.5 space-y-1 border-line border-l pl-3">
             {data.caveats.map((c) => (
@@ -159,11 +160,13 @@ function Totals({ data }: { data: Readiness }) {
 
 function Stat({ id, label, title, tone }: { id: string; label: string; title: string; tone?: "miss" }) {
   return (
-    <div className="glass rounded-2xl p-4" title={title}>
+    <div className="glass rounded-2xl p-4">
       <div className={cn("text-[30px] leading-none", tone === "miss" ? "text-st-miss" : "text-ink")}>
         <V id={id} />
       </div>
-      <div className="mt-1.5 text-[11.5px] text-ink-3">{label}</div>
+      <Tip text={title} className="mt-1.5 inline-block text-[11.5px] text-ink-3">
+        {label}
+      </Tip>
     </div>
   );
 }
@@ -183,33 +186,21 @@ function FeatureSection({ data }: { data: Readiness }) {
   return (
     <section className="glass rounded-2xl p-4">
       <h2 className="text-[13px] text-ink">Coverage by feature</h2>
-      <p className="mt-0.5 max-w-[86ch] text-[11.5px] text-ink-3">
-        Share of grid cells with a real observation. No observation is a gap, not a low value.
+      <p className="mt-0.5 text-[11.5px] text-ink-3">
+        Share of cells with an observation. A gap is not a low value.
       </p>
 
-      <h3 className="mt-4 text-[12px] text-ink-2">
+      <h3 className="mt-3 mb-1 text-[12px] text-ink-2">
         Geological features (<V id={data.totals.geo_features} unit={false} />)
       </h3>
-      <p className="mt-0.5 mb-1 max-w-[86ch] text-[11.5px] text-ink-3">
-        Measured or mapped properties of the ground. Rows marked thin cover a minority of the basin.
-      </p>
       <FeatureTable rows={geological} />
 
-      <h3 className="mt-6 text-[12px] text-ink-2">
+      <h3 className="mt-5 text-[12px] text-ink-2">
         Exploration-effort features (<V id={data.totals.effort_features} unit={false} />)
       </h3>
-      <p className="mt-0.5 max-w-[86ch] text-[11.5px] text-ink-3">
-        Where people looked, not what is in the rock: surveys flown, samples taken, holes collared.
+      <p className="mt-0.5 mb-1 text-[11.5px] text-ink-3">
+        Where people looked, not the rock. Inputs to the null model only.
       </p>
-      <details className="mt-1 mb-1">
-        <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">
-          why these are kept apart
-        </summary>
-        <p className="mt-1 max-w-[86ch] border-line border-l pl-3 text-[11.5px] text-ink-3">
-          A model trained on effort alone is the null model any later score has to beat. Beating it is the
-          only way to show a score carries geology rather than exploration history.
-        </p>
-      </details>
       <FeatureTable rows={effort} />
     </section>
   );
@@ -221,10 +212,18 @@ function FeatureTable({ rows }: { rows: ProspectFeature[] }) {
       <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
         <tr>
           <th className="py-1.5 text-left font-normal">Feature</th>
-          <th className="w-[170px] py-1.5 text-left font-normal">Coverage of the grid</th>
-          <th className="w-[80px] py-1.5 text-right font-normal">Share</th>
-          <th className="w-[110px] py-1.5 text-right font-normal">Cells covered</th>
-          <th className="w-[130px] py-1.5 text-right font-normal">Observations per value</th>
+          <th className="w-[90px] py-1.5 text-left font-normal">Bears on</th>
+          <th className="w-[150px] py-1.5 text-left font-normal">Coverage</th>
+          <th className="w-[64px] py-1.5 text-right font-normal">Share</th>
+          <th className="w-[80px] py-1.5 text-right font-normal">Cells</th>
+          <th className="w-[72px] py-1.5 text-right font-normal">
+            <Tip
+              text="Median observations behind each value."
+              className="border-line-strong border-b border-dotted"
+            >
+              Obs
+            </Tip>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -238,14 +237,14 @@ function FeatureTable({ rows }: { rows: ProspectFeature[] }) {
 
 function FeatureRow({ feature: f }: { feature: ProspectFeature }) {
   return (
-    <tr
-      className="border-line border-t align-top"
-      data-testid="feature-row"
-      data-thin={f.thin ? "" : undefined}
-    >
-      <td className="py-2.5 pr-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className={cn("text-[13px]", f.thin ? "text-ink-2" : "text-ink")} data-source-text>
+    <tr className="border-line border-t" data-testid="feature-row" data-thin={f.thin ? "" : undefined}>
+      <td className="py-1.5 pr-3">
+        <span className="flex items-center gap-1.5">
+          <span
+            className={cn("text-[12.5px]", f.thin ? "text-ink-2" : "text-ink")}
+            title={f.feature_key}
+            data-source-text
+          >
             {f.title}
           </span>
           {f.thin ? (
@@ -253,47 +252,29 @@ function FeatureRow({ feature: f }: { feature: ProspectFeature }) {
               thin
             </Chip>
           ) : null}
-        </div>
-        {f.notes ? (
-          <details className="mt-0.5">
-            <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">
-              <Meta feature={f} /> · note
-            </summary>
-            <p
-              className="mt-1 max-w-[72ch] border-line border-l pl-3 text-[11.5px] text-ink-3"
-              data-source-text
-            >
-              {f.notes}
-            </p>
-          </details>
-        ) : (
-          <div className="mt-0.5 text-[11px] text-ink-3">
-            <Meta feature={f} />
-          </div>
-        )}
+          {f.notes ? (
+            <Tip text={f.notes} className="text-ink-3 hover:text-ink-2" testId="feature-note" label="note">
+              <Info className="size-3" aria-hidden="true" />
+            </Tip>
+          ) : null}
+        </span>
       </td>
-      <td className="py-3 pr-4">
+      <td className="py-1.5 pr-3 text-[11.5px] text-ink-3" data-ident>
+        {f.bears_on}
+      </td>
+      <td className="py-1.5 pr-3">
         <Bar share={numberOf(f.coverage)} thin={f.thin} />
       </td>
-      <td className="py-2.5 text-right">
+      <td className="py-1.5 text-right">
         <V id={f.coverage} className={f.thin ? "text-ink-3" : "text-ink"} />
       </td>
-      <td className="py-2.5 text-right text-ink-2">
+      <td className="py-1.5 text-right text-ink-2">
         <V id={f.covered_cells} />
       </td>
-      <td className="py-2.5 text-right text-ink-2">
-        <V id={f.median_obs} emptyText="not recorded" />
+      <td className="py-1.5 text-right text-ink-2">
+        <V id={f.median_obs} emptyText="–" />
       </td>
     </tr>
-  );
-}
-
-/** The identifiers under a feature's title: what it bears on, and the key it is stored under. */
-function Meta({ feature: f }: { feature: ProspectFeature }) {
-  return (
-    <>
-      bears on <span data-ident>{f.bears_on}</span> · <span data-ident>{f.feature_key}</span>
-    </>
   );
 }
 
@@ -311,26 +292,16 @@ function Bar({ share, thin }: { share: number; thin: boolean }) {
 
 // ---------- sources ----------
 
-const ROLE_NOTE: Record<ProspectSource["role"], string | null> = {
-  feature: null,
-  label:
-    "A label, never used as a feature: deposits sit where people looked, so feeding them back would teach exploration history.",
-  context: "Context only, not built into a feature.",
-};
-
 function SourcesSection({ sources }: { sources: ProspectSource[] }) {
   return (
-    <Section
-      title="Sources"
-      hint="Every layer behind the features: licence, tier, and whether a live call confirmed it."
-    >
+    <Section title="Sources" hint="Label layers are never used as a feature.">
       <table className="w-full text-[12.5px]">
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
           <tr>
             <th className="py-1.5 text-left font-normal">Source</th>
             <th className="w-[80px] py-1.5 text-left font-normal">Role</th>
             <th className="w-[70px] py-1.5 text-left font-normal">Tier</th>
-            <th className="w-[240px] py-1.5 text-left font-normal">Licence</th>
+            <th className="w-[220px] py-1.5 text-left font-normal">Licence</th>
             <th className="w-[100px] py-1.5 text-right font-normal">Records</th>
             <th className="w-[110px] py-1.5 text-right font-normal">Checked</th>
           </tr>
@@ -346,7 +317,6 @@ function SourcesSection({ sources }: { sources: ProspectSource[] }) {
 }
 
 function SourceRow({ source: s }: { source: ProspectSource }) {
-  const note = ROLE_NOTE[s.role];
   return (
     <tr
       className={cn("border-line border-t align-top", !s.verified && "opacity-60")}
@@ -373,12 +343,9 @@ function SourceRow({ source: s }: { source: ProspectSource }) {
             {s.key}
           </span>
         </div>
-        {note ? <p className="mt-1 max-w-[72ch] text-[11.5px] text-ink-3">{note}</p> : null}
         {s.notes || s.caveats.length ? (
           <details className="mt-1">
-            <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">
-              {s.caveats.length ? "note and what to watch" : "note"}
-            </summary>
+            <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">notes</summary>
             <ul className="mt-1 space-y-1 border-line border-l pl-3">
               {[...(s.notes ? [s.notes] : []), ...s.caveats].map((c) => (
                 <li key={c} className="max-w-[72ch] text-[11.5px] text-ink-3" data-source-text>
@@ -396,13 +363,14 @@ function SourceRow({ source: s }: { source: ProspectSource }) {
           href={s.licence_url}
           target="_blank"
           rel="noreferrer"
-          className="text-ink-3 underline decoration-line-strong underline-offset-4 hover:text-ink-2"
+          className="block max-w-[220px] truncate text-ink-3 underline decoration-line-strong underline-offset-4 hover:text-ink-2"
+          title={s.licence}
           data-source-text
         >
           {s.licence}
         </a>
         {!s.redistributable ? (
-          <span className="mt-1 block text-[11px] text-ink-3">not redistributable</span>
+          <span className="block text-[11px] text-st-flag">not redistributable</span>
         ) : null}
       </td>
       <td className="py-2.5 text-right text-ink-2">
@@ -431,24 +399,20 @@ function SourceRow({ source: s }: { source: ProspectSource }) {
  */
 const GAP_TEXT: Record<string, { why: string; workaround: string }> = {
   aeromagnetic_grids: {
-    why: "Magnetics and radiometrics are the standard first-pass Athabasca datasets, and gravity carries the quartz-dissolution signal. Their absence is the biggest hole in any public model of this basin.",
-    workaround:
-      "Mapped lithology and interpreted magnetic domains stand in for the magnetic-low proxy. Nothing stands in for radiometrics or gravity until the 200 m grid is pulled.",
+    why: "The standard first-pass Athabasca data; gravity carries the quartz-dissolution signal.",
+    workaround: "Lithology and magnetic domains stand in for magnetics. Nothing for radiometrics or gravity.",
   },
   discovery_dates: {
-    why: "Without dates there is no train-before, test-after split, which is the strongest test short of drilling.",
-    workaround:
-      "A hand-built table of about ten dated discoveries, each cited to a public technical report, used only as a hold-out. Leave-one-camp-out spatial folds need no dates.",
+    why: "No dates, no train-before, test-after split.",
+    workaround: "About ten dated discoveries, cited by hand, used only as a hold-out.",
   },
   em_conductor_attributes: {
-    why: "The folklore that stronger conductors make better ground needs a conductance value to test.",
-    workaround:
-      "Criteria use distance and density only. The strength claims stay in the handbook as untested folklore, with weight zero.",
+    why: "Testing whether stronger conductors mean better ground needs conductance.",
+    workaround: "Criteria use distance and density only; strength claims carry weight zero.",
   },
   alteration_measurements: {
-    why: "Alteration is the largest expression of the system. The Cigar Lake halo reaches about 100 m below and 300 m above the unconformity.",
-    workaround:
-      "None. The handbook states the extents, so an agent can say what would settle a cell. The adjudicator names alteration as an unknown, never an absence.",
+    why: "Alteration is the system's largest footprint.",
+    workaround: "None. The agents name alteration as unknown, never absent.",
   },
 };
 
@@ -479,57 +443,67 @@ function GateSection({ gate }: { gate?: ReadinessGate }) {
   const failing = gate.rows.filter((r) => GATE_COLUMNS.some((c) => !r[c].ok)).length;
   return (
     <Section
-      title="The readiness gate"
-      hint="Five checks per dataset: present, licensed, coverage stated, servable, and versioned to a hashed pull. No agent phase starts until every row is green."
+      title="Readiness gate"
+      hint="Present, licensed, coverage stated, servable, versioned. Hover a mark for its note."
     >
       <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px]" data-testid="gate-verdict">
         <Chip tone={gate.green ? "pass" : "miss"}>{gate.green ? "gate green" : "gate red"}</Chip>
         <span className="text-ink-3" data-instrument>
-          {failing} of {gate.rows.length} rows failing · store{" "}
+          {failing} of {gate.rows.length} failing · store{" "}
           <span data-ident>{gate.store_sha256?.slice(0, 12) ?? "none"}</span>
-          {gate.snapshot ? " (a named snapshot)" : " (no snapshot names it)"}
+          {gate.snapshot ? " · snapshot" : ""}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-[12px]" data-testid="gate-table">
-          <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
-            <tr>
-              <th className="py-1 text-left font-normal">Dataset</th>
-              <th className="py-1 text-left font-normal">Kind</th>
-              {GATE_COLUMNS.map((c) => (
-                <th key={c} className="py-1 text-left font-normal">
-                  {c}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {gate.rows.map((r) => (
-              <tr
-                key={r.dataset}
-                className="border-line border-t align-top"
-                data-testid="gate-row"
-                data-kind={r.kind}
-              >
-                <td className="py-1.5 pr-2">
-                  <span data-ident>{r.dataset}</span>
-                </td>
-                <td className="py-1.5 pr-2 text-ink-3">{GATE_KIND_LABEL[r.kind]}</td>
+      {/* all green is one chip, not a wall of ticks: the rows open on request, and open by themselves when red */}
+      <details className="group" open={!gate.green} data-testid="gate-rows">
+        <summary className="flex cursor-pointer list-none items-center gap-1 text-[11.5px] text-ink-3 hover:text-ink-2">
+          <ChevronRight className="size-3 transition-transform group-open:rotate-90" />
+          Every dataset
+        </summary>
+        <div className="mt-1.5 overflow-x-auto">
+          <table className="w-full text-[12px]" data-testid="gate-table">
+            <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+              <tr>
+                <th className="py-1 text-left font-normal">Dataset</th>
+                <th className="py-1 text-left font-normal">Kind</th>
                 {GATE_COLUMNS.map((c) => (
-                  <td key={c} className="py-1.5 pr-2" title={r[c].note}>
-                    <span className={cn("block", r[c].ok ? "text-st-ok" : "text-st-miss")}>
-                      {r[c].ok ? "ok" : "not yet"}
-                    </span>
-                    <span className="block max-w-[26ch] truncate text-[10.5px] text-ink-3" data-source-text>
-                      {r[c].note}
-                    </span>
-                  </td>
+                  <th key={c} className="py-1 text-left font-normal">
+                    {c}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {gate.rows.map((r) => (
+                <tr
+                  key={r.dataset}
+                  className="border-line border-t align-top"
+                  data-testid="gate-row"
+                  data-kind={r.kind}
+                >
+                  <td className="py-1.5 pr-2">
+                    <span data-ident>{r.dataset}</span>
+                  </td>
+                  <td className="py-1.5 pr-2 text-ink-3">{GATE_KIND_LABEL[r.kind]}</td>
+                  {GATE_COLUMNS.map((c) => (
+                    <td key={c} className="py-1.5 pr-2" data-gate-cell={c}>
+                      <Tip text={r[c].note}>
+                        {r[c].ok ? (
+                          <Check className="inline size-3.5 text-st-ok" aria-hidden="true" />
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[11.5px] text-st-miss">
+                            <X className="size-3.5" aria-hidden="true" /> not yet
+                          </span>
+                        )}
+                      </Tip>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
     </Section>
   );
 }
@@ -538,9 +512,8 @@ function GapsSection({ gaps, totalId }: { gaps: ProspectGap[]; totalId: string }
   return (
     <section className="glass rounded-2xl p-4">
       <h2 className="text-[13px] text-ink">What is missing</h2>
-      <p className="mt-0.5 mb-3 max-w-[86ch] text-[11.5px] text-ink-3">
-        <V id={totalId} unit={false} /> datasets a reader would expect here that no public service publishes,
-        and that no amount of work on public data will produce.
+      <p className="mt-0.5 mb-3 text-[11.5px] text-ink-3">
+        <V id={totalId} unit={false} /> datasets no public service publishes.
       </p>
       <div className="grid grid-cols-2 gap-3">
         {gaps.map((g) => {

@@ -75,8 +75,7 @@ export const TOUR_STEPS: TourStep[] = [
     seconds: 30,
     screen: "Title",
     say: WORDING.opening,
-    doing:
-      "One system on public files, covering the data, the scores, the model results, the analyst and the agent.",
+    doing: "Data, scores, model results, the analyst and the agent.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -92,9 +91,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "data",
     seconds: 45,
     screen: "Data and readiness",
-    say: "Everything here is public. The page gives each feature's coverage of the grid, which features are thin, and which geophysics is not public.",
-    doing:
-      "The readiness gate asks five things of every dataset, and no agent phase starts until every row is green.",
+    say: "All public data: coverage per feature, the thin ones, and the missing geophysics.",
+    doing: "No agent phase starts until the readiness gate is green.",
     enter: (ctx) => {
       const s = store();
       s.openValue(null);
@@ -106,8 +104,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "map",
     seconds: 45,
     screen: "The map",
-    say: "One district, with conductors, faults, the graphitic host, lake geochemistry and drill collars switched on. The cell open in the rail was read and its chain computed in advance.",
-    doing: "Each layer loads only when it is switched on, grouped by what it is evidence of.",
+    say: "One district: conductors, faults, host rock, lake geochemistry and collars. The open cell's chain was computed in advance.",
+    doing: "Layers load when switched on.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -127,8 +125,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "scores",
     seconds: 45,
     screen: "Scoring the ground",
-    say: "The analysis cells, coloured by the knowledge-driven criteria score. Every threshold and weight is written down beside its source, and none is fitted to the answer.",
-    doing: "Only this layer colours by a value, and a cell nobody could score is drawn as a ring.",
+    say: "Cells coloured by the criteria score. Every threshold and weight is cited, none fitted.",
+    doing: "An unscored cell is a ring.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -146,8 +144,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "nullmodel",
     seconds: 45,
     screen: "The null model",
-    say: "The same ground, now showing the learned score minus the exploration-effort score. Blue is where geology beats drilling history, and most of the basin is not blue.",
-    doing: "The effort model sees drillhole counts, survey footprints and first-drilled years, and no rock.",
+    say: "Learned minus effort. Blue is where geology beats drilling history; most of the basin is not blue.",
+    doing: "The effort model sees drilling and surveys, no rock.",
     enter: (ctx) => {
       ctx.navigate("/");
       const s = store();
@@ -160,9 +158,8 @@ export const TOUR_STEPS: TourStep[] = [
     id: "eval",
     seconds: 60,
     screen: "Eval",
-    say: "The Eval page. The reading run statistics sit on top, then the model search, the dated hindcast and the analyst benchmark.",
-    doing:
-      "A candidate is validated only if its interval lies wholly above the null's, and the code applies that rule.",
+    say: "Eval: the analyst benchmark first, then the map scores, the hindcast, the gate and the reading run.",
+    doing: "Every row on the same cells, against the same nulls.",
     enter: (ctx) => {
       const s = store();
       s.openValue(null);
@@ -174,17 +171,16 @@ export const TOUR_STEPS: TourStep[] = [
     id: "chains",
     seconds: 50,
     screen: "The analyst's chains",
-    say: "Back on the enabled cell, the evidence tab. Under the scores sits the stored analyst chain, one node per criterion, each citing the values it read.",
-    doing:
-      "The verdict tops out at supports a closer look, and a node that failed its gate is shown withheld.",
+    say: "The evidence tab: scores, criteria, and the stored analyst chain, one node per criterion.",
+    doing: "The top verdict is supports a closer look.",
     enter: (ctx) => openRecordedCell(ctx, null),
   },
   {
     id: "ask",
     seconds: 60,
     screen: "Asking the agent",
-    say: "The agent answers about this cell, and each question is routed before any tool runs. Every number it states is a value id, and one without a citation is withheld.",
-    doing: "This exchange was recorded on the cheap model, so nothing waits on a model call.",
+    say: "The agent answers about this cell. Every number is a value id; an uncited one is withheld.",
+    doing: "A recorded exchange on the cheap model.",
     enter: (ctx) => openRecordedCell(ctx, ctx.targets.recordedCell?.askTurns ?? 0),
   },
   {
@@ -198,18 +194,17 @@ export const TOUR_STEPS: TourStep[] = [
         : cell.chainPublished
           ? ", and the new chain was published into the store"
           : ", and the verifier withheld its chain";
-      return `The last question hands the cell to the analyst itself. The job card shows each stage, the verdict, the cost, and a diff against the stored chain${made}.`;
+      return `The last question calls the analyst. The job card shows its stages, verdict, cost and a diff against the stored chain${made}.`;
     },
-    doing:
-      "The agent finds, explains and invokes, but recording a geologist's insight is the one action it does not take.",
+    doing: "Recording a geologist's insight is the one action it does not take.",
     enter: (ctx) => openRecordedCell(ctx, ctx.targets.recordedCell?.turns ?? 0),
   },
   {
     id: "limits",
     seconds: 40,
     screen: "Limits",
-    say: "Trusting this for drilling needs geologists to define which errors matter and label a sample. Neither exists yet.",
-    doing: "Each row gives a claim, whether public data supports it, and what it would take.",
+    say: "Drilling decisions need geologist labels. None exist yet.",
+    doing: "One row per claim.",
     enter: (ctx) => {
       const s = store();
       s.openValue(null);

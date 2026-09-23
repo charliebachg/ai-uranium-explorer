@@ -27,6 +27,8 @@ test("evidence loop on the fixture: report, hole, value to page box", async ({ p
   await page.goto("/?fixture=1&motion=0");
   await expect(page.getByTestId("fixture-watermark")).toBeVisible();
 
+  // the reports are a dropdown, closed until asked for
+  await page.getByTestId("reports-toggle").click();
   await page
     .getByRole("button", { name: /64L04-0075/ })
     .first()

@@ -2,6 +2,7 @@ import { Check, ImageOff, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { readKey, subscribeKey } from "@/api/client";
 import { Chip } from "@/components/ui/StatusMark";
+import { Tip } from "@/components/ui/Tip";
 import type { BBox, ReviewItem, ReviewQueuePage, ReviewReading } from "@/data/contract";
 import { pageImageUrl } from "@/data/reports";
 import { OfflineNotice, type ServiceState } from "@/features/prospect/OfflineNotice";
@@ -63,11 +64,8 @@ export function ReviewPage() {
       <div className="mx-auto max-w-[1100px] space-y-4 px-6 py-6">
         <header className="glass rounded-2xl px-4 py-3">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[15px] text-ink">Review queue</h1>
-            <span className="text-[12px] text-ink-3">
-              Values the two readers disagreed on. An accepted reading is filed under the key's label, and
-              both readings stay as they were.
-            </span>
+            <h1 className="font-semibold text-[15px] text-ink">Review</h1>
+            <span className="text-[12px] text-ink-3">Values the two readers disagree on.</span>
             {data ? (
               <span className="ml-auto text-[12px] text-ink-3" data-chrome>
                 {data.total} open{file ? ` in ${file}` : ""}
@@ -105,17 +103,17 @@ export function ReviewPage() {
               <RefreshCw className="size-3" /> refresh
             </button>
             {!hasKey ? (
-              <span className="text-ink-3">
-                no API key set. Decisions are accepted from this machine only while the service runs without a
-                key register.
-              </span>
+              <Tip
+                text="Without a key register, decisions are accepted from this machine only."
+                className="text-ink-3"
+              >
+                no API key
+              </Tip>
             ) : null}
           </div>
         </header>
 
-        {service === "down" ? (
-          <OfflineNotice state="down" what="The queue lives in the store the service reads." />
-        ) : null}
+        {service === "down" ? <OfflineNotice state="down" /> : null}
         {error ? <div className="text-[13px] text-st-miss">{error}</div> : null}
         {data && data.items.length === 0 && service === "up" ? (
           <div className="text-[13px] text-ink-3">

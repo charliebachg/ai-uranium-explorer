@@ -185,10 +185,7 @@ export function ChatPanel({
           <Chip tone="neutral" className="uppercase tracking-wider">
             recorded
           </Chip>
-          <span className="text-[11px] text-ink-3">
-            a real session, replayed: every number was checked against the tool values, and the analyst job
-            ran to the end when it was recorded
-          </span>
+          <span className="text-[11px] text-ink-3">a real session, replayed</span>
           <span className="ml-auto text-[11px] text-ink-3" data-chrome>
             {recorded.recorded_at.slice(0, 10)} · {recorded.model}
           </span>
@@ -212,10 +209,8 @@ export function ChatPanel({
   if (state !== "up") {
     return (
       <div className="px-3 py-2" data-testid="chat-panel">
-        <p className="mb-2 text-[11.5px] text-ink-3">
-          Answers are checked against the tool values before they are shown.
-        </p>
-        <OfflineNotice state={state} what="The conversation needs the local model process." />
+        <p className="mb-2 text-[11.5px] text-ink-3">Answers are checked against the tool values.</p>
+        <OfflineNotice state={state} />
       </div>
     );
   }
@@ -233,10 +228,7 @@ export function ChatPanel({
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pt-2.5 pb-2" data-testid="chat-log">
         {entries.length === 0 ? (
           <div>
-            <p className="text-[12px] text-ink-3">
-              Every number is checked against the tool values. One that fails is withheld, with the objection
-              in its place.
-            </p>
+            <p className="text-[12px] text-ink-3">Every number is checked against the tool values.</p>
             <div className="mt-3 flex flex-col items-start gap-1.5">
               {SUGGESTIONS.map((s) => (
                 <button
@@ -252,9 +244,7 @@ export function ChatPanel({
             </div>
             {history.data && history.data.conversations.length > 0 ? (
               <div className="mt-4" data-testid="chat-history">
-                <p className="text-[11px] text-ink-3 uppercase tracking-wider">
-                  Earlier conversations about this cell
-                </p>
+                <p className="text-[11px] text-ink-3 uppercase tracking-wider">Earlier conversations</p>
                 <ul className="mt-1.5 space-y-1">
                   {history.data.conversations.map((c) => (
                     <li key={c.conversation_id}>

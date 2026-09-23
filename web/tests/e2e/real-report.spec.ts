@@ -6,7 +6,8 @@ test("real report: feet read as metres is visible as a flagged value with its pa
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/?motion=0&r=74H09-0039");
   const panel = page.locator('[data-strict="report-panel"]');
-  await expect(panel).toContainText("Assessment file 74H09-0039");
+  // the first report load on a cold dev server can outlast the default five seconds when specs run in parallel
+  await expect(panel).toContainText("Assessment file 74H09-0039", { timeout: 20_000 });
   await expect(panel).toContainText("CONWEST");
   await page.waitForTimeout(2500);
   await page.screenshot({ path: "test-results/real-report.png" });
