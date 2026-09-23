@@ -232,3 +232,19 @@ def test_the_baselines_are_read_from_the_benchmarks_own_out_of_fold_file(tmp_pat
         con.close()
     names = [r["name"] for r in out]
     assert names[-4:] == ["learned", "effort", "criteria", "extended"], "the extended model rides along"
+
+
+def test_the_table_rescores_every_arm_from_its_cells_with_the_scorer_as_it_stands(tmp_path, monkeypatch) -> None:
+    """A run scored before a metric existed still gets it: the table recomputes, it does not copy."""
+    from fake_bench import AnalystBackend
+
+    from uranium_explorer.analyst import arms as A
+    from uranium_explorer.analyst import run as RUN
+
+    rt = install_runtime(monkeypatch, tmp_path)
+    bench = make_bench(tmp_path)
+    s = RUN.run_arm(bench.version, A.load_arm("v0"), lambda _a: AnalystBackend(), budget_usd=5.0,
+                    log=lambda *_: None, workers=1, track=False, cache_root=rt.cache, boot=5)
+    s["score"] = {k: v for k, v in s["score"].items() if not k.startswith("pr_auc_rank")}
+    assert "pr_auc_rank" not in SC.arm_row(s)
+    assert "pr_auc_rank" in SC.arm_row(s, bench.key, boot=5)

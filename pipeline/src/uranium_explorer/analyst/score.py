@@ -461,11 +461,16 @@ def sample_name(arm: str, sample: int = 0) -> str:
     return f"{arm}~s{int(sample)}" if sample else arm
 
 
-def arm_row(summary: dict[str, Any]) -> dict[str, Any]:
-    """A table row from the summary `run_arm` wrote for an arm: its score as written, the per-stage columns
-    re-derived from the run's cells, and null under a stage the arm never had (a v0 arm has no verifier and
-    no rounds), so every row carries the same columns."""
-    score = dict(summary.get("score") or {}) | _stages_of(summary)
+def arm_row(summary: dict[str, Any], key: dict[str, dict[str, Any]] | None = None, boot: int = BOOT,
+            seed: int = 0) -> dict[str, Any]:
+    """A table row from the summary `run_arm` wrote for an arm: its score, the per-stage columns re-derived
+    from the run's cells, and null under a stage the arm never had (a v0 arm has no verifier and no rounds),
+    so every row carries the same columns. Given the key, the score is recomputed from the run's own cells
+    with the scorer as it stands, so a change to the scoring reaches every arm at once, not only the arms run
+    after it; without the key, or without the run's cells, the score as written stands."""
+    rd = summary.get("run_dir")
+    fresh = score_run(Path(rd), key, boot=boot, seed=seed) if key is not None and rd and (Path(rd) / "cells.jsonl").is_file() else None
+    score = dict(fresh or summary.get("score") or {}) | _stages_of(summary)
     stages = {k: float(score[k]) if _number(score.get(k)) else None for k in STAGE_COLUMNS}
     return {"name": sample_name(summary["arm"], int(summary.get("sample") or 0)), "kind": "arm",
             "model": summary.get("model"), "effort": _effort_of(summary),
@@ -482,7 +487,8 @@ def table(version: str, con: Any = None, boot: int = BOOT, seed: int = 0, write:
     d = out_dir(version)
     arm_files = sorted((d / "arms").glob("*.json")) if (d / "arms").is_dir() else []
     summaries = [json.loads(p.read_text()) for p in arm_files]
-    rows = [arm_row(s) for s in summaries]
+    key = F.load_bench(version).key
+    rows = [arm_row(s, key, boot=boot, seed=seed) for s in summaries]
     own = con is None
     con = con if con is not None else connect()
     try:
