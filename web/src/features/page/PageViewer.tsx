@@ -41,7 +41,7 @@ export function PageViewer() {
           exit={{ opacity: 0, y: 12, scale: 0.985 }}
           transition={{ type: "spring", stiffness: 380, damping: 34 }}
           className={cn(
-            "glass pointer-events-auto fixed top-[92px] right-[472px] z-20 flex flex-col overflow-hidden rounded-2xl shadow-2xl shadow-black/60",
+            "glass-opaque pointer-events-auto fixed top-[92px] right-[472px] z-20 flex flex-col overflow-hidden rounded-2xl shadow-2xl shadow-black/60",
             rail ? "left-[316px]" : "left-[76px]",
             // the walkthrough HUD takes the bottom strip; the page keeps its quote and lineage visible above it
             tourActive ? "bottom-[188px]" : "bottom-4",

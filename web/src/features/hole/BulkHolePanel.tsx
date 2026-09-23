@@ -24,7 +24,7 @@ export function BulkHolePanel() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 24 }}
           transition={{ type: "spring", stiffness: 380, damping: 34 }}
-          className="glass pointer-events-auto w-[380px] rounded-2xl shadow-2xl shadow-black/50"
+          className="glass-opaque pointer-events-auto w-[380px] rounded-2xl shadow-2xl shadow-black/50"
           data-strict="hole-panel"
           aria-label="Selected drillhole"
         >

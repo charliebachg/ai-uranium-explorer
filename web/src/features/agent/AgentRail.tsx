@@ -72,7 +72,7 @@ export function AgentRail() {
   return (
     <aside
       className={cn(
-        "glass pointer-events-auto flex min-h-0 w-[420px] flex-col overflow-hidden rounded-2xl shadow-2xl shadow-black/40",
+        "glass-opaque pointer-events-auto flex min-h-0 w-[420px] flex-col overflow-hidden rounded-2xl shadow-2xl shadow-black/40",
         // once a cell is open the rail is the working surface and takes the column; empty, it stays a card
         cellId && "flex-1",
       )}

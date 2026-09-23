@@ -148,6 +148,13 @@ describe("the strip", () => {
       done,
       job({ job_id: "0000000000000001", status: "failed", error: "process restarted" }),
     ]);
+    // closed, the strip shows what is running and the newest finished job, one line each
+    const closed = Array.from(el.querySelectorAll("[data-testid=job-row]"));
+    expect(closed.map((r) => r.getAttribute("data-status"))).toEqual(["running", "done"]);
+    expect(el.querySelector("[data-testid=jobs-more]")?.textContent).toContain("1 earlier");
+    await act(async () => {
+      el.querySelector<HTMLButtonElement>("[data-testid=jobs-more]")?.click();
+    });
     const rows = Array.from(el.querySelectorAll("[data-testid=job-row]"));
     expect(rows.map((r) => r.getAttribute("data-status"))).toEqual(["running", "done", "failed"]);
     expect(rows[0]?.querySelector("[data-testid=job-stage]")?.textContent).toBe("at execute");

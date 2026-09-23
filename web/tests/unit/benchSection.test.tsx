@@ -225,7 +225,9 @@ describe("the ranking columns, the derived rows and the comparisons fixed before
       r.getAttribute("data-row"),
     );
     expect(order).toEqual(["d1-vote5", "d1", "extended"]);
-    expect(el.querySelector('[data-row="d1-vote5"]')?.textContent).toContain("Single call · rich · vote of 5");
+    expect(el.querySelector('[data-row="d1-vote5"]')?.textContent).toContain(
+      "Single call · rich · vote of 5",
+    );
     const d1 = el.querySelector('[data-testid="bench-row"][data-row="d1"]');
     expect(d1?.querySelector(`[data-vid="${D1}:pr_auc_rank"]`)?.textContent).toBe("0.610");
     expect(d1?.querySelector(`[data-vid="${D1}:coverage"]`)).not.toBeNull();

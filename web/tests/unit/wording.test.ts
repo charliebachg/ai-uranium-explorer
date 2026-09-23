@@ -13,7 +13,6 @@ function files(dir: string): string[] {
 }
 
 describe("wording", () => {
-
   it("contains no forbidden phrases anywhere in the app source", () => {
     for (const f of files(SRC)) {
       if (f.endsWith("wording.ts")) continue;

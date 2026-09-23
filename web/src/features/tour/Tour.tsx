@@ -35,7 +35,7 @@ export function Tour() {
   const step = useStore((s) => s.tour.step);
   const startedAt = useStore((s) => s.tour.startedAt);
   const setTour = useStore((s) => s.setTour);
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [targets, setTargets] = useState<TourTargets | null>(null);
   const [stepStarted, setStepStarted] = useState<number>(() => Date.now());
   const [now, setNow] = useState<number>(() => Date.now());
@@ -98,7 +98,14 @@ export function Tour() {
   const progress = Math.min(1, stepSeconds / current.seconds);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+    // on the map the right-hand column (the agent rail, the report) is what the step is about: the card sits
+    // in the space left of it, and clear of the layer rail too when the window is wide enough for both
+    <div
+      className={cn(
+        "pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4",
+        location === "/" && "pr-[472px] xl:pl-[332px]",
+      )}
+    >
       {/* one card for the whole walkthrough: stepping only swaps its contents, so a fast ← → cannot strand it
           mid-transition */}
       <motion.section
@@ -108,7 +115,7 @@ export function Tour() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="glass-opaque pointer-events-auto w-[min(780px,calc(100vw-2rem))] overflow-hidden rounded-2xl shadow-2xl shadow-black/50"
+        className="glass-opaque pointer-events-auto w-full max-w-[780px] overflow-hidden rounded-2xl shadow-2xl shadow-black/50"
         aria-label="Guided walkthrough"
       >
         <div className="flex items-center gap-3 border-line border-b px-4 py-2">

@@ -30,7 +30,7 @@ export function ReportPanel() {
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 24 }}
           transition={{ type: "spring", stiffness: 380, damping: 34 }}
-          className="glass pointer-events-auto flex max-h-[calc(100vh-120px)] w-[440px] flex-col overflow-hidden rounded-2xl shadow-2xl shadow-black/50"
+          className="glass-opaque pointer-events-auto flex max-h-[calc(100vh-120px)] w-[440px] flex-col overflow-hidden rounded-2xl shadow-2xl shadow-black/50"
           data-strict="report-panel"
           aria-label="Report"
         >

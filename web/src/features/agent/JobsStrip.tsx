@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Play, X } from "lucide-react";
+import { ChevronRight, Play, X } from "lucide-react";
 import { useState } from "react";
 import { V } from "@/components/values/V";
 import type { Job } from "@/data/contract";
@@ -20,8 +20,10 @@ import {
 /**
  * The cell's background jobs, under the scores and above the tabs: what is queued or running, which stage it
  * reached, and what a finished one produced. A job is a status, not a merit: every row prints the same way,
- * and a verdict is a word beside a chain id, not a colour. Polled only while something is running; when an
- * analyst job finishes the evidence record is re-read so its chain appears in the panel below.
+ * and a verdict is a word beside a chain id, not a colour. Each job is one line, and only the running ones and
+ * the newest finished one show; the rest open on request, so the strip never pushes the evidence off the rail.
+ * Polled only while something is running; when an analyst job finishes the evidence record is re-read so its
+ * chain appears in the panel below.
  */
 
 export function JobsStrip({ cellId, state }: { cellId: string; state: ServiceState }) {
@@ -30,6 +32,7 @@ export function JobsStrip({ cellId, state }: { cellId: string; state: ServiceSta
   const jobs = jobsQ.data ?? [];
   useChainRefresh(cellId, jobsQ.data);
   const [note, setNote] = useState<string | null>(null);
+  const [all, setAll] = useState(false);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: jobKeys.cell(cellId) });
   const run = useMutation({
@@ -47,6 +50,9 @@ export function JobsStrip({ cellId, state }: { cellId: string; state: ServiceSta
 
   if (state !== "up") return null;
   const busy = jobs.some(isActive);
+  const newestDone = jobs.find((j) => !isActive(j));
+  const shown = all ? jobs : jobs.filter((j) => isActive(j) || j === newestDone);
+  const hidden = jobs.length - jobs.filter((j) => isActive(j) || j === newestDone).length;
 
   return (
     <section
@@ -57,6 +63,27 @@ export function JobsStrip({ cellId, state }: { cellId: string; state: ServiceSta
       <div className="flex items-center gap-2">
         <span className="text-[10.5px] text-ink-3 uppercase tracking-[0.12em]">Jobs</span>
         {jobs.length === 0 ? <span className="text-ink-3">none for this cell</span> : null}
+        {hidden > 0 ? (
+          <button
+            type="button"
+            onClick={() => setAll((v) => !v)}
+            aria-expanded={all}
+            className="flex items-center gap-0.5 text-[11px] text-ink-3 hover:text-ink-2"
+            data-testid="jobs-more"
+          >
+            <ChevronRight
+              className={cn("size-3 transition-transform", all && "rotate-90")}
+              aria-hidden="true"
+            />
+            {all ? (
+              "fewer"
+            ) : (
+              <>
+                <span data-instrument>{hidden}</span> earlier
+              </>
+            )}
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => run.mutate()}
@@ -77,9 +104,9 @@ export function JobsStrip({ cellId, state }: { cellId: string; state: ServiceSta
           {note}
         </p>
       ) : null}
-      {jobs.length ? (
-        <ul className="mt-1.5 space-y-1">
-          {jobs.map((job) => (
+      {shown.length ? (
+        <ul className={cn("mt-1 space-y-0.5", all && "max-h-[120px] overflow-y-auto")}>
+          {shown.map((job) => (
             <JobRow key={job.job_id} job={job} onCancel={() => cancel.mutate(job.job_id)} />
           ))}
         </ul>
@@ -103,11 +130,12 @@ function JobRow({ job, onCancel }: { job: Job; onCancel: () => void }) {
   const costId = jobCostId(job.job_id);
   return (
     <li
-      className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5"
+      className="flex min-w-0 items-baseline gap-2 whitespace-nowrap"
       data-testid="job-row"
       data-status={job.status}
+      title={`${job.kind} job ${job.job_id}, asked by ${job.requested_by}`}
     >
-      <span className="text-ink-2">{job.kind}</span>
+      {job.kind !== "analyst" ? <span className="text-ink-2">{job.kind}</span> : null}
       <span
         className="rounded bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10.5px] text-ink"
         data-testid="job-status"
@@ -119,28 +147,28 @@ function JobRow({ job, onCancel }: { job: Job; onCancel: () => void }) {
           {latestStage(job) === job.status ? "waiting" : `at ${latestStage(job)}`}
         </span>
       ) : null}
+      {job.status === "done" && verdict ? (
+        <span className="text-ink-2" data-source-text>
+          {verdict}
+        </span>
+      ) : null}
+      {job.status === "done" && hasValue(costId) ? <V id={costId} className="text-ink-3" /> : null}
       {job.status === "done" && chainId ? (
-        <span className="text-ink-3">
-          chain{" "}
-          <span className="font-mono text-[10.5px] text-ink-2" data-ident>
-            {chainId}
-          </span>
-          {verdict ? <span data-source-text> · {verdict}</span> : null}
-          {hasValue(costId) ? (
-            <>
-              {" · "}
-              <V id={costId} className="text-ink-2" />
-            </>
-          ) : null}
+        <span
+          className="min-w-0 flex-1 truncate font-mono text-[10.5px] text-ink-3"
+          title={chainId}
+          data-ident
+        >
+          {chainId}
         </span>
       ) : null}
       {job.error ? (
-        <span className="text-ink-3" data-testid="job-error">
+        <span className="min-w-0 flex-1 truncate text-ink-3" title={job.error} data-testid="job-error">
           {job.error}
         </span>
       ) : null}
-      <span className="ml-auto text-[10.5px] text-ink-3" data-chrome>
-        {job.requested_by} · {job.created_at.slice(11, 16)}
+      <span className="ml-auto shrink-0 text-[10.5px] text-ink-3" data-chrome>
+        {job.created_at.slice(11, 16)}
       </span>
       {active ? (
         <button
