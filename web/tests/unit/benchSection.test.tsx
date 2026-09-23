@@ -232,7 +232,7 @@ describe("the ranking columns, the derived rows and the comparisons fixed before
     expect(d1?.querySelector(`[data-vid="${D1}:pr_auc_rank"]`)?.textContent).toBe("0.610");
     expect(d1?.querySelector(`[data-vid="${D1}:coverage"]`)).not.toBeNull();
     const c = el.querySelector('[data-testid="bench-contrast"]');
-    expect(c?.textContent).toContain("Single call · rich vs ML · extended");
+    expect(c?.textContent).toContain("Single call · rich vs Extended model");
     expect(c?.getAttribute("title")).toBe("the single-shot LLM against the fitted model");
     for (const id of [`${C}:diff`, `${C}:mcnemar_b`, `${C}:mcnemar_c`, `${C}:mcnemar_p`])
       expect(c?.querySelector(`[data-vid="${id}"]`), id).not.toBeNull();
@@ -249,7 +249,7 @@ describe("the plain names", () => {
     expect(rowLabel("d2")).toBe("Evidence readers · rich");
     expect(rowLabel("d2-fitted")).toBe("Evidence readers · rich · fitted weights");
     expect(rowLabel("d1~s3")).toBe("Single call · rich · sample 3");
-    expect(rowLabel("extended")).toBe("ML · extended");
+    expect(rowLabel("extended")).toBe("Extended model");
     expect(rowLabel("v0-qwen38")).toBe("v0-qwen38");
   });
 });

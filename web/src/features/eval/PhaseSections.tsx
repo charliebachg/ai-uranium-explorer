@@ -44,7 +44,7 @@ const ARM_LABEL: Record<string, string> = {
   logistic_spatial: "logistic + spatial terms",
   bagging_pu: "bagging PU",
   criteria_prior: "boosting + criteria prior",
-  effort: "effort (null)",
+  effort: "effort null",
   "learned+effort": "geology + effort",
 };
 
@@ -447,10 +447,10 @@ const ROW_LABEL: Record<string, string> = {
   d1: "Single call · rich",
   v1: "Staged loop · basic",
   d2: "Evidence readers · rich",
-  extended: "ML · extended",
-  learned: "ML · learned",
-  criteria: "Criteria",
-  effort: "Effort (null)",
+  extended: "Extended model",
+  learned: "Learned model",
+  criteria: "Criteria score",
+  effort: "Effort null",
   random: "Random",
 };
 

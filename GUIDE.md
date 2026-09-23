@@ -247,7 +247,8 @@ and open by themselves when the gate is red), the sources with their licences, a
 
 **Eval** (`/eval`) puts results first, with a section bar at the top. **Benchmark**: one table of every LLM
 arm, derived row and baseline on the benchmark's open cells, ranked by rank PR-AUC and named in words (single
-call or staged loop or evidence readers, basic or rich pack; ML extended, ML learned, criteria, effort, random),
+call or staged loop or evidence readers, basic or rich pack; extended model, learned model, criteria score,
+effort null, random; the names the deck uses),
 the 2×2 LLM ablation as a grid, and the comparisons fixed before the runs; the staged loop's per-chain numbers
 and earlier benchmark versions sit closed under it. **Map scores**: the fold metrics, geology against effort
 after the corrections, and the model search with its registry decision (the model card closed). **Hindcast**,

@@ -12,9 +12,9 @@ import { cn } from "@/lib/cn";
  */
 
 const MODEL_LABEL: Record<MetricRow["model"], string> = {
-  criteria: "Criteria",
-  learned: "Learned",
-  effort: "Effort (null)",
+  criteria: "Criteria score",
+  learned: "Learned model",
+  effort: "Effort null",
 };
 
 const FOLD_LABEL: Record<MetricRow["fold"], string> = {
