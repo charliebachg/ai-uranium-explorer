@@ -12,7 +12,7 @@ TOOL = f"uranium_explorer {__version__}"
 PROJ_TOOL = f"pyproj {pyproj.__version__} / PROJ {pyproj.proj_version_str}"
 
 
-def stat(vid: str, value: int | float, fmt: str = "int", note: str | None = None, unit: str | None = None) -> dict[str, Any]:
+def stat(vid: str, value: int | float | str, fmt: str = "int", note: str | None = None, unit: str | None = None) -> dict[str, Any]:
     v: dict[str, Any] = {"id": vid, "kind": "stat", "as_printed": None, "value": value, "unit_as_printed": None,
                          "fmt": fmt}
     if unit:

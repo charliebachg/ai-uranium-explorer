@@ -34,8 +34,11 @@ from .arms import ArmConfig
 TASK_STAGE, TASK_RANK = "analyst_v2_reading", "analyst_v2"
 SCHEMA_VERSION = "1.0.0"
 #: readers write 550 to 800 characters when nothing stops them (the smoke run); 500 turned most first answers
-#: into refusals and, as a schema limit, some into CLI errors
-SUMMARY_MAX = 1000
+#: into refusals and, as a schema limit, some into CLI errors. The prompt states SUMMARY_STATED; readers aim at it and
+#: overshoot by a few dozen characters (median 1,018 on benchmark v2), so the gate allows SUMMARY_MAX: at 1,000,
+#: 208 of 225 refused readings were refused for length alone.
+SUMMARY_STATED = 1000
+SUMMARY_MAX = 1500
 READINGS_FILE = "readings.md"
 ASSESSMENTS = ("for", "neutral", "against", "unknown")
 
@@ -110,7 +113,7 @@ Absolute rules, the same for every reader:
 Answer JSON with exactly these fields: assessment, one of {" | ".join(ASSESSMENTS)}: what your family's evidence
 says about a deposit in or near this cell ("unknown" when there is too little of it to say); strength, from 0 to
 1: how strongly it points toward one (0 against, 0.5 says nothing either way, 1 strongly toward); claims, each
-with text and value_ids; unknowns, what your family cannot tell here and why; summary, at most {SUMMARY_MAX}
+with text and value_ids; unknowns, what your family cannot tell here and why; summary, at most {SUMMARY_STATED}
 characters of prose with no number in it that a claim does not cite."""
 
 
@@ -190,7 +193,7 @@ def gate_reading(answer: dict[str, Any], part: dict[str, Any]) -> list[str]:
         claims = []
     summary = str(answer.get("summary") or "")
     if len(summary) > SUMMARY_MAX:
-        problems.append(f"summary is {len(summary)} characters; the limit is {SUMMARY_MAX}")
+        problems.append(f"summary is {len(summary)} characters; keep it to {SUMMARY_STATED}")
     values = part.get("values") or {}
     ctx = V0.gate_context(part)
     if V0._number(s):

@@ -251,3 +251,31 @@ def test_extended_features_are_hidden_unless_switched_on_and_the_domains_always_
     assert feats(plain) == ["d_conductor_m"]
     assert feats(rich) == ["d_conductor_m", "sed_u_th_max"], "the domain one-hot names ground and is never shown"
     assert "b:b-0001:cell:domain_wollaston" not in rich["values"]
+
+
+def test_a_label_names_its_deposit_in_one_word_and_that_word_is_scrubbed() -> None:
+    """Benchmark v2's passages kept McClean, Sue, Gumboot and Raven: the label names were matched only whole
+    ("McClean South Pod SE") and a single word needed five letters. The naming words now go on their own, a short
+    or everyday name only as a name is written, so the geology around it survives."""
+    assert P.name_tokens("McClean South Pod SE") == {"McClean"}
+    assert P.name_tokens("Sue C") == {"Sue"}
+    assert P.name_tokens("Radioactive Boulder Train") == set()
+    names = frozenset({"McClean", "Sue", "Raven", "Athabasca", "Mann Lake"} | P.gazetteer())
+    text = ("Drilling at McClean and at SUE intersected the Raven pod; the Gumboot zone lies near mann lake, "
+            "under athabasca sandstone. Nobody would sue over a raven on the muskeg, and the mineralization is "
+            "horseshoe-shaped.")
+    out = P.scrub_text(text, names)
+    for gone in ("McClean", "SUE", "Raven pod", "Gumboot", "mann lake", "athabasca"):
+        assert gone not in out, gone
+    for kept in ("would sue", "a raven", "the muskeg", "mineralization is", "horseshoe-shaped", "sandstone"):
+        assert kept in out, kept
+
+
+def test_words_that_only_describe_never_become_names(store: Path) -> None:
+    con = ST.connect(store, read_only=True)
+    try:
+        names = P.forbidden_strings(con)
+    finally:
+        con.close()
+    assert not {n for n in names if n.lower() in {"mineralization", "north", "nickel", "operator", "sandstone"}}
+    assert {"Gumboot", "Kelic", "Mirror River"} <= names, "the gazetteer is part of the set"

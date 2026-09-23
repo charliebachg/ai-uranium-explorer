@@ -308,6 +308,24 @@ def test_an_unsampled_cell_is_unknown_and_carries_the_nearest_observation_id(wor
 # ---------------------------------------------------------------- ids, registry, label mask
 
 
+def test_a_mapped_class_is_known_and_citable_not_missing(world: Path) -> None:
+    """A text-valued feature (the dominant surficial environment) is an observation: it carries an id a claim can
+    cite. Without one the pack printed the bare feature name where ids go and readers cited an id nobody returned."""
+    con = ST.connect(world)
+    try:
+        con.execute(
+            "insert into derived.cell_feature (cell_id, feature_key, value, value_text, unit, n_obs, nearest_m, "
+            "from_tier, op, tool, params, inputs, computed_at) "
+            "values (?, 'surficial_class', null, 'Morainal drumlinoid', null, 1, null, 'native', 'test', 'test', "
+            "null, null, ?)", [CELL, NOW])
+    finally:
+        con.close()
+    row = next(r for r in T.cell_features(CELL).rows if r["feature"] == "surficial_class")
+    assert "missing" not in row and row["text"] == "Morainal drumlinoid"
+    val = T.cell_features(CELL).values[row["value_id"]]
+    assert val["value"] == "Morainal drumlinoid" and val["fmt"] == "text"
+
+
 def test_every_id_carries_the_cell_in_second_position(world: Path) -> None:
     pattern = re.compile(rf"^c:(nb|x|cell|near):{CELL}:")
     results = [T.nearby(CELL, layer, radius_m=5000, k=3) for layer in WORLD]

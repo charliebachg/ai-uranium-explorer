@@ -495,6 +495,8 @@ def table(version: str, con: Any = None, boot: int = BOOT, seed: int = 0, write:
         rows += baselines(version, con, boot=boot, seed=seed, log=log)
         derived, contrasts = CMP.extras(version, summaries, boot=boot, seed=seed)
         rows += derived
+        by_own = CMP.own_columns(version, summaries, boot=boot, seed=seed)
+        rows = [r | by_own.get(r["name"], {}) for r in rows]
         now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
         out = {"version": version, "computed_at": now, "manifest_sha256": F.load_bench(version).manifest_sha256,
                "rows": rows, "contrasts": contrasts}

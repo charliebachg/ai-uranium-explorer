@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 import numpy as np
@@ -79,3 +80,35 @@ def test_the_table_adds_the_vote_and_the_fitted_decider_and_only_contrasts_rows_
     assert [(c["first"], c["second"]) for c in out["contrasts"]] == [("d2-fitted", "d2")]
     c = out["contrasts"][0]
     assert {"diff", "diff_ci", "p_not_better", "mcnemar"} <= set(c) and c["cells"] == 4
+
+
+def test_average_precision_matches_scikit_learn_with_ties() -> None:
+    from sklearn.metrics import average_precision_score
+
+    rng = np.random.default_rng(3)
+    for _ in range(20):
+        y = (rng.random(60) < 0.4).astype(int)
+        s = np.round(rng.random(60), 1)  # coarse, so many ties, as LLM probabilities are
+        assert CMP.average_precision(y, s) == pytest.approx(average_precision_score(y, s))
+
+
+def test_the_permutation_test_holds_its_level_and_finds_a_real_gap() -> None:
+    rng = np.random.default_rng(0)
+    y = np.array([1] * 30 + [0] * 40)
+    noise = rng.random(70)
+    assert CMP.rank_permutation(y, noise, noise, n=500) == 1.0, "identical rankings: no evidence either way"
+    good = y + 0.8 * rng.random(70)
+    assert CMP.rank_permutation(y, good, noise, n=500) < 0.01
+    assert CMP.rank_permutation(y, noise, good, n=500) > 0.9
+
+
+def test_holm_steps_down_in_the_order_given() -> None:
+    assert CMP.holm([0.01, 0.04, 0.03]) == pytest.approx([0.03, 0.06, 0.06])
+
+
+def test_the_own_rule_keeps_a_refused_answers_probability() -> None:
+    refused = {"published": False, "answer": {"probability": 0.2, "verdict": "insufficient"}}
+    assert math.isnan(CMP.cell_view(refused)[0])
+    p, _v, abstained = CMP.cell_view_own(refused)
+    assert p == 0.2 and abstained
+    assert math.isnan(CMP.cell_view_own({"published": False, "answer": None})[0]), "no answer, no probability"

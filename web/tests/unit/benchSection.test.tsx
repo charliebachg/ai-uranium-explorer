@@ -250,6 +250,7 @@ describe("the plain names", () => {
     expect(rowLabel("d2-fitted")).toBe("Evidence readers · rich · fitted weights");
     expect(rowLabel("d1~s3")).toBe("Single call · rich · sample 3");
     expect(rowLabel("extended")).toBe("Extended model");
+    expect(rowLabel("d1+extended")).toBe("Single call · rich + extended · rank average");
     expect(rowLabel("v0-qwen38")).toBe("v0-qwen38");
   });
 });

@@ -23,6 +23,7 @@ from typing import Any
 import pandas as pd
 
 from ..filenum import _FIND as FILE_NUMBER
+from ..paths import PATHS
 from ..prospect import evidence as E
 from ..prospect import features as FE
 from ..prospect import models as M
@@ -95,12 +96,39 @@ def anonymise(payload: Any, cell_id: str, bench_id: str) -> Any:
 # ---------------------------------------------------------------- scrubbing
 
 
+#: names that are also everyday words (checked against a dictionary once, frozen here): matched only as a name
+#: is written, so "Raven" and "RAVEN" are scrubbed and a raven, a muskeg or a horseshoe-shaped conductor are not
+COMMON_NAMES = frozenset("""
+abatis alpha amphora anaconda arrow aurora banana bluegrass bulldog canyon capstone carbide caribou centennial
+chestnut cinch cluff continental coronation dixie eagle fisher fission forget forum goldcrest graham gulch hacker
+harper harpoon hatchet hawker henry homer horseshoe hourglass hurricane husky imperial japan laird mackintosh
+magnum marline martin maverick millennium miller moonlight muskeg nighthawk partridge peacock peter petroleum
+phoenix pioneer pitchstone prince prodigy ranger raven reward roughrider shell skull skully snowbird spitfire
+standard tamarack turner union united viking wheeler wolverine wright
+""".split())
+
+
 @lru_cache(maxsize=8)
 def name_pattern(names: frozenset[str]) -> re.Pattern[str] | None:
-    words = sorted((n for n in names if len(n) >= 4), key=len, reverse=True)
-    if not words:
+    """One pattern for a set of names. A phrase of several words, or a single word of five letters or more that
+    is no everyday word, matches in any case. A shorter word or an everyday one matches only as a name is
+    written (as given, capitalised, in capitals, or capitalised from capitals: CAMECO gives Cameco), so "Sue"
+    and "SUE" are scrubbed and the verb is not."""
+    loose = sorted((n.strip() for n in names if len(n.strip()) >= 4 and (" " in n.strip() or (
+        len(n.strip()) >= 5 and n.strip().lower() not in COMMON_NAMES))), key=len, reverse=True)
+    exact: set[str] = set()
+    for n in names:
+        w = n.strip()
+        if len(w) >= 3 and " " not in w and w not in loose:
+            exact |= {w, w.upper(), w[0].upper() + w[1:], w[0].upper() + w[1:].lower()}
+    parts = []
+    if loose:
+        parts.append("(?i:" + "|".join(re.escape(p) for p in loose) + ")")
+    if exact:
+        parts.append("|".join(re.escape(w) for w in sorted(exact, key=len, reverse=True)))
+    if not parts:
         return None
-    return re.compile(r"(?<![A-Za-z0-9])(?:" + "|".join(re.escape(w) for w in words) + r")(?![A-Za-z0-9])", re.I)
+    return re.compile(r"(?<![A-Za-z0-9])(?:" + "|".join(parts) + r")(?![A-Za-z0-9])")
 
 
 def scrub_text(text: str, forbidden: set[str] | frozenset[str]) -> str:
@@ -177,8 +205,56 @@ def usable_name(name: str) -> bool:
     return True
 
 
+#: words in provincial label names that describe rather than name: "McClean South Pod SE" names McClean and
+#: "Radioactive Boulder Train" names nothing. Geology, commodities, workings and plain words, so a label's own
+#: words never take "sandstone" or "drilling" out of a passage.
+LABEL_GENERIC = frozenset("""
+uranium drill drilling drilled hole holes showing showings zone zones radioactive occurrence occurrences boulder
+boulders claim claims sample samples uraniferous mine mines mining train island deposit deposits pegmatite
+pegmatites pegmatoid area anomaly anomalies radiometric adit trench trenches trenched trenching exploration
+explorations prospecting outcrop outcrops rock rocks group prospect prospects pod pods lens lenses body bodies ore
+vein veins pit pits shaft old new little big great small large middle narrow wide far next bay bays inlet peninsula
+narrows rapids portage falls channel ridge mountain valley bluff cliff shore beach dome field fields forest meadow
+spring spur bridge dyke dykes dike dikes fault faults fold shear breccia gneiss paragneiss granite quartz sandstone
+arkose conglomerate diabase garnet allanite pyrite graphite graphitic pitch pitchvein pitchblende uraninite regolith
+sediment sediments soil sand seeps erratics esker overburden conductor circulation cluster reverse phase pipe
+copper gold nickel molybdenum thorium lead silver cobalt oil oils gas energy metals resources corporation
+international national syndicate union permit concession combined hosted territorial trans canada
+northwest northeast southwest southeast alpha beta gamma red black green burnt lost hidden spot row pen pig fan
+fish horse bear wolf moose goose lynx seal rabbit lazy man smart sandy magma patch coin bonus boom cunning
+telephone october virgin bearing shift strand and the of to or no with near from high low grade anomalous float grab chip
+""".split())
+
+#: words the store offers as names that only describe (a property called "Mineralization", a role tag)
+NOT_NAMES = frozenset({"mineralization", "mineralisation", "operator", "combined", "bearing", "shift", "strand"})
+
+GAZETTEER_FILE = PATHS.pipeline / "knowledge" / "place_names.txt"
+
+
+def name_tokens(name: str) -> set[str]:
+    """The naming words inside a longer provincial name: capitalised, three letters or more, not a descriptive
+    word, not a two- or three-letter tag. "McClean South Pod SE" gives McClean; "Sue C" gives Sue."""
+    out: set[str] = set()
+    for w in re.findall(r"[A-Za-z][A-Za-z'’]*", name):
+        if len(w) < 3 or not w[0].isupper() or (w.isupper() and len(w) <= 3):
+            continue
+        if w.lower() in NAME_STOPWORDS or w.lower() in LABEL_GENERIC:
+            continue
+        out.add(w)
+    return out
+
+
+@lru_cache(maxsize=1)
+def gazetteer() -> frozenset[str]:
+    """The names in `knowledge/place_names.txt`: deposits, camps, lakes and regional structures the store does
+    not hold as a property or a label but the reports name."""
+    lines = GAZETTEER_FILE.read_text().splitlines() if GAZETTEER_FILE.is_file() else []
+    return frozenset(s.strip() for s in lines if s.strip() and not s.lstrip().startswith("#"))
+
+
 def forbidden_strings(con: Any) -> set[str]:
-    """Every company, property and deposit name the store knows: the strings no pack may carry."""
+    """Every company, property and deposit name the store knows, the naming words inside the provincial label
+    names, and the gazetteer: the strings no pack or passage may carry."""
     out: set[str] = set()
     rows = con.execute("select company, property from native.corpus_file").fetchall()
     for company, prop in rows:
@@ -187,7 +263,14 @@ def forbidden_strings(con: Any) -> set[str]:
             out.add(str(prop).strip())
     labels = con.execute("select distinct label_name from derived.cell_label where label_name is not null").fetchall()
     out |= {str(n).strip() for (n,) in labels if n and len(str(n).strip()) >= 4}
-    return {n for n in out if usable_name(n)}
+    out = {n for n in out if usable_name(n)}
+    for (n,) in labels:
+        if n:
+            out |= name_tokens(str(n))
+    out |= set(gazetteer())
+    # a single word that only describes is never a name, whatever source offered it: an all-capitals company
+    # fragment ("NORTH", "NICKEL") passes as an acronym, and "Mineralization" came in as a property
+    return {n for n in out if " " in n.strip() or n.strip().lower() not in (LABEL_GENERIC | NAME_STOPWORDS | NOT_NAMES)}
 
 
 def hole_names(con: Any) -> set[str]:

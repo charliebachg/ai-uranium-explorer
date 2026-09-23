@@ -460,6 +460,8 @@ export function rowLabel(name: string): string {
   if (vote) return `${rowLabel(vote[1] ?? "")} · vote of ${vote[2] ?? ""}`;
   const fitted = /^(.+)-fitted$/.exec(name);
   if (fitted) return `${rowLabel(fitted[1] ?? "")} · fitted weights`;
+  const blend = /^(.+)\+extended$/.exec(name);
+  if (blend) return `${rowLabel(blend[1] ?? "")} + extended · rank average`;
   const sample = /^(.+)~s(\d+)$/.exec(name);
   if (sample) return `${rowLabel(sample[1] ?? "")} · sample ${sample[2] ?? ""}`;
   return ROW_LABEL[name] ?? name;

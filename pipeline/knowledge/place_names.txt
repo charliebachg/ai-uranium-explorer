@@ -1,0 +1,89 @@
+# Names a closed-book pack or passage must never carry, beyond the store's own company, property and label names.
+#
+# Mined from the report text in `read.corpus_page` and the benchmark passages ("<Name> deposit / zone / pod /
+# showing / mine"), then added to from public descriptions of the basin's deposits, prospects, camps and the
+# regional structures that place a cell. One name per line. A single word is matched only as a name is written
+# (as given, capitalised, or in capitals), so "Sue" is scrubbed and "sue" is not; a phrase of several words is
+# matched in any case.
+
+# deposits, pods and zones
+Anne
+Bong
+Centennial
+Claude
+Collins Bay
+Colette
+Collette
+Deilmann
+Dominique-Janine
+Dominique-Peter
+Dubyna
+Eagle Point
+End Grid
+Gaertner
+Gryphon
+Gumboot
+Horseshoe
+Huskie
+Jeb
+JEB
+Kelic
+Kianna
+Leonard
+Maverick
+Mavrick
+McClean
+Midwest
+Millennium
+Moonlight
+P-Patch
+Raven
+Ray
+Roughrider
+Seahorse
+Spitfire
+Sue
+Tamarack
+Tent-Seal
+Tthe Heldeth Túé
+Waterbury
+West Bear
+Harpoon
+Karpinka
+Hook Lake
+# lakes, camps and properties named in the reports
+Candy Lake
+Christie Lake
+Close Lake
+Collins Creek
+Cree Extension
+Fox Lake
+Mallen Lake
+Mann Lake
+Maurice Bay
+Mirror River
+Moore Lakes
+Read Lake
+Reindeer Lake
+Tent Lake
+Thanout Lake
+Virgin River
+Carswell
+# the northern camps
+Ace
+Fay
+Verna
+Gunnar
+Lorado
+Nicholson
+Bolger
+Hab
+Cenex
+Eldorado
+# regional structures and domains that place a cell
+Snowbird
+Tabbernor
+Mudjatik
+Taltson
+Needle Falls
+Black Lake

@@ -1,0 +1,62 @@
+# Pre-registration for benchmark v3: does an LLM reading cell-level report text rank drilled ground better than
+# the fitted model given the same evidence?
+#
+# Written and committed before any model call on v3, and hashed into v3's manifest, so the table can only report
+# what is fixed here. Changing anything below after the first v3 call makes a new registration, recorded as such.
+# Sources for the choices: the paired rank permutation for PR-AUC at 50 positives (Bandos, Rockette and Gur 2005,
+# for ROC areas), fixed-sequence secondaries (FDA, Multiple Endpoints in Clinical Trials, 2022), Haybittle-Peto
+# interim boundaries, and a non-binding futility stop.
+
+[question]
+primary = "d3 - extended"
+statement = """The text arm (d3: the evidence readers plus a fifth reader over the cell's redacted report text) ranks
+the labelled open cells of v3 better than the extended fitted model (out-of-fold, averaged over five fold seeds)."""
+# tested in this order, each at the full alpha, stopping at the first that fails (fixed sequence)
+secondaries = [
+  "S1: the text arm's ranking adds information to the extended score (likelihood-ratio test of a two-variable logistic model)",
+  "S2: d3 - d2 on v3 (the report text helps the LLM)",
+  "S3: d3 - criteria",
+]
+descriptive = ["every other contrast in analyst.compare.CONTRASTS, Holm-adjusted",
+               "precision in the top 20%, capture and lift at 20%, with coverage"]
+
+[scoring]
+metric = "average precision (rank PR-AUC) over the labelled open cells"
+rule = "own"   # each answer at the probability it stated, refused or not; 0.5 only where no answer came back
+sensitivity = ["tie: a refused or failed answer at 0.5", "the cells both arms published"]
+positives = ["deposit", "occurrence"]
+report_by_stratum = ["deposit vs negative", "occurrence vs negative", "cells the recognition probe did not recognise"]
+
+[test]
+statistic = "difference in average precision, first minus second"
+test = "paired within-cell rank permutation, 10000 swaps, one-sided"
+alpha = 0.025
+interval = "stratified cell bootstrap, 2000 draws; runs as an outer level where an arm has several samples"
+runs = "sample 0 of each LLM arm for the primary; the fitted model averaged over five fold seeds"
+
+[decision]
+confirmed = "the primary test rejects at the final look"
+refuted_below = 0.10   # refuted at +0.10 when the upper 95% bound of the difference is below it
+undecided = "otherwise"
+
+[looks]
+interim_cells = 114          # the labelled open cells of v3
+efficacy_z = 3.09            # stop and report confirmed
+futility = "stop growing if d3 does not lead the extended model (z < 0); non-binding"
+final_cells = 300            # one pre-drawn, hashed batch; held-out cells untouched
+final_z = 1.966
+growth = "new positives one per 10 km block from drilled occurrences; drilled negatives matched on effort at 1.3 per positive"
+
+[gates]
+# process gates on the 30-cell pilot (two samples); a failed gate stops the run for a fix, never for a result
+refusals_max = 0.10          # share of readings and answers refused by the number gate
+abstention_max = 0.30
+cost_overrun_max = 0.20      # against the estimate made before the run
+outcome_words_in_prompt = 0  # redacted view: no assay, grade, intercept, U3O8 or mineralisation sentence reaches a prompt
+names_in_prompt = 0          # no gazetteer, property, company or label name reaches a prompt
+text_only_ceiling = 0.60     # a TF-IDF model on the redacted passages alone must stay well below the effort null (0.621)
+
+[views]
+primary = "redacted"         # report text within 2 km of the cell (5 km where none), outcome sentences, assays, grades, intercepts, radiometrics, hole counts, dates and names removed
+secondary = ["pre-drilling: text dated before the cell's first hole", "swapped: each cell given another cell's passages (placebo)"]
+leak_check_only = ["raw"]

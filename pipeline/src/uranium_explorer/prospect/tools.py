@@ -95,6 +95,13 @@ def cell_features(cell_id: str) -> ToolResult:
             row["value_id"] = vid
             row["value"] = round(float(value), 4)
             row["unit"] = unit
+        elif text:
+            # a class, not a measurement (the dominant surficial environment): citable like a number, so a claim
+            # that names it has an id to cite rather than one it has to guess
+            vid = f"c:cell:{cell_id}:{key}"
+            out.values |= _vals(stat(vid, str(text), fmt="text", note=f"{title or key} for cell {cell_id}"))
+            row["value_id"] = vid
+            row["value"] = None
         else:
             row["value"] = None
             row["missing"] = "no observation; this is not a low value"

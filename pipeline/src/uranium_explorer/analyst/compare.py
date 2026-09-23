@@ -10,6 +10,14 @@ their weights out of fold on the benchmark's own spatial folds, the lever that m
 The **contrasts** are fixed here, before the table exists, so a table can only report them, not choose them:
 each is a paired difference in the ranking PR-AUC over the same labelled cells, with a bootstrap interval, the
 share of draws where the first did not beat the second, and McNemar's exact test on which cells each got right.
+
+Every contrast is scored two ways. The **tie rule** puts a refused or failed answer at 0.5 on both sides. The
+**own rule** scores every answer at the probability it stated, refused or not: a refusal is the gate's verdict on
+the numbers an answer cited, not a ranking, and at 0.5 it sits above 86 to 91% of real answers, so under the tie
+rule one arm's refusals can decide a contrast (benchmark v2's d2 minus d1 was +0.063 tied, +0.010 own). The own
+rule carries the permutation test (within-cell ranks swapped at random, one-sided), Holm's adjustment across
+the contrasts, and Spearman's rho between the two rankings, which says how much pairing can help. When an arm
+has several samples its interval resamples runs as well as cells.
 """
 
 from __future__ import annotations
@@ -61,6 +69,18 @@ def cell_view(row: dict[str, Any]) -> tuple[float, str, bool]:
     return p, v, v == ABSTAIN
 
 
+def cell_view_own(row: dict[str, Any]) -> tuple[float, str, bool]:
+    """(probability, verdict, abstained) under the own rule: the probability the answer stated, published or
+    refused; NaN only where no answer came back at all."""
+    a = row.get("answer") if isinstance(row.get("answer"), dict) else None
+    if a is None:
+        return NAN, "", True
+    p = a.get("probability")
+    p = float(p) if isinstance(p, (int, float)) and not isinstance(p, bool) else NAN
+    v = str(a.get("verdict") or "")
+    return p, v, v == ABSTAIN or not row.get("published")
+
+
 def vote(samples: list[dict[str, dict[str, Any]]]) -> dict[str, tuple[float, str, bool]]:
     """Per bench id: the mean published probability and the voted verdict (abstain when most samples
     abstained, else the majority among the committed, a tie going to the side the mean probability is on)."""
@@ -110,6 +130,44 @@ def fitted_decider(strengths: dict[str, list[float]], y: dict[str, int], folds: 
     return out
 
 
+def average_precision(y: np.ndarray, s: np.ndarray) -> float:
+    """Average precision as scikit-learn computes it (a step at each distinct score, ties taken together), in
+    numpy, for the ten thousand draws of a permutation test."""
+    order = np.argsort(-s, kind="mergesort")
+    ss, yy = s[order], y[order]
+    last = np.r_[np.flatnonzero(np.diff(ss)), len(ss) - 1]
+    tp = np.cumsum(yy)[last]
+    precision = tp / (last + 1)
+    recall = tp / max(int(y.sum()), 1)
+    return float(np.sum(np.diff(np.r_[0.0, recall]) * precision))
+
+
+def rank_permutation(y: np.ndarray, pa: np.ndarray, pb: np.ndarray, n: int = 10_000, seed: int = 0) -> float:
+    """One-sided p that the first ranks better: each cell's two normalised ranks swapped at random, so a
+    probability and a fitted score are exchangeable (Bandos, Rockette and Gur 2005, for ROC areas)."""
+    from scipy.stats import rankdata
+
+    ra, rb = rankdata(pa) / len(pa), rankdata(pb) / len(pb)
+    observed = average_precision(y, ra) - average_precision(y, rb)
+    rng = np.random.default_rng(seed)
+    hits = 0
+    for _ in range(n):
+        swap = rng.random(len(y)) < 0.5
+        if average_precision(y, np.where(swap, rb, ra)) - average_precision(y, np.where(swap, ra, rb)) >= observed - 1e-12:
+            hits += 1
+    return (hits + 1) / (n + 1)
+
+
+def holm(ps: list[float]) -> list[float]:
+    """Holm's step-down adjustment, in the order given."""
+    order = sorted(range(len(ps)), key=lambda i: ps[i])
+    out, running = [1.0] * len(ps), 0.0
+    for rank, i in enumerate(order):
+        running = max(running, min(1.0, (len(ps) - rank) * ps[i]))
+        out[i] = running
+    return out
+
+
 def mcnemar(right_a: np.ndarray, right_b: np.ndarray) -> dict[str, Any]:
     """Cells only the first got right (b), only the second (c), and the exact two-sided binomial p."""
     b = int((right_a & ~right_b).sum())
@@ -122,8 +180,13 @@ def mcnemar(right_a: np.ndarray, right_b: np.ndarray) -> dict[str, Any]:
     return {"b": b, "c": c, "p": float(min(1.0, 2 * tail))}
 
 
-def contrast(y: np.ndarray, a: dict[str, Any], b: dict[str, Any], boot: int, seed: int) -> dict[str, Any]:
-    """The paired difference in ranking PR-AUC (a refused cell at 0.5 on both sides) and McNemar on verdicts."""
+def contrast(y: np.ndarray, a: dict[str, Any], b: dict[str, Any], boot: int, seed: int,
+             a_own: dict[str, Any] | None = None, b_own: dict[str, Any] | None = None,
+             perms: int = 10_000) -> dict[str, Any]:
+    """The paired difference in ranking PR-AUC (a refused cell at 0.5 on both sides) and McNemar on verdicts;
+    with the own-rule views, the same difference under the own rule, its permutation p and Spearman's rho."""
+    from scipy.stats import spearmanr
+
     from ..prospect import models as M
     from ..prospect.extended import paired_difference
 
@@ -131,8 +194,37 @@ def contrast(y: np.ndarray, a: dict[str, Any], b: dict[str, Any], boot: int, see
     pb = np.where(np.isfinite(b["p"]), b["p"], 0.5)
     d = paired_difference(y, pa, pb, M.pr_auc, n=boot, seed=seed)
     right = lambda v: np.array([(x == POSITIVE) == bool(t) and x != ABSTAIN for x, t in zip(v, y, strict=True)])  # noqa: E731
-    return {**d, "pr_auc_rank_first": M.pr_auc(y, pa), "pr_auc_rank_second": M.pr_auc(y, pb),
-            "mcnemar": mcnemar(right(a["v"]), right(b["v"]))}
+    out = {**d, "pr_auc_rank_first": M.pr_auc(y, pa), "pr_auc_rank_second": M.pr_auc(y, pb),
+           "mcnemar": mcnemar(right(a["v"]), right(b["v"]))}
+    if a_own is not None and b_own is not None:
+        oa = np.where(np.isfinite(a_own["p"]), a_own["p"], 0.5)
+        ob = np.where(np.isfinite(b_own["p"]), b_own["p"], 0.5)
+        runs_a, runs_b = a_own.get("samples") or [oa], b_own.get("samples") or [ob]
+        own = two_level(y, runs_a, runs_b, n=boot, seed=seed) if len(runs_a) > 1 or len(runs_b) > 1 \
+            else paired_difference(y, oa, ob, M.pr_auc, n=boot, seed=seed)
+        rho = spearmanr(oa, ob).statistic
+        out["own"] = {"diff": own["diff"], "diff_ci": own["diff_ci"], "first": M.pr_auc(y, oa),
+                      "second": M.pr_auc(y, ob), "perm_p": rank_permutation(y, oa, ob, n=perms, seed=seed),
+                      "spearman": float(rho) if np.isfinite(rho) else None,
+                      "runs": [len(runs_a), len(runs_b)]}
+    return out
+
+
+def two_level(y: np.ndarray, runs_a: list[np.ndarray], runs_b: list[np.ndarray], n: int, seed: int) -> dict[str, Any]:
+    """The paired difference with a two-level bootstrap: each draw picks one run of each arm, then resamples
+    cells (positives and negatives apart). The point is the difference of the run means."""
+    from ..prospect import models as M
+
+    point = float(np.mean([M.pr_auc(y, r) for r in runs_a]) - np.mean([M.pr_auc(y, r) for r in runs_b]))
+    rng = np.random.default_rng(seed)
+    pos, neg = np.flatnonzero(y == 1), np.flatnonzero(y == 0)
+    draws = []
+    for _ in range(n):
+        ra, rb = runs_a[rng.integers(len(runs_a))], runs_b[rng.integers(len(runs_b))]
+        idx = np.concatenate([rng.choice(pos, len(pos)), rng.choice(neg, len(neg))])
+        draws.append(average_precision(y[idx], ra[idx]) - average_precision(y[idx], rb[idx]))
+    arr = np.asarray(draws, dtype=float)
+    return {"diff": point, "diff_ci": [float(np.percentile(arr, 2.5)), float(np.percentile(arr, 97.5))]}
 
 
 def labelled(version: str) -> tuple[list[str], np.ndarray, dict[str, int], dict[str, str]]:
@@ -168,10 +260,10 @@ def _derived_row(name: str, how: str, model: Any, view: dict[str, Any], y: np.nd
             **dict.fromkeys(STAGE_COLUMNS), **m, "note": note}
 
 
-def extras(version: str, summaries: list[dict[str, Any]], boot: int, seed: int
+def extras(version: str, summaries: list[dict[str, Any]], boot: int, seed: int, perms: int = 10_000
            ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """The derived rows (votes over an arm's samples, a fitted decider over a v2 arm's readings) and every
-    contrast in `CONTRASTS` whose two rows exist."""
+    """The derived rows (votes over an arm's samples, a fitted decider over a v2 arm's readings, and each LLM
+    arm's rank average with the extended model) and every contrast in `CONTRASTS` whose two rows exist."""
     from . import score as SC
     from .families import FAMILIES
 
@@ -179,28 +271,36 @@ def extras(version: str, summaries: list[dict[str, Any]], boot: int, seed: int
     bench = F.load_bench(version)
     strata = [str(bench.key[b].get("stratum") or bench.key[b].get("label")) for b in ids]
     views: dict[str, dict[str, Any]] = {}
+    own: dict[str, dict[str, Any]] = {}
     by_arm: dict[str, list[tuple[int, dict[str, Any], dict[str, dict[str, Any]]]]] = {}
     for s in summaries:
         rows = run_cells(s)
         sample = int(s.get("sample") or 0)
-        views[SC.sample_name(s["arm"], sample)] = _arrays(ids, {b: cell_view(r) for b, r in rows.items()})
+        name = SC.sample_name(s["arm"], sample)
+        views[name] = _arrays(ids, {b: cell_view(r) for b, r in rows.items()})
+        own[name] = _arrays(ids, {b: cell_view_own(r) for b, r in rows.items()})
         by_arm.setdefault(s["arm"], []).append((sample, s, rows))
     scores, _note = SC.bench_oof_scores(version, list(cell_of.values()))
     for model, sc in scores.items():
         p = np.array([sc.get(cell_of[b], NAN) for b in ids], dtype=float)
         views[model] = {"p": p, "v": [POSITIVE if x >= 0.5 else NEGATIVE for x in np.nan_to_num(p, nan=0.5)],
                         "ab": ~np.isfinite(p)}
+        own[model] = views[model]
     derived: list[dict[str, Any]] = []
     for arm, samples in sorted(by_arm.items()):
         samples.sort(key=lambda t: t[0])
         if len(samples) >= 2:
             name = f"{arm}-vote{len(samples)}"
             views[name] = _arrays(ids, vote([rows for _s, _sum, rows in samples]))
+            own[name] = views[name]
             derived.append(_derived_row(
                 name, "vote", samples[0][1].get("model"), views[name], y, strata,
                 sum(float((s.get("score") or {}).get("cost_usd_total") or 0.0) for _n, s, _r in samples), boot, seed,
                 f"samples {', '.join(str(n) for n, _s, _r in samples)} of {arm}: the mean published probability, "
                 "abstaining when most samples abstained, else the majority among the committed"))
+            # the arm itself, compared with its runs as the outer level of the bootstrap
+            own[arm] = {**own[arm], "samples": [np.where(np.isfinite(o["p"]), o["p"], 0.5) for o in (
+                own[SC.sample_name(arm, n)] for n, _s, _r in samples)]}
         first = next(((s, rows) for n, s, rows in samples if n == 0), None)
         if first and any(isinstance(r.get("readings"), dict) for r in first[1].values()):
             strengths = reading_strengths(first[1], tuple(f.name for f in FAMILIES))
@@ -209,13 +309,66 @@ def extras(version: str, summaries: list[dict[str, Any]], boot: int, seed: int
             name = f"{arm}-fitted"
             views[name] = {"p": p, "v": [POSITIVE if x >= 0.5 else NEGATIVE for x in np.nan_to_num(p, nan=0.5)],
                            "ab": ~np.isfinite(p)}
+            own[name] = views[name]
             derived.append(_derived_row(
                 name, "fitted decider", first[0].get("model"), views[name], y, strata, 0.0, boot, seed,
                 f"a logistic regression over the four reading strengths of {arm}, fitted out of fold on the "
                 "benchmark's spatial folds; no model call"))
+    if EXTENDED in views:
+        for arm in sorted(by_arm):
+            if arm not in own:
+                continue
+            name = f"{arm}+{EXTENDED}"
+            p = rank_average(own[arm]["p"], views[EXTENDED]["p"])
+            views[name] = own[name] = {"p": p, "v": [POSITIVE if x >= 0.5 else NEGATIVE for x in p],
+                                       "ab": np.zeros(len(p), dtype=bool)}
+            derived.append(_derived_row(
+                name, "rank average", None, views[name], y, strata, 0.0, boot, seed,
+                f"the mean of {arm}'s rank (each answer at its own probability) and the {EXTENDED} model's rank "
+                "over the labelled cells; no model call, the control an LLM given the fitted score must beat"))
     contrasts = []
     for a, b, question in CONTRASTS:
         if a in views and b in views:
             contrasts.append({"first": a, "second": b, "question": question,
-                              **contrast(y, views[a], views[b], boot, seed)})
+                              **contrast(y, views[a], views[b], boot, seed, own.get(a), own.get(b), perms=perms)})
+    tested = [c for c in contrasts if "own" in c]
+    for c, adj in zip(tested, holm([c["own"]["perm_p"] for c in tested]), strict=True):
+        c["own"]["holm_p"] = adj
     return derived, contrasts
+
+
+EXTENDED = "extended"
+
+
+def rank_average(pa: np.ndarray, pb: np.ndarray) -> np.ndarray:
+    """The mean of two scores' normalised ranks, a missing score ranked as a tie at the middle."""
+    from scipy.stats import rankdata
+
+    a = np.where(np.isfinite(pa), pa, np.nanmedian(pa) if np.isfinite(pa).any() else 0.5)
+    b = np.where(np.isfinite(pb), pb, np.nanmedian(pb) if np.isfinite(pb).any() else 0.5)
+    return (rankdata(a) / len(a) + rankdata(b) / len(b)) / 2
+
+
+def own_columns(version: str, summaries: list[dict[str, Any]], boot: int, seed: int) -> dict[str, dict[str, Any]]:
+    """Per arm row: its ranking PR-AUC under the own rule with an interval, and its refused answers by label."""
+    from ..prospect import headline as H
+    from ..prospect import models as M
+    from . import score as SC
+
+    ids, y, _folds, _cells = labelled(version)
+    bench = F.load_bench(version)
+    label = [str(bench.key[b].get("stratum") or bench.key[b].get("label")) for b in ids]
+    out: dict[str, dict[str, Any]] = {}
+    for s in summaries:
+        rows = run_cells(s)
+        o = _arrays(ids, {b: cell_view_own(r) for b, r in rows.items()})
+        p = np.where(np.isfinite(o["p"]), o["p"], 0.5)
+        refused: dict[str, int] = {}
+        for b, lab in zip(ids, label, strict=True):
+            r = rows.get(b)
+            if r is not None and not r.get("published"):
+                refused[lab] = refused.get(lab, 0) + 1
+        out[SC.sample_name(s["arm"], int(s.get("sample") or 0))] = {
+            "pr_auc_own": M.pr_auc(y, p), "pr_auc_own_ci": H.bootstrap_ci(y, p, M.pr_auc, n=boot, seed=seed),
+            "refused_by_label": refused}
+    return out
