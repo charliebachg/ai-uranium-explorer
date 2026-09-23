@@ -141,7 +141,7 @@ Every `UE_*` variable the code reads, with its default and meaning. None of thei
 |---|---|---|
 | `UE_ROOT` | the repository root, found from the package | Overrides where `pipeline/`, `pipeline/data`, `gold/` and `web/public/data` are looked for. The Docker image sets it to `/app`. |
 | `UE_STORE_RW` | unset | `1` puts the process in one-connection mode: every store open is read-write, because DuckDB refuses to open one file read-only and read-write at once from one process. `ue prospect serve`, `ue arm chain` and `ue prospect record --job` set it for themselves; batch commands leave it unset and keep their read-only handles. |
-| `UE_MAX_SPEND_USD` | 300 | The cumulative ceiling across every backend family, checked before each live call against the on-disk ledger `pipeline/data/spend.jsonl`. |
+| `UE_MAX_SPEND_USD` | 300 | The cumulative ceiling across every billed backend family (the subscription CLI is recorded, not counted), checked before each live call against the on-disk ledger `pipeline/data/spend.jsonl`. |
 | `UE_INTERFACE_MODEL` | `z-ai/glm-5.3-flash` | The interface agent's model under `--backend auto` (the chat, `ue interface ask`, `ue prospect record`). |
 | `UE_MCP_KEYS` | unset (no register) | The key register shared by the MCP server and the API: `<key>:<scope>[,<scope>];<key>:...`. Unset, local clients hold every scope. |
 | `UE_MCP_KEY` | unset | The key a stdio MCP client's process presents when a register is configured. |
@@ -783,7 +783,10 @@ no budget.
 **Budgets.** One ledger, `pipeline/data/spend.jsonl`, every family writes to; two cumulative ceilings on disk
 (the total, `UE_MAX_SPEND_USD`, and a family's own where it has one) checked before each live call, so a
 restart never hands back a fresh budget; and one run budget in memory (`--budget-usd`) that the cached
-backend refuses to cross by the worst case of the call about to be made. Dollars are recorded as the provider
+backend refuses to cross by the worst case of the call about to be made. The ceilings count billed families
+only: the subscription CLI (`claude_cli`) is written at the envelope's list-price figure, so the ledger still
+says what every call cost, but it is bounded by the run budget and the subscription's usage limit, never by a
+ceiling meant for money (a benchmark on the subscription once locked the pay-per-token chat out that way). Dollars are recorded as the provider
 reported them where it does (the CLI's envelope, OpenRouter's usage block) and as arithmetic over configured
 prices where it does not (OpenAI). `ue spend show` prints spend per family against its ceiling.
 
@@ -1411,7 +1414,7 @@ Every `ue` command, grouped as the CLI groups them; every flag is in that comman
 
 **`ue cache`**: `rekey [--dry-run]` (move cached calls written under the old key to the current one), `stats` (records by task and version).
 
-**`ue spend`**: `show` (spend per backend family against its ceiling, and the total against `UE_MAX_SPEND_USD`).
+**`ue spend`**: `show` (spend per backend family against its ceiling, and the billed total against `UE_MAX_SPEND_USD`; the subscription family is listed but bounded by the run budget).
 
 **`ue bench`**: `build [--version V]` (write `data/bench/<V>/` from the spec and the store, resumable), `audit [--version V]` (re-hash every file and scan every pack and passage for anything that places or names the ground), `show [--version V]` (counts per stratum and split, shortfalls, hashes), `oof-scores [--seed N] [--write/--no-write]` (out-of-fold learned, effort and criteria scores for every scorable cell under 30 km spatial folds), and `interface build|audit|show [--version V]` (the interface track's tiers 1 and 3).
 

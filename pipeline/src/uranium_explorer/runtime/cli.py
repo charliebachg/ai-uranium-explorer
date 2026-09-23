@@ -48,21 +48,22 @@ def cache_stats_cmd() -> None:
 
 @spend_app.command("show")
 def spend_show_cmd() -> None:
-    """Spend per backend family against its ceiling, and the total against UE_MAX_SPEND_USD."""
+    """Spend per backend family against its ceiling, and the billed total against UE_MAX_SPEND_USD. A
+    subscription family is listed at list price and bounded by each run's budget, not by a ceiling."""
     from ..backends.openai_api import load_dotenv
-    from .spend import FAMILY_CAPS, TOTAL_CAP, by_family, cap_usd, ledger_path, spent_usd
+    from .spend import FAMILY_CAPS, SUBSCRIPTION_FAMILIES, TOTAL_CAP, billed_usd, by_family, cap_usd, ledger_path
 
     load_dotenv()
     per = by_family()
-    families = sorted(set(per) | set(FAMILY_CAPS) | {"claude_cli"})
-    typer.echo(f"  {'family':<14}{'spent':>12}{'ceiling':>12}   env")
+    families = sorted(set(per) | set(FAMILY_CAPS) | set(SUBSCRIPTION_FAMILIES))
+    typer.echo(f"  {'family':<14}{'spent':>12}{'ceiling':>14}   env")
     for fam in families:
         spent = per.get(fam, 0.0)
         env = FAMILY_CAPS.get(fam, (None, None))[0]
-        cap = f"${cap_usd(fam):.2f}" if env else "(total)"
-        typer.echo(f"  {fam:<14}{'$' + format(spent, '.4f'):>12}{cap:>12}   {env or ''}")
-    total = spent_usd()
-    typer.echo(f"  {'total':<14}{'$' + format(total, '.4f'):>12}{'$' + format(cap_usd(), '.2f'):>12}   {TOTAL_CAP[0]}")
+        cap = f"${cap_usd(fam):.2f}" if env else "(run budget)" if fam in SUBSCRIPTION_FAMILIES else "(total)"
+        typer.echo(f"  {fam:<14}{'$' + format(spent, '.4f'):>12}{cap:>14}   {env or ''}")
+    total = billed_usd()
+    typer.echo(f"  {'billed':<14}{'$' + format(total, '.4f'):>12}{'$' + format(cap_usd(), '.2f'):>14}   {TOTAL_CAP[0]}")
     typer.echo(f"  ledger  {ledger_path()}")
     if total != total:
         typer.echo("  the ledger has a line this code cannot read; every check will refuse until it is fixed")

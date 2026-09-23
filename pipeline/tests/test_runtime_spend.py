@@ -1,4 +1,5 @@
-"""One ledger, two ceilings and a run budget, all checked before a call leaves the machine."""
+"""One ledger, two ceilings and a run budget, all checked before a call leaves the machine. The ceilings count
+billed families only: the subscription CLI is recorded at list price and bounded by the run budget."""
 
 from __future__ import annotations
 
@@ -41,6 +42,7 @@ def test_record_writes_one_line_per_call_with_its_family(caps) -> None:
     assert S.spent_usd("claude_cli") == pytest.approx(0.29)
     assert S.spent_usd("openai") == pytest.approx(0.001)
     assert S.by_family() == pytest.approx({"claude_cli": 0.29, "openai": 0.001})
+    assert S.billed_usd() == pytest.approx(0.001), "the subscription's list-price figure is not billed money"
 
 
 def test_the_caps_come_from_the_environment_with_stated_defaults(monkeypatch) -> None:
@@ -64,11 +66,31 @@ def test_check_refuses_when_the_run_budget_would_be_crossed(caps) -> None:
     S.check("claude_cli", 0.25, budget)   # exactly reaching it is allowed (binary-exact figures on purpose)
 
 
-def test_check_refuses_when_the_total_ceiling_would_be_crossed(caps) -> None:
-    S.record("claude_cli", "m", 0.9)
+def test_check_refuses_when_the_billed_total_would_be_crossed(caps) -> None:
+    S.record("openrouter", "m", 0.9)
     with pytest.raises(BudgetExhausted, match="UE_MAX_SPEND_USD"):
-        S.check("claude_cli", 0.2)
-    S.check("claude_cli", 0.1)
+        S.check("openrouter", 0.2)
+    S.check("openrouter", 0.1)
+
+
+def test_subscription_spend_never_locks_out_a_billed_family(caps) -> None:
+    # a benchmark on the subscription, far past the total at list price: the chat still has its whole ceiling
+    S.record("claude_cli", "claude-opus-5", 850.0)
+    S.check("openrouter", 0.5)
+    S.check("openai", 0.5)
+    assert S.spent_usd() == pytest.approx(850.0), "the ledger still says what every call cost"
+    # and the billed total, not the list-price one, is what a billed call is refused against
+    S.record("openrouter", "m", 0.9)
+    with pytest.raises(BudgetExhausted, match=r"billed total to \$1\.1000"):
+        S.check("openrouter", 0.2)
+
+
+def test_a_subscription_call_meets_the_run_budget_but_no_cumulative_ceiling(caps) -> None:
+    S.record("openrouter", "m", 1.0)           # the billed total is at its ceiling
+    S.record("claude_cli", "m", 500.0)
+    S.check("claude_cli", 5.0)                 # neither stops a subscription call
+    with pytest.raises(BudgetExhausted, match="budget"):
+        S.check("claude_cli", 5.0, RunBudget(cap_usd=4.0))
 
 
 def test_check_refuses_when_a_family_ceiling_would_be_crossed(caps) -> None:
@@ -102,9 +124,9 @@ def test_the_shim_is_the_openai_family_of_the_same_ledger(caps) -> None:
     assert shim.cap_usd() == 0.5 and shim.remaining_usd() == pytest.approx(0.25)
     assert shim.ledger_path() == S.ledger_path()
     assert shim.BudgetExhausted is BudgetExhausted
-    S.record("claude_cli", "m", 0.4)
-    with pytest.raises(BudgetExhausted, match="ceiling"):
-        shim.check(0.4)   # the total ceiling applies to the OpenAI family too
+    S.record("openrouter", "m", 0.4)
+    with pytest.raises(BudgetExhausted, match="UE_MAX_SPEND_USD"):
+        shim.check(0.4)   # the billed total applies to the OpenAI family too
 
 
 # ---------------------------------------------------------------- the cached backend
@@ -165,12 +187,15 @@ def test_an_exhausted_run_budget_refuses_before_the_backend_is_called(tmp_path, 
     assert not (tmp_path / "cache" / "failures").exists(), "a refused call is not a backend failure"
 
 
-def test_the_cumulative_ceiling_applies_to_the_cli_family_too(tmp_path, caps) -> None:
-    S.record("claude_cli", "m", 0.95)
+def test_the_cli_family_is_bounded_by_its_run_budget_not_the_billed_total(tmp_path, caps) -> None:
+    S.record("openrouter", "m", 0.95)          # billed spend at the ceiling
     inner = ScriptedBackend()
-    with pytest.raises(BudgetExhausted, match="UE_MAX_SPEND_USD"):
-        CachedBackend(inner, root=tmp_path / "cache", estimate_usd=0.1).call(request(tmp_path))
-    assert inner.calls == 0
+    CachedBackend(inner, root=tmp_path / "cache", estimate_usd=0.1).call(request(tmp_path))
+    assert inner.calls == 1, "a subscription call adds nothing billed, so the billed ceiling does not stop it"
+    with pytest.raises(BudgetExhausted, match="budget"):
+        CachedBackend(inner, root=tmp_path / "cache2", run_budget=RunBudget(cap_usd=0.05),
+                      estimate_usd=0.1).call(request(tmp_path))
+    assert inner.calls == 1
 
 
 def test_a_backend_that_settles_the_ledger_itself_is_not_charged_twice(tmp_path, caps) -> None:

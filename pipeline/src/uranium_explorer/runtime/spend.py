@@ -1,17 +1,20 @@
 """One ledger for everything the pipeline spends, checked before a call is sent rather than regretted after.
 
-There used to be a ledger for the OpenAI backend only, because that was the one purse with a real bill. The
-subscription behind `claude -p` felt free and was not: the CLI reports what each call cost in its envelope,
-and a memo panel that loops on a tool error spends it just as fast. So there is now one file, every backend
-family writes to it, and one number answers "what has this project spent".
+Every backend family writes to one file, so one command answers "what has every call cost". The CLI family
+behind `claude -p` is written too, at the envelope's `total_cost_usd`: a memo panel that loops on a tool error
+burns subscription quota as fast as it would burn money, and the list-price figure is how that shows.
 
-Two ceilings, both cumulative and on disk, so a fresh process does not get a fresh budget:
+But only a **billed** family is money. The CLI runs on a flat subscription, so its list-price figures are kept
+out of the cumulative ceilings: counting them let a benchmark run on the subscription (about $850 at list
+price) lock the pay-per-token chat out of a $600 ceiling it had barely touched. The ceilings, both cumulative
+and on disk so a fresh process does not get a fresh budget:
 
-* the **total** (`UE_MAX_SPEND_USD`, default 300) across every family, and
+* the **total** (`UE_MAX_SPEND_USD`, default 300) across every billed family, and
 * a **family** ceiling where a family has its own — the OpenAI key keeps `OPENAI_MAX_SPEND_USD` (default 2.00).
 
 And one **run budget**, in memory, handed to the cached backend by whoever started the run: it stops one
-runaway loop long before the cumulative ceiling has to.
+runaway loop long before a ceiling has to, and it is the bound on a subscription run, beside the
+subscription's own usage limit (the CLI stops with exit 75 when that is reached).
 
 What is written is what was measured. The CLI family's dollars are the envelope's `total_cost_usd`, recorded
 as returned. The OpenAI family's tokens are the API's and its dollars are arithmetic over a price the operator
@@ -35,6 +38,8 @@ from ..paths import PATHS
 FAMILY_CAPS: dict[str, tuple[str, float]] = {"openai": ("OPENAI_MAX_SPEND_USD", 2.00),
                                               "openrouter": ("OPENROUTER_MAX_SPEND_USD", 25.00)}
 TOTAL_CAP: tuple[str, float] = ("UE_MAX_SPEND_USD", 300.0)
+#: families paid by a flat subscription, not per token: recorded, never counted against the cumulative ceilings
+SUBSCRIPTION_FAMILIES: frozenset[str] = frozenset({"claude_cli"})
 
 _append_lock = threading.Lock()
 
@@ -143,6 +148,23 @@ def spent_usd(family: str | None = None, *, path: Path | None = None) -> float:
     return total
 
 
+def billed_usd(*, path: Path | None = None) -> float:
+    """What the billed families have been charged: every line but the subscription's. An unreadable line is NaN
+    here too, since nobody can say which purse it belonged to."""
+    total = 0.0
+    for row in _rows(path):
+        if row is None:
+            total += float("nan")
+            continue
+        if row.get("family") in SUBSCRIPTION_FAMILIES:
+            continue
+        try:
+            total += float(row.get("usd") or 0.0)
+        except (TypeError, ValueError):
+            total += float("nan")
+    return total
+
+
 def by_family(*, path: Path | None = None) -> dict[str, float]:
     """Spend per family, for the `spend show` command. An unreadable line lands under "unreadable" as NaN."""
     out: dict[str, float] = {}
@@ -170,8 +192,9 @@ def check(family: str, estimate_usd: float = 0.0, run_budget: RunBudget | None =
     """Refuse before sending. `estimate_usd` is the worst case for the call about to be made.
 
     Three ceilings, in the order they are cheapest to explain: the run's own budget, the total across every
-    family, and the family's own where it has one. Exactly reaching a ceiling is allowed; crossing it is not.
-    A run budget is anything with `cap_usd` and `spent_usd` (a test's stand-in as much as `RunBudget`)."""
+    billed family, and the family's own where it has one. A subscription family meets the run budget only: its
+    calls add nothing to what is billed. Exactly reaching a ceiling is allowed; crossing it is not. A run budget
+    is anything with `cap_usd` and `spent_usd` (a test's stand-in as much as `RunBudget`)."""
     if run_budget is not None and run_budget.cap_usd is not None:
         cap, spent = float(run_budget.cap_usd), float(run_budget.spent_usd)
         if spent + estimate_usd > cap:
@@ -179,14 +202,17 @@ def check(family: str, estimate_usd: float = 0.0, run_budget: RunBudget | None =
                 f"this call could take the run to ${spent + estimate_usd:.4f} against its ${cap:.2f} budget "
                 f"(${spent:.4f} already spent)."
             )
-    total = spent_usd(None, path=path)
+    total = billed_usd(path=path)
     if total != total:  # NaN: an unreadable ledger line
         raise BudgetExhausted(f"{path or ledger_path()} has a line this code cannot read; refusing to spend blind")
+    if family in SUBSCRIPTION_FAMILIES:
+        return
     cap = cap_usd(None)
     if total + estimate_usd > cap:
         raise BudgetExhausted(
-            f"this call could take the total to ${total + estimate_usd:.4f} against a ${cap:.2f} ceiling "
-            f"(${total:.4f} already spent). Raise {TOTAL_CAP[0]} in .env, or stop here."
+            f"this call could take the billed total to ${total + estimate_usd:.4f} against a ${cap:.2f} ceiling "
+            f"(${total:.4f} already billed; subscription calls are recorded, not counted). Raise {TOTAL_CAP[0]} "
+            f"in .env, or stop here."
         )
     if family in FAMILY_CAPS:
         fam_spent = spent_usd(family, path=path)
