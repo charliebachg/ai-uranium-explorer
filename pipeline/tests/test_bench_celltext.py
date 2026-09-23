@@ -119,3 +119,8 @@ def test_local_place_names_go_and_descriptive_zones_and_basin_stratigraphy_stay(
     assert f("A Shear Zone and the Fault Zone cut the Manitou Falls Formation.") == \
         "A Shear Zone and the Fault Zone cut the Manitou Falls Formation."
     assert f("Drilling on Zone K and Grid A.") == "Drilling on Zone [n] and Grid [n]."
+
+
+def test_a_name_before_a_direction_is_a_grid_and_goes() -> None:
+    assert CT.scrub_local("The Fox North and Fox South conductors, and The North.") == \
+        "The [redacted] North and [redacted] South conductors, and The North."

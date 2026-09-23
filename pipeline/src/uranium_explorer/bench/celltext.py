@@ -219,6 +219,9 @@ GEOGRAPHIC = ("Lakes?|Bays?|Rivers?|Creeks?|Islands?|Inlets?|Hills?|Points?|Chan
 WORKINGS = "Grids?|Property|Project|Claims?|Trend|Corridor|Area|Zones?|Deposits?|Prospects?|Showings?|Mines?|Camp"
 LOCAL = re.compile(r"\b((?:[A-Z][A-Za-z'’.]*[ -]){1,3})(" + GEOGRAPHIC + "|" + WORKINGS + r")\b")
 CODE = re.compile(r"\b(Grids?|Zones?|Conductors?|Lines?|Anomal(?:y|ies))\s+[A-Z]{1,3}\b")
+#: a name before a direction or a part is a grid, a conductor or a zone ("Fox North", "Fox South")
+PART = re.compile(r"\b([A-Z][a-z'’]+)(\s+(?:North|South|East|West|Northeast|Northwest|Southeast|Southwest|Main|"
+                  r"Extension|Central)\b)")
 #: basin-wide stratigraphy, not a place
 KEEP_LOCAL = frozenset({"manitou falls"})
 _GEOGRAPHIC = re.compile(r"^(?:" + GEOGRAPHIC + r")$")
@@ -245,7 +248,10 @@ def scrub_local(text: str) -> str:
             out.append(w if keep else "[redacted]")
         return re.sub(r"\[redacted\](?:[ -]\[redacted\])+", "[redacted]", "".join(out)) + noun
 
-    return CODE.sub(lambda m: f"{m.group(1)} [n]", LOCAL.sub(sub, text))
+    def part(m: re.Match[str]) -> str:
+        return m.group(0) if m.group(1).lower() in generic else "[redacted]" + m.group(2)
+
+    return PART.sub(part, CODE.sub(lambda m: f"{m.group(1)} [n]", LOCAL.sub(sub, text)))
 
 
 def redact(sentence: str, scrub: Callable[[str], str]) -> str | None:
