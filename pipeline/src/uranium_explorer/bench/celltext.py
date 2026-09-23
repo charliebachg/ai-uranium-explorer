@@ -50,7 +50,9 @@ OUTCOME = re.compile(
     r"radiometric\w*|anomal\w*|cps|counts? per|scintillomet\w*|spectromet\w*|gamma\w*|probed?|probing|geiger|"
     r"discover\w*|deposits?|showings?|occurrences?|economic\w*|resources?|reserves?|assay\w*|enrich\w*|"
     r"elevated|significant|encouraging|hot)\b")
-NUMBER = re.compile(r"(?<![A-Za-z])\d[\d,.:/]*\d|(?<![A-Za-z\[])\d(?![\]\w])")
+#: any token with a digit in it: a number, a grid line or conductor name (L4, A2), a hole (2O7), a figure (3A),
+#: an OCR slip (Fal1s). All become [n]; a digit is a number the gate cannot check or a label for ground
+NUMBER = re.compile(r"[A-Za-z]*\d[\w.,:/+'-]*")
 SENTENCE = re.compile(r"(?<=[.!?])\s+(?=[A-Z(\"'])")
 WORD = re.compile(r"[a-z]{3,}")
 
@@ -212,7 +214,8 @@ def prose(s: str) -> bool:
 
 def redact(sentence: str, scrub: Callable[[str], str]) -> str | None:
     """A sentence as an arm may read it, or None when it states an outcome."""
-    if OUTCOME.search(sentence):
+    # a unit glued to a number ("1000cps") is only a word once the digits are blanked
+    if OUTCOME.search(sentence) or OUTCOME.search(re.sub(r"\d+", " ", sentence)):
         return None
     return scrub(NUMBER.sub("[n]", sentence))
 

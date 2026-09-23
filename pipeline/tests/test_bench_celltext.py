@@ -100,3 +100,11 @@ def test_build_texts_caps_every_cell_and_keeps_both_views(monkeypatch: pytest.Mo
     raw = " ".join(r["text"] for r in out["b-0001"]["raw"])
     assert "MC-123" not in raw and "McClean" not in raw, "the raw view keeps outcomes, never names"
     assert out["b-0001"]["sources"][0]["ocr"] is True
+
+
+def test_no_digit_survives_and_a_unit_glued_to_a_number_is_still_an_outcome() -> None:
+    s = "The L4 zone near conductor A2 and hole 2O7 (Fig. 3A) sits in the Manitou Fal1s sandstone with strong clay."
+    out = CT.redact(s, scrub)
+    assert out is not None and not any(c.isdigit() for c in out)
+    assert "zone near conductor [n] and hole [n]" in out
+    assert CT.redact("Readings of 1000cps were logged in the altered sandstone above the unconformity.", scrub) is None
