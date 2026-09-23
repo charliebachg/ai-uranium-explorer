@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -286,3 +287,27 @@ def test_the_python_contract_mirror_rejects_what_zod_would():
     e = contract_check.Errors()
     contract_check.check_registry(e, "$", {"x:f:1": {**bad_val, "id": "x:f:2"}})
     assert any("registry key" in m for m in e)
+
+
+def test_a_file_links_to_its_own_report_pdf_never_the_province_site_root(tmp_path: Path) -> None:
+    from uranium_explorer.export_reports import main_report_url
+
+    def rec(file_num: str, name: str, kind: str = "report_pdf", size: int = 10) -> dict:
+        return {"file_num": file_num, "kind": kind, "name": name, "bytes": size,
+                "url": f"https://s3sask2.example/{file_num}/{name.replace(' ', '%20')}"}
+
+    (tmp_path / "manifest.json").write_text(json.dumps({
+        "A-1/big map.pdf": rec("A-1", "big map.pdf", size=900),
+        "A-1/2013 Annual Report.pdf": rec("A-1", "2013 Annual Report.pdf", size=100),
+        "A-1/appendix/huge log.pdf": rec("A-1", "huge log.pdf", size=5000),
+        "B-2/08RH43101.pdf": rec("B-2", "08RH43101.pdf", size=50),
+        "B-2/appendix/x.pdf": rec("B-2", "x.pdf", size=9000),
+        "C-3/sheet.xls": rec("C-3", "sheet.xls", kind="assay_sheet"),
+    }))
+    # a top-level PDF whose name says report wins over a larger map; an appendix never does
+    assert main_report_url("A-1", tmp_path).endswith("/A-1/2013%20Annual%20Report.pdf")
+    # no name says report: the largest top-level PDF
+    assert main_report_url("B-2", tmp_path).endswith("/B-2/08RH43101.pdf")
+    # nothing fetched: empty, and the export falls back to the provincial index, not the 403 site root
+    assert main_report_url("C-3", tmp_path) == ""
+    assert main_report_url("D-4", tmp_path) == ""

@@ -15,6 +15,7 @@ Nothing is written until `contract_check` passes on the staged copy: an invalid 
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import json
 import shutil
 import tempfile
@@ -36,6 +37,8 @@ from .render import read_pages
 from .values import stat
 
 EXPORT_VERSION = "export-reports/v1"
+#: where a file with no fetched PDF links to: the province's assessment-file index (the GeoDS site root is 403)
+PROVINCE_SEARCH = "https://gis.saskatchewan.ca/egis/rest/services/Economy/Mineral_Assessment_File_Information/FeatureServer/2"
 HOLE_BUFFER_M = 250.0
 PAGE_DPI_SOURCE = 200
 PAGE_DPI_TARGET = 150
@@ -62,23 +65,68 @@ def _dump(path: Path, obj: Any, compact: bool = True) -> None:
 
 # ------------------------------------------------------------------ file metadata
 
+@functools.lru_cache(maxsize=1)
+def _index_by_file() -> tuple[Any, dict[str, dict[str, Any]]]:
+    from .filenum import norm_file_num
+    from .select import load_index
+
+    idx = load_index()
+    by: dict[str, dict[str, Any]] = {}
+    for rec in idx.files:
+        for key in ("SYSTEM_ASSMNT_FILE_NUM", "ASSMNT_FILE_NUM"):
+            if rec.get(key):
+                by.setdefault(norm_file_num(rec[key]), rec)
+    return idx, by
+
+
+def index_features(file_num: str) -> dict[str, Any] | None:
+    """The shortlist's features for any uranium-tagged file, by the same rule (year from the work date, never
+    the free-text period); None when the index does not list it or is not on disk."""
+    from .filenum import norm_file_num
+    from .select import file_features
+
+    try:
+        idx, by = _index_by_file()
+    except FileNotFoundError:
+        return None
+    rec = by.get(norm_file_num(file_num))
+    return file_features(rec, idx) if rec else None
+
+
+def main_report_url(file_num: str, raw_dir: Path | None = None) -> str:
+    """The URL of a file's main report PDF, from the fetch manifest: a top-level report PDF whose name says
+    report, else the largest top-level one. Empty when nothing was fetched. The province's site root is no
+    fallback: it answers 403 to a browser."""
+    from .fetch import documents_by_file
+
+    docs = documents_by_file(raw_dir or PATHS.raw, kinds=("report_pdf",)).get(file_num, [])
+    top = [d for d in docs if d.get("url") and d["path"].count("/") == 1] or [d for d in docs if d.get("url")]
+    if not top:
+        return ""
+    named = [d for d in top if "report" in str(d.get("name", "")).lower()]
+    return str(max(named or top, key=lambda d: int(d.get("bytes") or 0))["url"])
+
+
 def file_metadata(file_num: str) -> dict[str, Any]:
     """Company, era, year, NTS sheets, source URL and page count, from the selection artifacts."""
     sel = json.loads((PATHS.index / "selection.json").read_text())
     meta: dict[str, Any] = {"file_num": file_num, "company": "", "property": None, "era": "1970s",
                             "year": None, "nts_sheets": [], "source_url": "", "pages": 0,
                             "split": "dev", "scanned": None}
-    for cand in sel.get("shortlist", {}).get("candidates", []):
-        if cand.get("file_num") == file_num:
-            f = cand.get("features", {})
-            meta.update(company=(f.get("company") or "").strip() or "(company not recorded)",
-                        property=(f.get("property") or None), era=f.get("era") or "1970s",
-                        year=f.get("year"), nts_sheets=f.get("nts_sheets") or [])
-            break
+    # the shortlist's features, else the same features computed from the index for a file read later (the
+    # enabled cells' files never went through the shortlist, and were shown as 1970s with no company)
+    f = next((c.get("features", {}) for c in sel.get("shortlist", {}).get("candidates", [])
+              if c.get("file_num") == file_num), None) or index_features(file_num)
+    if f:
+        meta.update(company=(f.get("company") or "").strip() or "(company not recorded)",
+                    property=(f.get("property") or None), era=f.get("era") or "1970s",
+                    year=f.get("year"), nts_sheets=f.get("nts_sheets") or [])
     probe = (sel.get("probe", {}).get("files") or {}).get(file_num, {})
     reports = probe.get("report_pdfs") or []
     if reports:
         meta["source_url"] = reports[0].get("url") or ""
+    if not meta["source_url"]:
+        meta["source_url"] = main_report_url(file_num)
     post = (sel.get("post_fetch", {}).get("files") or {}).get(file_num, {})
     meta["pages"] = post.get("pages") or 0
     meta["scanned"] = post.get("scanned")
@@ -293,7 +341,7 @@ def build_report(file_num: str, log: Callable[[str], None] = print) -> tuple[dic
     summary = {
         "file_num": file_num, "company": meta["company"], "era": meta["era"], "year": year_vid,
         "nts_sheets": meta["nts_sheets"], "page_count": pages_vid, "scan_kind": _scan_kind(page_rows),
-        "file_sha256": file_sha, "source_url": meta["source_url"] or "https://geoscience-data-system.saskatchewan.ca/",
+        "file_sha256": file_sha, "source_url": meta["source_url"] or PROVINCE_SEARCH,
         "split": meta["split"], "status_counts": count_ids, "footprint": footprint, "centroid": centroid,
         "holes": stubs, "note": footprint_note,
     }
