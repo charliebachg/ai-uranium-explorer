@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+from pathlib import Path
 from typing import Any, Callable
 
 import typer
@@ -122,6 +123,56 @@ def chain_cmd(
         raise typer.Exit(75)
     if summary["budget_exhausted"]:
         raise typer.Exit(3)
+
+
+@bench_run_app.command("readers")
+def readers_cmd(
+    arm: str = typer.Option("d2", "--arm", help="an evidence readers (v2) arm under configs/arms/"),
+    cells: list[str] = typer.Option(None, "--cells", help="real cell ids (repeatable or comma-separated)"),
+    enabled: bool = typer.Option(False, "--enabled", help="the enabled cells from knowledge/enabled_cells.toml"),
+    budget_usd: float = typer.Option(40.0, "--budget-usd", help="ceiling on live spend for this run"),
+    workers: int = typer.Option(3, "--workers", help="cells in parallel; a cell's five calls run one after another"),
+    backend: str = typer.Option("claude", "--backend", help="claude (the local CLI, the benchmark's configuration), auto or replay"),
+    resume: str = typer.Option("", "--resume", help="a run id: read only the cells it has not finished"),
+    store: bool = typer.Option(True, "--store/--no-store", help="land the rows in agent.reading_run at the end"),
+) -> None:
+    """Run the evidence readers (the benchmark's best design) over real cells for the dashboard. The rows are
+    written to the run directory as each cell finishes and stored in the agent tier at the end."""
+    import datetime as dt
+    import tempfile
+    import tomllib
+
+    from ..paths import PATHS
+    from ..store import connect
+    from .arms import load_arm
+    from .readers import run_cells, store_run
+    from .run import render_cards
+
+    ids = [x.strip() for c in (cells or []) for x in c.split(",") if x.strip()]
+    if enabled:
+        doc = tomllib.loads((PATHS.pipeline / "knowledge" / "enabled_cells.toml").read_text())
+        ids += [str(c["id"]) for c in doc.get("cell", []) if str(c["id"]) not in ids]
+    if not ids:
+        raise typer.BadParameter("name cells with --cells, or --enabled")
+    arm_cfg = load_arm(arm)
+    run_id = resume or dt.datetime.now(dt.UTC).strftime("%Y%m%dT%H%M%SZ-readers")
+    out = PATHS.data / "runs" / run_id
+    cards = render_cards(ids, Path(tempfile.mkdtemp(prefix="ue_readers_cards_")), log=typer.echo) \
+        if arm_cfg.inputs.card else {}
+    typer.echo(f"  run {run_id}: {len(ids)} cell(s), arm {arm_cfg.name} ({arm_cfg.model}), backend {backend}")
+    summary = run_cells(ids, arm_cfg, _factory(backend), budget_usd, out, log=typer.echo, workers=workers,
+                        card_paths=cards)
+    typer.echo(f"  run {run_id}: {summary['done']} of {len(ids)} done, {len(summary['failed'])} failed, "
+               f"${summary['spent_usd']:.2f} spent (CLI accounting)")
+    if store and summary["done"]:
+        con = connect()
+        try:
+            n = store_run(con, out)
+        finally:
+            con.close()
+        typer.echo(f"  stored {n} row(s) in agent.reading_run")
+    if summary["failed"]:
+        raise typer.Exit(1)
 
 
 @bench_run_app.command("score")

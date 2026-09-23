@@ -997,6 +997,49 @@ export const AnalystChain = z.object({
 export type AnalystChain = z.infer<typeof AnalystChain>;
 
 /** The evidence record for one cell, served by the local agent service (never bundled into the static build). */
+const CitedClaim = z.object({ text: z.string(), value_ids: z.array(z.string()) });
+
+/** One evidence family's reading of a cell; a refused one carries why, and nothing of itself. */
+export const ReaderReading = z.object({
+  family: z.string(),
+  assessment: z.string().nullable().optional(),
+  strength_id: z.string().nullable().optional(),
+  published: z.boolean(),
+  attempts: z.number().nullable().optional(),
+  problems: z.array(z.string()).default([]),
+  summary: z.string().default(""),
+  claims: z.array(CitedClaim).default([]),
+  unknowns: z.array(z.string()).default([]),
+});
+export type ReaderReading = z.infer<typeof ReaderReading>;
+
+/**
+ * The evidence readers' result for a cell (analyst v2, the benchmark's best design), computed offline by
+ * `ue arm readers`: four readings, then the ranking call's answer. Numbers are ids into the record's values.
+ */
+export const ReadersRun = z.object({
+  reading_run_id: z.string(),
+  run_id: z.string(),
+  arm: z.string(),
+  model: z.string(),
+  verdict: z.string().nullable(),
+  published: z.boolean(),
+  problems: z.array(z.string()).default([]),
+  answer: z
+    .object({
+      claims: z.array(CitedClaim).default([]),
+      unknown_criteria: z.array(z.string()).default([]),
+      absent_criteria: z.array(z.string()).default([]),
+      next_observation: z.string().nullable().optional(),
+    })
+    .prefault({}),
+  created_at: z.string(),
+  cost_usd: z.number().nullable().optional(),
+  probability_id: z.string().nullable(),
+  readings: z.array(ReaderReading).default([]),
+});
+export type ReadersRun = z.infer<typeof ReadersRun>;
+
 export const CellEvidence = z.object({
   cell_id: z.string(),
   lon: z.number().nullable(),
@@ -1025,6 +1068,8 @@ export const CellEvidence = z.object({
   ),
   /** The cell's analyst chains, newest first; a record from before the chains existed simply has none. */
   chains: z.array(AnalystChain).default([]),
+  /** The evidence readers' results, newest first; only the enabled cells have one. */
+  readers: z.array(ReadersRun).default([]),
 });
 export type CellEvidence = z.infer<typeof CellEvidence>;
 

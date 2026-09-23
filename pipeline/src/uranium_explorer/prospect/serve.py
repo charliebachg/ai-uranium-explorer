@@ -179,6 +179,9 @@ def evidence(cell_id: str) -> dict[str, Any]:
             "select lon, lat, in_basin from derived.cell where cell_id = ?", [cell_id]
         ).fetchone()
         chains = _chains(con, cell_id)
+        from ..analyst.readers import for_cell as readers_for_cell
+
+        readers = readers_for_cell(con, cell_id)
     finally:
         con.close()
     by_memo: dict[str, list[dict[str, Any]]] = {}
@@ -188,7 +191,7 @@ def evidence(cell_id: str) -> dict[str, Any]:
         )
     # a value the tools returned for this request is the same number the chain cited, read fresh; the chain's
     # own copy fills in only the ids the tools no longer serve, so every id the panel shows still resolves
-    for _record, chain_values in chains:
+    for _record, chain_values in [*chains, *readers]:
         for vid, val in chain_values.items():
             values.setdefault(vid, val)
     return {
@@ -204,6 +207,8 @@ def evidence(cell_id: str) -> dict[str, Any]:
             for m in memos
         ],
         "chains": [record for record, _values in chains],
+        # the evidence readers' results, the benchmark's best design, computed offline like the chains
+        "readers": [record for record, _values in readers],
     }
 
 

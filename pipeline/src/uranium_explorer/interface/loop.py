@@ -17,6 +17,8 @@ from ..backends.base import UsageLimitReached
 from ..prospect import tools as T
 from . import model as M
 from .conversation import Conversation
+from .readers_tool import TOOL as READERS
+from .readers_tool import evidence_readers
 from .sensitivity import TOOL as SENSITIVITY
 from .sensitivity import sensitivity
 
@@ -108,16 +110,18 @@ TOOL_HELP: dict[str, str] = {
     **T.TOOL_HELP,
     SENSITIVITY: f"{SENSITIVITY}(cell_id) - which unknown criterion, measured and met, would move the criteria "
                  "score most; computed from the weights and memberships, every figure with an id",
+    READERS: f"{READERS}(cell_id) - what the evidence readers (the best analyst design) concluded about this "
+             "cell, stored for the enabled cells: the verdict and probability, and each of the four readings",
 }
 
 
 def call_tool(tool: str, args: dict[str, Any]) -> T.ToolResult:
     """One tool call: the registry's own, or the sensitivity, which lives with the interface agent."""
-    if tool == SENSITIVITY:
+    if tool in (SENSITIVITY, READERS):
         cell = args.get("cell_id")
         if not isinstance(cell, str) or not cell:
-            raise T.ToolError(f"{SENSITIVITY} needs a cell_id")
-        return sensitivity(cell)
+            raise T.ToolError(f"{tool} needs a cell_id")
+        return sensitivity(cell) if tool == SENSITIVITY else evidence_readers(cell)
     return T.call(tool, args)
 
 

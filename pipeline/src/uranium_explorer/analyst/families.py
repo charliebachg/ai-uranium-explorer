@@ -313,7 +313,11 @@ def run_cell(backend: Any, pack: dict[str, Any], card_path: Path | None, arm: Ar
                                    "strength": (r["answer"] or {}).get("strength"), "published": r["published"],
                                    "attempts": r["attempts"], "problems": r["problems"],
                                    "claims": len((r["answer"] or {}).get("claims") or []),
-                                   "n_values": r["n_values"], "cost_usd": r["cost_usd"]} for r in readings},
+                                   "n_values": r["n_values"], "cost_usd": r["cost_usd"],
+                                   # the reading itself, for the dashboard; a refused one is kept as the record
+                                   "summary": str((r["answer"] or {}).get("summary") or ""),
+                                   "claim_list": list((r["answer"] or {}).get("claims") or []),
+                                   "unknowns": list((r["answer"] or {}).get("unknowns") or [])} for r in readings},
     }
 
 

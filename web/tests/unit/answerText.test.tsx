@@ -74,7 +74,9 @@ describe("AnswerText with the interface agent's ids", () => {
 
 describe("a typed number and its chip", () => {
   it("prints the cited value once: the chip replaces the same number typed before it, and nothing else", () => {
-    const el = mount(`If the fault were measured and met the score would be 0.75 (${IF_MET}), within 5 km (${INSIGHT}).`);
+    const el = mount(
+      `If the fault were measured and met the score would be 0.75 (${IF_MET}), within 5 km (${INSIGHT}).`,
+    );
     const text = el.textContent ?? "";
     // 0.75 typed, then its chip 0.750: printed once, as the chip
     expect(text).toContain("would be 0.750");

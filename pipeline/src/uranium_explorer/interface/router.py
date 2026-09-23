@@ -19,6 +19,7 @@ from ..bench.pack import CELL_ID
 from ..prospect import tools as T
 from . import model as M
 from .conversation import Conversation
+from .readers_tool import TOOL as READERS
 from .sensitivity import TOOL as SENSITIVITY
 
 PROMPT_VERSION = "interface/router/v1"
@@ -29,7 +30,7 @@ KINDS: tuple[str, ...] = ("lookup", "compare", "explain_score", "what_is_unknown
 TOPICS: dict[str, str] = {
     "features": "cell_features", "scores": "cell_scores", "criteria": "criteria_breakdown",
     "labels": "label_context", "coverage": "coverage", "passages": "retrieve", "nearby": "nearby",
-    "crosscheck": "crosscheck", "sensitivity": SENSITIVITY,
+    "crosscheck": "crosscheck", "sensitivity": SENSITIVITY, "readers": READERS,
 }
 #: one line per kind, for the router's prompt and the panel's route line
 MEANING: dict[str, str] = {
@@ -63,6 +64,8 @@ Topics a lookup or a compare may be about (pick the one that holds the value):
   nearby      what one evidence layer holds around the cell (a count, the nearest feature)
   crosscheck  a conductor beside a fault, a sediment anomaly beside its sampling
   sensitivity which unmeasured criterion would move the score most
+  readers     what the evidence readers, the best analyst design, concluded here: their verdict and
+              probability, and what each of the four readers found
 
 Out of scope, whatever the wording: a company's holdings or claims, a grade or tonnage, an ore body, where to
 drill or whether to drill, a recommendation to buy or stake, anything about ground outside this grid, and

@@ -171,7 +171,7 @@ export const TOUR_STEPS: TourStep[] = [
     id: "chains",
     seconds: 50,
     screen: "The analyst's chains",
-    say: "The evidence tab: scores, criteria, and the stored analyst chain, one node per criterion.",
+    say: "The evidence tab: scores, criteria, the evidence readers' verdict, and the staged loop's chain.",
     doing: "The top verdict is supports a closer look.",
     enter: (ctx) => openRecordedCell(ctx, null),
   },

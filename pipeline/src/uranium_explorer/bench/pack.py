@@ -210,6 +210,30 @@ def build_pack(cell_id: str, bench_id: str, spec: BenchSpec, con: Any = None,
     given); `oof` is the out-of-fold score table when the switch is on (read from `con` otherwise); `shared`
     may carry a `coverage` result so a build computes the grid-wide table once."""
     sw = {**spec.pack.switches(), **(switches or {})}
+    tools, values = assemble(cell_id, sw, con=con, oof=oof, shared=shared)
+    pack = {"bench_id": bench_id, "version": spec.version, "switches": sw, "tools": tools, "values": values}
+    pack = anonymise(pack, cell_id, bench_id)
+    names = set(forbidden) if forbidden is not None else (forbidden_strings(con) if con is not None else set())
+    names.add(cell_id)
+    if spec.pack.later():
+        from ..analyst.v0 import PLACE_NAMES   # here, not at the top: the analyst imports this module
+
+        names |= set(PLACE_NAMES)
+    return scrub(pack, names)
+
+
+def live_pack(cell_id: str, switches: dict[str, bool], con: Any = None,
+              shared: dict[str, Any] | None = None) -> dict[str, Any]:
+    """One real cell's pack for the dashboard: the same tool results a benchmark pack holds under the same
+    switches, with the cell's own ids, because the panel resolves every cited id against the live store. Not
+    anonymised and not scrubbed: the dashboard blinds nothing, as the staged loop's dashboard sessions do not."""
+    tools, values = assemble(cell_id, dict(switches), con=con, shared=shared)
+    return {"bench_id": cell_id, "version": "dashboard", "switches": dict(switches), "tools": tools, "values": values}
+
+
+def assemble(cell_id: str, sw: dict[str, bool], con: Any = None, oof: pd.DataFrame | None = None,
+             shared: dict[str, Any] | None = None) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    """The tool results a pack holds under these switches, and every value they cite, keyed by the real ids."""
     shared = shared or {}
     results: dict[str, T.ToolResult] = {
         "cell_features": T.cell_features(cell_id),
@@ -236,15 +260,7 @@ def build_pack(cell_id: str, bench_id: str, spec: BenchSpec, con: Any = None,
     for name, r in results.items():
         tools[name] = {"note": r.note, "rows": r.rows}
         values |= r.values
-    pack = {"bench_id": bench_id, "version": spec.version, "switches": sw, "tools": tools, "values": values}
-    pack = anonymise(pack, cell_id, bench_id)
-    names = set(forbidden) if forbidden is not None else (forbidden_strings(con) if con is not None else set())
-    names.add(cell_id)
-    if spec.pack.later():
-        from ..analyst.v0 import PLACE_NAMES   # here, not at the top: the analyst imports this module
-
-        names |= set(PLACE_NAMES)
-    return scrub(pack, names)
+    return tools, values
 
 
 def drop_features(result: T.ToolResult, keys: frozenset[str]) -> T.ToolResult:

@@ -76,6 +76,8 @@ class Evidence(BaseModel):
     #: the analyst chains stored for the cell (the loop's publish step), as `prospect.serve.evidence` shapes them; the
     #: web contract (`CellEvidence.chains`) is the typed side, so the route passes the dicts through untouched
     chains: list[dict[str, Any]] = Field(default_factory=list)
+    #: the evidence readers' results for the cell (`ue arm readers`), newest first; typed on the web side too
+    readers: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class Turn(BaseModel):

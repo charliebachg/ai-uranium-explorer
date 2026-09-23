@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Chip } from "@/components/ui/StatusMark";
 import { Tip } from "@/components/ui/Tip";
 import { V } from "@/components/values/V";
-import type { AnalystChain, CellEvidence, ChainNode, ChainVerdict } from "@/data/contract";
+import type { AnalystChain, CellEvidence, ChainNode, ChainVerdict, ReaderReading } from "@/data/contract";
 import { hasValue } from "@/data/registry";
 import { cn } from "@/lib/cn";
 import { knownShareId, weightId } from "./cellValues";
@@ -64,6 +64,7 @@ export function EvidencePanel({
         <div className="mt-3 space-y-4">
           <Scores record={record} />
           <Criteria record={record} />
+          <Readers record={record} />
           <Labels record={record} />
           <Memos record={record} />
           <Chains key={record.cell_id} record={record} />
@@ -537,6 +538,145 @@ function Chains({ record }: { record: CellEvidence }) {
         <Decision chain={chain} />
       </article>
     </Block>
+  );
+}
+
+/** Plain names for the four evidence families, as the deck and the benchmark name them. */
+const FAMILY_LABEL: Record<string, string> = {
+  geochemistry: "Geochemistry",
+  dispersal: "Dispersal",
+  structure: "Structure",
+  setting: "Setting",
+};
+
+/**
+ * The evidence readers, the benchmark's best design: four readers, one per evidence family, then one ranking
+ * call. Their verdict is words in plain ink like the chain's; each number is a stored value.
+ */
+function Readers({ record }: { record: CellEvidence }) {
+  const [run] = record.readers;
+  if (!run) return null;
+  return (
+    <Block
+      title="Evidence readers"
+      note="The benchmark's best design: four readers, one per evidence family, then one ranking call. Computed offline."
+    >
+      <article
+        className={cn(
+          "rounded-xl border border-line bg-black/20 p-3",
+          !run.published && "border-st-miss/40 bg-st-miss/[0.04]",
+        )}
+        data-testid="readers"
+        data-run-id={run.run_id}
+      >
+        <header className="flex flex-wrap items-center gap-2">
+          <Chip ident>{run.model}</Chip>
+          {run.published ? null : <WithheldChip />}
+          <span className="ml-auto text-[10.5px] text-ink-3" data-chrome>
+            {stamp(run.created_at)}
+          </span>
+        </header>
+        {run.published && run.verdict ? (
+          <p className="mt-1.5 text-[12.5px] text-ink" data-testid="readers-verdict">
+            {VERDICT_WORDING[run.verdict as ChainVerdict] ?? run.verdict}
+            {run.probability_id ? (
+              <span className="text-ink-2">
+                {" "}
+                · probability <ChainNumber id={run.probability_id} />
+              </span>
+            ) : null}
+          </p>
+        ) : (
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-st-miss">
+            <CircleDashed className="size-3.5 shrink-0" aria-hidden="true" />
+            <span data-source-text>{run.problems[0] ?? "did not pass the gate"}</span>
+          </p>
+        )}
+        <ul className="mt-2 space-y-1.5">
+          {run.readings.map((r) => (
+            <ReadingRow key={r.family} reading={r} />
+          ))}
+        </ul>
+        {run.published ? (
+          <details className="group mt-2" data-testid="readers-answer">
+            <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">
+              the ranking call's answer
+            </summary>
+            <ol className="mt-1.5 space-y-1.5">
+              {run.answer.claims.map((claim) => (
+                <li key={claim.text} className="text-[11.5px] text-ink-2">
+                  <span data-source-text>{claim.text}</span>
+                  <Cites ids={claim.value_ids} />
+                </li>
+              ))}
+            </ol>
+            <div className="mt-2 grid gap-2 text-[11.5px] sm:grid-cols-2">
+              <CriteriaList title="Unknown: never measured here" items={run.answer.unknown_criteria} />
+              <CriteriaList title="Absent: measured here and not found" items={run.answer.absent_criteria} />
+            </div>
+            {run.answer.next_observation ? (
+              <p className="mt-2 text-[11.5px] text-ink-2">
+                <span className="text-ink-3">Would change it: </span>
+                <span data-source-text>{run.answer.next_observation}</span>
+              </p>
+            ) : null}
+          </details>
+        ) : null}
+      </article>
+    </Block>
+  );
+}
+
+/** A reader's summary as its first sentence and the rest, so the rail shows one line per reader. */
+function firstSentence(text: string): [string, string] {
+  const m = /^(.+?[.!?])\s+([\s\S]+)$/.exec(text.trim());
+  return m ? [m[1] ?? "", m[2] ?? ""] : [text.trim(), ""];
+}
+
+function ReadingRow({ reading: r }: { reading: ReaderReading }) {
+  const [lead, rest] = firstSentence(r.summary);
+  const cited = r.claims.flatMap((c) => c.value_ids);
+  return (
+    <li
+      className="rounded-lg border border-line bg-black/15 px-2.5 py-2"
+      data-testid="reading"
+      data-family={r.family}
+      data-published={r.published ? "" : undefined}
+    >
+      <div className="flex flex-wrap items-center gap-2 text-[12px]">
+        <span className="text-ink">{FAMILY_LABEL[r.family] ?? r.family}</span>
+        {r.published ? <span className="text-ink-2">{r.assessment ?? "unknown"}</span> : <WithheldChip />}
+        {r.published && r.strength_id ? (
+          <span className="ml-auto text-[11px] text-ink-3">
+            strength <ChainNumber id={r.strength_id} />
+          </span>
+        ) : null}
+      </div>
+      {r.published ? (
+        <>
+          {lead ? (
+            <p className="mt-1 text-[11.5px] text-ink-3" data-source-text>
+              {lead}
+            </p>
+          ) : null}
+          {rest || cited.length ? (
+            <details className="group mt-0.5" data-testid="reading-more">
+              <summary className="cursor-pointer text-[11px] text-ink-3 hover:text-ink-2">more</summary>
+              {rest ? (
+                <p className="mt-1 text-[11.5px] text-ink-3" data-source-text>
+                  {rest}
+                </p>
+              ) : null}
+              <Cites ids={cited} />
+            </details>
+          ) : null}
+        </>
+      ) : (
+        <p className="mt-1 text-[11px] text-st-miss" data-source-text>
+          {r.problems[0] ?? "refused by the check"}
+        </p>
+      )}
+    </li>
   );
 }
 

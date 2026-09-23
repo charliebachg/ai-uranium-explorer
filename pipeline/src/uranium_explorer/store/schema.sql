@@ -440,6 +440,30 @@ create table if not exists agent.chain_decision (
   tier             text not null default 'agent' check (tier = 'agent')
 );
 
+-- The evidence readers (analyst v2) over the enabled cells, computed offline for the dashboard
+-- (`ue arm readers`): four readings, one per evidence family, then the ranking call's answer. One row per run and
+-- cell. Nothing here is a source of numbers: the readings and the answer cite value ids, and `values_json`
+-- carries the cited values (with the minted probability and strengths) so a row stands on its own.
+create table if not exists agent.reading_run (
+  reading_run_id  text primary key,     -- <run_id>:<cell_id>
+  cell_id         text not null,
+  run_id          text not null,
+  arm             text not null,
+  model           text not null,
+  verdict         text,                 -- the ranking call's verdict, recorded whether or not it published
+  probability     double,
+  published       boolean not null,     -- false: the answer failed the gate and is shown withheld
+  problems_json   text not null,
+  answer_json     text not null,        -- verdict, probability, claims, unknown and absent criteria, next_observation
+  readings_json   text not null,        -- {family: {assessment, strength, published, attempts, problems, summary, claim_list, unknowns}}
+  values_json     text not null,
+  cost_usd        double,
+  duration_s      double,
+  created_at      text not null,
+  tier            text not null default 'agent' check (tier = 'agent')
+);
+create index if not exists reading_run_cell_idx on agent.reading_run (cell_id, created_at);
+
 -- Background jobs (PRD §A.2): anything over a second the API runs on its own worker pool, in this process,
 -- because DuckDB allows one read-write connection per file and the serving process holds it. One row per job,
 -- written as its state changes, so a restart shows every job's last state and marks the ones that were running

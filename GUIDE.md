@@ -270,9 +270,12 @@ The evidence tab of the agent rail holds everything the local service knows abou
 same four tool calls the chat opens with: the three scores with their known share and applicability; the
 criteria breakdown, where a criterion that is unknown here is drawn with no bar and named as not measured,
 while one that was measured and fell short gets a bar and a number; the nearest labelled deposits and
-occurrences; the memos the three-role panel wrote about the cell, a rejected memo shown with its verdict
-struck out and its claims withheld; and the analyst chains stored for the cell, newest first (the record
-carries up to five), with a picker between them.
+occurrences; the **evidence readers'** result where one is stored (the enabled cells, `ue arm readers`): the
+ranking call's verdict and probability, then one line per reader (its assessment, strength, summary and cited
+values; a refused reading shown as refused, with the reason and nothing else of it), the full answer closed
+under them; the memos the three-role panel wrote about the cell, a rejected memo shown with its verdict
+struck out and its claims withheld; and the staged loop's analyst chains stored for the cell, newest first
+(the record carries up to five), with a picker between them.
 
 A chain is shown as the staged analyst produced it: one node per criterion and cross-check with its status in
 words (met, not met, unknown), its strength, the value ids it cites (an expert-tier id labelled as such), and
@@ -973,7 +976,11 @@ ids, `--workers` cells in parallel, `--backend claude|auto|replay`, `--resume <r
 cells forward, `--sample N` asks the same question again as its own calls and its own table row
 (`<arm>~s<N>`; sample 0 is the arm itself and keeps its cache), exit 3 on the budget and 75 on a usage limit. `ue arm chain --enabled` (or `--cells`) runs the
 staged loop over real cells for the dashboard in one-connection mode and publishes the chains into the agent
-tier. `ue arm score --run` scores a run's cells against the key, `ue arm regate --run` re-applies the current
+tier. `ue arm readers --enabled` (or `--cells`) runs the evidence readers, the benchmark's best design, over
+real cells: the same tools and switches as the benchmark pack but with the cell's own ids (`bench.pack.
+live_pack`), rows written to `pipeline/data/runs/<run>/rows.jsonl` as each cell finishes and stored in
+`agent.reading_run` at the end (`--no-store` to store later); `--backend claude` by default, the benchmark's
+configuration. `ue arm score --run` scores a run's cells against the key, `ue arm regate --run` re-applies the current
 gate to stored v0 answers and re-scores with no model call, `ue arm table` merges every arm's latest run with
 the baselines into `pipeline/data/out/bench/<version>/table.json` and `derived.metric`, and `ue arm
 baselines` prints the baseline rows alone.
@@ -998,7 +1005,9 @@ The analyst runs only on the **enabled cells** frozen in `pipeline/knowledge/ena
 cells chosen for their score behaviour, the cells of the reports read in the reading pipeline, and two deposit
 cells per camp with the fewest attached files that still carry drilling. For each enabled cell every
 assessment file inside it is fetched and text-indexed, the two files with the most drillholes are model-read,
-and the analyst chain is computed offline (`ue arm chain --enabled`) and served as-is. A live reading is
+and both analysts are computed offline and served as-is: the evidence readers' result (`ue arm readers
+--enabled`, Opus through the CLI) and the staged loop's chain (`ue arm chain --enabled`). The chat can read the
+readers' result (the lookup topic `readers`, the `evidence_readers` tool). A live reading, the staged loop, is
 available only on them, as a job within a per-session budget; any other cell shows its scores and its
 evidence, and a request to run the analyst on it is refused with that reason.
 

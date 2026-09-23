@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import { AnalystChain, CellEvidence, type ValRegistry, type ValueId } from "@/data/contract";
+import { AnalystChain, CellEvidence, ReadersRun, type ValRegistry, type ValueId } from "@/data/contract";
 import { registerValues } from "@/data/registry";
 import { EvidencePanel } from "@/features/prospect/EvidencePanel";
 
@@ -157,6 +157,7 @@ const record: CellEvidence = {
   values: {},
   memos: [],
   chains: [chain],
+  readers: [],
 };
 
 /** The record as the service served it before chains existed: no `chains` key at all. */
@@ -293,5 +294,77 @@ describe("the Chains section", () => {
     expect(shown?.getAttribute("data-chain-id")).toBe("ch0");
     expect(shown?.querySelector('[data-testid="chain-verdict"]')?.textContent).toContain("evidence against");
     expect(shown?.querySelector('[data-testid="chain-verdict"]')?.textContent).toContain("weighted sum");
+  });
+});
+
+describe("the evidence readers", () => {
+  const base = `c:readers:${CELL}:r1`;
+  const run = ReadersRun.parse({
+    reading_run_id: `r1:${CELL}`,
+    run_id: "r1",
+    arm: "d2",
+    model: "claude-opus-5",
+    verdict: "supports_closer_look",
+    published: true,
+    answer: {
+      claims: [{ text: "The nearest conductor is 1.2 km away.", value_ids: [CONDUCTOR] }],
+      unknown_criteria: ["alteration"],
+      absent_criteria: [],
+      next_observation: "a lake-sediment sample down-ice",
+    },
+    created_at: "2026-09-24T01:00:00+00:00",
+    probability_id: `${base}:probability`,
+    readings: [
+      {
+        family: "structure",
+        assessment: "for",
+        strength_id: `${base}:structure:strength`,
+        published: true,
+        summary: "A conductor runs along a lineament.",
+        claims: [{ text: "1.2 km", value_ids: [CONDUCTOR] }],
+      },
+      {
+        family: "dispersal",
+        assessment: null,
+        published: false,
+        problems: ["cites 2.4% with no id"],
+        summary: "",
+        claims: [],
+      },
+    ],
+  });
+
+  it("shows the verdict and its probability, one row per reader, and a refused reading as refused", () => {
+    registerValues(
+      Object.fromEntries(
+        [stat(`${base}:probability`, 0.72, "ratio3"), stat(`${base}:structure:strength`, 0.8, "ratio3")].map(
+          (v) => [v.id, v],
+        ),
+      ),
+      { notify: false },
+    );
+    const el = mount({ ...record, readers: [run] });
+    const block = el.querySelector('[data-testid="readers"]');
+    expect(block?.querySelector('[data-testid="readers-verdict"]')?.textContent).toContain(
+      "supports a closer look",
+    );
+    expect(block?.querySelector(`[data-vid="${base}:probability"]`)?.textContent).toBe("0.720");
+    const rows = Array.from(el.querySelectorAll('[data-testid="reading"]'));
+    expect(rows.map((r) => r.getAttribute("data-family"))).toEqual(["structure", "dispersal"]);
+    expect(rows[0]?.textContent).toContain("A conductor runs along a lineament.");
+    expect(rows[0]?.querySelector(`[data-vid="${base}:structure:strength"]`)?.textContent).toBe("0.800");
+    expect(rows[1]?.hasAttribute("data-published")).toBe(false);
+    expect(rows[1]?.textContent).toContain("withheld");
+    expect(rows[1]?.textContent).toContain("cites 2.4% with no id");
+    expect(el.querySelector('[data-testid="readers-answer"]')?.textContent).toContain(
+      "a lake-sediment sample down-ice",
+    );
+  });
+
+  it("is absent for a cell with no readers run, and an older record parses with none", () => {
+    const el = mount(record);
+    expect(el.querySelector('[data-testid="readers"]')).toBeNull();
+    const { readers: _drop, ...older } = record;
+    expect(CellEvidence.parse(older).readers).toEqual([]);
   });
 });
