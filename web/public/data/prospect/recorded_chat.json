@@ -1,117 +1,70 @@
 {
- "cell_id": "0152_0083",
- "lon": -105.39309297750572,
- "lat": 58.36128021440831,
- "recorded_at": "2026-09-21T04:33:13+00:00",
+ "cell_id": "0145_0019",
+ "lon": -105.61255860753958,
+ "lat": 57.21064773435427,
+ "recorded_at": "2026-09-23T18:54:50+00:00",
  "model": "z-ai/glm-5.3-flash",
  "effort": "low",
  "requested_by": "tour",
- "cost_usd": 0.0418,
+ "cost_usd": 0.0356,
  "tools_available": [
   "abstain",
   "cell_features",
   "cell_scores",
   "coverage",
   "criteria_breakdown",
+  "evidence_readers",
   "job_result",
   "label_context",
-  "run_analyst",
-  "sensitivity"
+  "run_analyst"
  ],
  "turns": [
   {
    "question": "What is actually measured in this cell, and what is only assumed?",
-   "text": "In cell 0152_0083 the criteria score is built on only about two-thirds of its inputs being measured (known share 0.667, c:score:0152_0083:criteria:known). Three weighted criteria are unknown here \u2014 unmeasured, not failed. Boulder train (radioactive boulders nearby): no boulder observation exists in this cell, and the coverage row shows boulder_max_cps covers only 0.081 of the grid, marked thin (c:cov:boulder_max_cps); the nearest boulder observation is 46,679.7 m away (c:cell:0152_0083:boulder_max_cps:nearest_m). Lake-sediment uranium: no sample here, and sed_u_max_ppm covers 0.379 of the grid, thin (c:cov:sed_u_max_ppm); the nearest sample is 82,885.3 m away (c:cell:0152_0083:sed_u_max_ppm:nearest_m). Lake-water uranium: no sample here, and water_u_max_ppm is the thinnest geochemical layer in the record at 0.026 coverage, thin (c:cov:water_u_max_ppm); the nearest water-uranium observation is 67,219.3 m away (c:cell:0152_0083:water_u_max_ppm:nearest_m). By contrast, the measured-and-met criteria here are conductor proximity (216.6547 m to the nearest conductor, c:cell:0152_0083:d_conductor_m), fault proximity (122.1962 m, c:cell:0152_0083:d_fault_m), graphitic host (mapped present, c:cell:0152_0083:graphitic_host), and unconformity depth (338.2833 m interpolated from 8 holes, c:cell:0152_0083:unconformity_depth_m, c:cell:0152_0083:unconformity_depth_m:n_obs). One criterion is measured and not met: structural density, membership 0.013 (c:crit:0152_0083:structural_density). The two folklore criteria (conductor strength, EM bright spot) are carried at weight zero and may be named but never counted as support (c:crit:0152_0083:conductor_strength:weight, c:crit:0152_0083:em_bright_spot:weight). The unknown criteria all rest on thin coverage layers, so their unknown status here reflects sampling sparsity across the grid, not an absence of the feature.",
+   "text": "Three criteria are unknown here rather than not met: boulder_train, graphitic_host, and lake_water_uranium. For boulder_train the underlying boulder feature is thin, with observations behind only about 8% of the grid. For lake_water_uranium the water feature is the thinnest, behind about 3% of cells. For graphitic_host its coverage row is not flagged thin, so it is simply unmeasured in this cell because the sandstone cover says nothing about the basement.",
    "claims": [
     {
-     "text": "Only 0.667 of the criteria score's inputs are measured in this cell.",
+     "text": "boulder_train has no value in this cell, so it is unknown rather than not met",
      "value_ids": [
-      "c:score:0152_0083:criteria:known"
+      "c:crit:0145_0019:boulder_train:weight",
+      "c:cell:0145_0019:boulder_max_cps:nearest_m"
      ]
     },
     {
-     "text": "Boulder train is unknown here, and boulder_max_cps coverage is 0.081 of the grid, marked thin.",
+     "text": "boulder_max_cps observations cover 0.081 of the grid and the feature is flagged thin",
      "value_ids": [
       "c:cov:boulder_max_cps"
      ]
     },
     {
-     "text": "The nearest radioactive-boulder observation is 46,679.7 m from this cell.",
-     "value_ids": [
-      "c:cell:0152_0083:boulder_max_cps:nearest_m"
-     ]
-    },
-    {
-     "text": "Lake-sediment uranium is unknown here, and sed_u_max_ppm coverage is 0.379, marked thin.",
-     "value_ids": [
-      "c:cov:sed_u_max_ppm"
-     ]
-    },
-    {
-     "text": "The nearest lake-sediment uranium observation is 82,885.3 m from this cell.",
-     "value_ids": [
-      "c:cell:0152_0083:sed_u_max_ppm:nearest_m"
-     ]
-    },
-    {
-     "text": "Lake-water uranium is unknown here, and water_u_max_ppm coverage is 0.026, marked thin.",
+     "text": "water_u_max_ppm observations cover 0.026 of the grid and the feature is flagged thin",
      "value_ids": [
       "c:cov:water_u_max_ppm"
      ]
     },
     {
-     "text": "The nearest lake-water uranium observation is 67,219.3 m from this cell.",
+     "text": "graphitic_host has no value in this cell and no observation backs it",
      "value_ids": [
-      "c:cell:0152_0083:water_u_max_ppm:nearest_m"
+      "c:cell:0145_0019:graphitic_host:n_obs"
      ]
     },
     {
-     "text": "Conductor proximity is measured at 216.6547 m and met.",
+     "text": "graphitic_host observations cover 0.933 of the grid and its coverage row is not flagged thin",
      "value_ids": [
-      "c:cell:0152_0083:d_conductor_m",
-      "c:crit:0152_0083:conductor_proximity"
+      "c:cov:graphitic_host"
      ]
     },
     {
-     "text": "Fault proximity is measured at 122.1962 m and met.",
+     "text": "lake_water_uranium has no value in this cell, so it is unknown rather than not met",
      "value_ids": [
-      "c:cell:0152_0083:d_fault_m",
-      "c:crit:0152_0083:fault_proximity"
-     ]
-    },
-    {
-     "text": "Graphitic host is mapped present (value 1.0) and met.",
-     "value_ids": [
-      "c:cell:0152_0083:graphitic_host",
-      "c:crit:0152_0083:graphitic_host"
-     ]
-    },
-    {
-     "text": "Unconformity depth is measured at 338.2833 m from 8 hole observations and met.",
-     "value_ids": [
-      "c:cell:0152_0083:unconformity_depth_m",
-      "c:cell:0152_0083:unconformity_depth_m:n_obs",
-      "c:crit:0152_0083:unconformity_depth"
-     ]
-    },
-    {
-     "text": "Structural density is the one criterion measured and not met, membership 0.013.",
-     "value_ids": [
-      "c:crit:0152_0083:structural_density"
-     ]
-    },
-    {
-     "text": "Folklore criteria conductor_strength and em_bright_spot carry weight 0 and cannot support anything.",
-     "value_ids": [
-      "c:crit:0152_0083:conductor_strength:weight",
-      "c:crit:0152_0083:em_bright_spot:weight"
+      "c:crit:0145_0019:lake_water_uranium:weight",
+      "c:cell:0145_0019:water_u_max_ppm:nearest_m"
      ]
     }
    ],
    "caveats": [
-    "Unknown is not absent: the three unknown criteria have no measurement in this cell, not a low reading.",
-    "Coverage figures are grid-wide shares of cells with an observation, not measurements in this cell.",
-    "The criteria score's distance and density thresholds are marked 'assumed', not published measurements."
+    "The boulder and lake-water features are unknown here not because nobody ever measured them anywhere, but because the nearest observation is far away: a tool in this session reports the distances but the answer above does not rely on those figures beyond identifying the nearest observation ids.",
+    "The graphitic_host criterion scores a keyword match on a 1:250,000 map; inside the basin a null is the cover speaking, not the basement."
    ],
    "cannot_answer": false,
    "published": true,
@@ -119,26 +72,26 @@
    "tools_used": [
     "coverage"
    ],
-   "cost_usd": 0.0078,
+   "cost_usd": 0.0087,
    "model": "z-ai/glm-5.3-flash",
    "route": {
     "kind": "what_is_unknown",
     "topic": "criteria",
     "cell_ids": [
-     "0152_0083"
+     "0145_0019"
     ],
     "entities": [],
     "insight_text": "",
     "out_of_scope": false,
-    "detail": "Asking which criteria are actually measured versus unknown/assumed in this cell.",
-    "reason": "The question asks what is measured versus only assumed, i.e. which criteria are unknown here rather than not met, and how thin the supporting features are.",
+    "detail": "Which criteria are unknown versus not met, and how thin the measured features are",
+    "reason": "The question asks what is actually measured versus only assumed in this cell, which is about unknown criteria and thin feature support.",
     "fallback": null,
     "meaning": "which criteria are unknown here rather than not met, and how thin the features behind them are",
     "plan": [
      {
       "tool": "criteria_breakdown",
       "args": {
-       "cell_id": "0152_0083"
+       "cell_id": "0145_0019"
       }
      },
      {
@@ -157,141 +110,73 @@
    "retried": false
   },
   {
-   "question": "Why is the criteria score what it is, and is the learned score explained by the drilling history here?",
-   "text": "The criteria score here is 0.9013 (c:score:0152_0083:criteria), built on a known share of 0.667 (c:score:0152_0083:criteria:known). Four criteria carried it at full membership 1.0: conductor proximity (c:crit:0152_0083:conductor_proximity), fault proximity (c:crit:0152_0083:fault_proximity), mapped graphitic host (c:crit:0152_0083:graphitic_host), and unconformity depth in the window (c:crit:0152_0083:unconformity_depth). Structural density was measured and nearly failed at 0.013 (c:crit:0152_0083:structural_density), and three criteria are unknown (boulder train, lake sediment, lake water) \u2014 unmeasured, not failed. The two folklore criteria (conductor strength, EM bright spot) carry weight zero and do not affect the score (c:crit:0152_0083:conductor_strength:weight, c:crit:0152_0083:em_bright_spot:weight).\n\nIs the learned score explained by drilling history here? The evidence says largely not. The effort score for this cell is 0.0338 (c:score:0152_0083:effort) \u2014 very low \u2014 and the learned score is 0.0245 (c:score:0152_0083:learned), even lower. The cell itself has zero provincial drillhole collars within 2 km (c:cell:0152_0083:holes_n) and no lake-sediment samples (c:cell:0152_0083:sed_samples_n); exploration contact is limited to survey footprints (7 airborne, c:cell:0152_0083:airborne_surveys_n; 7 ground, c:cell:0152_0083:ground_surveys_n) and an earliest drilling year of 2007 within 5 km (c:cell:0152_0083:holes_first_year). So the learned score is low because exploration history is thin here, not high because of it: what is high in this cell is the geology-driven criteria score, not the history-driven one. Grid-wide, the effort model does outscore the geological model under spatial folds (effort ROC-AUC 0.8524, c:metric:effort.spatial.roc_auc), so a low learned score still reflects a history-informed fit \u2014 but in this cell the exploration-history signal is near zero and the learned score tracks that.",
+   "question": "What did the evidence readers conclude about this cell?",
+   "text": "The readers' published verdict is supports_closer_look. Two family readings are published as 'for': structure (stronger) and setting (weaker), while the geochemistry and dispersal readings failed their checks and are unpublished. They flagged three criteria as unknown (graphitic_host, boulder_train, lake_water_uranium) and the em_bright_spot criterion as absent, and named a basement-penetrating test under the sandstone cover as the next observation.",
    "claims": [
     {
-     "text": "The criteria score is 0.9013 with a known share of 0.667 of its inputs measured.",
+     "text": "The readers' verdict is supports_closer_look, published with probability 0.62 that the public record labels this cell a known deposit or occurrence, a calibration figure, not a probability that ore is present.",
      "value_ids": [
-      "c:score:0152_0083:criteria",
-      "c:score:0152_0083:criteria:known"
+      "c:readers:0145_0019:20260923T174803Z-readers:probability"
      ]
     },
     {
-     "text": "Conductor proximity met at membership 1.0.",
+     "text": "The structure reader judged 'for' with strength 0.78.",
      "value_ids": [
-      "c:crit:0152_0083:conductor_proximity"
+      "c:readers:0145_0019:20260923T174803Z-readers:structure:strength"
      ]
     },
     {
-     "text": "Fault proximity met at membership 1.0.",
+     "text": "The setting reader judged 'for' with strength 0.68.",
      "value_ids": [
-      "c:crit:0152_0083:fault_proximity"
+      "c:readers:0145_0019:20260923T174803Z-readers:setting:strength"
      ]
     },
     {
-     "text": "Mapped graphitic host met at membership 1.0.",
+     "text": "The readers list graphitic_host, boulder_train and lake_water_uranium as unknown criteria and em_bright_spot as absent.",
      "value_ids": [
-      "c:crit:0152_0083:graphitic_host"
+      "c:crit:0145_0019:em_bright_spot"
      ]
     },
     {
-     "text": "Unconformity depth met at membership 1.0.",
+     "text": "Their next observation is a drill or basement-penetrating test of what lies beneath the sandstone cover under this cell.",
      "value_ids": [
-      "c:crit:0152_0083:unconformity_depth"
-     ]
-    },
-    {
-     "text": "Structural density measured and not met, membership 0.013.",
-     "value_ids": [
-      "c:crit:0152_0083:structural_density"
-     ]
-    },
-    {
-     "text": "The folklore criteria conductor strength and EM bright spot carry weight zero and do not affect the score.",
-     "value_ids": [
-      "c:crit:0152_0083:conductor_strength:weight",
-      "c:crit:0152_0083:em_bright_spot:weight"
-     ]
-    },
-    {
-     "text": "The effort score for this cell is 0.0338, so exploration history is thin here.",
-     "value_ids": [
-      "c:score:0152_0083:effort"
-     ]
-    },
-    {
-     "text": "The learned score for this cell is 0.0245.",
-     "value_ids": [
-      "c:score:0152_0083:learned"
-     ]
-    },
-    {
-     "text": "Zero provincial drillhole collars within 2 km of the cell.",
-     "value_ids": [
-      "c:cell:0152_0083:holes_n"
-     ]
-    },
-    {
-     "text": "No lake-sediment samples within 5 km of the cell.",
-     "value_ids": [
-      "c:cell:0152_0083:sed_samples_n"
-     ]
-    },
-    {
-     "text": "Seven airborne survey footprints cover the cell.",
-     "value_ids": [
-      "c:cell:0152_0083:airborne_surveys_n"
-     ]
-    },
-    {
-     "text": "Seven ground survey footprints cover the cell.",
-     "value_ids": [
-      "c:cell:0152_0083:ground_surveys_n"
-     ]
-    },
-    {
-     "text": "The earliest drilling year within 5 km is 2007.",
-     "value_ids": [
-      "c:cell:0152_0083:holes_first_year"
-     ]
-    },
-    {
-     "text": "Grid-wide under spatial folds the effort model scores ROC-AUC 0.8524, so a history-informed fit does carry weight on this grid.",
-     "value_ids": [
-      "c:metric:effort.spatial.roc_auc"
+      "c:cell:0145_0019:unconformity_depth_m"
      ]
     }
    ],
    "caveats": [
-    "Three criteria (boulder train, lake sediment, lake water uranium) are unknown here \u2014 unmeasured, not failed \u2014 and their layers are thin grid-wide.",
-    "Conductor traces plot up-dip of blind ore, so conductor proximity marks a corridor, not a position.",
-    "The 2007 earliest-drilling figure is within 5 km, not within the cell itself."
+    "The probability is a calibration figure about the public record's labels, never a probability that ore is present.",
+    "The geochemistry reading was refused (summary over the character limit) and the dispersal reading cited a value no tool returned, so neither says anything usable.",
+    "Readers are a best-analyst design run on claude-opus-5; their verdict tops out at supports a closer look and is never a drilling recommendation."
    ],
    "cannot_answer": false,
    "published": true,
    "problems": [],
-   "tools_used": [],
-   "cost_usd": 0.0079,
+   "tools_used": [
+    "evidence_readers"
+   ],
+   "cost_usd": 0.009,
    "model": "z-ai/glm-5.3-flash",
    "route": {
-    "kind": "explain_score",
-    "topic": "scores",
+    "kind": "lookup",
+    "topic": "readers",
     "cell_ids": [
-     "0152_0083"
+     "0145_0019"
     ],
     "entities": [
-     "criteria score",
-     "learned score",
-     "drilling history"
+     "evidence readers"
     ],
     "insight_text": "",
     "out_of_scope": false,
     "detail": "",
-    "reason": "Asks why the criteria score is what it is and how much of the learned score is explained by exploration (drilling) history \u2014 exactly the explain_score kind for this cell.",
+    "reason": "Asks what the evidence readers concluded about this cell: their verdicts and probabilities, a readers lookup.",
     "fallback": null,
-    "meaning": "why the scores are what they are: what carried the criteria score, and how much of the learned score is exploration history",
+    "meaning": "a value the store holds for this cell: a feature, a score, a criterion's state, the nearest deposit, a layer's coverage, what the reports say",
     "plan": [
      {
-      "tool": "cell_scores",
+      "tool": "evidence_readers",
       "args": {
-       "cell_id": "0152_0083"
-      }
-     },
-     {
-      "tool": "criteria_breakdown",
-      "args": {
-       "cell_id": "0152_0083"
+       "cell_id": "0145_0019"
       }
      }
     ]
@@ -304,131 +189,132 @@
    "retried": false
   },
   {
-   "question": "Which single unmeasured criterion would move the score most if it were measured?",
-   "text": "The sensitivity ranking has a tie at the top: boulder train (radioactive boulders nearby) and lake-sediment uranium would each move the criteria score equally if measured and met. The score now is 0.9013 (c:sens:0152_0083:score_now). If boulder_train were measured and met, the score would be 0.9177, a move of 0.0164, and if measured and not met it would fall to 0.7511 (c:sens:0152_0083:boulder_train:score_if_met, c:sens:0152_0083:boulder_train:delta_if_met, c:sens:0152_0083:boulder_train:score_if_not_met). Lake-sediment uranium is identical: 0.9177 if met, delta 0.0164, 0.7511 if not met (c:sens:0152_0083:lake_sediment_uranium:score_if_met, c:sens:0152_0083:lake_sediment_uranium:delta_if_met, c:sens:0152_0083:lake_sediment_uranium:score_if_not_met). Lake-water uranium ranks third at 0.9103 if met, delta 0.009, 0.8194 if not met (c:sens:0152_0083:lake_water_uranium:score_if_met, c:sens:0152_0083:lake_water_uranium:delta_if_met, c:sens:0152_0083:lake_water_uranium:score_if_not_met). Both tied criteria carry weight 2.0 (c:crit:0152_0083:boulder_train:weight, c:crit:0152_0083:lake_sediment_uranium:weight). The sensitivity tool ranks boulder_train first and lake sediment second only by listing order; the movement it reports is the same for both, so the single most consequential unmeasured criterion is a tie between them. Note also what each outcome does to the known share: measuring either lifts it from 0.667 to 0.8 (c:sens:0152_0083:known_share, c:sens:0152_0083:boulder_train:known_share_after, c:sens:0152_0083:lake_sediment_uranium:known_share_after).",
+   "question": "Why is the criteria score what it is, and is the learned score explained by the drilling history here?",
+   "text": "The criteria score is 0.9687, and it is carried mainly by the fully met structural and detection criteria: conductor_proximity (weight 3), fault_proximity (weight 2), lake_sediment_uranium (weight 2) and structural_density (weight 1) all sit at full membership, with unconformity_depth at 0.843. Only two-thirds of the criteria inputs are actually measured here, and graphitic_host, boulder_train and lake_water_uranium are unknown rather than failed. On the second question: yes, the learned score tracks exploration history strongly, because the effort score for this cell is nearly as high as the learned score itself, and the handbook notes the effort model beats the geological one under spatial folds.",
    "claims": [
     {
-     "text": "The criteria score now is 0.9013.",
+     "text": "The criteria score for this cell is 0.9687.",
      "value_ids": [
-      "c:sens:0152_0083:score_now"
+      "c:score:0145_0019:criteria"
      ]
     },
     {
-     "text": "If boulder_train were measured and met the score would be 0.9177.",
+     "text": "Only 0.667 of the criteria score's inputs are measured here.",
      "value_ids": [
-      "c:sens:0152_0083:boulder_train:score_if_met"
+      "c:score:0145_0019:criteria:known"
      ]
     },
     {
-     "text": "Boulder_train's delta if met is 0.0164.",
+     "text": "conductor_proximity is met at full membership 1.0.",
      "value_ids": [
-      "c:sens:0152_0083:boulder_train:delta_if_met"
+      "c:crit:0145_0019:conductor_proximity"
      ]
     },
     {
-     "text": "If boulder_train were measured and not met the score would be 0.7511.",
+     "text": "conductor_proximity carries weight 3.0.",
      "value_ids": [
-      "c:sens:0152_0083:boulder_train:score_if_not_met"
+      "c:crit:0145_0019:conductor_proximity:weight"
      ]
     },
     {
-     "text": "If lake_sediment_uranium were measured and met the score would be 0.9177.",
+     "text": "fault_proximity is met at full membership 1.0.",
      "value_ids": [
-      "c:sens:0152_0083:lake_sediment_uranium:score_if_met"
+      "c:crit:0145_0019:fault_proximity"
      ]
     },
     {
-     "text": "Lake-sediment uranium's delta if met is 0.0164.",
+     "text": "fault_proximity carries weight 2.0.",
      "value_ids": [
-      "c:sens:0152_0083:lake_sediment_uranium:delta_if_met"
+      "c:crit:0145_0019:fault_proximity:weight"
      ]
     },
     {
-     "text": "If lake_sediment_uranium were measured and not met the score would be 0.7511.",
+     "text": "lake_sediment_uranium is met at full membership 1.0.",
      "value_ids": [
-      "c:sens:0152_0083:lake_sediment_uranium:score_if_not_met"
+      "c:crit:0145_0019:lake_sediment_uranium"
      ]
     },
     {
-     "text": "If lake_water_uranium were measured and met the score would be 0.9103.",
+     "text": "lake_sediment_uranium carries weight 2.0.",
      "value_ids": [
-      "c:sens:0152_0083:lake_water_uranium:score_if_met"
+      "c:crit:0145_0019:lake_sediment_uranium:weight"
      ]
     },
     {
-     "text": "Lake-water uranium's delta if met is 0.009.",
+     "text": "structural_density is met at full membership 1.0.",
      "value_ids": [
-      "c:sens:0152_0083:lake_water_uranium:delta_if_met"
+      "c:crit:0145_0019:structural_density"
      ]
     },
     {
-     "text": "If lake_water_uranium were measured and not met the score would be 0.8194.",
+     "text": "structural_density carries weight 1.0.",
      "value_ids": [
-      "c:sens:0152_0083:lake_water_uranium:score_if_not_met"
+      "c:crit:0145_0019:structural_density:weight"
      ]
     },
     {
-     "text": "Boulder_train carries weight 2.0.",
+     "text": "unconformity_depth is met with membership 0.843.",
      "value_ids": [
-      "c:crit:0152_0083:boulder_train:weight"
+      "c:crit:0145_0019:unconformity_depth"
      ]
     },
     {
-     "text": "Lake-sediment uranium carries weight 2.0.",
+     "text": "unconformity_depth carries weight 2.0.",
      "value_ids": [
-      "c:crit:0152_0083:lake_sediment_uranium:weight"
+      "c:crit:0145_0019:unconformity_depth:weight"
      ]
     },
     {
-     "text": "The known share of criteria weight is 0.667 now.",
+     "text": "The learned score for this cell is 0.7948.",
      "value_ids": [
-      "c:sens:0152_0083:known_share"
+      "c:score:0145_0019:learned"
      ]
     },
     {
-     "text": "Measuring boulder_train would raise the known share to 0.8.",
+     "text": "The effort score for this cell is 0.8952, showing how much of the learned score is explained by exploration history.",
      "value_ids": [
-      "c:sens:0152_0083:boulder_train:known_share_after"
-     ]
-    },
-    {
-     "text": "Measuring lake sediment would raise the known share to 0.8.",
-     "value_ids": [
-      "c:sens:0152_0083:lake_sediment_uranium:known_share_after"
+      "c:score:0145_0019:effort"
      ]
     }
    ],
    "caveats": [
-    "The top two criteria move the score identically (0.0164 each); the tool's rank order does not break the tie on the reported numbers, so no single criterion stands alone as most consequential.",
-    "These moves are the tool's arithmetic over existing weights and memberships, not a prediction of what a measurement would find.",
-    "This is about the criteria score only; it says nothing about whether ore is present."
+    "Three criteria (graphitic_host, boulder_train, lake_water_uranium) are unknown here, not failed.",
+    "The effort model is fitted on every cell it scores, so its high score here is evidence about where people have worked, not about rock."
    ],
    "cannot_answer": false,
    "published": true,
    "problems": [],
-   "tools_used": [
-    "sensitivity"
-   ],
-   "cost_usd": 0.0085,
+   "tools_used": [],
+   "cost_usd": 0.0088,
    "model": "z-ai/glm-5.3-flash",
    "route": {
-    "kind": "what_would_change",
-    "topic": "sensitivity",
+    "kind": "explain_score",
+    "topic": "scores",
     "cell_ids": [
-     "0152_0083"
+     "0145_0019"
     ],
-    "entities": [],
+    "entities": [
+     "criteria score",
+     "learned score",
+     "drilling history"
+    ],
     "insight_text": "",
     "out_of_scope": false,
     "detail": "",
-    "reason": "The question asks which single unmeasured criterion would move the score most if measured \u2014 a sensitivity question on this cell's unknown criteria.",
+    "reason": "",
     "fallback": null,
-    "meaning": "which single unmeasured criterion would move the reading most if it were measured",
+    "meaning": "why the scores are what they are: what carried the criteria score, and how much of the learned score is exploration history",
     "plan": [
      {
-      "tool": "sensitivity",
+      "tool": "cell_scores",
       "args": {
-       "cell_id": "0152_0083"
+       "cell_id": "0145_0019"
+      }
+     },
+     {
+      "tool": "criteria_breakdown",
+      "args": {
+       "cell_id": "0145_0019"
       }
      }
     ]
@@ -442,7 +328,7 @@
   },
   {
    "question": "What grade would a hole drilled here intersect?",
-   "text": "No answer: this record never says that. Asks for grade of a hypothetical drilled hole \u2014 a grade/ore-body question, out of scope; the record holds no such value.",
+   "text": "No answer: this record never says that. Asks for the grade a drilled hole would intersect \u2014 grades and ore-body values are out of scope.",
    "claims": [],
    "caveats": [],
    "cannot_answer": true,
@@ -451,29 +337,32 @@
    "tools_used": [
     "abstain"
    ],
-   "cost_usd": 0.0005,
+   "cost_usd": 0.0001,
    "model": "z-ai/glm-5.3-flash",
    "route": {
     "kind": "lookup",
-    "topic": "labels",
+    "topic": null,
     "cell_ids": [
-     "0152_0083"
+     "0145_0019"
     ],
-    "entities": [],
+    "entities": [
+     "grade",
+     "hole"
+    ],
     "insight_text": "",
     "out_of_scope": true,
-    "detail": "Asks for grade of a hypothetical drilled hole \u2014 a grade/ore-body question, out of scope; the record holds no such value.",
-    "reason": "Grade of an undrilled hole is not a value the store holds for this cell and falls under the excluded grade/tonnage and drilling-recommendation topics.",
+    "detail": "Asks for the grade a drilled hole would intersect \u2014 grades and ore-body values are out of scope.",
+    "reason": "The question requests a grade/tonnage-style value, which the store does not hold and is out of scope.",
     "fallback": null,
     "meaning": "a value the store holds for this cell: a feature, a score, a criterion's state, the nearest deposit, a layer's coverage, what the reports say",
     "plan": []
    },
    "abstention": {
-    "abstain_id": "a:ad0bb868:1",
-    "session_id": "ad0bb868042a",
+    "abstain_id": "a:623638e7:1",
+    "session_id": "623638e70512",
     "reason": "out_of_scope",
-    "detail": "Asks for grade of a hypothetical drilled hole \u2014 a grade/ore-body question, out of scope; the record holds no such value.",
-    "recorded_at": "2026-09-21T04:29:49+00:00",
+    "detail": "Asks for the grade a drilled hole would intersect \u2014 grades and ore-body values are out of scope.",
+    "recorded_at": "2026-09-23T18:54:05+00:00",
     "said": "this record never says that"
    },
    "insight": null,
@@ -484,7 +373,7 @@
   },
   {
    "question": "Run the analyst on this cell and tell me what it decides.",
-   "text": "Analyst invoked on cell 0152_0083. It reads the evidence pack, the out-of-fold scores and the expert-tier values recorded in this conversation, gated like any other run; the verdict and the diff against the stored chain without the insight are reported here when it finishes.",
+   "text": "Analyst invoked on cell 0145_0019. It reads the evidence pack, the out-of-fold scores and the expert-tier values recorded in this conversation, gated like any other run; the verdict and the diff against the stored chain without the insight are reported here when it finishes.",
    "claims": [],
    "caveats": [],
    "cannot_answer": false,
@@ -493,19 +382,21 @@
    "tools_used": [
     "run_analyst"
    ],
-   "cost_usd": 0.0005,
+   "cost_usd": 0.0001,
    "model": "z-ai/glm-5.3-flash",
    "route": {
     "kind": "run_analyst",
-    "topic": "scores",
+    "topic": "readers",
     "cell_ids": [
-     "0152_0083"
+     "0145_0019"
     ],
-    "entities": [],
+    "entities": [
+     "analyst"
+    ],
     "insight_text": "",
     "out_of_scope": false,
-    "detail": "User asks for the analyst to be run on cell 0152_0083 and its decision reported.",
-    "reason": "Asks for the analyst to run on this cell, not a value lookup or explanation.",
+    "detail": "",
+    "reason": "The person asks for the analyst to be run on this cell and for its decision, so it is a run_analyst request about this record.",
     "fallback": null,
     "meaning": "the person asks for the analyst to run (or re-run) on this cell",
     "plan": []
@@ -513,102 +404,128 @@
    "abstention": null,
    "insight": null,
    "job": {
-    "job_id": "6313e184b5f04469",
-    "cell_id": "0152_0083",
+    "job_id": "3c9828be77a14db5",
+    "cell_id": "0145_0019",
     "reason": "Run the analyst on this cell and tell me what it decides.",
     "expert_ids": [],
     "score_ids": [
-     "c:score:0152_0083:criteria",
-     "c:score:0152_0083:effort",
-     "c:score:0152_0083:learned"
+     "c:score:0145_0019:criteria",
+     "c:score:0145_0019:effort",
+     "c:score:0145_0019:learned"
     ],
     "budget_usd": 0.5,
     "requested_by": "tour",
-    "submitted_at": "2026-09-21T04:29:51+00:00",
+    "submitted_at": "2026-09-23T18:54:06+00:00",
     "status": "done",
     "reported": false,
     "progress": [
      {
-      "at": "2026-09-21T04:29:51+00:00",
+      "at": "2026-09-23T18:54:06+00:00",
       "event": "queued"
      },
      {
-      "at": "2026-09-21T04:29:51+00:00",
+      "at": "2026-09-23T18:54:06+00:00",
       "event": "started"
      },
      {
-      "at": "2026-09-21T04:30:03+00:00",
+      "at": "2026-09-23T18:54:24+00:00",
       "event": "log",
       "text": "preloaded 6 map layers for the workers"
      },
      {
-      "at": "2026-09-21T04:30:03+00:00",
+      "at": "2026-09-23T18:54:24+00:00",
       "event": "log",
-      "text": "chains: arm v1-openrouter over 1 cell(s), budget $0.50, run 20260921T042952Z-chain"
+      "text": "chains: arm v1-openrouter over 1 cell(s), budget $0.50, run 20260923T185407Z-chain"
      },
      {
-      "at": "2026-09-21T04:30:08+00:00",
+      "at": "2026-09-23T18:54:27+00:00",
       "event": "run",
-      "run_id": "20260921T042952Z-chain"
+      "run_id": "20260923T185407Z-chain"
      },
      {
-      "at": "2026-09-21T04:30:08+00:00",
+      "at": "2026-09-23T18:54:27+00:00",
       "event": "stage:plan",
-      "ms": 0.172,
+      "ms": 0.313,
       "n_segments": 10
      },
      {
-      "at": "2026-09-21T04:30:31+00:00",
+      "at": "2026-09-23T18:54:35+00:00",
       "event": "stage:execute",
-      "ms": 22868.225,
+      "ms": 7937.537,
       "round": 0,
       "n_segments": 10
      },
      {
-      "at": "2026-09-21T04:32:07+00:00",
+      "at": "2026-09-23T18:54:35+00:00",
       "event": "stage:verify",
-      "ms": 95941.851,
+      "ms": 6.369,
       "round": 0
      },
      {
-      "at": "2026-09-21T04:32:38+00:00",
-      "event": "log",
-      "text": "0152_0083  insufficient           p=0.78  $0.028  rounds 1 valid  gate 0/10"
+      "at": "2026-09-23T18:54:35+00:00",
+      "event": "stage:execute",
+      "ms": 107.638,
+      "round": 1,
+      "n_segments": 4
      },
      {
-      "at": "2026-09-21T04:32:38+00:00",
+      "at": "2026-09-23T18:54:35+00:00",
+      "event": "stage:verify",
+      "ms": 4.892,
+      "round": 1
+     },
+     {
+      "at": "2026-09-23T18:54:35+00:00",
+      "event": "log",
+      "text": "0145_0019  supports_closer_look   p=0.76  $0.095  rounds 3 valid  gate 3/22"
+     },
+     {
+      "at": "2026-09-23T18:54:35+00:00",
+      "event": "stage:execute",
+      "ms": 176.466,
+      "round": 2,
+      "n_segments": 5
+     },
+     {
+      "at": "2026-09-23T18:54:35+00:00",
+      "event": "stage:verify",
+      "ms": 4.998,
+      "round": 2
+     },
+     {
+      "at": "2026-09-23T18:54:35+00:00",
       "event": "stage:decide",
-      "ms": 31294.759,
+      "ms": 161.571,
       "decider": "both"
      },
      {
-      "at": "2026-09-21T04:32:38+00:00",
+      "at": "2026-09-23T18:54:35+00:00",
       "event": "stage:publish",
-      "ms": 39.031,
+      "ms": 64.607,
       "published": true
      },
      {
-      "at": "2026-09-21T04:32:41+00:00",
+      "at": "2026-09-23T18:54:37+00:00",
       "event": "done"
      }
     ],
     "result": {
-     "chain_id": "20260921T042952Z-chain:0152_0083",
-     "run_id": "20260921T042952Z-chain",
+     "chain_id": "20260923T185407Z-chain:0145_0019",
+     "run_id": "20260923T185407Z-chain",
      "arm": "v1-openrouter",
-     "verdict": "insufficient",
-     "probability": 0.78,
+     "verdict": "supports_closer_look",
+     "probability": 0.76,
      "published": true,
      "problems": [],
-     "cost_usd": 0.0282,
-     "spent_usd": 0.0282,
+     "cost_usd": 0.0953,
+     "spent_usd": 0.0,
      "reason": "Run the analyst on this cell and tell me what it decides.",
      "expert_ids": []
     },
     "error": null,
-    "run_id": "20260921T042952Z-chain",
-    "started_at": "2026-09-21T04:29:51+00:00",
-    "finished_at": "2026-09-21T04:32:41+00:00"
+    "run_id": "20260923T185407Z-chain",
+    "started_at": "2026-09-23T18:54:06+00:00",
+    "finished_at": "2026-09-23T18:54:37+00:00"
    },
    "jobs_done": [],
    "expert_ids": [],
@@ -616,37 +533,44 @@
   },
   {
    "question": "The analyst has finished. What did it decide, and what changed against the stored chain?",
-   "text": "The analyst finished with a verdict of \"insufficient\" (insufficient evidence). Against the stored chain, the diff is: the stored chain's verdict was \"supports_closer_look\", so the verdict changed to \"insufficient\"; of the 10 nodes compared, 0 changed status. No nodes lean on expert-tier values (0).",
+   "text": "The analyst decided supports_closer_look, the same verdict the stored chain already held. Against the stored chain it changed two nodes of the ten compared: graphitic_host and boulder_train each moved from not_met to unknown, and no node leaned on an expert-tier value. The adjudicator's probability for the run was 0.76, a calibration figure, and the run cost 0.0953 USD.",
    "claims": [
     {
-     "text": "The analyst verdict for cell 0152_0083 is \"insufficient\".",
+     "text": "The analyst's verdict was supports_closer_look, unchanged from the stored chain's verdict_before of supports_closer_look.",
      "value_ids": [
-      "c:job:6313e184b5f04469:probability"
+      "c:job:3c9828be77a14db5:probability"
      ]
     },
     {
-     "text": "The stored (baseline) chain verdict was \"supports_closer_look\" and the run's verdict was \"insufficient\", so the verdict changed.",
+     "text": "Two of the ten nodes in the diff changed status between the analyst's chain and the stored chain.",
      "value_ids": [
-      "c:job:6313e184b5f04469:probability"
+      "c:job:3c9828be77a14db5:n_changed",
+      "c:job:3c9828be77a14db5:n_nodes"
      ]
     },
     {
-     "text": "0 of 10 compared nodes changed status between the run's chain and the stored chain.",
+     "text": "Node n02 (graphitic_host) changed from not_met to unknown, and node n08 (boulder_train) changed from not_met to unknown.",
      "value_ids": [
-      "c:job:6313e184b5f04469:n_changed",
-      "c:job:6313e184b5f04469:n_nodes"
+      "c:job:3c9828be77a14db5:n_changed"
      ]
     },
     {
-     "text": "0 nodes of the run's chain lean on expert-tier values.",
+     "text": "No node of the analyst's chain leaned on an expert-tier value.",
      "value_ids": [
-      "c:job:6313e184b5f04469:n_leaning_on_expert"
+      "c:job:3c9828be77a14db5:n_leaning_on_expert"
+     ]
+    },
+    {
+     "text": "The adjudicator's probability for the run was 0.76, and the run cost 0.0953 USD.",
+     "value_ids": [
+      "c:job:3c9828be77a14db5:probability",
+      "c:job:3c9828be77a14db5:cost_usd"
      ]
     }
    ],
    "caveats": [
-    "The probability 0.78 is the adjudicator's calibration figure for whether the public record labels this cell a known deposit or occurrence \u2014 never a probability that ore is present.",
-    "The verdict scale tops out at \"supports a closer look\"; a verdict change here does not mean a new measurement was made."
+    "The 0.76 is a calibration probability that the public record labels this cell a known deposit or occurrence, never a probability that ore is present.",
+    "The diff compared against baseline chain 20260920T130034Z-chain:0145_0019; the verdict itself did not change."
    ],
    "cannot_answer": false,
    "published": true,
@@ -654,31 +578,30 @@
    "tools_used": [
     "job_result"
    ],
-   "cost_usd": 0.0167,
+   "cost_usd": 0.009,
    "model": "z-ai/glm-5.3-flash",
    "route": {
     "kind": "lookup",
-    "topic": "scores",
+    "topic": "readers",
     "cell_ids": [
-     "0152_0083"
+     "0145_0019"
     ],
     "entities": [
      "analyst",
-     "verdict",
      "stored chain",
-     "diff"
+     "verdict"
     ],
     "insight_text": "",
     "out_of_scope": false,
-    "detail": "Reads the analyst run's verdict and its diff against the stored chain for cell 0152_0083.",
-    "reason": "A value the store holds for this cell \u2014 the analyst's decision \u2014 is being asked for after a run.",
+    "detail": "",
+    "reason": "Asks for the analyst run's verdict and its diff against the stored chain \u2014 what the readers concluded for this cell.",
     "fallback": null,
     "meaning": "a value the store holds for this cell: a feature, a score, a criterion's state, the nearest deposit, a layer's coverage, what the reports say",
     "plan": [
      {
-      "tool": "cell_scores",
+      "tool": "evidence_readers",
       "args": {
-       "cell_id": "0152_0083"
+       "cell_id": "0145_0019"
       }
      }
     ]
@@ -689,106 +612,132 @@
    "jobs_done": [
     {
      "tool": "run_analyst",
-     "job_id": "6313e184b5f04469",
-     "cell_id": "0152_0083",
+     "job_id": "3c9828be77a14db5",
+     "cell_id": "0145_0019",
      "reason": "Run the analyst on this cell and tell me what it decides.",
      "expert_ids": [],
      "score_ids": [
-      "c:score:0152_0083:criteria",
-      "c:score:0152_0083:effort",
-      "c:score:0152_0083:learned"
+      "c:score:0145_0019:criteria",
+      "c:score:0145_0019:effort",
+      "c:score:0145_0019:learned"
      ],
      "budget_usd": 0.5,
      "requested_by": "tour",
-     "submitted_at": "2026-09-21T04:29:51+00:00",
+     "submitted_at": "2026-09-23T18:54:06+00:00",
      "status": "done",
      "reported": true,
      "progress": [
       {
-       "at": "2026-09-21T04:29:51+00:00",
+       "at": "2026-09-23T18:54:06+00:00",
        "event": "queued"
       },
       {
-       "at": "2026-09-21T04:29:51+00:00",
+       "at": "2026-09-23T18:54:06+00:00",
        "event": "started"
       },
       {
-       "at": "2026-09-21T04:30:03+00:00",
+       "at": "2026-09-23T18:54:24+00:00",
        "event": "log",
        "text": "preloaded 6 map layers for the workers"
       },
       {
-       "at": "2026-09-21T04:30:03+00:00",
+       "at": "2026-09-23T18:54:24+00:00",
        "event": "log",
-       "text": "chains: arm v1-openrouter over 1 cell(s), budget $0.50, run 20260921T042952Z-chain"
+       "text": "chains: arm v1-openrouter over 1 cell(s), budget $0.50, run 20260923T185407Z-chain"
       },
       {
-       "at": "2026-09-21T04:30:08+00:00",
+       "at": "2026-09-23T18:54:27+00:00",
        "event": "run",
-       "run_id": "20260921T042952Z-chain"
+       "run_id": "20260923T185407Z-chain"
       },
       {
-       "at": "2026-09-21T04:30:08+00:00",
+       "at": "2026-09-23T18:54:27+00:00",
        "event": "stage:plan",
-       "ms": 0.172,
+       "ms": 0.313,
        "n_segments": 10
       },
       {
-       "at": "2026-09-21T04:30:31+00:00",
+       "at": "2026-09-23T18:54:35+00:00",
        "event": "stage:execute",
-       "ms": 22868.225,
+       "ms": 7937.537,
        "round": 0,
        "n_segments": 10
       },
       {
-       "at": "2026-09-21T04:32:07+00:00",
+       "at": "2026-09-23T18:54:35+00:00",
        "event": "stage:verify",
-       "ms": 95941.851,
+       "ms": 6.369,
        "round": 0
       },
       {
-       "at": "2026-09-21T04:32:38+00:00",
-       "event": "log",
-       "text": "0152_0083  insufficient           p=0.78  $0.028  rounds 1 valid  gate 0/10"
+       "at": "2026-09-23T18:54:35+00:00",
+       "event": "stage:execute",
+       "ms": 107.638,
+       "round": 1,
+       "n_segments": 4
       },
       {
-       "at": "2026-09-21T04:32:38+00:00",
+       "at": "2026-09-23T18:54:35+00:00",
+       "event": "stage:verify",
+       "ms": 4.892,
+       "round": 1
+      },
+      {
+       "at": "2026-09-23T18:54:35+00:00",
+       "event": "log",
+       "text": "0145_0019  supports_closer_look   p=0.76  $0.095  rounds 3 valid  gate 3/22"
+      },
+      {
+       "at": "2026-09-23T18:54:35+00:00",
+       "event": "stage:execute",
+       "ms": 176.466,
+       "round": 2,
+       "n_segments": 5
+      },
+      {
+       "at": "2026-09-23T18:54:35+00:00",
+       "event": "stage:verify",
+       "ms": 4.998,
+       "round": 2
+      },
+      {
+       "at": "2026-09-23T18:54:35+00:00",
        "event": "stage:decide",
-       "ms": 31294.759,
+       "ms": 161.571,
        "decider": "both"
       },
       {
-       "at": "2026-09-21T04:32:38+00:00",
+       "at": "2026-09-23T18:54:35+00:00",
        "event": "stage:publish",
-       "ms": 39.031,
+       "ms": 64.607,
        "published": true
       },
       {
-       "at": "2026-09-21T04:32:41+00:00",
+       "at": "2026-09-23T18:54:37+00:00",
        "event": "done"
       }
      ],
      "result": {
-      "chain_id": "20260921T042952Z-chain:0152_0083",
-      "run_id": "20260921T042952Z-chain",
+      "chain_id": "20260923T185407Z-chain:0145_0019",
+      "run_id": "20260923T185407Z-chain",
       "arm": "v1-openrouter",
-      "verdict": "insufficient",
-      "probability": 0.78,
+      "verdict": "supports_closer_look",
+      "probability": 0.76,
       "published": true,
       "problems": [],
-      "cost_usd": 0.0282,
-      "spent_usd": 0.0282,
+      "cost_usd": 0.0953,
+      "spent_usd": 0.0,
       "reason": "Run the analyst on this cell and tell me what it decides.",
       "expert_ids": []
      },
-     "verdict": "insufficient",
+     "verdict": "supports_closer_look",
      "assessment": {
-      "chain_id": "20260921T042952Z-chain:0152_0083",
-      "baseline_chain_id": "20260920T130034Z-chain:0152_0083",
+      "chain_id": "20260923T185407Z-chain:0145_0019",
+      "baseline_chain_id": "20260920T130034Z-chain:0145_0019",
       "verdict": {
        "before": "supports_closer_look",
-       "after": "insufficient",
-       "changed": true
+       "after": "supports_closer_look",
+       "changed": false
       },
       "nodes": [
        {
@@ -804,10 +753,10 @@
         "node_id": "n02",
         "criterion": "graphitic_host",
         "kind": "criterion",
-        "before": "met",
-        "after": "met",
+        "before": "not_met",
+        "after": "unknown",
         "expert_ids": [],
-        "changed": false
+        "changed": true
        },
        {
         "node_id": "n03",
@@ -822,8 +771,8 @@
         "node_id": "n04",
         "criterion": "structural_density",
         "kind": "criterion",
-        "before": "not_met",
-        "after": "not_met",
+        "before": "met",
+        "after": "met",
         "expert_ids": [],
         "changed": false
        },
@@ -840,8 +789,8 @@
         "node_id": "n06",
         "criterion": "lake_sediment_uranium",
         "kind": "criterion",
-        "before": "unknown",
-        "after": "unknown",
+        "before": "met",
+        "after": "met",
         "expert_ids": [],
         "changed": false
        },
@@ -858,10 +807,10 @@
         "node_id": "n08",
         "criterion": "boulder_train",
         "kind": "criterion",
-        "before": "unknown",
+        "before": "not_met",
         "after": "unknown",
         "expert_ids": [],
-        "changed": false
+        "changed": true
        },
        {
         "node_id": "n09",
@@ -876,245 +825,186 @@
         "node_id": "n10",
         "criterion": "sediment_sampling",
         "kind": "crosscheck",
-        "before": "unknown",
-        "after": "unknown",
+        "before": "met",
+        "after": "met",
         "expert_ids": [],
         "changed": false
        }
       ],
-      "n_changed": 0,
+      "n_changed": 2,
       "n_leaning_on_expert": 0,
       "expert_ids": [],
       "note": "node statuses and the verdict of the run with the insight, beside the stored run without it"
      },
      "result_file": "tool_09_job_result.json",
      "value_ids": [
-      "c:job:6313e184b5f04469:cost_usd",
-      "c:job:6313e184b5f04469:n_changed",
-      "c:job:6313e184b5f04469:n_leaning_on_expert",
-      "c:job:6313e184b5f04469:n_nodes",
-      "c:job:6313e184b5f04469:probability"
+      "c:job:3c9828be77a14db5:cost_usd",
+      "c:job:3c9828be77a14db5:n_changed",
+      "c:job:3c9828be77a14db5:n_leaning_on_expert",
+      "c:job:3c9828be77a14db5:n_nodes",
+      "c:job:3c9828be77a14db5:probability"
      ]
     }
    ],
    "expert_ids": [],
-   "retried": true
+   "retried": false
   }
  ],
  "job": {
-  "job_id": "6313e184b5f04469",
-  "cell_id": "0152_0083",
+  "job_id": "3c9828be77a14db5",
+  "cell_id": "0145_0019",
   "kind": "analyst",
   "requested_by": "tour",
-  "created_at": "2026-09-21T04:29:51+00:00",
+  "created_at": "2026-09-23T18:54:06+00:00",
   "status": "done",
   "progress": [
    {
-    "at": "2026-09-21T04:29:51+00:00",
+    "at": "2026-09-23T18:54:06+00:00",
     "event": "queued"
    },
    {
-    "at": "2026-09-21T04:29:51+00:00",
+    "at": "2026-09-23T18:54:06+00:00",
     "event": "started"
    },
    {
-    "at": "2026-09-21T04:30:03+00:00",
+    "at": "2026-09-23T18:54:24+00:00",
     "event": "log",
     "text": "preloaded 6 map layers for the workers"
    },
    {
-    "at": "2026-09-21T04:30:03+00:00",
+    "at": "2026-09-23T18:54:24+00:00",
     "event": "log",
-    "text": "chains: arm v1-openrouter over 1 cell(s), budget $0.50, run 20260921T042952Z-chain"
+    "text": "chains: arm v1-openrouter over 1 cell(s), budget $0.50, run 20260923T185407Z-chain"
    },
    {
-    "at": "2026-09-21T04:30:08+00:00",
+    "at": "2026-09-23T18:54:27+00:00",
     "event": "run",
-    "run_id": "20260921T042952Z-chain"
+    "run_id": "20260923T185407Z-chain"
    },
    {
-    "at": "2026-09-21T04:30:08+00:00",
+    "at": "2026-09-23T18:54:27+00:00",
     "event": "stage:plan",
-    "ms": 0.172,
+    "ms": 0.313,
     "n_segments": 10
    },
    {
-    "at": "2026-09-21T04:30:31+00:00",
+    "at": "2026-09-23T18:54:35+00:00",
     "event": "stage:execute",
-    "ms": 22868.225,
+    "ms": 7937.537,
     "round": 0,
     "n_segments": 10
    },
    {
-    "at": "2026-09-21T04:32:07+00:00",
+    "at": "2026-09-23T18:54:35+00:00",
     "event": "stage:verify",
-    "ms": 95941.851,
+    "ms": 6.369,
     "round": 0
    },
    {
-    "at": "2026-09-21T04:32:38+00:00",
-    "event": "log",
-    "text": "0152_0083  insufficient           p=0.78  $0.028  rounds 1 valid  gate 0/10"
+    "at": "2026-09-23T18:54:35+00:00",
+    "event": "stage:execute",
+    "ms": 107.638,
+    "round": 1,
+    "n_segments": 4
    },
    {
-    "at": "2026-09-21T04:32:38+00:00",
+    "at": "2026-09-23T18:54:35+00:00",
+    "event": "stage:verify",
+    "ms": 4.892,
+    "round": 1
+   },
+   {
+    "at": "2026-09-23T18:54:35+00:00",
+    "event": "log",
+    "text": "0145_0019  supports_closer_look   p=0.76  $0.095  rounds 3 valid  gate 3/22"
+   },
+   {
+    "at": "2026-09-23T18:54:35+00:00",
+    "event": "stage:execute",
+    "ms": 176.466,
+    "round": 2,
+    "n_segments": 5
+   },
+   {
+    "at": "2026-09-23T18:54:35+00:00",
+    "event": "stage:verify",
+    "ms": 4.998,
+    "round": 2
+   },
+   {
+    "at": "2026-09-23T18:54:35+00:00",
     "event": "stage:decide",
-    "ms": 31294.759,
+    "ms": 161.571,
     "decider": "both"
    },
    {
-    "at": "2026-09-21T04:32:38+00:00",
+    "at": "2026-09-23T18:54:35+00:00",
     "event": "stage:publish",
-    "ms": 39.031,
+    "ms": 64.607,
     "published": true
    },
    {
-    "at": "2026-09-21T04:32:41+00:00",
+    "at": "2026-09-23T18:54:37+00:00",
     "event": "done"
    }
   ],
   "result": {
-   "chain_id": "20260921T042952Z-chain:0152_0083",
-   "run_id": "20260921T042952Z-chain",
+   "chain_id": "20260923T185407Z-chain:0145_0019",
+   "run_id": "20260923T185407Z-chain",
    "arm": "v1-openrouter",
-   "verdict": "insufficient",
-   "probability": 0.78,
+   "verdict": "supports_closer_look",
+   "probability": 0.76,
    "published": true,
    "problems": [],
-   "cost_usd": 0.0282,
-   "spent_usd": 0.0282,
+   "cost_usd": 0.0953,
+   "spent_usd": 0.0,
    "reason": "Run the analyst on this cell and tell me what it decides.",
    "expert_ids": []
   },
   "error": null,
-  "run_id": "20260921T042952Z-chain",
-  "started_at": "2026-09-21T04:29:51+00:00",
-  "finished_at": "2026-09-21T04:32:41+00:00"
+  "run_id": "20260923T185407Z-chain",
+  "started_at": "2026-09-23T18:54:06+00:00",
+  "finished_at": "2026-09-23T18:54:37+00:00"
  },
  "values": {
-  "c:cell:0152_0083:airborne_surveys_n": {
-   "id": "c:cell:0152_0083:airborne_surveys_n",
+  "c:cell:0145_0019:boulder_max_cps:nearest_m": {
+   "id": "c:cell:0145_0019:boulder_max_cps:nearest_m",
    "kind": "stat",
    "as_printed": null,
-   "value": 7.0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "Airborne survey footprints covering the cell for cell 0152_0083"
-  },
-  "c:cell:0152_0083:boulder_max_cps:nearest_m": {
-   "id": "c:cell:0152_0083:boulder_max_cps:nearest_m",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 46679.7,
+   "value": 12648.4,
    "unit_as_printed": null,
    "fmt": "m1",
    "unit": "m",
-   "note": "distance from cell 0152_0083 to the nearest boulder_max_cps observation"
+   "note": "distance from cell 0145_0019 to the nearest boulder_max_cps observation"
   },
-  "c:cell:0152_0083:d_conductor_m": {
-   "id": "c:cell:0152_0083:d_conductor_m",
+  "c:cell:0145_0019:graphitic_host:n_obs": {
+   "id": "c:cell:0145_0019:graphitic_host:n_obs",
    "kind": "stat",
    "as_printed": null,
-   "value": 216.6547,
+   "value": 1,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "observations behind Mapped bedrock names a graphitic or pelitic host at cell 0145_0019"
+  },
+  "c:cell:0145_0019:unconformity_depth_m": {
+   "id": "c:cell:0145_0019:unconformity_depth_m",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 109.0449,
    "unit_as_printed": null,
    "fmt": "m1",
    "unit": "m",
-   "note": "Distance to nearest EM conductor for cell 0152_0083"
+   "note": "Interpolated depth to the base of the Athabasca sandstone for cell 0145_0019"
   },
-  "c:cell:0152_0083:d_fault_m": {
-   "id": "c:cell:0152_0083:d_fault_m",
+  "c:cell:0145_0019:water_u_max_ppm:nearest_m": {
+   "id": "c:cell:0145_0019:water_u_max_ppm:nearest_m",
    "kind": "stat",
    "as_printed": null,
-   "value": 122.1962,
+   "value": 132012.9,
    "unit_as_printed": null,
    "fmt": "m1",
    "unit": "m",
-   "note": "Distance to nearest mapped fault or lineament for cell 0152_0083"
-  },
-  "c:cell:0152_0083:graphitic_host": {
-   "id": "c:cell:0152_0083:graphitic_host",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 1.0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "Mapped bedrock names a graphitic or pelitic host for cell 0152_0083"
-  },
-  "c:cell:0152_0083:ground_surveys_n": {
-   "id": "c:cell:0152_0083:ground_surveys_n",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 7.0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "Ground survey footprints covering the cell for cell 0152_0083"
-  },
-  "c:cell:0152_0083:holes_first_year": {
-   "id": "c:cell:0152_0083:holes_first_year",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 2007.0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "unit": "year",
-   "note": "Earliest drilling year within 5 km for cell 0152_0083"
-  },
-  "c:cell:0152_0083:holes_n": {
-   "id": "c:cell:0152_0083:holes_n",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "Provincial drillhole collars within 2 km for cell 0152_0083"
-  },
-  "c:cell:0152_0083:sed_samples_n": {
-   "id": "c:cell:0152_0083:sed_samples_n",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "Lake-sediment samples within 5 km for cell 0152_0083"
-  },
-  "c:cell:0152_0083:sed_u_max_ppm:nearest_m": {
-   "id": "c:cell:0152_0083:sed_u_max_ppm:nearest_m",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 82885.3,
-   "unit_as_printed": null,
-   "fmt": "m1",
-   "unit": "m",
-   "note": "distance from cell 0152_0083 to the nearest sed_u_max_ppm observation"
-  },
-  "c:cell:0152_0083:unconformity_depth_m": {
-   "id": "c:cell:0152_0083:unconformity_depth_m",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 338.2833,
-   "unit_as_printed": null,
-   "fmt": "m1",
-   "unit": "m",
-   "note": "Interpolated depth to the base of the Athabasca sandstone for cell 0152_0083"
-  },
-  "c:cell:0152_0083:unconformity_depth_m:n_obs": {
-   "id": "c:cell:0152_0083:unconformity_depth_m:n_obs",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 8,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "observations behind Interpolated depth to the base of the Athabasca sandstone at cell 0152_0083"
-  },
-  "c:cell:0152_0083:water_u_max_ppm:nearest_m": {
-   "id": "c:cell:0152_0083:water_u_max_ppm:nearest_m",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 67219.3,
-   "unit_as_printed": null,
-   "fmt": "m1",
-   "unit": "m",
-   "note": "distance from cell 0152_0083 to the nearest water_u_max_ppm observation"
+   "note": "distance from cell 0145_0019 to the nearest water_u_max_ppm observation"
   },
   "c:cov:boulder_max_cps": {
    "id": "c:cov:boulder_max_cps",
@@ -1125,14 +1015,14 @@
    "fmt": "ratio3",
    "note": "share of cells with an observation behind boulder_max_cps"
   },
-  "c:cov:sed_u_max_ppm": {
-   "id": "c:cov:sed_u_max_ppm",
+  "c:cov:graphitic_host": {
+   "id": "c:cov:graphitic_host",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.379,
+   "value": 0.933,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "share of cells with an observation behind sed_u_max_ppm"
+   "note": "share of cells with an observation behind graphitic_host"
   },
   "c:cov:water_u_max_ppm": {
    "id": "c:cov:water_u_max_ppm",
@@ -1143,8 +1033,8 @@
    "fmt": "ratio3",
    "note": "share of cells with an observation behind water_u_max_ppm"
   },
-  "c:crit:0152_0083:boulder_train:weight": {
-   "id": "c:crit:0152_0083:boulder_train:weight",
+  "c:crit:0145_0019:boulder_train:weight": {
+   "id": "c:crit:0145_0019:boulder_train:weight",
    "kind": "stat",
    "as_printed": null,
    "value": 2.0,
@@ -1152,53 +1042,62 @@
    "fmt": "m2",
    "note": "weight carried by boulder_train"
   },
-  "c:crit:0152_0083:conductor_proximity": {
-   "id": "c:crit:0152_0083:conductor_proximity",
+  "c:crit:0145_0019:conductor_proximity": {
+   "id": "c:crit:0145_0019:conductor_proximity",
    "kind": "stat",
    "as_printed": null,
    "value": 1.0,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "conductor_proximity membership for cell 0152_0083"
+   "note": "conductor_proximity membership for cell 0145_0019"
   },
-  "c:crit:0152_0083:conductor_strength:weight": {
-   "id": "c:crit:0152_0083:conductor_strength:weight",
+  "c:crit:0145_0019:conductor_proximity:weight": {
+   "id": "c:crit:0145_0019:conductor_proximity:weight",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 3.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "weight carried by conductor_proximity"
+  },
+  "c:crit:0145_0019:em_bright_spot": {
+   "id": "c:crit:0145_0019:em_bright_spot",
    "kind": "stat",
    "as_printed": null,
    "value": 0.0,
    "unit_as_printed": null,
-   "fmt": "m2",
-   "note": "weight carried by conductor_strength"
+   "fmt": "ratio3",
+   "note": "em_bright_spot membership for cell 0145_0019"
   },
-  "c:crit:0152_0083:em_bright_spot:weight": {
-   "id": "c:crit:0152_0083:em_bright_spot:weight",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.0,
-   "unit_as_printed": null,
-   "fmt": "m2",
-   "note": "weight carried by em_bright_spot"
-  },
-  "c:crit:0152_0083:fault_proximity": {
-   "id": "c:crit:0152_0083:fault_proximity",
+  "c:crit:0145_0019:fault_proximity": {
+   "id": "c:crit:0145_0019:fault_proximity",
    "kind": "stat",
    "as_printed": null,
    "value": 1.0,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "fault_proximity membership for cell 0152_0083"
+   "note": "fault_proximity membership for cell 0145_0019"
   },
-  "c:crit:0152_0083:graphitic_host": {
-   "id": "c:crit:0152_0083:graphitic_host",
+  "c:crit:0145_0019:fault_proximity:weight": {
+   "id": "c:crit:0145_0019:fault_proximity:weight",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "weight carried by fault_proximity"
+  },
+  "c:crit:0145_0019:lake_sediment_uranium": {
+   "id": "c:crit:0145_0019:lake_sediment_uranium",
    "kind": "stat",
    "as_printed": null,
    "value": 1.0,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "graphitic_host membership for cell 0152_0083"
+   "note": "lake_sediment_uranium membership for cell 0145_0019"
   },
-  "c:crit:0152_0083:lake_sediment_uranium:weight": {
-   "id": "c:crit:0152_0083:lake_sediment_uranium:weight",
+  "c:crit:0145_0019:lake_sediment_uranium:weight": {
+   "id": "c:crit:0145_0019:lake_sediment_uranium:weight",
    "kind": "stat",
    "as_printed": null,
    "value": 2.0,
@@ -1206,80 +1105,135 @@
    "fmt": "m2",
    "note": "weight carried by lake_sediment_uranium"
   },
-  "c:crit:0152_0083:structural_density": {
-   "id": "c:crit:0152_0083:structural_density",
+  "c:crit:0145_0019:lake_water_uranium:weight": {
+   "id": "c:crit:0145_0019:lake_water_uranium:weight",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.013,
+   "value": 1.0,
    "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "structural_density membership for cell 0152_0083"
+   "fmt": "m2",
+   "note": "weight carried by lake_water_uranium"
   },
-  "c:crit:0152_0083:unconformity_depth": {
-   "id": "c:crit:0152_0083:unconformity_depth",
+  "c:crit:0145_0019:structural_density": {
+   "id": "c:crit:0145_0019:structural_density",
    "kind": "stat",
    "as_printed": null,
    "value": 1.0,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "unconformity_depth membership for cell 0152_0083"
+   "note": "structural_density membership for cell 0145_0019"
   },
-  "c:job:6313e184b5f04469:n_changed": {
-   "id": "c:job:6313e184b5f04469:n_changed",
+  "c:crit:0145_0019:structural_density:weight": {
+   "id": "c:crit:0145_0019:structural_density:weight",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "weight carried by structural_density"
+  },
+  "c:crit:0145_0019:unconformity_depth": {
+   "id": "c:crit:0145_0019:unconformity_depth",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.843,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "unconformity_depth membership for cell 0145_0019"
+  },
+  "c:crit:0145_0019:unconformity_depth:weight": {
+   "id": "c:crit:0145_0019:unconformity_depth:weight",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2.0,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "note": "weight carried by unconformity_depth"
+  },
+  "c:job:3c9828be77a14db5:cost_usd": {
+   "id": "c:job:3c9828be77a14db5:cost_usd",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0953,
+   "unit_as_printed": null,
+   "fmt": "m2",
+   "unit": "USD",
+   "note": "what analyst job 3c9828be77a14db5 spent on live model calls"
+  },
+  "c:job:3c9828be77a14db5:n_changed": {
+   "id": "c:job:3c9828be77a14db5:n_changed",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 2,
+   "unit_as_printed": null,
+   "fmt": "int",
+   "note": "nodes whose status differs between analyst job 3c9828be77a14db5's chain and the stored chain"
+  },
+  "c:job:3c9828be77a14db5:n_leaning_on_expert": {
+   "id": "c:job:3c9828be77a14db5:n_leaning_on_expert",
    "kind": "stat",
    "as_printed": null,
    "value": 0,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "nodes whose status differs between analyst job 6313e184b5f04469's chain and the stored chain"
+   "note": "nodes of analyst job 3c9828be77a14db5's chain that cite an expert-tier value"
   },
-  "c:job:6313e184b5f04469:n_leaning_on_expert": {
-   "id": "c:job:6313e184b5f04469:n_leaning_on_expert",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0,
-   "unit_as_printed": null,
-   "fmt": "int",
-   "note": "nodes of analyst job 6313e184b5f04469's chain that cite an expert-tier value"
-  },
-  "c:job:6313e184b5f04469:n_nodes": {
-   "id": "c:job:6313e184b5f04469:n_nodes",
+  "c:job:3c9828be77a14db5:n_nodes": {
+   "id": "c:job:3c9828be77a14db5:n_nodes",
    "kind": "stat",
    "as_printed": null,
    "value": 10,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "nodes compared in the diff of analyst job 6313e184b5f04469's chain against the stored chain"
+   "note": "nodes compared in the diff of analyst job 3c9828be77a14db5's chain against the stored chain"
   },
-  "c:job:6313e184b5f04469:probability": {
-   "id": "c:job:6313e184b5f04469:probability",
+  "c:job:3c9828be77a14db5:probability": {
+   "id": "c:job:3c9828be77a14db5:probability",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.76,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "the adjudicator's probability for analyst job 3c9828be77a14db5 on cell 0145_0019: that the public record labels this cell a known deposit or occurrence, a calibration figure and never a probability that ore is present"
+  },
+  "c:readers:0145_0019:20260923T174803Z-readers:probability": {
+   "id": "c:readers:0145_0019:20260923T174803Z-readers:probability",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.62,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "the evidence readers' probability for cell 0145_0019 (run 20260923T174803Z-readers): that the public record labels it a known deposit or occurrence, a calibration figure, never a probability that ore is present"
+  },
+  "c:readers:0145_0019:20260923T174803Z-readers:setting:strength": {
+   "id": "c:readers:0145_0019:20260923T174803Z-readers:setting:strength",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.68,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "the setting reader's strength for cell 0145_0019, from 0 to 1"
+  },
+  "c:readers:0145_0019:20260923T174803Z-readers:structure:strength": {
+   "id": "c:readers:0145_0019:20260923T174803Z-readers:structure:strength",
    "kind": "stat",
    "as_printed": null,
    "value": 0.78,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "the adjudicator's probability for analyst job 6313e184b5f04469 on cell 0152_0083: that the public record labels this cell a known deposit or occurrence, a calibration figure and never a probability that ore is present"
+   "note": "the structure reader's strength for cell 0145_0019, from 0 to 1"
   },
-  "c:metric:effort.spatial.roc_auc": {
-   "id": "c:metric:effort.spatial.roc_auc",
+  "c:score:0145_0019:criteria": {
+   "id": "c:score:0145_0019:criteria",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8524,
+   "value": 0.9687,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "effort.spatial.roc_auc, measured under spatial folds"
+   "note": "criteria score for cell 0145_0019"
   },
-  "c:score:0152_0083:criteria": {
-   "id": "c:score:0152_0083:criteria",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.9013,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "criteria score for cell 0152_0083"
-  },
-  "c:score:0152_0083:criteria:known": {
-   "id": "c:score:0152_0083:criteria:known",
+  "c:score:0145_0019:criteria:known": {
+   "id": "c:score:0145_0019:criteria:known",
    "kind": "stat",
    "as_printed": null,
    "value": 0.667,
@@ -1287,140 +1241,23 @@
    "fmt": "ratio3",
    "note": "share of the criteria score's inputs actually measured here"
   },
-  "c:score:0152_0083:effort": {
-   "id": "c:score:0152_0083:effort",
+  "c:score:0145_0019:effort": {
+   "id": "c:score:0145_0019:effort",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0338,
+   "value": 0.8952,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "effort score for cell 0152_0083"
+   "note": "effort score for cell 0145_0019"
   },
-  "c:score:0152_0083:learned": {
-   "id": "c:score:0152_0083:learned",
+  "c:score:0145_0019:learned": {
+   "id": "c:score:0145_0019:learned",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0245,
+   "value": 0.7948,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "learned score for cell 0152_0083"
-  },
-  "c:sens:0152_0083:boulder_train:delta_if_met": {
-   "id": "c:sens:0152_0083:boulder_train:delta_if_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.0164,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "how far the criteria score at cell 0152_0083 moves if boulder_train is measured and met"
-  },
-  "c:sens:0152_0083:boulder_train:known_share_after": {
-   "id": "c:sens:0152_0083:boulder_train:known_share_after",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.8,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "share of the criteria weight known at cell 0152_0083 once boulder_train is measured"
-  },
-  "c:sens:0152_0083:boulder_train:score_if_met": {
-   "id": "c:sens:0152_0083:boulder_train:score_if_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.9177,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083 if boulder_train were measured and met"
-  },
-  "c:sens:0152_0083:boulder_train:score_if_not_met": {
-   "id": "c:sens:0152_0083:boulder_train:score_if_not_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.7511,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083 if boulder_train were measured and not met"
-  },
-  "c:sens:0152_0083:known_share": {
-   "id": "c:sens:0152_0083:known_share",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.6667,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "share of the criteria weight measured at cell 0152_0083"
-  },
-  "c:sens:0152_0083:lake_sediment_uranium:delta_if_met": {
-   "id": "c:sens:0152_0083:lake_sediment_uranium:delta_if_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.0164,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "how far the criteria score at cell 0152_0083 moves if lake_sediment_uranium is measured and met"
-  },
-  "c:sens:0152_0083:lake_sediment_uranium:known_share_after": {
-   "id": "c:sens:0152_0083:lake_sediment_uranium:known_share_after",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.8,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "share of the criteria weight known at cell 0152_0083 once lake_sediment_uranium is measured"
-  },
-  "c:sens:0152_0083:lake_sediment_uranium:score_if_met": {
-   "id": "c:sens:0152_0083:lake_sediment_uranium:score_if_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.9177,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083 if lake_sediment_uranium were measured and met"
-  },
-  "c:sens:0152_0083:lake_sediment_uranium:score_if_not_met": {
-   "id": "c:sens:0152_0083:lake_sediment_uranium:score_if_not_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.7511,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083 if lake_sediment_uranium were measured and not met"
-  },
-  "c:sens:0152_0083:lake_water_uranium:delta_if_met": {
-   "id": "c:sens:0152_0083:lake_water_uranium:delta_if_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.009,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "how far the criteria score at cell 0152_0083 moves if lake_water_uranium is measured and met"
-  },
-  "c:sens:0152_0083:lake_water_uranium:score_if_met": {
-   "id": "c:sens:0152_0083:lake_water_uranium:score_if_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.9103,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083 if lake_water_uranium were measured and met"
-  },
-  "c:sens:0152_0083:lake_water_uranium:score_if_not_met": {
-   "id": "c:sens:0152_0083:lake_water_uranium:score_if_not_met",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.8194,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083 if lake_water_uranium were measured and not met"
-  },
-  "c:sens:0152_0083:score_now": {
-   "id": "c:sens:0152_0083:score_now",
-   "kind": "stat",
-   "as_printed": null,
-   "value": 0.9013,
-   "unit_as_printed": null,
-   "fmt": "ratio3",
-   "note": "the criteria score at cell 0152_0083, recomputed from the table"
+   "note": "learned score for cell 0145_0019"
   }
  }
 }

@@ -511,7 +511,9 @@ def ask(
         # once more with the objections; the second refusal is final
         turn["retried"] = True
         on_event({"type": "refused", "problems": problems})
-        again = _answer_once(conv, question, route, [], backend, model, effort, on_event, feedback=problems,
+        # the retry names the turn's files too: they must lead its bundle as they led the first ask's, or a
+        # size-capped inline cuts them and the retry abstains over evidence it was never shown
+        again = _answer_once(conv, question, route, files, backend, model, effort, on_event, feedback=problems,
                              jobs=reported)
         spent += again.spent
         if again.usage_limited:

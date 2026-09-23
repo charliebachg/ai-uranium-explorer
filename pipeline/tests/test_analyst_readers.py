@@ -103,6 +103,8 @@ def test_the_chat_reads_the_stored_result_with_every_number_beside_its_id(tmp_pa
     assert geo["assessment"] == "for" and geo["strength"] == 0.7 and geo["strength_id"] in result.values
     struct = next(r for r in readings if r["family"] == "structure")
     assert struct["assessment"] is None and struct["summary"] == "" and struct["problems"]
+    assert struct["strength_id"] is None and "strength" not in struct, "a refused reading's strength is not offered"
+    assert not any(k.endswith(":structure:strength") for k in result.values)
     assert none.rows == [] and "enabled cells only" in none.note
     # a lookup about the readers is planned onto this tool
     route = R.Route(kind="lookup", cell_ids=[CELL], topic="readers")

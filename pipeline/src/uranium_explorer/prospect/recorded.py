@@ -40,8 +40,8 @@ from ..paths import PATHS
 #: purpose: a declined question with its reason is the most informative turn in the demo.
 QUESTIONS: tuple[str, ...] = (
     "What is actually measured in this cell, and what is only assumed?",
+    "What did the evidence readers conclude about this cell?",
     "Why is the criteria score what it is, and is the learned score explained by the drilling history here?",
-    "Which single unmeasured criterion would move the score most if it were measured?",
     "What grade would a hole drilled here intersect?",
     "Run the analyst on this cell and tell me what it decides.",
 )

@@ -221,6 +221,10 @@ def test_the_gate_refuses_an_unbacked_number_then_retries_once(tmp_path: Path, w
     refused = [e for e in events if e["type"] == "refused"]
     assert refused and any("512.7" in p for p in refused[0]["problems"])
     assert "512.7" in backend.requests[-1].user_prompt, "the retry carries the gate's objection"
+    first_ask, retry = [r for r in backend.requests if r.task == "interface_answer"]
+    assert [n for _p, n in retry.stage_files][:1] == [n for _p, n in first_ask.stage_files][:1], \
+        "the retry's bundle leads with the turn's own files, as the first ask's did"
+    assert [n for _p, n in retry.stage_files][0].startswith("tool_"), "and those are the plan's reads"
     assert backend.requests[-1].context_hash != backend.requests[-2].context_hash, "the retry is never a cache hit"
 
 

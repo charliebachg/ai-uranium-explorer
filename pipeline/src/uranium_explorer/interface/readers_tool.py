@@ -45,9 +45,11 @@ def evidence_readers(cell_id: str, con: Any = None) -> T.ToolResult:
                      "next_observation": answer.get("next_observation"),
                      "claims": answer.get("claims") or []})
     for r in rec.get("readings") or []:
+        # a refused reading gives nothing but why: no assessment, no strength, no summary, no claims
         out.rows.append({"row": "reading", "family": r["family"], "published": r["published"],
                          "assessment": r.get("assessment") if r["published"] else None,
-                         "strength_id": r.get("strength_id"), "summary": r.get("summary") or "",
+                         "strength_id": r.get("strength_id") if r["published"] else None,
+                         "summary": r.get("summary") or "",
                          "unknowns": r.get("unknowns") or [], "claims": r.get("claims") or [],
                          "problems": r.get("problems") or []})
     # every stored value the result cites, with the minted probability and strengths, printed beside their ids
@@ -56,7 +58,9 @@ def evidence_readers(cell_id: str, con: Any = None) -> T.ToolResult:
             vid = row.get(key)
             if vid and vid in values:
                 row[key.removesuffix("_id")] = values[vid]["value"]
-    out.values = dict(values)
+    # and the values of what it cites: a refused reading's minted strength stays out, so it cannot be quoted
+    refused = {r.get("strength_id") for r in rec.get("readings") or [] if not r["published"]}
+    out.values = {k: v for k, v in values.items() if k not in refused}
     out.note = ("The evidence readers, the benchmark's best analyst design (four readers, one per evidence "
                 f"family, then one ranking call), run offline on {rec['model']}. A refused reading or answer "
                 "failed the number check and says nothing usable; the probability is a calibration figure that the "
