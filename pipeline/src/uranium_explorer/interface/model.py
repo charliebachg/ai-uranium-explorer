@@ -7,6 +7,7 @@ streamed so the panel can show the reply being written; one that cannot is calle
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Callable
 
@@ -19,15 +20,30 @@ SCHEMA_VERSION = "1.0.0"
 Event = Callable[[dict[str, Any]], None]
 
 
+def ordered_files(stage: Path, first: Sequence[str] = ()) -> tuple[tuple[Path, str], ...]:
+    """The staged files in the order they are worth reading: the ones this call is about (`first`), then the
+    guidance (the handbook and the criteria), then the other tool results, newest first. A backend that inlines
+    the files under a size budget cuts from the end, and in name order the newest tool result sorted last: a
+    finished analyst job and a turn's own sensitivity table were the files cut, and the model, told to read
+    them first, abstained or answered with nothing."""
+    files = {p.name: p for p in stage.iterdir() if p.is_file()}
+    head = [n for n in dict.fromkeys(first) if n in files]
+    guidance = [n for n in sorted(files) if not n.startswith("tool_") and n not in head]
+    tools = [n for n in sorted(files, reverse=True) if n.startswith("tool_") and n not in head]
+    return tuple((files[n], n) for n in head + guidance + tools)
+
+
 def request(*, task: str, stage: Path | None, system: str, prompt: str, schema: dict[str, Any],
-            prompt_version: str, model: str, effort: str, salt: Any = None) -> ExtractionRequest:
+            prompt_version: str, model: str, effort: str, salt: Any = None,
+            first: Sequence[str] = ()) -> ExtractionRequest:
     """The request for one call. `stage` None sends no files: the router classifies the question and needs
     none of the evidence, and a classification that carried the handbook and four tool results would cost
     more than the answer. `salt` joins the question in the context hash: the retry after a refusal carries a
-    different one, so the refused answer is never served back from the cache."""
+    different one, so the refused answer is never served back from the cache. `first` names the files this call
+    is about; they lead the bundle (see `ordered_files`)."""
     return ExtractionRequest(
         task=task, images=(),
-        stage_files=tuple(sorted((p, p.name) for p in stage.iterdir() if p.is_file())) if stage else (),
+        stage_files=ordered_files(stage, first) if stage else (),
         system_prompt=system, user_prompt=prompt, schema=schema, schema_version=SCHEMA_VERSION,
         prompt_version=prompt_version, model=model, effort=effort,
         # The question is the input here, not the staged files. Without it two different questions over the
@@ -48,4 +64,4 @@ def call(backend: Any, req: ExtractionRequest, on_event: Event, step: int) -> tu
     return out, float(getattr(response, "cost_usd", 0.0) or 0.0)
 
 
-__all__ = ["Event", "SCHEMA_VERSION", "call", "request"]
+__all__ = ["Event", "SCHEMA_VERSION", "call", "ordered_files", "request"]

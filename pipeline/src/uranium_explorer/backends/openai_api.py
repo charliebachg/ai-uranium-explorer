@@ -124,7 +124,8 @@ def _staged_text(req: ExtractionRequest) -> str:
         budget -= min(len(body), budget)
         parts.append(f"--- FILE {name} ---\n{body}")
         if budget <= 0:
-            remaining = [n for _p, n in req.stage_files if n != name]
+            shown = {n for _p, n in req.stage_files[: len(parts)]}
+            remaining = [n for _p, n in req.stage_files if n not in shown]
             if remaining:
                 parts.append(f"[... not included, the bundle is full: {', '.join(remaining)} ...]")
             break

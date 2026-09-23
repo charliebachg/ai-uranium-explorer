@@ -55,9 +55,10 @@ GUIDANCE: dict[str, str] = {
     "what_is_unknown": "Name the criteria whose state is unknown here, apart from those not met, and for each say "
                        "what the coverage row says about how thin its feature is across the grid.",
     "what_would_change": "Read the sensitivity rows: they rank the unknown criteria by how far the criteria score "
-                         "would move if each were measured and met. Report the top row (and the next if close) "
-                         "by their ids: the score now, the score if met, the score if not met. Never compute a "
-                         "delta or a share yourself.",
+                         "would move if each were measured and met. Every row already carries its rank, "
+                         "delta_if_met, score_if_met and score_if_not_met, each beside its *_id, and the first "
+                         "row carries score_now: report the rank 1 row (and the next if its delta is the same) by "
+                         "those ids. Never compute a delta or a share yourself.",
 }
 
 #: the one answer call's schema: the action and its object, and no `reasoning` field, because the cheap model
@@ -86,6 +87,14 @@ def _now() -> str:
 #: what the model is told when its reply had the action but no answer in it
 NO_ANSWER = ("the reply carried no answer: put the prose in answer.text and every number in a claim under "
              "answer.claims with its value id (the reasoning field is not the answer)")
+
+
+#: what the model is told when it abstained for want of a value while this turn's plan had staged values
+ABSTAINED_WITH_EVIDENCE = ("you abstained with no_value, but this question's plan staged {n} value(s) in {files}: "
+                           "read them again and answer from them; abstain again only if none of them bears on "
+                           "the question")
+VERDICT_WORDS: dict[str, str] = {"supports_closer_look": "supports a closer look",
+                                 "insufficient": "insufficient evidence", "evidence_against": "evidence against"}
 
 
 def check_answer(conv: Conversation, answer: dict[str, Any]) -> list[str]:
@@ -173,7 +182,7 @@ def _answer_once(conv: Conversation, question: str, route: R.Route, files: list[
     req = M.request(task="interface_answer", stage=conv.stage, system=L.SYSTEM,
                     prompt=_answer_prompt(conv, question, route, files, feedback, jobs), schema=ANSWER_SCHEMA,
                     prompt_version=ANSWER_PROMPT_VERSION, model=model, effort=effort,
-                    salt="retry" if feedback else None)
+                    salt="retry" if feedback else None, first=[*(jobs or []), *files])
     try:
         reply, out.spent = M.call(backend, req, on_event, step)
     except UsageLimitReached as limit:
@@ -300,6 +309,34 @@ def _stage_result(conv: Conversation, job: dict[str, Any]) -> str:
             handover.update({"status": job.get("status"), "reported": True, "result_file": name})
             path.write_text(json.dumps(handover, indent=1, default=str))
     return name
+
+
+def job_report(conv: Conversation, jobs: list[dict[str, Any]]) -> dict[str, Any]:
+    """The finished jobs said from their own records, for a turn whose model reply failed the check: the
+    verdict as a word, whether the chain validated, and the probability, cost and changed nodes cited by the
+    ids the job minted. Nothing in it is the model's, and it is put to the same gate before it is shown."""
+    texts: list[str] = []
+    claims: list[dict[str, Any]] = []
+    for job in jobs:
+        base = f"c:job:{job['job_id']}"
+        if job.get("status") != DONE:
+            texts.append(f"The analyst job did not finish: {job.get('error') or job.get('status')}.")
+            continue
+        result = dict(job.get("result") or {})
+        verdict = VERDICT_WORDS.get(str(result.get("verdict") or ""), "no verdict")
+        kept = "" if result.get("published") else "; its chain was not validated, so it is stored unpublished"
+        texts.append(f"The analyst finished on this cell: {verdict}{kept}.")
+        for key, said in (("probability", "the analyst's probability for this cell"),
+                          ("n_changed", "nodes whose status differs from the stored chain"),
+                          ("cost_usd", "what the analyst job spent")):
+            if f"{base}:{key}" in conv.values:
+                claims.append({"text": said, "value_ids": [f"{base}:{key}"]})
+    return {"text": " ".join(texts), "claims": claims}
+
+
+def _staged_values(conv: Conversation, files: list[str]) -> int:
+    """How many values the calls staged under these files returned."""
+    return sum(int(c.get("values") or 0) for c in conv.calls if c.get("file") in files)
 
 
 def report_jobs(conv: Conversation, on_event: M.Event) -> list[dict[str, Any]]:
@@ -441,6 +478,7 @@ def ask(
         if missing:
             return refuse("outside_grid", f"cell {missing[0]} is not on this grid")
 
+    files: list[str] = []
     if route.kind in PLANNED:
         files = reported + _execute(conv, steps, on_event, log)
         out = _answer_once(conv, question, route, files, backend, model, effort, on_event, feedback=None,
@@ -448,6 +486,18 @@ def ask(
     else:
         out = L.run(conv, question, backend, model, effort, on_event, log)
     spent += out.spent
+
+    # "no value" while the plan had just staged values for this very question is a misreading, not an answer:
+    # the cheap model once abstained on a sensitivity table that held every delta it said was missing. It is
+    # asked once more, told which files hold them; a second abstention stands. This is the turn's one retry.
+    n_staged = _staged_values(conv, files)
+    if out.abstain is not None and str(out.abstain.get("reason") or "") == "no_value" and n_staged:
+        turn["retried"] = True
+        objection = [ABSTAINED_WITH_EVIDENCE.format(n=n_staged, files=", ".join(files))]
+        on_event({"type": "refused", "problems": objection})
+        out = _answer_once(conv, question, route, files, backend, model, effort, on_event, feedback=objection,
+                           jobs=reported)
+        spent += out.spent
 
     if out.usage_limited or (out.answer is None and out.abstain is None):
         return finish(out, text=None, problems=out.problems or ["the model neither answered nor abstained"])
@@ -457,7 +507,7 @@ def ask(
     answer = out.answer or {}
     on_event({"type": "checking", "claims": len(answer.get("claims") or [])})
     problems = check_answer(conv, answer)
-    if problems:
+    if problems and not turn["retried"]:
         # once more with the objections; the second refusal is final
         turn["retried"] = True
         on_event({"type": "refused", "problems": problems})
@@ -471,11 +521,20 @@ def ask(
         answer = again.answer or {}
         on_event({"type": "checking", "claims": len(answer.get("claims") or [])})
         problems = check_answer(conv, answer)
+    if problems and jobs_done:
+        # the analyst's result must not be lost to a reply that failed the check: say it from the job's record
+        report = job_report(conv, jobs_done)
+        if report["text"] and not check_answer(conv, report):
+            turn["job_report"] = True
+            on_event({"type": "job_report", "problems": problems})
+            return finish(text="The reply failed the evidence check, so this is said from the job's own record. "
+                               + report["text"], claims=report["claims"])
     claims = [dict(c) for c in (answer.get("claims") or [])]
     return finish(text=str(answer.get("text") or "") if not problems else None,
                   claims=claims if not problems else [], caveats=[str(c) for c in (answer.get("caveats") or [])],
                   cannot_answer=bool(answer.get("cannot_answer")), problems=problems)
 
 
-__all__ = ["ANSWER_PROMPT_VERSION", "ANSWER_SCHEMA", "GUIDANCE", "JOB_RESULT", "NO_ANSWER", "PLANNED", "REASON_SAID",
+__all__ = ["ABSTAINED_WITH_EVIDENCE", "ANSWER_PROMPT_VERSION", "ANSWER_SCHEMA", "GUIDANCE", "JOB_RESULT", "NO_ANSWER",
+           "PLANNED", "REASON_SAID", "VERDICT_WORDS", "job_report",
            "ask", "check_answer", "gate", "report_jobs"]

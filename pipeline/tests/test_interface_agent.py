@@ -251,6 +251,74 @@ def test_a_second_refusal_withholds_the_answer(tmp_path: Path, world: dict) -> N
     assert any("4.7" in p for p in turn["problems"])
 
 
+def test_a_no_value_abstention_over_values_the_plan_staged_is_asked_once_more(tmp_path: Path, world: dict) -> None:
+    """Seen live: the cheap model abstained "no value" on a sensitivity table that held every delta it named."""
+    conv = conversation(tmp_path)
+    backend = Scripted(
+        interface_route=[route("lookup", topic="features")],
+        interface_answer=[{"action": "abstain", "abstain": {"reason": "no_value", "detail": "no distance given"}},
+                          answer("The conductor is 820.0 m away.", [{"text": "820.0 m", "value_ids": [CONDUCTOR]}])],
+    )
+    events: list[dict[str, Any]] = []
+    turn = G.ask(conv, "how far is the conductor?", backend, model="fake", on_event=events.append)
+    assert turn["published"] is True and turn["retried"] is True and turn["abstention"] is None
+    assert "you abstained with no_value" in backend.requests[-1].user_prompt
+    assert any(e["type"] == "refused" for e in events)
+    # a second abstention stands, and an abstention of another kind is never second-guessed
+    twice = Scripted(interface_route=[route("lookup", topic="features")],
+                     interface_answer=[{"action": "abstain", "abstain": {"reason": "no_value"}}] * 2)
+    turn2 = G.ask(conversation(tmp_path), "how far?", twice, model="fake")
+    assert turn2["abstention"]["reason"] == "no_value" and turn2["retried"] is True
+    other = Scripted(interface_route=[route("lookup", topic="features")],
+                     interface_answer=[{"action": "abstain", "abstain": {"reason": "not_measured"}}])
+    turn3 = G.ask(conversation(tmp_path), "how deep?", other, model="fake")
+    assert turn3["abstention"]["reason"] == "not_measured" and turn3["retried"] is False
+    assert len([r for r in other.requests if r.task == "interface_answer"]) == 1
+
+
+def test_a_finished_jobs_report_that_fails_the_check_is_said_from_the_jobs_record(
+        tmp_path: Path, world: dict, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Seen live: asked what the analyst found, the cheap model twice replied `action: answer` carrying only a
+    junk abstain object. The analyst's result is not lost to that: it is said from the job's own record."""
+    from uranium_explorer.api import jobs as J
+
+    monkeypatch.setattr(J, "submit_analyst", lambda *a, **k: "job-xyz")
+    monkeypatch.setattr(A, "oof_score_ids", lambda cell: [])
+    monkeypatch.setattr(J, "get", lambda job_id: {
+        "job_id": job_id, "status": "done", "progress": [{"at": "t", "event": "done"}],
+        "result": {"chain_id": "run:cell", "run_id": "run", "arm": "v1-openrouter", "verdict": "supports_closer_look",
+                   "probability": 0.86, "published": False, "problems": [], "cost_usd": 0.0574}})
+    monkeypatch.setattr(G.D, "assess", lambda cell, chain_id: None)
+    conv = conversation(tmp_path)
+    G.ask(conv, "run the analyst", Scripted(interface_route=[route("run_analyst")]), model="fake")
+    junk = {"action": "answer", "abstain": {"reason": "out_of_scope", "detail": "temp"}}
+    backend = Scripted(interface_route=[route("lookup", topic="scores")], interface_answer=[junk, junk])
+    turn = G.ask(conv, "what did the analyst find?", backend, model="fake")
+    assert turn["published"] is True and turn.get("job_report") is True and turn["problems"] == []
+    assert turn["text"].startswith("The reply failed the evidence check, so this is said from the job's own record.")
+    assert "supports a closer look" in turn["text"] and "not validated" in turn["text"]
+    base = "c:job:job-xyz"
+    assert [c["value_ids"] for c in turn["claims"]] == [[f"{base}:probability"], [f"{base}:cost_usd"]]
+    assert not G.check_answer(conv, {"text": turn["text"], "claims": turn["claims"]}), "it passes the same gate"
+    # with no job just finished, a failed reply is still withheld
+    turn2 = G.ask(conv, "and again?", Scripted(interface_route=[route("lookup", topic="scores")],
+                                               interface_answer=[junk, junk]), model="fake")
+    assert turn2["published"] is False and turn2.get("job_report") is None
+
+
+def test_the_bundle_leads_with_this_calls_files_then_guidance_then_the_newest_results(tmp_path: Path) -> None:
+    """In name order the newest tool result sorted last, and a size-capped inline cut exactly it."""
+    from uranium_explorer.interface import model as M
+
+    for name in ("criteria.toml", "handbook.md", "tool_01_cell_features.json", "tool_02_coverage.json",
+                 "tool_03_sensitivity.json", "tool_04_job_result.json"):
+        (tmp_path / name).write_text("{}")
+    names = [n for _p, n in M.ordered_files(tmp_path, ["tool_04_job_result.json", "tool_03_sensitivity.json", "gone.json"])]
+    assert names == ["tool_04_job_result.json", "tool_03_sensitivity.json", "criteria.toml", "handbook.md",
+                     "tool_02_coverage.json", "tool_01_cell_features.json"]
+    assert [n for _p, n in M.ordered_files(tmp_path)][:3] == ["criteria.toml", "handbook.md", "tool_04_job_result.json"]
+
+
 # ---------------------------------------------------------------- record_insight
 
 
@@ -432,7 +500,8 @@ def test_a_finished_job_is_staged_as_a_tool_result_the_next_turn_answers_from(
     prompt = backend.requests[-1].user_prompt
     assert "An analyst job this conversation invoked has finished" in prompt
     assert prompt.index(done["result_file"]) < prompt.index("Everything staged in this conversation")
-    assert done["result_file"] in [name for _p, name in backend.requests[-1].stage_files]
+    assert [name for _p, name in backend.requests[-1].stage_files][0] == done["result_file"], \
+        "the finished job leads the bundle: a backend that inlines under a budget cuts from the end"
     # a number the job did not return is still refused
     bad = Scripted(interface_route=[route("lookup", topic="scores")],
                    interface_answer=[answer("It decided insufficient at probability 0.9.",
