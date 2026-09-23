@@ -55,7 +55,7 @@ import importlib
 import json
 from collections import Counter
 from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Callable
 
@@ -248,7 +248,7 @@ class _Loop:
             task=task, images=images, stage_files=stage_files, system_prompt=system, user_prompt=user,
             schema=schema, schema_version=SCHEMA_VERSION, prompt_version=self.cfg.prompt_version, model=model,
             effort=effort,
-            context_hash=short(sha256_json({"bench_id": self.session.bench_id, "switches": asdict(self.switches),
+            context_hash=short(sha256_json({"bench_id": self.session.bench_id, "switches": self.switches.keyed(),
                                             **context})),
         )
 

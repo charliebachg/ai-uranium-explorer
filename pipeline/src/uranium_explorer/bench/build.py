@@ -33,6 +33,7 @@ from shapely import wkb
 
 from ..paths import PATHS
 from ..prospect import tools as T
+from ..prospect.extended import EXTENDED_FEATURES
 from ..store import connect
 from ..store import snapshot as SN
 from .blind import blind_list, passages
@@ -43,7 +44,7 @@ from .oof import COLUMNS as OOF_COLUMNS
 from .oof import oof_scores
 from .pack import FORBIDDEN_KEYS, NORTHING, PATTERNS, name_pattern, build_pack, forbidden_strings, KEEP_TEXT
 from .sample import assign_bench_ids, sample_cells, shortfalls
-from .spec import STRATA, load_spec
+from .spec import LATER_PACK_SWITCHES, STRATA, load_spec
 
 MANIFEST_VERSION = "bench-manifest/v1"
 SUBDIRS = ("packs", "cards", "cards_drillholes", "blind", "passages")
@@ -70,6 +71,19 @@ def _dump(obj: Any) -> str:
 def _fresh(path: Path, previous: dict[str, str], rel: str) -> bool:
     """True when the file is on disk with the hash the last manifest recorded for it."""
     return path.is_file() and previous.get(rel) == sha256_file(path)
+
+
+def _previous_cells(out: Path, previous: dict[str, str]) -> dict[str, str]:
+    """The last build's bench id to cell map, when its cell list is the one its manifest hashed; empty otherwise.
+
+    A file is fresh for a bench id only while that id names the same cell. The sample can move with the store
+    while the spec and the seed stay the same, and a pack, card or passage kept across that move describes other
+    ground under a key that labels this ground."""
+    path = out / "cells.jsonl"
+    if not previous or not path.is_file() or previous.get("cells.jsonl") != sha256_file(path):
+        return {}
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    return {str(r["bench_id"]): str(r["cell_id"]) for r in rows}
 
 
 def _pack_switches(path: Path) -> dict[str, bool] | None:
@@ -114,7 +128,8 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
     own = con is None
     con = con or connect(read_only=True)
     try:
-        df = load_frame(con=con)
+        extended = spec.pack.extended_features
+        df = load_frame(con=con, extra=EXTENDED_FEATURES if extended else ())
         log(f"  frame: {len(df):,} scorable cells, {(df['label_tier'] != 'unlabelled').sum()} positives")
         cells = assign_bench_ids(sample_cells(df, spec), spec.seed)
         short = shortfalls(cells, spec)
@@ -122,7 +137,7 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
         log("  sampled: " + ", ".join(f"{s} {n}" for s, n in counts.items())
             + (f"; short {short}" if short else ""))
 
-        oof = oof_scores(spec.seed, df=df, fold_km=spec.fold_km, n_folds=spec.n_folds, fit=fit)
+        oof = oof_scores(spec.seed, df=df, fold_km=spec.fold_km, n_folds=spec.n_folds, fit=fit, extended=extended)
         bench_oof = (cells[["bench_id", "cell_id"]].merge(oof, on="cell_id")
                      .drop(columns=["cell_id"]).sort_values(["bench_id", "model"]).reset_index(drop=True))
         bench_oof = bench_oof[["bench_id", *[c for c in OOF_COLUMNS if c != "cell_id"]]]
@@ -130,6 +145,12 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
         log(f"  out-of-fold scores: {len(bench_oof):,} rows for the benchmark cells")
 
         forbidden = forbidden_strings(con)
+        if spec.pack.later():
+            # a benchmark built with the later switches is closed-book to the prompt's standard: the passages
+            # are scrubbed of its place names as the packs are (`pack.build_pack`), and the audit checks both
+            from ..analyst.v0 import PLACE_NAMES
+
+            forbidden = forbidden | set(PLACE_NAMES)
         coverage = T.coverage()
         layers = card_layers(spec)
         log("  card layers: " + ", ".join(f"{k} {len(v):,}" for k, v in layers.items()))
@@ -139,23 +160,29 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
             f"select cell_id, geom_wkb from derived.cell where cell_id in ({placeholders})", ids).fetchall()}
 
         written = {"packs": 0, "cards": 0, "cards_drillholes": 0, "blind": 0, "passages": 0}
+        before = _previous_cells(out, previous)
+        moved = sum(before.get(str(r.bench_id)) != str(r.cell_id) for r in cells.itertuples(index=False))
+        if previous and moved:
+            log(f"  {moved} bench id(s) now name a different cell than last build: their files are rebuilt")
         for row in cells.itertuples(index=False):
             bid, cid = str(row.bench_id), str(row.cell_id)
+            # nothing is fresh for a bench id that names another cell than it did: its files describe that cell
+            kept = previous if before.get(bid) == cid else {}
             pack_path = out / "packs" / f"{bid}.json"
             # a pack is fresh only if its hash matches the last manifest and it was built with the spec's
             # switches: the switches are written into the pack, so a stale pack under a new spec is caught
-            if not (_fresh(pack_path, previous, f"packs/{bid}.json") and _pack_switches(pack_path) == spec.pack.switches()):
+            if not (_fresh(pack_path, kept, f"packs/{bid}.json") and _pack_switches(pack_path) == spec.pack.switches()):
                 pack = build_pack(cid, bid, spec, con=con, forbidden=forbidden, oof=oof, shared={"coverage": coverage})
                 pack_path.write_text(_dump(pack))
                 written["packs"] += 1
             card_path = out / "cards" / f"{bid}.png"
-            if not _fresh(card_path, previous, f"cards/{bid}.png"):
+            if not _fresh(card_path, kept, f"cards/{bid}.png"):
                 img = render_card(cid, spec, layers, geoms[cid], drillholes=spec.card.drillholes)
                 card_path.write_bytes(png_bytes(img))
                 written["cards"] += 1
             if spec.card.drillholes_variant:
                 holes_path = out / "cards_drillholes" / f"{bid}.png"
-                if not _fresh(holes_path, previous, f"cards_drillholes/{bid}.png"):
+                if not _fresh(holes_path, kept, f"cards_drillholes/{bid}.png"):
                     img = render_card(cid, spec, layers, geoms[cid], drillholes=True)
                     holes_path.write_bytes(png_bytes(img))
                     written["cards_drillholes"] += 1
@@ -165,7 +192,7 @@ def build(version: str, log: Callable[[str], None] = print, root: Path | None = 
                                                     "files": files}).encode()):
                 written["blind"] += 1
             pass_path = out / "passages" / f"{bid}.json"
-            if not _fresh(pass_path, previous, f"passages/{bid}.json"):
+            if not _fresh(pass_path, kept, f"passages/{bid}.json"):
                 found = passages(cid, spec, files, con, forbidden=forbidden)
                 if found:
                     pass_path.write_text(_dump({"bench_id": bid, "passages": found}))
@@ -261,6 +288,11 @@ def audit(version: str, root: Path | None = None, con: Any = None) -> list[str]:
     if names is None:
         problems.append("no store to read company, property and deposit names from; the name check did not run")
         names = set()
+    if any((manifest.get("spec") or {}).get("pack", {}).get(k) for k in LATER_PACK_SWITCHES):
+        # a pack built with the later switches is scrubbed of place names too, so the audit looks for them
+        from ..analyst.v0 import PLACE_NAMES
+
+        names = set(names) | set(PLACE_NAMES)
     name_pat = name_pattern(frozenset(names))
     for sub in ("packs", "passages"):
         for p in sorted((out / sub).glob("*.json")):

@@ -62,14 +62,29 @@ class CardSpec:
     drillholes_variant: bool = False
 
 
+#: pack switches added after v2. Off, they are left out of the switches and the manifest, so a spec written
+#: before them builds and hashes exactly as it did.
+LATER_PACK_SWITCHES = ("evidence", "region", "extended_features")
+
+
 @dataclass(frozen=True)
 class PackSpec:
     label_context: bool = False
     oof_scores: bool = False
     effort_features: bool = False
+    #: the raw evidence around the cell, one tool per family (`prospect.evidence`)
+    evidence: bool = False
+    #: the regional setting: the sandstone cover, basement domains by letter, the nearest domain boundary
+    region: bool = False
+    #: the extended features in `cell_features` and `coverage`, and the extended model's out-of-fold score
+    extended_features: bool = False
 
     def switches(self) -> dict[str, bool]:
-        return asdict(self)
+        return {k: v for k, v in asdict(self).items() if v or k not in LATER_PACK_SWITCHES}
+
+    def later(self) -> bool:
+        """Whether any switch added after v2 is on: such a pack is also scrubbed of place names."""
+        return any(getattr(self, k) for k in LATER_PACK_SWITCHES)
 
 
 @dataclass(frozen=True)
@@ -98,8 +113,8 @@ class BenchSpec:
     retrieval: RetrievalSpec = field(default_factory=lambda: RetrievalSpec(6, 40.0))
 
     def as_dict(self) -> dict[str, Any]:
-        """The spec as plain data, for the manifest."""
-        return asdict(self)
+        """The spec as plain data, for the manifest; pack switches added later appear only when on."""
+        return {**asdict(self), "pack": self.pack.switches()}
 
 
 # ---------------------------------------------------------------- loading

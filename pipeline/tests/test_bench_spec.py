@@ -58,3 +58,13 @@ def test_the_version_must_match_the_file_and_shares_must_be_shares() -> None:
 def test_a_missing_spec_says_so() -> None:
     with pytest.raises(S.SpecError, match="no spec"):
         S.load_spec("v999")
+
+
+def test_the_later_pack_switches_leave_an_older_spec_as_it_was_and_are_carried_when_on() -> None:
+    v2 = S.load_spec("v2")
+    assert v2.pack.switches() == {"label_context": True, "oof_scores": True, "effort_features": True}
+    assert v2.as_dict()["pack"] == v2.pack.switches() and not v2.pack.later()
+    v3 = S.load_spec("v3")
+    assert v3.pack.later() and {"evidence", "region", "extended_features"} <= set(v3.pack.switches())
+    # v3 is v2's benchmark with richer packs: the same seed, strata, folds and cards
+    assert (v3.seed, v3.strata, v3.fold_km, v3.n_folds, v3.card) == (v2.seed, v2.strata, v2.fold_km, v2.n_folds, v2.card)

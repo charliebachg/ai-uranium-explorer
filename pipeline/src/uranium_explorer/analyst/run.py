@@ -34,6 +34,7 @@ from ..backends.cache import CachedBackend
 from ..ids import sha256_json
 from ..prospect import tracking as TR
 from ..prospect.criteria import load as load_criteria
+from . import families as FAM
 from . import frozen as F
 from . import loop as LOOP
 from . import prompts as PR
@@ -320,8 +321,11 @@ def run_arm(
             f"plan/{W.SCHEMA_VERSION}": sha256_json(W.PLAN_SCHEMA),
             f"nodes/{W.SCHEMA_VERSION}": sha256_json(W.NODES_SCHEMA),
         })
+    elif arm.agent == "v2":
+        _note(manifest, "prompt_hashes", {f"{arm.prompt_version}/{k}": v for k, v in FAM.prompt_hashes(arm.switches).items()})
+        _note(manifest, "schema_hashes", FAM.schema_hashes())
     else:
-        system = V0.default_system_prompt()
+        system = V0.system_for(arm.switches)
         _note(manifest, "prompt_hashes", {arm.prompt_version: sha256_json(system)})
         _note(manifest, "schema_hashes", {V0.SCHEMA_VERSION: sha256_json(V0.ANSWER_SCHEMA)})
         if arm.switches.oof_scores:
@@ -358,6 +362,8 @@ def run_arm(
                 if staged:
                     row = _run_staged(backend, bench, cell, arm, cfg, criteria, rd, run_id, shared,
                                       session_factory=session_factory)
+                elif arm.agent == "v2":
+                    row = FAM.run_cell(backend, bench.pack(bench_id), card, arm)
                 else:
                     row = V0.run_cell(backend, bench.pack(bench_id), card, bench.passages(bench_id), arm)
         except (BudgetExhausted, UsageLimitReached) as signal:

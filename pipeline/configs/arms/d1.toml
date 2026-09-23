@@ -1,0 +1,27 @@
+# Rung D1 of the information ladder: v0 given more to read. Every switch is stated; D1 differs from v0 only in
+# the three switches added for benchmark v3 and the prompt's guide to the raw evidence.
+[arm]
+name = "d1"
+agent = "v0"
+model = "claude-opus-5"
+effort = "medium"
+prompt_version = "analyst/v0/d1"
+max_budget_usd_per_call = 1.50
+timeout_s = 600
+workers = 2
+notes = "D1: v0 with more information in the same one call: the extended features, the raw evidence around the cell and the regional setting. Read against the extended fitted model, which is given the same evidence as features."
+
+[arm.inputs]
+card = true
+pack = true
+passages = false
+
+[arm.switches]
+drillholes = false
+label_context = false
+oof_scores = false
+effort_features = false
+criteria = true
+evidence = true
+region = true
+extended_features = true

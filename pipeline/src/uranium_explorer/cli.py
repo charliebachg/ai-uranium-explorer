@@ -574,6 +574,23 @@ def prospect_modelsearch_cmd(
     typer.echo(json.dumps({"cells": out["cells"], "arms": len(out["rows"]), "decision": out["decision"].get("reason")}))
 
 
+@prospect_app.command("extended")
+def prospect_extended_cmd(
+    seed: int = typer.Option(0, "--seed"),
+    boot: int = typer.Option(1000, "--boot", help="bootstrap resamples per interval and per paired difference"),
+    version: str = typer.Option("v2", "--version", help="benchmark whose open labelled cells are scored"),
+    write: bool = typer.Option(True, "--write/--no-write", help="store the metrics under extended.*"),
+    track: bool = typer.Option(True, "--track/--no-track", help="log the run to MLflow"),
+    snapshot: str = typer.Option(None, "--snapshot", help="store snapshot hash the run must be on; refuses any other store"),
+) -> None:
+    """The learned model given the extended evidence (geochemistry, boulders, structure, setting), family by family,
+    over the grid and on the benchmark cells, against the ten-feature model as paired differences."""
+    from .prospect.extended import run
+
+    out = run(seed=seed, boot=boot, version=version, log=typer.echo, write=write, track=track, snapshot=snapshot)
+    typer.echo(json.dumps({"run_id": out["run_id"], "cells": out["cells"], "rows": len(out["grid"]) + len(out["bench"])}))
+
+
 @prospect_app.command("hindcast")
 def prospect_hindcast_cmd(
     cutoff: list[int] = typer.Option([2000, 2010], "--cutoff", help="freeze datable inputs at this year (repeatable)"),

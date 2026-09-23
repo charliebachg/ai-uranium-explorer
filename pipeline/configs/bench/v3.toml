@@ -1,0 +1,50 @@
+# UraniumBench v3, analyst track: v2's cells, seed and folds, with packs that also carry the extended
+# features, the raw evidence around each cell and the regional setting. Change a number here and the next build
+# is a different benchmark; the version string is part of the output path, so keep it in step with the filename.
+
+version = "v3"
+seed = 20260920
+
+# spatial folds (whole blocks of this size held out together) and the share of each stratum held out
+fold_km = 30
+n_folds = 5
+held_out_share = 0.20
+
+[strata]
+# deposit cells are thinned to one per block so a camp of adjacent cells counts once
+deposit = 40
+thin_block_m = 10000
+# occurrences must have been drilled: an undrilled occurrence is a rumour with a point
+occurrence = 40
+# negatives are unlabelled cells with at least min_holes holes, drawn to match the positives' effort profile
+negative = 80
+min_holes = 5
+# probes are never-drilled unlabelled cells; they are not scored, they are watched
+probe = 20
+
+[card]
+window_km = 20
+size_px = 1000
+layers = [
+  "em_conductors", "faults_250k", "graphitic_host", "lake_sediment_gsc", "lake_sediment_sgs",
+  "radioactive_boulders", "survey_footprints_ground", "survey_footprints_airborne",
+]
+drillholes = false
+drillholes_variant = true
+
+[pack]
+label_context = true
+oof_scores = true
+effort_features = true
+# added for v3: arms switch each of these on or off; the packs carry them all
+evidence = true
+region = true
+extended_features = true
+
+[blind]
+radius_km = 10
+
+[retrieval]
+k = 6
+radius_km = 40
+query = "uranium mineralization drilling graphitic conductor unconformity alteration"

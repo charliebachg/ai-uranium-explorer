@@ -17,7 +17,7 @@ from typing import Any
 
 from ..paths import PATHS
 
-AGENTS = ("v0", "v1")
+AGENTS = ("v0", "v1", "v2")
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 
 
@@ -39,9 +39,22 @@ class Switches:
     oof_scores: bool        # the out-of-fold fitted scores (learned, effort, criteria)
     effort_features: bool   # the exploration-effort features (hole and sample counts)
     criteria: bool          # the criteria table with its fuzzy memberships; off, the model reasons from features
+    # added after the first arms, so optional in a file and false when absent (`LATER_SWITCHES`)
+    evidence: bool = False            # the raw evidence families: samples, boulders, lineaments, units
+    region: bool = False              # the regional setting: cover, basement domains by letter, boundaries
+    extended_features: bool = False   # the extended features among the pack's features and coverage
 
     def on(self) -> tuple[str, ...]:
         return tuple(f.name for f in fields(self) if getattr(self, f.name))
+
+    def keyed(self) -> dict[str, bool]:
+        """The switches as a cache key sees them: a later switch appears only when on, so every arm written
+        before it keeps the key, and the cached answers, it always had."""
+        return {k: v for k, v in asdict(self).items() if v or k not in LATER_SWITCHES}
+
+
+#: switches an arm file may leave out; they default to off
+LATER_SWITCHES = ("evidence", "region", "extended_features")
 
 
 @dataclass(frozen=True)
@@ -109,7 +122,8 @@ def _table(raw: dict[str, Any], key: str, cls: type, booleans: bool = True) -> A
     if not isinstance(sub, dict):
         raise ValueError(f"[arm.{key}] table is missing")
     want = {f.name for f in fields(cls)}
-    missing, extra = want - set(sub), set(sub) - want
+    optional = set(LATER_SWITCHES) if cls is Switches else set()
+    missing, extra = want - set(sub) - optional, set(sub) - want
     if missing or extra:
         raise ValueError(f"[arm.{key}]: missing {sorted(missing)}, unknown {sorted(extra)}")
     if booleans:

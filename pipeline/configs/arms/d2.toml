@@ -1,0 +1,27 @@
+# Rung D2: D1's information read in stages. Four readers, one per evidence family, then one ranking call that
+# sees what D1 sees plus the readings. Every switch is stated; D2 differs from D1 only in the staged reading.
+[arm]
+name = "d2"
+agent = "v2"
+model = "claude-opus-5"
+effort = "medium"
+prompt_version = "analyst/v2/v1"
+max_budget_usd_per_call = 1.50
+timeout_s = 600
+workers = 2
+notes = "D2: D1's information read by four family readers (geochemistry, dispersal, structure, setting), each gated with one retry, then ranked in one call under v0's gate; no verifier, no criterion nodes."
+
+[arm.inputs]
+card = true
+pack = true
+passages = false
+
+[arm.switches]
+drillholes = false
+label_context = false
+oof_scores = false
+effort_features = false
+criteria = true
+evidence = true
+region = true
+extended_features = true

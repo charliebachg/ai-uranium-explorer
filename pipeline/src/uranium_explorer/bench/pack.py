@@ -23,6 +23,8 @@ from typing import Any
 import pandas as pd
 
 from ..filenum import _FIND as FILE_NUMBER
+from ..prospect import evidence as E
+from ..prospect import features as FE
 from ..prospect import models as M
 from ..prospect import tools as T
 from ..values import stat
@@ -221,6 +223,14 @@ def build_pack(cell_id: str, bench_id: str, spec: BenchSpec, con: Any = None,
     if not sw.get("effort_features"):
         results["cell_features"] = drop_effort(results["cell_features"])
         results["coverage"] = drop_effort(results["coverage"])
+    # the extended features stay out unless asked for, and the domain one-hots always do: their keys name ground
+    hidden = FE.DOMAIN_KEYS | (frozenset() if sw.get("extended_features") else FE.EXTENDED_KEYS)
+    for name in ("cell_features", "coverage"):
+        results[name] = drop_features(results[name], hidden)
+    if sw.get("evidence"):
+        results |= {f"evidence_{f}": getattr(E, f"evidence_{f}")(cell_id) for f in E.FAMILIES}
+    if sw.get("region"):
+        results["region"] = E.region(cell_id)
     values: dict[str, dict[str, Any]] = {}
     tools: dict[str, dict[str, Any]] = {}
     for name, r in results.items():
@@ -230,7 +240,23 @@ def build_pack(cell_id: str, bench_id: str, spec: BenchSpec, con: Any = None,
     pack = anonymise(pack, cell_id, bench_id)
     names = set(forbidden) if forbidden is not None else (forbidden_strings(con) if con is not None else set())
     names.add(cell_id)
+    if spec.pack.later():
+        from ..analyst.v0 import PLACE_NAMES   # here, not at the top: the analyst imports this module
+
+        names |= set(PLACE_NAMES)
     return scrub(pack, names)
+
+
+def drop_features(result: T.ToolResult, keys: frozenset[str]) -> T.ToolResult:
+    """The tool result without the rows of these features and without the values only those rows cite."""
+    keep_rows, drop_ids = [], set()
+    for row in result.rows:
+        if row.get("feature") in keys:
+            drop_ids |= {v for k, v in row.items() if k.endswith("_id") and isinstance(v, str)}
+        else:
+            keep_rows.append(row)
+    values = {k: v for k, v in result.values.items() if k not in drop_ids}
+    return T.ToolResult(result.tool, result.args, keep_rows, values, result.note)
 
 
 def drop_effort(result: T.ToolResult) -> T.ToolResult:
@@ -327,5 +353,34 @@ def pack_text(pack: dict[str, Any]) -> str:
         lines.append("nearest labels: rank | tier | km | id")
         for r in near:
             lines.append(f"  {r.get('rank')} | {r.get('tier')} | {r.get('distance_km')} | {r.get('distance_km_id')}")
+    for name, title in EVIDENCE_TITLES.items():
+        if name in tools:
+            lines += evidence_lines(title, tools[name])
     return "\n".join(lines)
+
+
+#: the raw-evidence tools, in the order a pack renders them, with the heading each is printed under
+EVIDENCE_TITLES = {
+    "evidence_geochem": "lake sediment and lake water within 10 km, nearest first",
+    "evidence_boulders": "ice flow, then radioactive boulders within 10 km, nearest first",
+    "evidence_structure": "lineaments and conductors within 10 km, nearest first, then crossings within 5 km",
+    "evidence_bedrock": "bedrock units and surficial environments within 5 km, largest share first",
+    "region": "the regional setting within 50 km",
+}
+
+
+def evidence_lines(title: str, tool: dict[str, Any]) -> list[str]:
+    """One line per record: its kind, then each field, a number followed by its id in square brackets."""
+    lines = [f"{title}:"]
+    if tool.get("note"):
+        lines.append(f"  ({tool['note']})")
+    for r in tool.get("rows", []):
+        parts = []
+        for k, v in r.items():
+            if k == "kind" or k.endswith("_id"):
+                continue
+            vid = r.get(f"{k}_id")
+            parts.append(f"{k} {v} [{vid}]" if vid else f"{k}: {v}")
+        lines.append(f"  {r.get('kind')} | " + " | ".join(parts))
+    return lines
 

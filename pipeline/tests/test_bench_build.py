@@ -187,3 +187,35 @@ def test_a_changed_spec_rebuilds_every_file(world, monkeypatch) -> None:
     BB.build("t1", log=lines.append, root=root, fit=fake_fit)
     assert any("spec changed" in line for line in lines)
     assert not any("resuming" in line for line in lines)
+
+
+def test_a_bench_id_that_names_another_cell_on_a_rebuild_gets_that_cells_files(world, monkeypatch) -> None:
+    """The sample can move with the store while the spec and seed stay. A pack kept across the move would
+    describe the old cell under a key that labels the new one, so the files of a moved bench id are rebuilt."""
+    import uranium_explorer.bench.build as BB
+
+    root = world["root"]
+    BB.build("t1", log=lambda *a: None, root=root, fit=fake_fit)
+    out = root / "t1"
+    first = {json.loads(line)["bench_id"]: json.loads(line)["cell_id"] for line in (out / "cells.jsonl").read_text().splitlines()}
+    a, b = sorted(first)[:2]
+    original = BB.assign_bench_ids
+
+    def swapped(cells, seed):
+        c = original(cells, seed).copy()
+        ia, ib = c.index[c["bench_id"] == a][0], c.index[c["bench_id"] == b][0]
+        c.loc[ia, "bench_id"], c.loc[ib, "bench_id"] = b, a
+        return c
+
+    monkeypatch.setattr(BB, "assign_bench_ids", swapped)
+    lines: list[str] = []
+    BB.build("t1", log=lines.append, root=root, fit=fake_fit)
+    assert any("2 bench id(s) now name a different cell" in line for line in lines)
+    second = {json.loads(line)["bench_id"]: json.loads(line)["cell_id"] for line in (out / "cells.jsonl").read_text().splitlines()}
+    assert (second[a], second[b]) == (first[b], first[a])
+    df = world["df"].set_index("cell_id")
+    for bid in (a, b):
+        pack = json.loads((out / "packs" / f"{bid}.json").read_text())
+        row = next(r for r in pack["tools"]["cell_features"]["rows"] if r["feature"] == "d_conductor_m")
+        assert row["value"] == pytest.approx(round(float(df.loc[second[bid], "d_conductor_m"]), 4)), \
+            "the pack describes the cell its bench id names now"

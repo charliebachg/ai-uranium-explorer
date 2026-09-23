@@ -26,14 +26,16 @@ def latest_grid(con: Any) -> str | None:
     return row[0] if row else None
 
 
-def load_frame(grid_id: str | None = None, con: Any = None) -> pd.DataFrame:
+def load_frame(grid_id: str | None = None, con: Any = None, extra: tuple[str, ...] = ()) -> pd.DataFrame:
     """Cells of the grid with complete geological features, their effort features (nulls kept), and the stored
-    criteria score. Read-only on the store; `con` lets a test point it at a temporary one."""
+    criteria score. `extra` adds more features, nulls kept like the effort ones: the extended evidence, which
+    exists only where something was sampled. Read-only on the store; `con` lets a test point it at a temporary
+    one."""
     own = con is None
     con = con or connect(read_only=True)
     try:
         grid_id = grid_id or latest_grid(con)
-        keys = [*M.LEARNED_FEATURES, *M.EFFORT_FEATURES]
+        keys = list(dict.fromkeys([*M.LEARNED_FEATURES, *M.EFFORT_FEATURES, *extra]))
         placeholders = ",".join("?" * len(keys))
         wide = con.execute(
             f"select cell_id, feature_key, value from derived.cell_feature where feature_key in ({placeholders})",

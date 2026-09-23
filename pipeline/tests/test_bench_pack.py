@@ -179,3 +179,75 @@ def test_pack_text_quotes_a_text_valued_feature_as_known() -> None:
     text = pack_text(pack)
     assert "surficial_class | Glaciofluvial hummocky | - | 2 | known (text)" in text
     assert "sed_u_max_ppm | - | - | 0 | unknown (nearest observation id" in text
+
+
+def _later_spec(**on: bool) -> S.BenchSpec:
+    from dataclasses import replace
+
+    spec = v1()
+    return replace(spec, pack=replace(spec.pack, **on))
+
+
+def _fake_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Evidence tools that return one record each, one of them worded with a place name."""
+    from uranium_explorer.prospect import evidence as E
+    from uranium_explorer.prospect import tools as T
+
+    def tool(name: str):
+        def run(cell_id: str) -> T.ToolResult:
+            vid = f"c:ev:{cell_id}:x0:dist_m"
+            return T.ToolResult(name, {"cell_id": cell_id},
+                                [{"kind": "boulder", "rock": "athabasca sandstone", "dist_m": 900.0, "dist_m_id": vid}],
+                                {vid: {"id": vid, "value": 900.0, "note": f"record near cell {cell_id}"}}, "a note")
+        return run
+
+    for fam in E.FAMILIES:
+        monkeypatch.setattr(E, f"evidence_{fam}", tool(f"evidence_{fam}"))
+    monkeypatch.setattr(E, "region", tool("region"))
+
+
+def test_the_later_switches_add_the_evidence_and_the_region_anonymised_and_scrubbed(store: Path, monkeypatch) -> None:
+    _fake_evidence(monkeypatch)
+    con = ST.connect(store, read_only=True)
+    try:
+        rich = P.build_pack("0000_0000", "b-0001", _later_spec(evidence=True, region=True), con=con)
+        plain = P.build_pack("0000_0000", "b-0001", v1(), con=con)
+    finally:
+        con.close()
+    assert {"evidence_geochem", "evidence_boulders", "evidence_structure", "evidence_bedrock", "region"} <= set(rich["tools"])
+    assert not {"evidence_geochem", "region"} & set(plain["tools"])
+    assert "b:b-0001:ev:x0:dist_m" in rich["values"]
+    assert "0000_0000" not in json.dumps(rich)
+    # the new tools are scrubbed of place names (the criteria table's cited literature is kept, as always, and
+    # never rendered), and so is everything the model is shown
+    new = json.dumps({k: v for k, v in rich["tools"].items() if k.startswith("evidence_") or k == "region"})
+    assert "athabasca" not in new.lower() and "[redacted] sandstone" in new
+    assert "athabasca" not in P.pack_text(rich).lower()
+    assert rich["switches"]["evidence"] is True and "evidence" not in plain["switches"]
+    rendered = P.pack_text(rich)
+    assert "radioactive boulders within 10 km" in rendered
+    assert "dist_m 900.0 [b:b-0001:ev:x0:dist_m]" in rendered
+
+
+def test_extended_features_are_hidden_unless_switched_on_and_the_domains_always_are(store: Path, monkeypatch) -> None:
+    from uranium_explorer.prospect import tools as T
+
+    def features(cell_id: str) -> T.ToolResult:
+        out = T.ToolResult("cell_features", {"cell_id": cell_id})
+        for key, v in (("d_conductor_m", 820.0), ("sed_u_th_max", 3.1), ("domain_wollaston", 1.0)):
+            vid = f"c:cell:{cell_id}:{key}"
+            out.rows.append({"feature": key, "value": v, "value_id": vid, "observations": 1})
+            out.values[vid] = {"id": vid, "value": v}
+        return out
+
+    monkeypatch.setattr(T, "cell_features", features)
+    con = ST.connect(store, read_only=True)
+    try:
+        plain = P.build_pack("0000_0000", "b-0001", v1(), con=con)
+        rich = P.build_pack("0000_0000", "b-0001", _later_spec(extended_features=True), con=con)
+    finally:
+        con.close()
+    feats = lambda pack: [r["feature"] for r in pack["tools"]["cell_features"]["rows"]]  # noqa: E731
+    assert feats(plain) == ["d_conductor_m"]
+    assert feats(rich) == ["d_conductor_m", "sed_u_th_max"], "the domain one-hot names ground and is never shown"
+    assert "b:b-0001:cell:domain_wollaston" not in rich["values"]

@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 from ..bench.dataset import hint, knowledge_dir
+from .arms import LATER_SWITCHES
 from ..ids import sha256_file
 from ..paths import PATHS
 
@@ -109,6 +110,7 @@ class Bench:
         card = spec.get("card") if isinstance(spec.get("card"), dict) else {}
         out: dict[str, bool | None] = {k: (bool(pack[k]) if k in pack else None)
                                        for k in ("label_context", "oof_scores", "effort_features")}
+        out |= {k: bool(pack.get(k, False)) for k in LATER_SWITCHES}
         out["drillholes"] = bool(card["drillholes"]) if "drillholes" in card else None
         out["drillholes_variant"] = bool(card.get("drillholes_variant", False))
         return out
@@ -123,6 +125,10 @@ def compatibility(bench: Bench, switches: Any) -> list[str]:
     for name in ("label_context", "oof_scores", "effort_features"):
         want, have = bool(getattr(switches, name)), built.get(name)
         if want and have is False:
+            problems.append(f"the arm asks for {name}, which benchmark {bench.version} was built without")
+    # a switch added after the first benchmarks is absent from their manifests, and absent means not built
+    for name in LATER_SWITCHES:
+        if getattr(switches, name, False) and not built.get(name):
             problems.append(f"the arm asks for {name}, which benchmark {bench.version} was built without")
     want_holes, drawn, variant = bool(switches.drillholes), built.get("drillholes"), built.get("drillholes_variant")
     if want_holes and drawn is False and not variant:

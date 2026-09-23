@@ -249,7 +249,7 @@ the second reader (OCR), what the checks flagged, where the holes came from, the
 provincial records, per file, what the run cost, and what would turn these into accuracy. Below sit the score
 models: what the map's scores are worth (the fold metrics), the re-test, the model search with its registry
 decision and model card, the dated hindcast, the analyst benchmark with the staged loop's per-stage columns,
-and the fabrication gate put to the test. Section 6.7 says where each table's numbers come from.
+and the fabrication gate put to the test. Section 6.8 says where each table's numbers come from.
 
 **Limits** (`/limits`) is one row per claim (a grade or log means something; the map ranks ground; drill here;
 an LLM judge checked it; anything about a company's own ground): what public data can support, what it cannot,
@@ -442,7 +442,7 @@ square cells in the province's own projected system, NAD83 UTM zone 13N (EPSG:29
 feature is a distance on the ground: 30,534 cells, 18,898 of them over the sandstone, 122,136 km². A cell is a
 search area, never a target; a deposit is far smaller than any cell.
 
-`ue prospect features` and `ue prospect rasters` compute 25 features per cell, each stored in
+`ue prospect features` and `ue prospect rasters` compute 50 features per cell, each stored in
 `derived.cell_feature` with the count of observations behind it, the nearest observation's distance where
 there is one, and the layers or scenes it was built from. Nineteen are geological: distance to the nearest EM
 conductor and conductor density; a graphitic or pelitic host under the cover rule and the same map read at the
@@ -456,6 +456,19 @@ within 5 km, and airborne and ground survey footprints covering the cell. These 
 not what is in the rock; they are marked `is_effort` and are the null model's whole world. Features are
 computed from `native`-tier data only, and a builder that reads a label layer is refused
 (`test_feature_leakage`).
+
+The other 25 are the **extended evidence** (`features.EXTENDED_SPECS`): what the layers carry beyond one
+number each. Geochemistry: the highest uranium-to-thorium ratio and uranium per percent loss on ignition in
+lake sediment within 5 km, the highest lead and nickel, and the share of samples within 10 km above the
+survey's 95th percentile of uranium. Boulders: the highest count rate of a sandstone-family boulder, and of any
+boulder 1 to 10 km down-ice and up-ice of the cell, in a 60-degree cone along the DEM's landform grain with the
+south-west taken as down-ice (an assumption the up-ice mirror tests). Structure: lineament length by trend
+within 5 km, from each line's own geometry, and lineament-on-lineament and lineament-on-conductor crossings.
+Setting: the signed distance to the edge of the sandstone, the distance to the nearest boundary between
+basement domains, the lithology groups mapped within 5 km, and the mapped domain as a one-hot. A ratio is
+taken sample by sample and skipped over a near-zero denominator, and a negative laboratory result is read as
+under detection. The learned model does not read them; `ue prospect extended` asks whether it should
+(section 6.7).
 
 Three rules the builders enforce:
 
@@ -701,7 +714,22 @@ criteria, learned and effort models; and each later discovery's cell is reported
 area that scored at least as well, with a summary per model. What cannot be frozen is stated on every row: the
 geological layers are compilations as they stand today and the survey footprints carry no year.
 
-### 6.7 The Eval page's tables and where their numbers come from
+### 6.7 The extended model
+
+`ue prospect extended` gives the learned model the extended evidence (section 4.3), family by family
+(geochemistry, boulders, structure, setting) and all together, and scores each set the headline's way: spatial
+folds, matched background and thinned positives in training only, every set out of fold on the same cells, and
+its PR-AUC as a paired difference from the ten-feature model's with a bootstrap interval. The extended features
+are missing wherever nothing was sampled and the trees take a missing value as its own branch, which is how
+"where somebody sampled" could stand in for geology, so a model that reads nothing but which values are missing
+is scored beside them as the check. It runs twice: over the grid, on all positives and on deposits, and on the
+benchmark's open labelled cells under the benchmark's own folds and seed, with the spread over four more fold
+seeds and the seed-averaged score. It also reports the effort null from each place it is stored, so a gap
+between two of them is traced to the run that wrote it. Output: `pipeline/data/out/prospect/extended.json`,
+`extended.*` rows in `derived.metric`, an MLflow run. With `extended_features` on, a benchmark's out-of-fold
+scores (section 10.2) carry the extended model as a fourth baseline.
+
+### 6.8 The Eval page's tables and where their numbers come from
 
 Every table on the Eval page is read from `web/public/data`, and every number in it is a value with an id:
 
@@ -790,6 +818,20 @@ returns arrives as a value with an id (`c:cell:<cell>:<feature>`, `c:crit:<cell>
 criterion's thresholds and weights included, so the argument is never about a number the model has to quote
 from a file. The model never computes anything. `nearby` refuses a label layer (the labels are the answer) and
 a context layer.
+
+**The raw evidence** (`prospect/evidence.py`) is five more tools, one per evidence family and one for the
+region, that hand over the records the features are built from instead of the features:
+`evidence_geochem` (every lake-sediment and lake-water sample within 10 km, nearest first, with its elements,
+the ratios computed, and its bearing against the ice flow), `evidence_boulders` (the cell's down-ice bearing,
+then every radioactive boulder within 10 km with its rock type and whether it lies down-ice, up-ice or across),
+`evidence_structure` (every lineament and the nearest conductors within 10 km with trend and length, and the
+crossings within 5 km), `evidence_bedrock` (the bedrock units and surficial environments within 5 km as the maps
+word them, by share of area) and `region` (inside or outside the sandstone and how far from its edge, the
+basement domains within 50 km by letter with the rocks each is made of, and the nearest domain boundary).
+Every number carries an id (`c:ev:<cell>:<record>:<field>`), the tool computes every ratio, bearing and
+distance, and nothing names ground: domain and stratigraphic names, survey systems, file numbers, years and
+assay results are left out, and the benchmark's scrub runs over what remains. They reach an analyst through a
+benchmark pack built with the `evidence` and `region` switches (section 10.2).
 
 **The fabrication gate** (`memo.check_claims`) is the one rule every answer passes: every number in a claim
 must resolve to a value the claim cites by id, in any of the forms the gate can verify itself (a rounding, a
@@ -924,6 +966,20 @@ tier. `ue arm score --run` scores a run's cells against the key, `ue arm regate 
 gate to stored v0 answers and re-scores with no model call, `ue arm table` merges every arm's latest run with
 the baselines into `pipeline/data/out/bench/<version>/table.json` and `derived.metric`, and `ue arm
 baselines` prints the baseline rows alone.
+
+#### Analyst v2: the family readers
+
+`analyst/families.py` reads a pack with the raw evidence in stages that follow the evidence: four readers
+(geochemistry, dispersal, structure, setting), each shown only its family's evidence tools and its own rows of
+the feature, coverage and criteria tables, each answering with an assessment (for, neutral, against, unknown),
+a strength from 0 to 1, claims with value ids, what it cannot tell and a short summary. A reading passes the
+same gate as an answer, against the values its own share holds; a refused reading is asked once more with the
+reasons, and one refused twice reaches the next stage as refused, with nothing in it usable. Then one ranking
+call sees everything a v0 arm sees (the whole pack and the card) plus the four readings, and answers exactly as
+v0 does under v0's gate, with no retry, so a v2 row differs from a v0 row only in the staged reading. There is
+no verifier, no criterion-node template and no decider but the model's own probability; each row keeps the
+four assessments and strengths, so a weighted sum can be fitted over them afterwards at no model cost. An arm
+runs it with `agent = "v2"`.
 
 #### The dashboard's scope rule
 
@@ -1175,7 +1231,9 @@ whether a model ever writes such a claim; that needs the model, and is the bench
 
 The analyst benchmark ("UraniumBench", the requirement's name) is a frozen, anonymised set of cells built by
 `ue bench build --version <v>` from a spec under `pipeline/configs/bench/<v>.toml` and the store (read only,
-resumable, every draw from the spec's seed). Four strata, each answering a different question about an
+resumable, every draw from the spec's seed). Resuming keeps a file only if its hash matches the last manifest
+and its bench id still names the same cell: the sample can move with the store while the spec and seed stay,
+and a bench id that now names another cell has its pack, cards and passages rebuilt. Four strata, each answering a different question about an
 analyst: **deposit** cells thinned to one per 10 km block so a camp counts once; **occurrence** cells that
 were drilled; **negative** cells, unlabelled with at least five holes, drawn to match the positives'
 exploration-effort profile so that hole counts cannot stand in for geology; and **probe** cells, never
@@ -1188,7 +1246,15 @@ layers in a square window with no basemap, labels or place names, and the deposi
 blind-list per cell, scrubbed passages where retrieval returns any, the out-of-fold scores, the key (hashed on
 its own and never inside a pack), the held-out ids and a manifest with every file's hash. `ue bench audit`
 re-hashes everything and scans every pack and passage for anything that places or names the ground; `ue bench
-show` prints the counts and shortfalls. `ue bench oof-scores --write` refits the learned and effort models
+show` prints the counts and shortfalls. Three pack switches were added after v2 and are off unless a spec turns
+them on, so an older spec builds and hashes as it did: `extended_features` (the extended features in the
+feature and coverage tables, and the extended model among the out-of-fold scores), `evidence` (the four raw
+evidence tools) and `region` (the regional setting). The domain one-hots never reach a pack, since their keys
+name ground, and a pack built with any of the three is also scrubbed of the place names the closed-book prompt
+refuses. Benchmark v3 is v2's cells, seed and folds with all three on; an arm asks for each with a switch of the
+same name, and one that asks for a part its benchmark was built without is refused. The information ladder on
+v3 is `d1` (v0 with the three switches on and the prompt's guide to reading raw evidence) and `d2` (the same
+information through the family readers). `ue bench oof-scores --write` refits the learned and effort models
 the way the model search judges them and writes `derived.cell_score_oof`, the table every baseline and every
 blinded session reads instead of the fitted scores.
 
@@ -1342,7 +1408,7 @@ Every `ue` command, grouped as the CLI groups them; every flag is in that comman
 
 **`ue store`**: `rebuild` (flatten every reading stage into the tiered store plus the two GeoParquet layers), `snapshot [--list]` (a hashed manifest of the store a run can cite), `register-layers` (every pulled layer in `native.layer` with its payload hash), `lineage` (every layer, feature and verified source walks back to a hashed pull; exit 1 on a break), `migrate [--dsn DSN]` (the Alembic migrations on the serving database), `sync-pg [--dsn DSN]` (copy every tiered table into Postgres, set the cell geometry, audit the tiers there), `pg-audit [--dsn DSN]` (the tier audit on the serving database), `audit` (no table mixes provenance tiers), and `seed pack|verify|unpack|push|pull|ensure` (section 2.1).
 
-**`ue prospect`**: `inventory [--verbose]` (the data sources, what each bears on, what is missing), `grid [--cell-m N] [--buffer-m N]` (the analysis grid), `features [--only KEY ...]` (per-cell features with their coverage), `rasters [--start] [--end] [--max-cloud] [--only s2|dem]` (per-cell water, vegetation, bare ground and terrain from public COGs), `corpus [--files N] [--region-only/--province] [--download/--on-disk-only]` (index the assessment corpus), `retrieve [QUERY] [--lon] [--lat] [--radius-km] [-k] [--stats]` (search it, spatial filter first), `labels` (positive cells, camps and spatial folds), `score [--model criteria|learned|effort|all]` (score every cell), `headline [--seed] [--boot] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (the re-test with matched background and thinned positives, all folds, intervals), `modelsearch [--seed] [--boot] [--quick] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (candidates, ablations, block sizes, the served-model decision), `hindcast [--cutoff YEAR ...] [--min-confidence high|medium] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (later discoveries ranked by models frozen at a cutoff), `memo [--cell ID] [--model] [--effort] [--max-budget-usd] [--mode panel|oneshot] [--roles ...]` (the proponent, skeptic and adjudicator over one cell, gated), `serve [--port] [--model] [--effort] [--backend openai|claude|auto] [--host] [--web-dist DIR]` (the evidence record, the chat, the MCP route and the jobs), `record [--cell] [--backend] [--model] [--effort] [--budget-usd] [--job-budget-usd] [--job/--no-job] [--refresh] [--out]` (the tour's session, asked for real and written for the walkthrough), `gate-eval [--cells IDS] [--seed] [--per-cell N] [--out PATH]` (honest and corrupted claims put to the fabrication gate), `table` (write `knowledge/data_readiness_table.md`), `readiness` (how much of the basin each feature covers), `drift [--snapshot HASH]` (feature distributions now against a snapshot's; exit 1 on drift), `gate` (the five-column readiness gate; exit 1 when red), `export` (the readiness scorecard, the coverage layer, the scores and the Eval blocks into `web/public/data/prospect`).
+**`ue prospect`**: `inventory [--verbose]` (the data sources, what each bears on, what is missing), `grid [--cell-m N] [--buffer-m N]` (the analysis grid), `features [--only KEY ...]` (per-cell features with their coverage), `rasters [--start] [--end] [--max-cloud] [--only s2|dem]` (per-cell water, vegetation, bare ground and terrain from public COGs), `corpus [--files N] [--region-only/--province] [--download/--on-disk-only]` (index the assessment corpus), `retrieve [QUERY] [--lon] [--lat] [--radius-km] [-k] [--stats]` (search it, spatial filter first), `labels` (positive cells, camps and spatial folds), `score [--model criteria|learned|effort|all]` (score every cell), `headline [--seed] [--boot] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (the re-test with matched background and thinned positives, all folds, intervals), `modelsearch [--seed] [--boot] [--quick] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (candidates, ablations, block sizes, the served-model decision), `extended [--seed] [--boot] [--version V] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (the learned model given the extended evidence, family by family, over the grid and on a benchmark's cells, as paired differences), `hindcast [--cutoff YEAR ...] [--min-confidence high|medium] [--write/--no-write] [--track/--no-track] [--snapshot HASH]` (later discoveries ranked by models frozen at a cutoff), `memo [--cell ID] [--model] [--effort] [--max-budget-usd] [--mode panel|oneshot] [--roles ...]` (the proponent, skeptic and adjudicator over one cell, gated), `serve [--port] [--model] [--effort] [--backend openai|claude|auto] [--host] [--web-dist DIR]` (the evidence record, the chat, the MCP route and the jobs), `record [--cell] [--backend] [--model] [--effort] [--budget-usd] [--job-budget-usd] [--job/--no-job] [--refresh] [--out]` (the tour's session, asked for real and written for the walkthrough), `gate-eval [--cells IDS] [--seed] [--per-cell N] [--out PATH]` (honest and corrupted claims put to the fabrication gate), `table` (write `knowledge/data_readiness_table.md`), `readiness` (how much of the basin each feature covers), `drift [--snapshot HASH]` (feature distributions now against a snapshot's; exit 1 on drift), `gate` (the five-column readiness gate; exit 1 when red), `export` (the readiness scorecard, the coverage layer, the scores and the Eval blocks into `web/public/data/prospect`).
 
 **`ue openai`**: `models [--filter TEXT]` (what the key can reach; free), `budget` (what the chat has spent and what is left).
 

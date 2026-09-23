@@ -251,3 +251,146 @@ def test_graphitic_host_surface_keeps_the_covered_cells_complete_for_the_learned
     assert surface["value"].iloc[0] == 0.0 and surface["value"].iloc[1] == 1.0 and np.isnan(surface["value"].iloc[2])
     host = F.graphitic_host(c)
     assert np.isnan(host["value"].iloc[0]), "the cover-aware feature says unknown where the surface one says 0"
+
+
+# ---------------------------------------------------------------- the extended evidence
+
+
+def test_a_negative_result_is_below_detection_and_reads_as_zero(patch_layer):
+    """The 1975-1978 survey writes a result under its detection limit as a negative number."""
+    c = cells(1)
+    patch_layer["pts"] = gpd.GeoDataFrame({"PB_PPM": [-2.0, 5.0]}, geometry=[Point(900, 1000), Point(1100, 1000)],
+                                          crs=f"EPSG:{EPSG}")
+    assert F.point_stat(c, "pts", "PB_PPM", 5000, "max", negative_is_zero=True)["value"].iloc[0] == 5.0
+    patch_layer["pts"] = gpd.GeoDataFrame({"PB_PPM": [-26.0]}, geometry=[Point(1000, 1000)], crs=f"EPSG:{EPSG}")
+    out = F.point_stat(c, "pts", "PB_PPM", 5000, "max", negative_is_zero=True)
+    assert out["value"].iloc[0] == 0.0 and out["n_obs"].iloc[0] == 1, "below detection is a low reading, not a gap"
+
+
+def test_a_text_filter_takes_the_statistic_over_one_kind_of_record(patch_layer):
+    c = cells(1)
+    patch_layer["boulders"] = gpd.GeoDataFrame(
+        {"CPS": [700.0, 5000.0, 900.0], "LITHOLOGY": ["SANDSTONE", "Granite", "conglomeratic sandstone"]},
+        geometry=[Point(900, 1000), Point(1100, 1000), Point(1000, 1200)], crs=f"EPSG:{EPSG}")
+    out = F.point_stat(c, "boulders", "CPS", 5000, "max", text_field="LITHOLOGY", text_words=F.SANDSTONE_WORDS)
+    assert out["value"].iloc[0] == 900.0 and out["n_obs"].iloc[0] == 2, "the granite boulder is not sandstone"
+
+
+def test_a_ratio_is_taken_sample_by_sample_and_skips_a_near_zero_denominator(patch_layer):
+    c = cells(1)
+    patch_layer["sed"] = gpd.GeoDataFrame(
+        {"U_INA": [10.0, 4.0, 50.0, -0.2], "TH_INA": [5.0, 1.0, 0.1, 3.0]},
+        geometry=[Point(900 + 50 * i, 1000) for i in range(4)], crs=f"EPSG:{EPSG}")
+    out = F.point_ratio(c, "sed", "U_INA", "TH_INA", 5000, den_floor=0.5)
+    # 10/5 = 2 and 4/1 = 4 count; 50/0.1 is a division, not a measurement; -0.2 is below detection, so 0/3
+    assert out["value"].iloc[0] == 4.0 and out["n_obs"].iloc[0] == 3
+
+
+def test_a_share_above_the_layer_threshold_is_null_under_three_samples(patch_layer):
+    c = cells(2, size=20_000)
+    near = [Point(10_000 + 10 * i, 10_000) for i in range(4)]
+    far = [Point(30_000, 10_000 + 10 * i) for i in range(2)]
+    patch_layer["sed"] = gpd.GeoDataFrame({"U": [1.0, 1.0, 1.0, 50.0, 1.0, 60.0]}, geometry=near + far,
+                                          crs=f"EPSG:{EPSG}")
+    out = F.point_share_above(c, "sed", "U", 1000, quantile=0.6)
+    assert out["value"].iloc[0] == 0.25, "one of four samples is above the line"
+    assert np.isnan(out["value"].iloc[1]) and out["n_obs"].iloc[1] == 2, "two samples are not a share"
+
+
+def test_the_landform_grain_becomes_a_compass_axis_and_a_down_ice_end():
+    # the DEM measures from east, clockwise: a grain of 130.8 is the compass axis 40.8-220.8
+    assert np.isclose(F.grain_bearing(130.83), 220.83 - 180.0)
+    assert np.isclose(F.grain_bearing(0.0), 90.0), "an east-west grain is the compass axis 90"
+    down = F.down_ice_bearing(np.array([40.83, 151.0, 90.0, 10.0]))
+    # the end nearer the regional south-westward flow is down-ice
+    assert np.allclose(down, [220.83, 151.0, 270.0, 190.0])
+
+
+def test_a_cone_reads_boulders_down_ice_of_the_cell_and_leaves_up_ice_ones_to_the_mirror(patch_layer):
+    c = cells(1)
+    c["down_ice_deg"] = [180.0]   # ice moved south
+    patch_layer["boulders"] = gpd.GeoDataFrame(
+        {"CPS": [900.0, 5000.0, 99_999.0, 0.0]},
+        geometry=[Point(1000, -4000), Point(1000, 6000), Point(1100, 1000), Point(900, -3000)],
+        crs=f"EPSG:{EPSG}")
+    down = F.point_cone(c, "boulders", "CPS", 10_000, sense="down")
+    up = F.point_cone(c, "boulders", "CPS", 10_000, sense="up")
+    assert down["value"].iloc[0] == 900.0 and down["n_obs"].iloc[0] == 1, "the zero is a blank, the cell's own is out"
+    assert up["value"].iloc[0] == 5000.0
+    c["down_ice_deg"] = [90.0]    # ice moved east: neither boulder is in either cone
+    assert np.isnan(F.point_cone(c, "boulders", "CPS", 10_000)["value"].iloc[0])
+
+
+def test_lineament_length_is_split_by_trend(patch_layer):
+    c = cells(1)
+    patch_layer["faults"] = gpd.GeoDataFrame(
+        geometry=[LineString([(1000, 0), (1000, 2000)]), LineString([(-500, 1500), (2500, 1500)]),
+                  LineString([(0, 0), (1000, 1000)])], crs=f"EPSG:{EPSG}")
+    get = {t: F.line_length_by_trend(c, "faults", 5000, t)["value"].iloc[0] for t in F.TRENDS}
+    assert np.isclose(get["ns"], 2.0) and np.isclose(get["ew"], 3.0) and np.isclose(get["ne"], np.sqrt(2))
+    assert get["nw"] == 0.0
+
+
+def test_crossings_count_where_lines_cross_not_where_one_lineament_is_drawn_in_two(patch_layer):
+    c = cells(1)
+    patch_layer["faults"] = gpd.GeoDataFrame(
+        geometry=[LineString([(0, 1000), (2000, 1000)]), LineString([(1000, 0), (1000, 2000)]),
+                  LineString([(2000, 1000), (3000, 1500)])], crs=f"EPSG:{EPSG}")
+    patch_layer["conductors"] = gpd.GeoDataFrame(
+        geometry=[LineString([(500, 0), (500, 2000)]), LineString([(5000, 0), (5000, 100)])], crs=f"EPSG:{EPSG}")
+    faults = F.line_crossings(c, "faults", 5000)
+    assert faults["value"].iloc[0] == 1.0, "the third line only continues the first from its end"
+    both = F.line_crossings(c, "faults", 5000, other_key="conductors")
+    assert both["value"].iloc[0] == 1.0, "one conductor crosses the east-west fault; the other crosses nothing"
+
+
+def test_basin_edge_distance_is_positive_inside_and_negative_outside(monkeypatch):
+    c = cells(3)
+    monkeypatch.setattr(F, "_basin_outline", lambda: box(-10_000, -10_000, 3000, 10_000))
+    out = F.basin_edge_distance(c)["value"].to_numpy()
+    assert np.allclose(out, [2000.0, 0.0, -2000.0])
+
+
+def test_a_domain_is_one_hot_and_unmapped_ground_is_null(patch_layer):
+    c = cells(3)
+    patch_layer["bedrock_250k"] = gpd.GeoDataFrame(
+        {"DOMAIN": ["Wollaston", "Mudjatik"]}, geometry=[box(0, 0, 2000, 2000), box(2000, 0, 4000, 2000)],
+        crs=f"EPSG:{EPSG}")
+    out = F.polygon_is(c, "bedrock_250k", "DOMAIN", "Wollaston")["value"].to_numpy()
+    assert out[0] == 1.0 and out[1] == 0.0 and np.isnan(out[2])
+
+
+def test_domain_boundaries_are_between_basement_domains_and_not_at_the_cover_edge(patch_layer):
+    c = cells(3)
+    patch_layer["bedrock_250k"] = gpd.GeoDataFrame(
+        {"DOMAIN": ["Wollaston", "Mudjatik", "Athabasca Basin"]},
+        geometry=[box(-8000, 0, 2000, 2000), box(2000, 0, 4000, 2000), box(4000, 0, 20_000, 2000)],
+        crs=f"EPSG:{EPSG}")
+    out = F.distance_to_domain_boundary(c, "bedrock_250k", "DOMAIN")["value"].to_numpy()
+    # the boundary is at x = 2000 (grown 50 m each side); the sandstone's edge at x = 4000 is not one
+    assert np.allclose(out, [950.0, 950.0, 2950.0])
+
+
+def test_lithology_groups_and_their_count_within_reach(patch_layer):
+    assert F.lith_group("pelitic gneiss") == "graphitic_pelite"
+    assert F.lith_group("Conglomeratic quartz arenite") == "sandstone"
+    assert F.lith_group("granodiorite") == "granitoid"
+    assert F.lith_group("") is None and F.lith_group("unknown rock") == "other"
+    c = cells(2, size=20_000)
+    patch_layer["bedrock_250k"] = gpd.GeoDataFrame(
+        {"LITHOLOGY": ["granite", "pelitic gneiss", "granodiorite"]},
+        geometry=[box(0, 0, 10_000, 20_000), box(10_000, 0, 12_000, 20_000), box(12_000, 0, 20_000, 20_000)],
+        crs=f"EPSG:{EPSG}")
+    out = F.lith_group_count(c, "bedrock_250k", "LITHOLOGY", 5000)
+    assert out["value"].iloc[0] == 2.0 and out["n_obs"].iloc[0] == 3, "granite and granodiorite are one group"
+    assert np.isnan(out["value"].iloc[1]), "no polygon within reach of the second cell"
+
+
+def test_the_extended_evidence_is_geology_and_every_family_key_is_built():
+    from uranium_explorer.prospect.extended import EXTENDED_FEATURES
+
+    specs = {s.key: s for s in F.SPECS}
+    for key in EXTENDED_FEATURES:
+        assert key in specs, f"{key} is in a family but no spec builds it"
+        assert not specs[key].is_effort, f"{key} is geology; the effort null must not read it"
+        assert specs[key].op in F.BUILDERS

@@ -23,6 +23,8 @@ from .frame import load_frame
 
 TABLE = ("derived", "cell_score_oof")
 MODELS = ("learned", "effort", "criteria")
+#: the learned model given the extended evidence, scored beside them when a benchmark asks for it
+EXTENDED_MODEL = "extended"
 FOLD_KIND = "spatial"
 COLUMNS = ("cell_id", "model", "fold_kind", "fold", "score")
 
@@ -30,19 +32,25 @@ Fit = Callable[[np.ndarray, np.ndarray, np.ndarray], np.ndarray]
 
 
 def oof_scores(seed: int, grid_id: str | None = None, df: pd.DataFrame | None = None, con: Any = None,
-               fold_km: float = 30.0, n_folds: int = 5, fit: Fit | None = None) -> pd.DataFrame:
+               fold_km: float = 30.0, n_folds: int = 5, fit: Fit | None = None, extended: bool = False) -> pd.DataFrame:
     """One row per cell per model: `cell_id, model, fold_kind, fold, score`.
 
     `learned` and `effort` come from `fit_histgb` under the headline corrections and `spatial_fold(fold_km)`;
-    `criteria` is the stored score. A fold whose test side has no positive cannot be scored and leaves NaN."""
+    `criteria` is the stored score. With `extended`, the learned model given the extended evidence
+    (`prospect.extended`) is scored the same way beside them. A fold whose test side has no positive cannot be
+    scored and leaves NaN."""
+    from ..prospect import extended as X
+
     if df is None:
-        df = load_frame(grid_id, con=con)
+        df = load_frame(grid_id, con=con, extra=X.EXTENDED_FEATURES if extended else ())
     MS.register_feature_sets(df)
+    if extended:
+        X.register_feature_sets(df)
     y = H.labels(df, "all")
     train_ok = H.training_mask(df, y, matched=True, thinned=True, seed=seed)
     fold = MS.spatial_fold(df, fold_km, n_splits=n_folds, seed=seed)
     frames = []
-    for model in ("learned", "effort"):
+    for model in ("learned", "effort", *((EXTENDED_MODEL,) if extended else ())):
         p = H._oof(df, model, y, fold, fit or MS.fit_histgb, train_ok=train_ok)
         frames.append(_rows(df, model, fold, p))
     crit = df["criteria_score"].to_numpy(dtype=float) if "criteria_score" in df.columns else np.full(len(df), np.nan)

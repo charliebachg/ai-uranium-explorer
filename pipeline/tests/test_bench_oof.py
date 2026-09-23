@@ -83,3 +83,16 @@ def test_from_the_store_criteria_equals_the_stored_score_and_the_table_round_tri
             con.execute("insert into derived.cell_score_oof values ('x', 'learned', 'spatial', 0, 0.5, 'r', 't', 'native')")
     finally:
         con.close()
+
+
+def test_with_extended_the_extended_model_is_scored_beside_the_others_on_the_same_folds() -> None:
+    from uranium_explorer.prospect.extended import EXTENDED_FEATURES
+
+    df = bench_frame()
+    rng = np.random.default_rng(0)
+    for k in EXTENDED_FEATURES:
+        df[k] = np.where(rng.random(len(df)) < 0.3, np.nan, rng.random(len(df)))
+    out = O.oof_scores(seed=3, df=df, fit=fake_fit, extended=True)
+    assert set(out["model"]) == {*O.MODELS, O.EXTENDED_MODEL} and len(out) == 4 * len(df)
+    folds = out.pivot_table(index="cell_id", columns="model", values="fold")
+    assert (folds["extended"] == folds["learned"]).all(), "the same folds, so the rows compare cell for cell"

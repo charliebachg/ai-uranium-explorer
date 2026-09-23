@@ -12,7 +12,9 @@ from uranium_explorer.analyst import arms as A
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
 V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter", "v1-anthropic-or",
       "v1-skipunmeasured", "v1-batch", "v1-scoped", "v1-scoped-batch"]
-ALL = V0 + V1
+#: the information ladder on benchmark v3: D1 is a v0 arm, D2 the family-staged v2 agent
+LADDER = {"d1": "v0", "d2": "v2"}
+ALL = V0 + V1 + list(LADDER)
 
 
 def test_every_arm_file_loads_and_says_which_question_it_answers() -> None:
@@ -20,7 +22,8 @@ def test_every_arm_file_loads_and_says_which_question_it_answers() -> None:
     notes = set()
     for name in ALL:
         arm = A.load_arm(name)
-        assert arm.name == name and arm.agent == ("v1" if name in V1 else "v0") and arm.notes.strip()
+        agent = LADDER.get(name) or ("v1" if name in V1 else "v0")
+        assert arm.name == name and arm.agent == agent and arm.notes.strip()
         notes.add(arm.notes)
     assert len(notes) == len(ALL), "two arms with the same notes line answer the same question twice"
 
@@ -172,3 +175,26 @@ def test_a_loop_table_on_a_v0_arm_and_a_v1_arm_without_one_are_refused(tmp_path)
     typed = {**v1, "arm": {**v1["arm"], "loop": {**v1["arm"]["loop"], "rounds": "3"}}}
     with pytest.raises(ValueError, match="rounds"):
         A.parse_arm(typed)
+
+
+def test_a_later_switch_may_be_left_out_of_a_file_and_is_off_when_it_is() -> None:
+    v0 = A.load_arm("v0")
+    assert (v0.switches.evidence, v0.switches.region, v0.switches.extended_features) == (False, False, False)
+    # the cache key sees exactly the five switches every arm had before the later ones, so no cached answer moves
+    assert v0.switches.keyed() == {"drillholes": False, "label_context": False, "oof_scores": False,
+                                   "effort_features": False, "criteria": True}
+
+
+def test_the_ladder_differs_from_the_headline_in_the_information_and_d2_from_d1_in_the_agent() -> None:
+    later = {f"switches.{k}" for k in A.LATER_SWITCHES}
+    assert set(_diff(A.load_arm("v0"), A.load_arm("d1"))) == later | {"prompt_version"}
+    assert set(_diff(A.load_arm("d1"), A.load_arm("d2"))) == {"agent", "prompt_version"}
+    d1 = A.load_arm("d1")
+    assert d1.switches.keyed()["evidence"] is True and d1.model == A.load_arm("v0").model
+
+
+def test_an_unknown_switch_is_still_refused_when_the_later_ones_are_optional(tmp_path) -> None:
+    raw = tomllib.loads((A.arms_dir() / "v0.toml").read_text())
+    raw["arm"]["switches"]["imagery"] = True
+    with pytest.raises(ValueError, match="unknown"):
+        A.parse_arm(raw)

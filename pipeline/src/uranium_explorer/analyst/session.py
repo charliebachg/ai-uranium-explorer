@@ -35,7 +35,7 @@ whatever the scope, because a dashboard cites from it and the scope is the harne
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Literal, Mapping
 
@@ -416,7 +416,7 @@ class Session:
         """What the run manifest records about this session; every rule is present so manifests share a shape."""
         return {
             "purpose": self.purpose, "fold": self.fold, "blind_list_hash": self.blind_list_hash,
-            "switches": asdict(self.switches), "scores_seen": list(self.scores_seen),
+            "switches": self.switches.keyed(), "scores_seen": list(self.scores_seen),
             "n_values": len(self.values), "n_expert_ids": len(self.expert_ids), "n_calls": len(self.calls),
             "refusals": {rule: self.refusals.get(rule, 0) for rule in RULES},
             "effort_rows_dropped": self.effort_rows_dropped,

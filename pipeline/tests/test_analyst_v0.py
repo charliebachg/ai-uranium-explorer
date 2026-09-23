@@ -208,3 +208,37 @@ def test_the_criteria_switch_removes_the_criteria_table_and_its_ids() -> None:
     assert "criteria_breakdown" not in shown["tools"] and set(shown["values"]) == {"b:b-0001:cell:d_fault_m"}
     kept = V0.apply_switches(pack, A.load_arm("v0").switches)
     assert "criteria_breakdown" in kept["tools"] and "b:b-0001:crit:fault_proximity" in kept["values"]
+
+
+def _later_pack() -> dict:
+    """The fake pack plus what a v3 pack carries: an evidence tool, the region and an extended feature."""
+    pack = make_pack("b01")
+    ev_id, rg_id, xf_id = "b:b01:ev:b0:cps", "b:b01:ev:cov:dist_to_cover_edge_m", "b:b01:cell:sed_u_th_max"
+    pack["tools"]["evidence_boulders"] = {"note": "", "rows": [{"kind": "boulder", "cps": 900.0, "cps_id": ev_id}]}
+    pack["tools"]["region"] = {"note": "", "rows": [{"kind": "cover", "dist_to_cover_edge_m": 2000.0,
+                                                     "dist_to_cover_edge_m_id": rg_id}]}
+    pack["tools"]["cell_features"]["rows"].append({"feature": "sed_u_th_max", "value": 3.1, "value_id": xf_id})
+    pack["values"] |= {ev_id: {"id": ev_id, "value": 900.0}, rg_id: {"id": rg_id, "value": 2000.0},
+                       xf_id: {"id": xf_id, "value": 3.1}}
+    return pack
+
+
+def test_the_later_switches_remove_the_evidence_the_region_and_the_extended_features_when_off() -> None:
+    pack = _later_pack()
+    off = V0.apply_switches(pack, A.load_arm("v0").switches)
+    assert "evidence_boulders" not in off["tools"] and "region" not in off["tools"]
+    assert "sed_u_th_max" not in [r["feature"] for r in off["tools"]["cell_features"]["rows"]]
+    assert not {"b:b01:ev:b0:cps", "b:b01:ev:cov:dist_to_cover_edge_m", "b:b01:cell:sed_u_th_max"} & set(off["values"])
+    on = V0.apply_switches(pack, A.load_arm("d1").switches)
+    assert {"evidence_boulders", "region"} <= set(on["tools"]) and "b:b01:ev:b0:cps" in on["values"]
+    assert "sed_u_th_max" in [r["feature"] for r in on["tools"]["cell_features"]["rows"]]
+    # a pack built before the later switches has nothing for them to remove: v0 sees what it always saw
+    assert V0.apply_switches(PACK, A.load_arm("v0").switches) == V0.apply_switches(make_pack("b01"),
+                                                                                  A.load_arm("v0").switches)
+
+
+def test_the_evidence_guide_is_added_only_for_an_arm_shown_the_evidence() -> None:
+    plain = V0.system_for(A.load_arm("v0").switches)
+    rich = V0.system_for(A.load_arm("d1").switches)
+    assert plain == V0.default_system_prompt()
+    assert rich.startswith(plain) and V0.EVIDENCE_GUIDE in rich and not V0.place_names_in(rich)

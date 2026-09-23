@@ -36,6 +36,7 @@ from typing import Any
 from ..backends.base import ExtractionRequest
 from ..ids import sha256_json, short
 from ..prospect import models as M
+from ..prospect.features import EXTENDED_KEYS
 from ..prospect.memo import CRITERIA_FILE, HANDBOOK, check_claims, quotable
 from .arms import ArmConfig, Switches
 
@@ -193,6 +194,36 @@ def default_system_prompt() -> str:
     return system_prompt(HANDBOOK.read_text(), CRITERIA_FILE.read_text())
 
 
+#: how to read the raw evidence, added to the prompt of an arm that is shown it. It says what each kind of
+#: record means and how a geologist weighs it; it changes nothing about the rules, the gate or the answer.
+EVIDENCE_GUIDE = """Raw evidence. Beside the features, this pack lists the records they were built from: lake-sediment
+and lake-water samples with their elements; the ice-flow direction and the radioactive boulders with their rock
+types; lineaments and conductors with their trends; the bedrock units and surficial environments as the maps
+describe them; and, when shown, the regional setting, with basement domains named by letter and described by
+their rocks. Read them as a geologist reads a compilation map:
+- Dispersal runs down-ice. A radioactive boulder down-ice of the cell may have come from it; one up-ice cannot
+  have. Sandstone and conglomerate boulders come from altered cover; granite and pegmatite boulders are often
+  radioactive and barren. Several boulders pointing back toward the cell say more than one.
+- A lake-sediment anomaly says something up-drainage sheds uranium. Weigh uranium against organic content (per
+  loss on ignition) and against thorium, and look for lead and nickel beside it.
+- A conductor along or across a lineament is the pathway-and-trap pairing. Trends that agree matter.
+- The records are what was found where someone looked: few records is unknown, not absent.
+Every derived number (a ratio, a distance, a bearing, a share) is already computed and carries an id; cite it
+like any other value and compute nothing new."""
+
+
+def system_for(switches: Switches) -> str:
+    """The prompt an arm is given: the closed-book prompt, with the evidence guide when the arm is shown raw
+    evidence or the regional setting. Refuses to build if a place name reaches it."""
+    text = default_system_prompt()
+    if getattr(switches, "evidence", False) or getattr(switches, "region", False):
+        text = f"{text}\n\n{EVIDENCE_GUIDE}"
+        leaked = place_names_in(text)
+        if leaked:
+            raise ValueError(f"the closed-book prompt would name a place: {leaked}")
+    return text
+
+
 def user_prompt(bench_id: str, card: bool, pack: bool, passages: bool) -> str:
     lines = [f"Cell {bench_id}. Assess it closed-book from what is staged, and nothing else.", "",
              "Read these first:"]
@@ -216,6 +247,8 @@ _DRILLHOLE_TOOLS = ("drillhole", "drillholes", "holes", "drilling", "collars", "
 _LABEL_TOOLS = ("label_context", "labels", "nearest_label", "nearest_labels")
 _SCORE_TOOLS = ("cell_scores", "scores", "oof_scores", "cell_score_oof", "oof")
 _CRITERIA_TOOLS = ("criteria_breakdown", "criteria")
+#: the raw-evidence tools (`prospect.evidence`) and the regional one, each behind its own switch
+_EVIDENCE_PREFIX, _REGION_TOOL = "evidence_", "region"
 _ROW_KEYS = ("feature", "feature_key", "key", "name")
 
 
@@ -292,11 +325,22 @@ def apply_switches(pack: dict[str, Any], sw: Switches) -> dict[str, Any]:
         if (not sw.drillholes and _tool_is(tool, _DRILLHOLE_TOOLS)) \
                 or (not sw.label_context and _tool_is(tool, _LABEL_TOOLS)) \
                 or (not sw.oof_scores and _tool_is(tool, _SCORE_TOOLS)) \
-                or (not sw.criteria and _tool_is(tool, _CRITERIA_TOOLS)):
+                or (not sw.criteria and _tool_is(tool, _CRITERIA_TOOLS)) \
+                or (not sw.evidence and tool.startswith(_EVIDENCE_PREFIX)) \
+                or (not sw.region and tool == _REGION_TOOL):
             for r in rows.pop(tool):
                 if isinstance(r, dict):
                     dropped_ids |= _cited_ids(r)
             dropped = True
+    if not sw.extended_features:
+        for tool, rs in rows.items():
+            kept = [r for r in rs if not (isinstance(r, dict) and r.get("feature") in EXTENDED_KEYS)]
+            if len(kept) < len(rs):
+                for r in rs:
+                    if isinstance(r, dict) and r.get("feature") in EXTENDED_KEYS:
+                        dropped_ids |= _cited_ids(r)
+                rows[tool] = kept
+                dropped = True
     if not sw.effort_features:
         for tool, rs in rows.items():
             kept = []
@@ -369,7 +413,7 @@ def context_hash(bench_id: str, arm: ArmConfig) -> str:
     """The bench id and the switches, so two arms over one cell can never share a cached answer, even when a
     switch happens to remove nothing from this particular pack."""
     return short(sha256_json({"bench_id": bench_id, "inputs": asdict(arm.inputs),
-                              "switches": asdict(arm.switches)}))
+                              "switches": arm.switches.keyed()}))
 
 
 def build_request(
@@ -397,7 +441,7 @@ def build_request(
         task=TASK,
         images=images,
         stage_files=tuple(files),
-        system_prompt=system if system is not None else default_system_prompt(),
+        system_prompt=system if system is not None else system_for(arm.switches),
         user_prompt=user_prompt(bench_id, card=bool(images), pack=arm.inputs.pack, passages=with_passages),
         schema=ANSWER_SCHEMA,
         schema_version=SCHEMA_VERSION,
