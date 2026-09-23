@@ -1246,14 +1246,14 @@ layers in a square window with no basemap, labels or place names, and the deposi
 blind-list per cell, scrubbed passages where retrieval returns any, the out-of-fold scores, the key (hashed on
 its own and never inside a pack), the held-out ids and a manifest with every file's hash. `ue bench audit`
 re-hashes everything and scans every pack and passage for anything that places or names the ground; `ue bench
-show` prints the counts and shortfalls. Three pack switches were added after v2 and are off unless a spec turns
+show` prints the counts and shortfalls. Three pack switches were added after v1 and are off unless a spec turns
 them on, so an older spec builds and hashes as it did: `extended_features` (the extended features in the
 feature and coverage tables, and the extended model among the out-of-fold scores), `evidence` (the four raw
 evidence tools) and `region` (the regional setting). The domain one-hots never reach a pack, since their keys
 name ground, and a pack built with any of the three is also scrubbed of the place names the closed-book prompt
-refuses. Benchmark v3 is v2's cells, seed and folds with all three on; an arm asks for each with a switch of the
+refuses. Benchmark v2 is v1's cells, seed and folds with all three on; an arm asks for each with a switch of the
 same name, and one that asks for a part its benchmark was built without is refused. The information ladder on
-v3 is `d1` (v0 with the three switches on and the prompt's guide to reading raw evidence) and `d2` (the same
+v2 is `d1` (v0 with the three switches on and the prompt's guide to reading raw evidence) and `d2` (the same
 information through the family readers). `ue bench oof-scores --write` refits the learned and effort models
 the way the model search judges them and writes `derived.cell_score_oof`, the table every baseline and every
 blinded session reads instead of the fitted scores.

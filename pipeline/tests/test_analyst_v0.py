@@ -211,7 +211,7 @@ def test_the_criteria_switch_removes_the_criteria_table_and_its_ids() -> None:
 
 
 def _later_pack() -> dict:
-    """The fake pack plus what a v3 pack carries: an evidence tool, the region and an extended feature."""
+    """The fake pack plus what a v2 pack carries: an evidence tool, the region and an extended feature."""
     pack = make_pack("b01")
     ev_id, rg_id, xf_id = "b:b01:ev:b0:cps", "b:b01:ev:cov:dist_to_cover_edge_m", "b:b01:cell:sed_u_th_max"
     pack["tools"]["evidence_boulders"] = {"note": "", "rows": [{"kind": "boulder", "cps": 900.0, "cps_id": ev_id}]}

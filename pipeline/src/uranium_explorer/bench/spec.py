@@ -62,7 +62,7 @@ class CardSpec:
     drillholes_variant: bool = False
 
 
-#: pack switches added after v2. Off, they are left out of the switches and the manifest, so a spec written
+#: pack switches added after v1. Off, they are left out of the switches and the manifest, so a spec written
 #: before them builds and hashes exactly as it did.
 LATER_PACK_SWITCHES = ("evidence", "region", "extended_features")
 
@@ -83,7 +83,7 @@ class PackSpec:
         return {k: v for k, v in asdict(self).items() if v or k not in LATER_PACK_SWITCHES}
 
     def later(self) -> bool:
-        """Whether any switch added after v2 is on: such a pack is also scrubbed of place names."""
+        """Whether any switch added after v1 is on: such a pack is also scrubbed of place names."""
         return any(getattr(self, k) for k in LATER_PACK_SWITCHES)
 
 

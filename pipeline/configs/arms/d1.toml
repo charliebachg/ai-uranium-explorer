@@ -1,5 +1,5 @@
 # Rung D1 of the information ladder: v0 given more to read. Every switch is stated; D1 differs from v0 only in
-# the three switches added for benchmark v3 and the prompt's guide to the raw evidence.
+# the three switches added for benchmark v2 and the prompt's guide to the raw evidence.
 [arm]
 name = "d1"
 agent = "v0"

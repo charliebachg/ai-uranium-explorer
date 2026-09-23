@@ -183,7 +183,9 @@ class ClaudeCliBackend:
             if limit:
                 raise limit
             if env.get("is_error"):
-                raise TransientBackendError(f"claude reported an error: {str(env.get('result'))[:300]}")
+                raise TransientBackendError(
+                    f"claude reported an error ({env.get('subtype')}, {env.get('num_turns')} turns, "
+                    f"${env.get('total_cost_usd')}): {str(env.get('result'))[:300]}")
             if env.get("permission_denials"):
                 raise BackendConfigError(f"permission denied inside the call: {env['permission_denials']}")
             turns = env.get("num_turns")

@@ -33,7 +33,9 @@ from .arms import ArmConfig
 
 TASK_STAGE, TASK_RANK = "analyst_v2_reading", "analyst_v2"
 SCHEMA_VERSION = "1.0.0"
-SUMMARY_MAX = 500
+#: readers write 550 to 800 characters when nothing stops them (the smoke run); 500 turned most first answers
+#: into refusals and, as a schema limit, some into CLI errors
+SUMMARY_MAX = 1000
 READINGS_FILE = "readings.md"
 ASSESSMENTS = ("for", "neutral", "against", "unknown")
 
@@ -85,7 +87,9 @@ READING_SCHEMA: dict[str, Any] = {
         "strength": {"type": "number", "minimum": 0, "maximum": 1},
         "claims": V0.ANSWER_SCHEMA["properties"]["claims"],
         "unknowns": {"type": "array", "items": {"type": "string"}},
-        "summary": {"type": "string", "maxLength": SUMMARY_MAX},
+        # no maxLength here: a schema the answer fails is an error from the CLI with nothing in it, while the
+        # gate's length check is a refusal the reader is told about and gets its one retry for
+        "summary": {"type": "string"},
     },
 }
 

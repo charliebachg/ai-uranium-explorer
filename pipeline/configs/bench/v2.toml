@@ -1,5 +1,6 @@
-# UraniumBench v1, analyst track. Change a number here and the next build is a different benchmark; the
-# version string is part of the output path, so keep it in step with the filename.
+# UraniumBench v2, analyst track: v1's cells, seed and folds, with packs that also carry the extended
+# features, the raw evidence around each cell and the regional setting. Change a number here and the next build
+# is a different benchmark; the version string is part of the output path, so keep it in step with the filename.
 
 version = "v2"
 seed = 20260920
@@ -35,6 +36,10 @@ drillholes_variant = true
 label_context = true
 oof_scores = true
 effort_features = true
+# added for v2: arms switch each of these on or off; the packs carry them all
+evidence = true
+region = true
+extended_features = true
 
 [blind]
 radius_km = 10

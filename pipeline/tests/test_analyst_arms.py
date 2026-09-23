@@ -12,7 +12,7 @@ from uranium_explorer.analyst import arms as A
 V0 = ["v0", "v0-text", "v0-card", "v0-sonnet", "v0-holes", "v0-labels", "v0-scores", "v0-retrieval", "v0-features", "v0-qwen38"]
 V1 = ["v1", "v1-noverify", "v1-K1", "v1-strong", "v1-triage", "v1-modelplanner", "v1-cumulative", "v1-cheap", "v1-openrouter", "v1-anthropic-or",
       "v1-skipunmeasured", "v1-batch", "v1-scoped", "v1-scoped-batch"]
-#: the information ladder on benchmark v3: D1 is a v0 arm, D2 the family-staged v2 agent
+#: the information ladder on benchmark v2: D1 is a v0 arm, D2 the family-staged v2 agent
 LADDER = {"d1": "v0", "d2": "v2"}
 ALL = V0 + V1 + list(LADDER)
 

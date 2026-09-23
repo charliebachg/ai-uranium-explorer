@@ -162,3 +162,12 @@ def test_an_arm_asking_for_the_evidence_is_refused_on_a_benchmark_built_without_
     with pytest.raises(ValueError, match="evidence, which benchmark"):
         RUN.run_arm(bench.version, d2_arm(), lambda _arm: ReadingBackend(), budget_usd=5.0, log=lambda *_: None,
                     track=False, cache_root=rt.cache)
+
+
+def test_the_summary_length_is_the_gates_to_refuse_not_the_schemas() -> None:
+    """A schema the answer fails comes back from the CLI as an error with nothing in it; a gate refusal is a
+    reason the reader is told, with its one retry."""
+    assert "maxLength" not in FAM.READING_SCHEMA["properties"]["summary"]
+    geo = next(f for f in FAM.FAMILIES if f.name == "geochemistry")
+    long = {**ReadingBackend().reading("geochemistry", "b01"), "summary": "x" * (FAM.SUMMARY_MAX + 1)}
+    assert any("summary is" in p for p in FAM.gate_reading(long, FAM.share(rich_pack(), geo)))

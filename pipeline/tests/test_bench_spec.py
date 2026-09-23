@@ -61,10 +61,10 @@ def test_a_missing_spec_says_so() -> None:
 
 
 def test_the_later_pack_switches_leave_an_older_spec_as_it_was_and_are_carried_when_on() -> None:
+    v1 = S.load_spec("v1")
+    assert v1.pack.switches() == {"label_context": True, "oof_scores": True, "effort_features": True}
+    assert v1.as_dict()["pack"] == v1.pack.switches() and not v1.pack.later()
     v2 = S.load_spec("v2")
-    assert v2.pack.switches() == {"label_context": True, "oof_scores": True, "effort_features": True}
-    assert v2.as_dict()["pack"] == v2.pack.switches() and not v2.pack.later()
-    v3 = S.load_spec("v3")
-    assert v3.pack.later() and {"evidence", "region", "extended_features"} <= set(v3.pack.switches())
-    # v3 is v2's benchmark with richer packs: the same seed, strata, folds and cards
-    assert (v3.seed, v3.strata, v3.fold_km, v3.n_folds, v3.card) == (v2.seed, v2.strata, v2.fold_km, v2.n_folds, v2.card)
+    assert v2.pack.later() and {"evidence", "region", "extended_features"} <= set(v2.pack.switches())
+    # v2 is v1's benchmark with richer packs: the same seed, strata, folds and cards
+    assert (v2.seed, v2.strata, v2.fold_km, v2.n_folds, v2.card) == (v1.seed, v1.strata, v1.fold_km, v1.n_folds, v1.card)
