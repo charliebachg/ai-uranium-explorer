@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-23T11:41:21+00:00",
+ "generated_at": "2026-09-23T11:55:53+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -6252,7 +6252,7 @@
  "bench": {
   "version": "v2",
   "manifest_sha256": "299f6ad19bcb121a1a8a22989ab6d36323c03f8b89c81eac0ec0156d42bb1b64",
-  "computed_at": "2026-09-23T11:38:14+00:00",
+  "computed_at": "2026-09-23T11:55:22+00:00",
   "rows": [
    {
     "name": "d1",
@@ -6586,8 +6586,8 @@
     "n": "c:bench:v2:v1:n",
     "n_pos": "c:bench:v2:v1:n_pos",
     "n_neg": "c:bench:v2:v1:n_neg",
-    "run_id": "20260923T113051Z-bench",
-    "mlflow_run_id": "335ae787e1774aa0ade0959031d1c267",
+    "run_id": "20260923T115137Z-bench",
+    "mlflow_run_id": "e6bb083af6154734a5b5728f1010d74e",
     "metrics": {
      "f1": "c:bench:v2:v1:f1",
      "precision": "c:bench:v2:v1:precision",
@@ -19564,10 +19564,10 @@
    "id": "c:bench:v2:v1:n",
    "kind": "stat",
    "as_printed": null,
-   "value": 113,
+   "value": 114,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "labelled open cells scored; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "labelled open cells scored; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:n_pos": {
    "id": "c:bench:v2:v1:n_pos",
@@ -19576,70 +19576,70 @@
    "value": 50,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "positive cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "positive cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:n_neg": {
    "id": "c:bench:v2:v1:n_neg",
    "kind": "stat",
    "as_printed": null,
-   "value": 63,
+   "value": 64,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "negative cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:f1": {
    "id": "c:bench:v2:v1:f1",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5289,
+   "value": 0.5246,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "f1; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "f1; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:f1.lo": {
    "id": "c:bench:v2:v1:f1.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.431,
+   "value": 0.4348,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; f1; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; f1; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:f1.hi": {
    "id": "c:bench:v2:v1:f1.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6167,
+   "value": 0.6061,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; f1; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; f1; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:precision": {
    "id": "c:bench:v2:v1:precision",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4507,
+   "value": 0.4444,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "precision; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "precision; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:precision.lo": {
    "id": "c:bench:v2:v1:precision.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.377,
+   "value": 0.3784,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; precision; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; precision; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:precision.hi": {
    "id": "c:bench:v2:v1:precision.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5257,
+   "value": 0.507,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; precision; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; precision; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:recall": {
    "id": "c:bench:v2:v1:recall",
@@ -19648,7 +19648,7 @@
    "value": 0.64,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "recall; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "recall; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:recall.lo": {
    "id": "c:bench:v2:v1:recall.lo",
@@ -19657,7 +19657,7 @@
    "value": 0.5,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; recall; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; recall; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:recall.hi": {
    "id": "c:bench:v2:v1:recall.hi",
@@ -19666,97 +19666,97 @@
    "value": 0.78,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; recall; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; recall; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc": {
    "id": "c:bench:v2:v1:pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4658,
+   "value": 0.4619,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "pr_auc; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "pr_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc.lo": {
    "id": "c:bench:v2:v1:pr_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3708,
+   "value": 0.3674,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; pr_auc; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; pr_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc.hi": {
    "id": "c:bench:v2:v1:pr_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6233,
+   "value": 0.6272,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; pr_auc; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; pr_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc": {
    "id": "c:bench:v2:v1:roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.52,
+   "value": 0.5205,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "roc_auc; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "roc_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc.lo": {
    "id": "c:bench:v2:v1:roc_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3929,
+   "value": 0.3825,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; roc_auc; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; roc_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc.hi": {
    "id": "c:bench:v2:v1:roc_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6479,
+   "value": 0.6531,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; roc_auc; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; roc_auc; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc_all": {
    "id": "c:bench:v2:v1:pr_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.454,
+   "value": 0.4504,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "pr_auc_all; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "pr_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc_all.lo": {
    "id": "c:bench:v2:v1:pr_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3946,
+   "value": 0.3889,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; pr_auc_all; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; pr_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc_all.hi": {
    "id": "c:bench:v2:v1:pr_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5618,
+   "value": 0.564,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; pr_auc_all; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; pr_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc_all": {
    "id": "c:bench:v2:v1:roc_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5065,
+   "value": 0.5044,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "roc_auc_all; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "roc_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc_all.lo": {
    "id": "c:bench:v2:v1:roc_auc_all.lo",
@@ -19765,314 +19765,314 @@
    "value": 0.395,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; roc_auc_all; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; roc_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc_all.hi": {
    "id": "c:bench:v2:v1:roc_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6084,
+   "value": 0.6087,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; roc_auc_all; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; roc_auc_all; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:ece": {
    "id": "c:bench:v2:v1:ece",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1424,
+   "value": 0.1462,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "ece; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "ece; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:ece.lo": {
    "id": "c:bench:v2:v1:ece.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.112,
+   "value": 0.1159,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; ece; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; ece; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:ece.hi": {
    "id": "c:bench:v2:v1:ece.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2187,
+   "value": 0.2246,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; ece; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; ece; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:abstain_rate": {
    "id": "c:bench:v2:v1:abstain_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3274,
+   "value": 0.3246,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "abstain_rate; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:abstain_rate.lo": {
    "id": "c:bench:v2:v1:abstain_rate.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2478,
+   "value": 0.2454,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; abstain_rate; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:abstain_rate.hi": {
    "id": "c:bench:v2:v1:abstain_rate.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4248,
+   "value": 0.4037,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; abstain_rate; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc_rank": {
    "id": "c:bench:v2:v1:pr_auc_rank",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.448,
+   "value": 0.4442,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "pr_auc_rank; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "pr_auc_rank; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc_rank.lo": {
    "id": "c:bench:v2:v1:pr_auc_rank.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3843,
+   "value": 0.3811,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; pr_auc_rank; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; pr_auc_rank; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:pr_auc_rank.hi": {
    "id": "c:bench:v2:v1:pr_auc_rank.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5565,
+   "value": 0.563,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; pr_auc_rank; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; pr_auc_rank; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc_rank": {
    "id": "c:bench:v2:v1:roc_auc_rank",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4971,
+   "value": 0.4952,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "roc_auc_rank; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "roc_auc_rank; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc_rank.lo": {
    "id": "c:bench:v2:v1:roc_auc_rank.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3846,
+   "value": 0.3868,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; roc_auc_rank; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; roc_auc_rank; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:roc_auc_rank.hi": {
    "id": "c:bench:v2:v1:roc_auc_rank.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6064,
+   "value": 0.6013,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; roc_auc_rank; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; roc_auc_rank; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:coverage": {
    "id": "c:bench:v2:v1:coverage",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8142,
+   "value": 0.8158,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "coverage; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "coverage; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:coverage.lo": {
    "id": "c:bench:v2:v1:coverage.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7345,
+   "value": 0.7456,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; coverage; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; coverage; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:coverage.hi": {
    "id": "c:bench:v2:v1:coverage.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.885,
+   "value": 0.8774,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; coverage; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; coverage; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:brier": {
    "id": "c:bench:v2:v1:brier",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2808,
+   "value": 0.2814,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "brier; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "brier; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:brier.lo": {
    "id": "c:bench:v2:v1:brier.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2459,
+   "value": 0.2503,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; brier; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; brier; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:brier.hi": {
    "id": "c:bench:v2:v1:brier.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.316,
+   "value": 0.3157,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; brier; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; brier; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:cal_slope": {
    "id": "c:bench:v2:v1:cal_slope",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0037,
+   "value": -0.0018,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "cal_slope; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "cal_slope; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:cal_slope.lo": {
    "id": "c:bench:v2:v1:cal_slope.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": -0.6279,
+   "value": -0.6373,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "lower bound of the 95% interval; cal_slope; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "lower bound of the 95% interval; cal_slope; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:cal_slope.hi": {
    "id": "c:bench:v2:v1:cal_slope.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.639,
+   "value": 0.5865,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "upper bound of the 95% interval; cal_slope; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "upper bound of the 95% interval; cal_slope; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:gate_rejection_rate": {
    "id": "c:bench:v2:v1:gate_rejection_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1953,
+   "value": 0.2,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "gate_rejection_rate; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "gate_rejection_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:probe_abstain_rate": {
    "id": "c:bench:v2:v1:probe_abstain_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6,
+   "value": 0.625,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "probe_abstain_rate; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "probe_abstain_rate; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:cost_usd_per_cell": {
    "id": "c:bench:v2:v1:cost_usd_per_cell",
    "kind": "stat",
    "as_printed": null,
-   "value": 2.0493,
+   "value": 2.0549,
    "unit_as_printed": null,
    "fmt": "m2",
-   "note": "cost_usd_per_cell; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "cost_usd_per_cell; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:latency_s_per_cell": {
    "id": "c:bench:v2:v1:latency_s_per_cell",
    "kind": "stat",
    "as_printed": null,
-   "value": 248.75,
+   "value": 249.7127,
    "unit_as_printed": null,
    "fmt": "m1",
    "unit": "s",
-   "note": "latency_s_per_cell; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "latency_s_per_cell; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:n_chains": {
    "id": "c:bench:v2:v1:stage:n_chains",
    "kind": "stat",
    "as_printed": null,
-   "value": 128,
+   "value": 130,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "chains the staged loop ran; the denominator of the other stage columns; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "chains the staged loop ran; the denominator of the other stage columns; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:gate_rejection_rate": {
    "id": "c:bench:v2:v1:stage:gate_rejection_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0517,
+   "value": 0.0521,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "node gate refusals over executor attempts; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "node gate refusals over executor attempts; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:valid_rate": {
    "id": "c:bench:v2:v1:stage:valid_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8125,
+   "value": 0.8077,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "share of chains a verifier round validated; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "share of chains a verifier round validated; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:verifier_catch_rate": {
    "id": "c:bench:v2:v1:stage:verifier_catch_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6406,
+   "value": 0.6462,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "share of chains the verifier refused at least once; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "share of chains the verifier refused at least once; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:rounds_to_valid_mean": {
    "id": "c:bench:v2:v1:stage:rounds_to_valid_mean",
    "kind": "stat",
    "as_printed": null,
-   "value": 1.7212,
+   "value": 1.7238,
    "unit_as_printed": null,
    "fmt": "m2",
-   "note": "verifier rounds per chain, over the chains that validated; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "verifier rounds per chain, over the chains that validated; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:reexecuted_mean": {
    "id": "c:bench:v2:v1:stage:reexecuted_mean",
    "kind": "stat",
    "as_printed": null,
-   "value": 1.6172,
+   "value": 1.6308,
    "unit_as_printed": null,
    "fmt": "m2",
-   "note": "nodes re-executed on the verifier's feedback, per chain; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "nodes re-executed on the verifier's feedback, per chain; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:verifier_agreement_rate": {
    "id": "c:bench:v2:v1:stage:verifier_agreement_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8516,
+   "value": 0.8538,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "share of chains whose verifier label matched the final verdict; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "share of chains whose verifier label matched the final verdict; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:stage:decider_agreement_rate": {
    "id": "c:bench:v2:v1:stage:decider_agreement_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8293,
+   "value": 0.832,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "share of chains where the weighted sum and the adjudicator fell on the same side of the threshold; over 128 chains; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "share of chains where the weighted sum and the adjudicator fell on the same side of the threshold; over 130 chains; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:deposit:n": {
    "id": "c:bench:v2:v1:deposit:n",
@@ -20081,7 +20081,7 @@
    "value": 18,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "n over the deposit cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "n over the deposit cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:deposit:accuracy": {
    "id": "c:bench:v2:v1:deposit:accuracy",
@@ -20090,7 +20090,7 @@
    "value": 0.7778,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "accuracy over the deposit cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "accuracy over the deposit cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:deposit:abstain_rate": {
    "id": "c:bench:v2:v1:deposit:abstain_rate",
@@ -20099,7 +20099,7 @@
    "value": 0.2222,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "abstain_rate over the deposit cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "abstain_rate over the deposit cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:occurrence:n": {
    "id": "c:bench:v2:v1:occurrence:n",
@@ -20108,7 +20108,7 @@
    "value": 32,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "n over the occurrence cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "n over the occurrence cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:occurrence:accuracy": {
    "id": "c:bench:v2:v1:occurrence:accuracy",
@@ -20117,7 +20117,7 @@
    "value": 0.5625,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "accuracy over the occurrence cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "accuracy over the occurrence cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:occurrence:abstain_rate": {
    "id": "c:bench:v2:v1:occurrence:abstain_rate",
@@ -20126,34 +20126,34 @@
    "value": 0.375,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "abstain_rate over the occurrence cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "abstain_rate over the occurrence cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:negative:n": {
    "id": "c:bench:v2:v1:negative:n",
    "kind": "stat",
    "as_printed": null,
-   "value": 63,
+   "value": 64,
    "unit_as_printed": null,
    "fmt": "int",
-   "note": "n over the negative cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "n over the negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:negative:accuracy": {
    "id": "c:bench:v2:v1:negative:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0476,
+   "value": 0.0469,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "accuracy over the negative cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "accuracy over the negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:v1:negative:abstain_rate": {
    "id": "c:bench:v2:v1:negative:abstain_rate",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3333,
+   "value": 0.3281,
    "unit_as_printed": null,
    "fmt": "ratio3",
-   "note": "abstain_rate over the negative cells; arm v1 (claude-opus-5) on 113 open cells of benchmark v2"
+   "note": "abstain_rate over the negative cells; arm v1 (claude-opus-5) on 114 open cells of benchmark v2"
   },
   "c:bench:v2:random_expected:n": {
    "id": "c:bench:v2:random_expected:n",
@@ -23651,7 +23651,7 @@
    "id": "c:bench:v2:contrast:v1~v0:diff",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0046,
+   "value": 0.0032,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "PR-AUC of the ranking, v1 minus v0, paired over the same cells; v1 against v0 on 114 labelled open cells of benchmark v2"
@@ -23660,7 +23660,7 @@
    "id": "c:bench:v2:contrast:v1~v0:diff.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": -0.106,
+   "value": -0.1076,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; the paired difference; v1 against v0 on 114 labelled open cells of benchmark v2"
@@ -23669,7 +23669,7 @@
    "id": "c:bench:v2:contrast:v1~v0:diff.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1224,
+   "value": 0.1179,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; the paired difference; v1 against v0 on 114 labelled open cells of benchmark v2"
@@ -23678,7 +23678,7 @@
    "id": "c:bench:v2:contrast:v1~v0:mcnemar_b",
    "kind": "stat",
    "as_printed": null,
-   "value": 19,
+   "value": 18,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "cells only v1 got right; v1 against v0 on 114 labelled open cells of benchmark v2"
@@ -23813,7 +23813,7 @@
    "id": "c:bench:v2:contrast:d2~v1:diff",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0552,
+   "value": 0.0566,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "PR-AUC of the ranking, d2 minus v1, paired over the same cells; d2 against v1 on 114 labelled open cells of benchmark v2"
@@ -23822,7 +23822,7 @@
    "id": "c:bench:v2:contrast:d2~v1:diff.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": -0.0798,
+   "value": -0.0782,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; the paired difference; d2 against v1 on 114 labelled open cells of benchmark v2"
@@ -23831,7 +23831,7 @@
    "id": "c:bench:v2:contrast:d2~v1:diff.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1809,
+   "value": 0.1833,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; the paired difference; d2 against v1 on 114 labelled open cells of benchmark v2"
@@ -23849,7 +23849,7 @@
    "id": "c:bench:v2:contrast:d2~v1:mcnemar_c",
    "kind": "stat",
    "as_printed": null,
-   "value": 14,
+   "value": 13,
    "unit_as_printed": null,
    "fmt": "int",
    "note": "cells only v1 got right; d2 against v1 on 114 labelled open cells of benchmark v2"
@@ -29866,5 +29866,5 @@
    "note": "abstain_rate over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
   }
  },
- "build_id": "19b424693056"
+ "build_id": "7b9eb289a821"
 }
