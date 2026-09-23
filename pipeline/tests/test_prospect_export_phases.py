@@ -257,3 +257,25 @@ def test_bench_carries_every_version_highest_first_and_drops_a_row_scored_on_no_
     assert [e["version"] for e in b["earlier"]] == ["v2"], "an earlier version's table rides along in full"
     assert [r["name"] for r in b["earlier"][0]["rows"]] == ["random_expected"]
     assert {v["id"].split(":")[2] for v in vals} == {"v10", "v2"}, "each version's numbers are minted under its own ids"
+
+
+def test_a_derived_row_and_the_fixed_contrasts_are_printed_as_values(tmp_path: Path) -> None:
+    vote = {**BASELINE, "name": "d1-vote5", "kind": "derived", "model": "claude-opus-5", "pr_auc_rank": 0.61,
+            "pr_auc_rank_ci": [0.5, 0.72], "coverage": 1.0, "brier": 0.23, "cal_slope": 0.8}
+    (tmp_path / "v2").mkdir(parents=True)
+    (tmp_path / "v2" / "table.json").write_text(json.dumps({
+        "version": "v2", "computed_at": "2026-09-23T10:00:00+00:00", "manifest_sha256": "c" * 64, "rows": [vote],
+        "contrasts": [{"first": "d1-vote5", "second": "extended", "question": "the voted single shot against the fitted model",
+                       "diff": 0.09, "diff_ci": [-0.02, 0.2], "p_not_better": 0.06, "cells": 40,
+                       "mcnemar": {"b": 21, "c": 12, "p": 0.163}},
+                      {"first": "d2", "second": "d1", "question": "never computed", "diff": None, "cells": 0}]}))
+    vals: list[dict] = []
+    b = X._bench_block(vals, tmp_path)
+    ids = {v["id"]: v for v in vals}
+    row = b["rows"][0]
+    assert row["kind"] == "derived" and ids[row["metrics"]["pr_auc_rank"]]["value"] == 0.61
+    assert {"coverage", "brier", "cal_slope"} <= set(row["metrics"]) and "pr_auc_rank" in row["ci"]
+    (c,) = b["contrasts"]
+    assert c["first"] == "d1-vote5" and ids[c["diff"]]["value"] == 0.09 and len(c["diff_ci"]) == 2
+    assert ids[c["mcnemar"]["b"]]["value"] == 21 and ids[c["mcnemar"]["p"]]["value"] == 0.163
+    assert c["diff"] == "c:bench:v2:contrast:d1-vote5~extended:diff"

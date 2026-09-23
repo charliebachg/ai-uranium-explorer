@@ -422,7 +422,7 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
   return (
     <Section
       title="The analyst benchmark"
-      hint="One row is one arm or one baseline on the same open cells of the frozen benchmark. An abstention is never a positive, and an answer the gate refused counts as an abstention."
+      hint="Every row on the same open cells of the frozen benchmark. Ranked by the model's own probability over every cell; a refused answer ranks at 0.5."
     >
       {/* eight stage columns need eight definitions; they belong under the table, not across the top of it */}
       <details className="mb-2" data-testid="bench-columns">
@@ -431,6 +431,9 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
         </summary>
         <ul className="mt-1.5 space-y-1 border-line border-l pl-3 text-[11.5px] text-ink-3">
           <li>Probe cells are not scored. Intervals are bootstraps over cells.</li>
+          <li>Rank PR-AUC: every cell ranked by the stated probability, whatever the verdict.</li>
+          <li>Coverage: share of cells with a usable probability. Brier: squared error of it.</li>
+          <li>Derived: no model call; a vote over an arm's samples, or weights fitted over its readings.</li>
           <li>Node gate: the gate's refusals over executor attempts.</li>
           <li>Valid: the share of chains a verifier round validated.</li>
           <li>Caught: the share the verifier refused at least once.</li>
@@ -449,10 +452,13 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
 
 /** One version's table, arms first by F1, then the baselines, then the line naming what it was scored against. */
 function BenchTableView({ table }: { table: BenchTable }) {
-  const byF1 = (a: BenchRow, b: BenchRow) => (numberOf(b.metrics.f1) ?? -1) - (numberOf(a.metrics.f1) ?? -1);
+  // the job is ranking, so rows sort by the ranking metric; a table scored before it existed sorts by F1
+  const rank = (r: BenchRow) => numberOf(r.metrics.pr_auc_rank) ?? numberOf(r.metrics.f1) ?? -1;
+  const byRank = (a: BenchRow, b: BenchRow) => rank(b) - rank(a);
   const rows = [
-    ...table.rows.filter((r) => r.kind === "arm").sort(byF1),
-    ...table.rows.filter((r) => r.kind === "baseline").sort(byF1),
+    ...table.rows.filter((r) => r.kind === "arm").sort(byRank),
+    ...table.rows.filter((r) => r.kind === "derived").sort(byRank),
+    ...table.rows.filter((r) => r.kind === "baseline").sort(byRank),
   ];
   return (
     <div className="mt-3" data-testid="bench-version" data-version={table.version}>
@@ -460,7 +466,7 @@ function BenchTableView({ table }: { table: BenchTable }) {
         <table className="w-full text-[12.5px]" data-testid="bench-table">
           <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
             <tr>
-              <th colSpan={10} className="py-1 text-left font-normal">
+              <th colSpan={12} className="py-1 text-left font-normal">
                 against the labels
               </th>
               <th
@@ -475,10 +481,12 @@ function BenchTableView({ table }: { table: BenchTable }) {
               <th className="py-1.5 text-left font-normal">Kind</th>
               <th className="py-1.5 text-left font-normal">Model</th>
               <th className="py-1.5 text-right font-normal">n</th>
+              <th className="py-1.5 text-right font-normal">Rank PR-AUC</th>
               <th className="py-1.5 text-right font-normal">
                 <span data-chrome>F1</span>
               </th>
-              <th className="py-1.5 text-right font-normal">PR-AUC</th>
+              <th className="py-1.5 text-right font-normal">Coverage</th>
+              <th className="py-1.5 text-right font-normal">Brier</th>
               <th className="py-1.5 text-right font-normal">Abstain</th>
               <th className="py-1.5 text-right font-normal">Gate rejected</th>
               <th className="py-1.5 text-right font-normal">$ per cell</th>
@@ -500,7 +508,55 @@ function BenchTableView({ table }: { table: BenchTable }) {
           </tbody>
         </table>
       </div>
+      <BenchContrasts table={table} />
       <BenchNaming table={table} />
+    </div>
+  );
+}
+
+/** The comparisons fixed before the runs: a paired difference in rank PR-AUC, and McNemar on verdicts. */
+function BenchContrasts({ table }: { table: BenchTable }) {
+  if (!table.contrasts.length) return null;
+  return (
+    <div className="mt-3 overflow-x-auto">
+      <table className="w-full text-[12.5px]" data-testid="bench-contrasts">
+        <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
+          <tr>
+            <th className="py-1.5 text-left font-normal">Comparison, fixed before the runs</th>
+            <th className="py-1.5 text-left font-normal">Rows</th>
+            <th className="py-1.5 text-right font-normal">Δ rank PR-AUC</th>
+            <th className="py-1.5 text-right font-normal">Only first right</th>
+            <th className="py-1.5 text-right font-normal">Only second right</th>
+            <th className="py-1.5 text-right font-normal">McNemar p</th>
+          </tr>
+        </thead>
+        <tbody>
+          {table.contrasts.map((c) => (
+            <tr key={`${c.first}~${c.second}`} className="border-line border-t" data-testid="bench-contrast">
+              <td className="py-1.5">{c.question}</td>
+              <td className="py-1.5">
+                <span data-ident>{c.first}</span>
+                <span className="text-ink-3" data-chrome>
+                  {" vs "}
+                </span>
+                <span data-ident>{c.second}</span>
+              </td>
+              <td className="py-1.5 text-right">
+                <Metric id={c.diff} ci={c.diff_ci} />
+              </td>
+              <td className="py-1.5 text-right">
+                <Metric id={c.mcnemar?.b} />
+              </td>
+              <td className="py-1.5 text-right">
+                <Metric id={c.mcnemar?.c} />
+              </td>
+              <td className="py-1.5 text-right">
+                <Metric id={c.mcnemar?.p} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -533,10 +589,16 @@ function BenchLine({ row }: { row: BenchRow }) {
         <V id={row.n} />
       </td>
       <td className="py-1.5 text-right">
+        <Metric id={row.metrics.pr_auc_rank} ci={row.ci?.pr_auc_rank} />
+      </td>
+      <td className="py-1.5 text-right">
         <Metric id={row.metrics.f1} ci={row.ci?.f1} />
       </td>
       <td className="py-1.5 text-right">
-        <Metric id={row.metrics.pr_auc} ci={row.ci?.pr_auc} />
+        <Metric id={row.metrics.coverage} />
+      </td>
+      <td className="py-1.5 text-right">
+        <Metric id={row.metrics.brier} />
       </td>
       <td className="py-1.5 text-right">
         <Metric id={row.metrics.abstain_rate} />

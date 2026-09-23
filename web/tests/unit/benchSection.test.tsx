@@ -164,3 +164,86 @@ describe("the analyst benchmark table with stage columns", () => {
     expect(kinds).toEqual(["arm", "arm", "baseline"]);
   });
 });
+
+describe("the ranking columns, the derived rows and the comparisons fixed before the runs", () => {
+  const D1 = "c:bench:v2:d1";
+  const VOTE = "c:bench:v2:d1-vote5";
+  const EXT = "c:bench:v2:extended";
+  const C = "c:bench:v2:contrast:d1~extended";
+  const values: ValRegistry = Object.fromEntries(
+    [
+      stat(`${D1}:n`, 114, "int"),
+      stat(`${D1}:pr_auc_rank`, 0.61, "ratio3"),
+      stat(`${D1}:coverage`, 0.97, "ratio3"),
+      stat(`${D1}:brier`, 0.24, "ratio3"),
+      stat(`${VOTE}:n`, 114, "int"),
+      stat(`${VOTE}:pr_auc_rank`, 0.66, "ratio3"),
+      stat(`${EXT}:n`, 114, "int"),
+      stat(`${EXT}:pr_auc_rank`, 0.52, "ratio3"),
+      stat(`${C}:diff`, 0.09, "ratio3"),
+      stat(`${C}:diff.lo`, -0.02, "ratio3"),
+      stat(`${C}:diff.hi`, 0.2, "ratio3"),
+      stat(`${C}:mcnemar_b`, 21, "int"),
+      stat(`${C}:mcnemar_c`, 12, "int"),
+      stat(`${C}:mcnemar_p`, 0.163, "ratio3"),
+    ].map((v) => [v.id, v]),
+  );
+  const row = (name: string, kind: "arm" | "derived" | "baseline", pre: string, extra = {}) => ({
+    name,
+    kind,
+    model: kind === "baseline" ? "extended" : "claude-opus-5",
+    n: `${pre}:n`,
+    n_pos: null,
+    n_neg: null,
+    run_id: null,
+    mlflow_run_id: null,
+    metrics: { pr_auc_rank: `${pre}:pr_auc_rank`, ...extra },
+  });
+  const v2 = BenchBlock.parse({
+    version: "v2",
+    manifest_sha256: null,
+    computed_at: null,
+    versions: [],
+    rows: [
+      row("extended", "baseline", EXT),
+      row("d1-vote5", "derived", VOTE),
+      row("d1", "arm", D1, { coverage: `${D1}:coverage`, brier: `${D1}:brier` }),
+    ],
+    contrasts: [
+      {
+        first: "d1",
+        second: "extended",
+        question: "the single-shot LLM against the fitted model",
+        diff: `${C}:diff`,
+        diff_ci: [`${C}:diff.lo`, `${C}:diff.hi`],
+        mcnemar: { b: `${C}:mcnemar_b`, c: `${C}:mcnemar_c`, p: `${C}:mcnemar_p` },
+      },
+    ],
+  });
+
+  it("orders arms, then derived rows, then baselines, and prints each comparison through <V>", () => {
+    registerValues(values, { notify: false });
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    act(() => {
+      root?.render(<BenchSection block={v2} />);
+    });
+    const el = container;
+    const order = Array.from(el.querySelectorAll('[data-testid="bench-row"]')).map((r) =>
+      r.getAttribute("data-row"),
+    );
+    expect(order).toEqual(["d1", "d1-vote5", "extended"]);
+    const d1 = el.querySelector('[data-testid="bench-row"][data-row="d1"]');
+    expect(d1?.querySelector(`[data-vid="${D1}:pr_auc_rank"]`)?.textContent).toBe("0.610");
+    expect(d1?.querySelector(`[data-vid="${D1}:coverage"]`)).not.toBeNull();
+    const c = el.querySelector('[data-testid="bench-contrast"]');
+    expect(c?.textContent).toContain("the single-shot LLM against the fitted model");
+    for (const id of [`${C}:diff`, `${C}:mcnemar_b`, `${C}:mcnemar_c`, `${C}:mcnemar_p`])
+      expect(c?.querySelector(`[data-vid="${id}"]`), id).not.toBeNull();
+  });
+
+  it("a table from before the comparisons existed parses with none", () => {
+    expect(block.contrasts).toEqual([]);
+  });
+});

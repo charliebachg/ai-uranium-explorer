@@ -722,6 +722,13 @@ export const BenchMetric = z.enum([
   "roc_auc_all",
   "ece",
   "abstain_rate",
+  /** the ranking by the model's own probability over every cell, whatever its verdict */
+  "pr_auc_rank",
+  "roc_auc_rank",
+  /** the share of cells with a probability the ranking could use */
+  "coverage",
+  "brier",
+  "cal_slope",
 ]);
 export type BenchMetric = z.infer<typeof BenchMetric>;
 
@@ -761,7 +768,8 @@ export type BenchStage = z.infer<typeof BenchStage>;
  */
 export const BenchRow = z.object({
   name: z.string(),
-  kind: z.enum(["arm", "baseline"]),
+  /** A derived row costs no model call: a vote over an arm's samples, or weights fitted over its readings. */
+  kind: z.enum(["arm", "baseline", "derived"]),
   model: z.string().nullable(),
   /** The reasoning effort the arm ran at (low, medium, high); null for a baseline. */
   effort: z.string().nullable().optional(),
@@ -785,12 +793,24 @@ export const BenchRow = z.object({
 });
 export type BenchRow = z.infer<typeof BenchRow>;
 
+/** A comparison fixed before the runs: the paired difference in ranking PR-AUC and McNemar on verdicts. */
+export const BenchContrast = z.object({
+  first: z.string(),
+  second: z.string(),
+  question: z.string(),
+  diff: StatRef,
+  diff_ci: z.tuple([StatRef, StatRef]).optional(),
+  mcnemar: z.object({ b: StatRef, c: StatRef, p: StatRef }).optional(),
+});
+export type BenchContrast = z.infer<typeof BenchContrast>;
+
 /** One benchmark version's table: the arms and baselines scored on its open cells. */
 export const BenchTable = z.object({
   version: z.string(),
   manifest_sha256: z.string().nullable(),
   computed_at: z.string().nullable(),
   rows: z.array(BenchRow),
+  contrasts: z.array(BenchContrast).default([]),
 });
 export type BenchTable = z.infer<typeof BenchTable>;
 

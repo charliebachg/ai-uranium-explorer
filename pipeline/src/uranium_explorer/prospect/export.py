@@ -374,7 +374,8 @@ def _phase_blocks(vals: list[dict[str, Any]], out_dir: Path | None = None) -> di
 
 
 #: the metrics the Eval page prints per benchmark row; the rest stay in table.json and the tracker
-BENCH_METRICS = ("f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all", "ece", "abstain_rate")
+BENCH_METRICS = ("f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all", "ece", "abstain_rate",
+                 "pr_auc_rank", "roc_auc_rank", "coverage", "brier", "cal_slope")
 #: what only an arm can report, with the formatter each takes: the gate, the probes, and what a cell cost
 BENCH_EXTRA = {"gate_rejection_rate": "ratio3", "probe_abstain_rate": "ratio3", "cost_usd_per_cell": "m2",
                "latency_s_per_cell": "m1"}
@@ -507,7 +508,36 @@ def _bench_table(version: str, path: Path, vals: list[dict[str, Any]]) -> dict[s
     if not rows:
         return None
     return {"version": version, "manifest_sha256": d.get("manifest_sha256"), "computed_at": d.get("computed_at"),
-            "rows": rows}
+            "rows": rows, "contrasts": _bench_contrasts(version, d.get("contrasts") or [], vals)}
+
+
+def _bench_contrasts(version: str, contrasts: list[dict[str, Any]], vals: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """The comparisons fixed before the runs (`analyst/compare.py`), each number a value under
+    `c:bench:<version>:contrast:<first>~<second>:<key>`."""
+    out = []
+    for c in contrasts:
+        first, second = str(c.get("first")), str(c.get("second"))
+        diff, cells = _num(c.get("diff")), _num(c.get("cells"))
+        if diff is None or not cells:
+            continue
+        pre = f"c:bench:{version}:contrast:{first}~{second}"
+        note = f"{first} against {second} on {int(cells)} labelled open cells of benchmark {version}"
+        vals.append(stat(f"{pre}:diff", round(diff, 4), fmt="ratio3",
+                         note=f"PR-AUC of the ranking, {first} minus {second}, paired over the same cells; {note}"))
+        entry: dict[str, Any] = {"first": first, "second": second, "question": str(c.get("question") or ""),
+                                 "diff": f"{pre}:diff"}
+        bounds = _interval(vals, f"{pre}:diff", c.get("diff_ci"), f"the paired difference; {note}")
+        if bounds:
+            entry["diff_ci"] = bounds
+        mc = c.get("mcnemar") or {}
+        if all(_num(mc.get(k)) is not None for k in ("b", "c", "p")):
+            vals.append(stat(f"{pre}:mcnemar_b", int(mc["b"]), note=f"cells only {first} got right; {note}"))
+            vals.append(stat(f"{pre}:mcnemar_c", int(mc["c"]), note=f"cells only {second} got right; {note}"))
+            vals.append(stat(f"{pre}:mcnemar_p", round(float(mc["p"]), 4), fmt="ratio3",
+                             note=f"McNemar's exact two-sided p over the cells the two disagree on; {note}"))
+            entry["mcnemar"] = {"b": f"{pre}:mcnemar_b", "c": f"{pre}:mcnemar_c", "p": f"{pre}:mcnemar_p"}
+        out.append(entry)
+    return out
 
 
 def _gate_block(vals: list[dict[str, Any]]) -> dict[str, Any] | None:

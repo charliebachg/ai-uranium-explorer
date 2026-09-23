@@ -1,6 +1,6 @@
 {
  "schema_version": "1.0.0",
- "generated_at": "2026-09-23T07:15:27+00:00",
+ "generated_at": "2026-09-23T07:46:52+00:00",
  "grid": {
   "grid_id": "8e52ffbca2f1",
   "epsg": 2957,
@@ -6252,7 +6252,7 @@
  "bench": {
   "version": "v1",
   "manifest_sha256": "fa09da9a223002023826345d31d7da13d217e94a7db802f32dc5677644317f21",
-  "computed_at": "2026-09-22T01:26:03+00:00",
+  "computed_at": "2026-09-23T07:46:28+00:00",
   "rows": [
    {
     "name": "v0-features",
@@ -6976,7 +6976,12 @@
      "pr_auc_all": "c:bench:v1:random:pr_auc_all",
      "roc_auc_all": "c:bench:v1:random:roc_auc_all",
      "ece": "c:bench:v1:random:ece",
-     "abstain_rate": "c:bench:v1:random:abstain_rate"
+     "abstain_rate": "c:bench:v1:random:abstain_rate",
+     "pr_auc_rank": "c:bench:v1:random:pr_auc_rank",
+     "roc_auc_rank": "c:bench:v1:random:roc_auc_rank",
+     "coverage": "c:bench:v1:random:coverage",
+     "brier": "c:bench:v1:random:brier",
+     "cal_slope": "c:bench:v1:random:cal_slope"
     },
     "note": "one uniform draw, seed 0, 0.5 threshold",
     "ci": {
@@ -7015,6 +7020,26 @@
      "abstain_rate": [
       "c:bench:v1:random:abstain_rate.lo",
       "c:bench:v1:random:abstain_rate.hi"
+     ],
+     "pr_auc_rank": [
+      "c:bench:v1:random:pr_auc_rank.lo",
+      "c:bench:v1:random:pr_auc_rank.hi"
+     ],
+     "roc_auc_rank": [
+      "c:bench:v1:random:roc_auc_rank.lo",
+      "c:bench:v1:random:roc_auc_rank.hi"
+     ],
+     "coverage": [
+      "c:bench:v1:random:coverage.lo",
+      "c:bench:v1:random:coverage.hi"
+     ],
+     "brier": [
+      "c:bench:v1:random:brier.lo",
+      "c:bench:v1:random:brier.hi"
+     ],
+     "cal_slope": [
+      "c:bench:v1:random:cal_slope.lo",
+      "c:bench:v1:random:cal_slope.hi"
      ]
     },
     "strata": {
@@ -7054,7 +7079,12 @@
      "pr_auc_all": "c:bench:v1:copy_learned:pr_auc_all",
      "roc_auc_all": "c:bench:v1:copy_learned:roc_auc_all",
      "ece": "c:bench:v1:copy_learned:ece",
-     "abstain_rate": "c:bench:v1:copy_learned:abstain_rate"
+     "abstain_rate": "c:bench:v1:copy_learned:abstain_rate",
+     "pr_auc_rank": "c:bench:v1:copy_learned:pr_auc_rank",
+     "roc_auc_rank": "c:bench:v1:copy_learned:roc_auc_rank",
+     "coverage": "c:bench:v1:copy_learned:coverage",
+     "brier": "c:bench:v1:copy_learned:brier",
+     "cal_slope": "c:bench:v1:copy_learned:cal_slope"
     },
     "note": "an analyst that copies the out-of-fold learned score and abstains where there is none",
     "ci": {
@@ -7093,6 +7123,26 @@
      "abstain_rate": [
       "c:bench:v1:copy_learned:abstain_rate.lo",
       "c:bench:v1:copy_learned:abstain_rate.hi"
+     ],
+     "pr_auc_rank": [
+      "c:bench:v1:copy_learned:pr_auc_rank.lo",
+      "c:bench:v1:copy_learned:pr_auc_rank.hi"
+     ],
+     "roc_auc_rank": [
+      "c:bench:v1:copy_learned:roc_auc_rank.lo",
+      "c:bench:v1:copy_learned:roc_auc_rank.hi"
+     ],
+     "coverage": [
+      "c:bench:v1:copy_learned:coverage.lo",
+      "c:bench:v1:copy_learned:coverage.hi"
+     ],
+     "brier": [
+      "c:bench:v1:copy_learned:brier.lo",
+      "c:bench:v1:copy_learned:brier.hi"
+     ],
+     "cal_slope": [
+      "c:bench:v1:copy_learned:cal_slope.lo",
+      "c:bench:v1:copy_learned:cal_slope.hi"
      ]
     },
     "strata": {
@@ -7132,7 +7182,12 @@
      "pr_auc_all": "c:bench:v1:learned:pr_auc_all",
      "roc_auc_all": "c:bench:v1:learned:roc_auc_all",
      "ece": "c:bench:v1:learned:ece",
-     "abstain_rate": "c:bench:v1:learned:abstain_rate"
+     "abstain_rate": "c:bench:v1:learned:abstain_rate",
+     "pr_auc_rank": "c:bench:v1:learned:pr_auc_rank",
+     "roc_auc_rank": "c:bench:v1:learned:roc_auc_rank",
+     "coverage": "c:bench:v1:learned:coverage",
+     "brier": "c:bench:v1:learned:brier",
+     "cal_slope": "c:bench:v1:learned:cal_slope"
     },
     "note": "the out-of-fold learned score at a 0.5 threshold (spatial folds); a missing score is 0.5",
     "ci": {
@@ -7171,6 +7226,26 @@
      "abstain_rate": [
       "c:bench:v1:learned:abstain_rate.lo",
       "c:bench:v1:learned:abstain_rate.hi"
+     ],
+     "pr_auc_rank": [
+      "c:bench:v1:learned:pr_auc_rank.lo",
+      "c:bench:v1:learned:pr_auc_rank.hi"
+     ],
+     "roc_auc_rank": [
+      "c:bench:v1:learned:roc_auc_rank.lo",
+      "c:bench:v1:learned:roc_auc_rank.hi"
+     ],
+     "coverage": [
+      "c:bench:v1:learned:coverage.lo",
+      "c:bench:v1:learned:coverage.hi"
+     ],
+     "brier": [
+      "c:bench:v1:learned:brier.lo",
+      "c:bench:v1:learned:brier.hi"
+     ],
+     "cal_slope": [
+      "c:bench:v1:learned:cal_slope.lo",
+      "c:bench:v1:learned:cal_slope.hi"
      ]
     },
     "strata": {
@@ -7210,7 +7285,12 @@
      "pr_auc_all": "c:bench:v1:effort:pr_auc_all",
      "roc_auc_all": "c:bench:v1:effort:roc_auc_all",
      "ece": "c:bench:v1:effort:ece",
-     "abstain_rate": "c:bench:v1:effort:abstain_rate"
+     "abstain_rate": "c:bench:v1:effort:abstain_rate",
+     "pr_auc_rank": "c:bench:v1:effort:pr_auc_rank",
+     "roc_auc_rank": "c:bench:v1:effort:roc_auc_rank",
+     "coverage": "c:bench:v1:effort:coverage",
+     "brier": "c:bench:v1:effort:brier",
+     "cal_slope": "c:bench:v1:effort:cal_slope"
     },
     "note": "the out-of-fold effort score at a 0.5 threshold (spatial folds); a missing score is 0.5",
     "ci": {
@@ -7249,6 +7329,26 @@
      "abstain_rate": [
       "c:bench:v1:effort:abstain_rate.lo",
       "c:bench:v1:effort:abstain_rate.hi"
+     ],
+     "pr_auc_rank": [
+      "c:bench:v1:effort:pr_auc_rank.lo",
+      "c:bench:v1:effort:pr_auc_rank.hi"
+     ],
+     "roc_auc_rank": [
+      "c:bench:v1:effort:roc_auc_rank.lo",
+      "c:bench:v1:effort:roc_auc_rank.hi"
+     ],
+     "coverage": [
+      "c:bench:v1:effort:coverage.lo",
+      "c:bench:v1:effort:coverage.hi"
+     ],
+     "brier": [
+      "c:bench:v1:effort:brier.lo",
+      "c:bench:v1:effort:brier.hi"
+     ],
+     "cal_slope": [
+      "c:bench:v1:effort:cal_slope.lo",
+      "c:bench:v1:effort:cal_slope.hi"
      ]
     },
     "strata": {
@@ -7288,7 +7388,12 @@
      "pr_auc_all": "c:bench:v1:criteria:pr_auc_all",
      "roc_auc_all": "c:bench:v1:criteria:roc_auc_all",
      "ece": "c:bench:v1:criteria:ece",
-     "abstain_rate": "c:bench:v1:criteria:abstain_rate"
+     "abstain_rate": "c:bench:v1:criteria:abstain_rate",
+     "pr_auc_rank": "c:bench:v1:criteria:pr_auc_rank",
+     "roc_auc_rank": "c:bench:v1:criteria:roc_auc_rank",
+     "coverage": "c:bench:v1:criteria:coverage",
+     "brier": "c:bench:v1:criteria:brier",
+     "cal_slope": "c:bench:v1:criteria:cal_slope"
     },
     "note": "the out-of-fold criteria score at a 0.5 threshold (spatial folds); a missing score is 0.5",
     "ci": {
@@ -7327,6 +7432,26 @@
      "abstain_rate": [
       "c:bench:v1:criteria:abstain_rate.lo",
       "c:bench:v1:criteria:abstain_rate.hi"
+     ],
+     "pr_auc_rank": [
+      "c:bench:v1:criteria:pr_auc_rank.lo",
+      "c:bench:v1:criteria:pr_auc_rank.hi"
+     ],
+     "roc_auc_rank": [
+      "c:bench:v1:criteria:roc_auc_rank.lo",
+      "c:bench:v1:criteria:roc_auc_rank.hi"
+     ],
+     "coverage": [
+      "c:bench:v1:criteria:coverage.lo",
+      "c:bench:v1:criteria:coverage.hi"
+     ],
+     "brier": [
+      "c:bench:v1:criteria:brier.lo",
+      "c:bench:v1:criteria:brier.hi"
+     ],
+     "cal_slope": [
+      "c:bench:v1:criteria:cal_slope.lo",
+      "c:bench:v1:criteria:cal_slope.hi"
      ]
     },
     "strata": {
@@ -7348,6 +7473,7 @@
     }
    }
   ],
+  "contrasts": [],
   "versions": [],
   "earlier": []
  },
@@ -20104,6 +20230,141 @@
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; abstain_rate; baseline random (random) on 114 open cells of benchmark v1"
   },
+  "c:bench:v1:random:pr_auc_rank": {
+   "id": "c:bench:v1:random:pr_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4244,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_rank; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:pr_auc_rank.lo": {
+   "id": "c:bench:v1:random:pr_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3695,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_rank; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:pr_auc_rank.hi": {
+   "id": "c:bench:v1:random:pr_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5244,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_rank; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:roc_auc_rank": {
+   "id": "c:bench:v1:random:roc_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4941,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_rank; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:roc_auc_rank.lo": {
+   "id": "c:bench:v1:random:roc_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3869,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_rank; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:roc_auc_rank.hi": {
+   "id": "c:bench:v1:random:roc_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6047,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_rank; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:coverage": {
+   "id": "c:bench:v1:random:coverage",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "coverage; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:coverage.lo": {
+   "id": "c:bench:v1:random:coverage.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; coverage; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:coverage.hi": {
+   "id": "c:bench:v1:random:coverage.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; coverage; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:brier": {
+   "id": "c:bench:v1:random:brier",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3503,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "brier; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:brier.lo": {
+   "id": "c:bench:v1:random:brier.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2909,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; brier; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:brier.hi": {
+   "id": "c:bench:v1:random:brier.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4129,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; brier; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:cal_slope": {
+   "id": "c:bench:v1:random:cal_slope",
+   "kind": "stat",
+   "as_printed": null,
+   "value": -0.0466,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "cal_slope; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:cal_slope.lo": {
+   "id": "c:bench:v1:random:cal_slope.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": -0.2142,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; cal_slope; baseline random (random) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:random:cal_slope.hi": {
+   "id": "c:bench:v1:random:cal_slope.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.1579,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; cal_slope; baseline random (random) on 114 open cells of benchmark v1"
+  },
   "c:bench:v1:random:deposit:n": {
    "id": "c:bench:v1:random:deposit:n",
    "kind": "stat",
@@ -20216,7 +20477,7 @@
    "id": "c:bench:v1:copy_learned:f1",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2258,
+   "value": 0.2687,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "f1; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20225,7 +20486,7 @@
    "id": "c:bench:v1:copy_learned:f1.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0968,
+   "value": 0.129,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; f1; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20234,7 +20495,7 @@
    "id": "c:bench:v1:copy_learned:f1.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3582,
+   "value": 0.4103,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; f1; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20243,7 +20504,7 @@
    "id": "c:bench:v1:copy_learned:precision",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5833,
+   "value": 0.5294,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "precision; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20252,7 +20513,7 @@
    "id": "c:bench:v1:copy_learned:precision.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2727,
+   "value": 0.3125,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; precision; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20261,7 +20522,7 @@
    "id": "c:bench:v1:copy_learned:precision.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8462,
+   "value": 0.7648,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; precision; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20270,7 +20531,7 @@
    "id": "c:bench:v1:copy_learned:recall",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.14,
+   "value": 0.18,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "recall; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20279,7 +20540,7 @@
    "id": "c:bench:v1:copy_learned:recall.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.06,
+   "value": 0.08,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; recall; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20288,7 +20549,7 @@
    "id": "c:bench:v1:copy_learned:recall.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.24,
+   "value": 0.28,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; recall; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20297,7 +20558,7 @@
    "id": "c:bench:v1:copy_learned:pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4967,
+   "value": 0.4537,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20306,7 +20567,7 @@
    "id": "c:bench:v1:copy_learned:pr_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4049,
+   "value": 0.3919,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20315,7 +20576,7 @@
    "id": "c:bench:v1:copy_learned:pr_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6092,
+   "value": 0.5764,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20324,7 +20585,7 @@
    "id": "c:bench:v1:copy_learned:roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5084,
+   "value": 0.505,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20333,7 +20594,7 @@
    "id": "c:bench:v1:copy_learned:roc_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3978,
+   "value": 0.4022,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20342,7 +20603,7 @@
    "id": "c:bench:v1:copy_learned:roc_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6131,
+   "value": 0.6147,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20351,7 +20612,7 @@
    "id": "c:bench:v1:copy_learned:pr_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4967,
+   "value": 0.4537,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20360,7 +20621,7 @@
    "id": "c:bench:v1:copy_learned:pr_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4049,
+   "value": 0.3919,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20369,7 +20630,7 @@
    "id": "c:bench:v1:copy_learned:pr_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6092,
+   "value": 0.5764,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20378,7 +20639,7 @@
    "id": "c:bench:v1:copy_learned:roc_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5084,
+   "value": 0.505,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20387,7 +20648,7 @@
    "id": "c:bench:v1:copy_learned:roc_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3978,
+   "value": 0.4022,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20396,7 +20657,7 @@
    "id": "c:bench:v1:copy_learned:roc_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6131,
+   "value": 0.6147,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc_all; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20405,7 +20666,7 @@
    "id": "c:bench:v1:copy_learned:ece",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2123,
+   "value": 0.2226,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "ece; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20414,7 +20675,7 @@
    "id": "c:bench:v1:copy_learned:ece.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1772,
+   "value": 0.1819,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; ece; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20423,7 +20684,7 @@
    "id": "c:bench:v1:copy_learned:ece.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3079,
+   "value": 0.3016,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; ece; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20455,6 +20716,141 @@
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; abstain_rate; baseline copy_learned (learned) on 114 open cells of benchmark v1"
   },
+  "c:bench:v1:copy_learned:pr_auc_rank": {
+   "id": "c:bench:v1:copy_learned:pr_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4537,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_rank; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:pr_auc_rank.lo": {
+   "id": "c:bench:v1:copy_learned:pr_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3919,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_rank; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:pr_auc_rank.hi": {
+   "id": "c:bench:v1:copy_learned:pr_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5764,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_rank; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:roc_auc_rank": {
+   "id": "c:bench:v1:copy_learned:roc_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.505,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_rank; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:roc_auc_rank.lo": {
+   "id": "c:bench:v1:copy_learned:roc_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4022,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_rank; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:roc_auc_rank.hi": {
+   "id": "c:bench:v1:copy_learned:roc_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6147,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_rank; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:coverage": {
+   "id": "c:bench:v1:copy_learned:coverage",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "coverage; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:coverage.lo": {
+   "id": "c:bench:v1:copy_learned:coverage.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; coverage; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:coverage.hi": {
+   "id": "c:bench:v1:copy_learned:coverage.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; coverage; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:brier": {
+   "id": "c:bench:v1:copy_learned:brier",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.306,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "brier; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:brier.lo": {
+   "id": "c:bench:v1:copy_learned:brier.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2693,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; brier; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:brier.hi": {
+   "id": "c:bench:v1:copy_learned:brier.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3418,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; brier; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:cal_slope": {
+   "id": "c:bench:v1:copy_learned:cal_slope",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0007,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "cal_slope; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:cal_slope.lo": {
+   "id": "c:bench:v1:copy_learned:cal_slope.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": -0.2877,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; cal_slope; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:copy_learned:cal_slope.hi": {
+   "id": "c:bench:v1:copy_learned:cal_slope.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3236,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; cal_slope; baseline copy_learned (learned) on 114 open cells of benchmark v1"
+  },
   "c:bench:v1:copy_learned:deposit:n": {
    "id": "c:bench:v1:copy_learned:deposit:n",
    "kind": "stat",
@@ -20468,7 +20864,7 @@
    "id": "c:bench:v1:copy_learned:deposit:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1111,
+   "value": 0.1667,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the deposit cells; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20495,7 +20891,7 @@
    "id": "c:bench:v1:copy_learned:occurrence:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1562,
+   "value": 0.1875,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the occurrence cells; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20522,7 +20918,7 @@
    "id": "c:bench:v1:copy_learned:negative:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.9219,
+   "value": 0.875,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the negative cells; baseline copy_learned (learned) on 114 open cells of benchmark v1"
@@ -20567,7 +20963,7 @@
    "id": "c:bench:v1:learned:f1",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2258,
+   "value": 0.2687,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "f1; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20576,7 +20972,7 @@
    "id": "c:bench:v1:learned:f1.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.0968,
+   "value": 0.129,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; f1; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20585,7 +20981,7 @@
    "id": "c:bench:v1:learned:f1.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3582,
+   "value": 0.4103,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; f1; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20594,7 +20990,7 @@
    "id": "c:bench:v1:learned:precision",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5833,
+   "value": 0.5294,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "precision; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20603,7 +20999,7 @@
    "id": "c:bench:v1:learned:precision.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2727,
+   "value": 0.3125,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; precision; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20612,7 +21008,7 @@
    "id": "c:bench:v1:learned:precision.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.8462,
+   "value": 0.7648,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; precision; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20621,7 +21017,7 @@
    "id": "c:bench:v1:learned:recall",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.14,
+   "value": 0.18,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "recall; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20630,7 +21026,7 @@
    "id": "c:bench:v1:learned:recall.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.06,
+   "value": 0.08,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; recall; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20639,7 +21035,7 @@
    "id": "c:bench:v1:learned:recall.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.24,
+   "value": 0.28,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; recall; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20648,7 +21044,7 @@
    "id": "c:bench:v1:learned:pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4967,
+   "value": 0.4537,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20657,7 +21053,7 @@
    "id": "c:bench:v1:learned:pr_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4049,
+   "value": 0.3919,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20666,7 +21062,7 @@
    "id": "c:bench:v1:learned:pr_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6092,
+   "value": 0.5764,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20675,7 +21071,7 @@
    "id": "c:bench:v1:learned:roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5084,
+   "value": 0.505,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20684,7 +21080,7 @@
    "id": "c:bench:v1:learned:roc_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3978,
+   "value": 0.4022,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20693,7 +21089,7 @@
    "id": "c:bench:v1:learned:roc_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6131,
+   "value": 0.6147,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20702,7 +21098,7 @@
    "id": "c:bench:v1:learned:pr_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4967,
+   "value": 0.4537,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc_all; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20711,7 +21107,7 @@
    "id": "c:bench:v1:learned:pr_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4049,
+   "value": 0.3919,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc_all; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20720,7 +21116,7 @@
    "id": "c:bench:v1:learned:pr_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6092,
+   "value": 0.5764,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc_all; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20729,7 +21125,7 @@
    "id": "c:bench:v1:learned:roc_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5084,
+   "value": 0.505,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc_all; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20738,7 +21134,7 @@
    "id": "c:bench:v1:learned:roc_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3978,
+   "value": 0.4022,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc_all; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20747,7 +21143,7 @@
    "id": "c:bench:v1:learned:roc_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6131,
+   "value": 0.6147,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc_all; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20756,7 +21152,7 @@
    "id": "c:bench:v1:learned:ece",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2123,
+   "value": 0.2226,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "ece; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20765,7 +21161,7 @@
    "id": "c:bench:v1:learned:ece.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1772,
+   "value": 0.1819,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; ece; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20774,7 +21170,7 @@
    "id": "c:bench:v1:learned:ece.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3079,
+   "value": 0.3016,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; ece; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20806,6 +21202,141 @@
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; abstain_rate; baseline learned (learned) on 114 open cells of benchmark v1"
   },
+  "c:bench:v1:learned:pr_auc_rank": {
+   "id": "c:bench:v1:learned:pr_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4537,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_rank; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:pr_auc_rank.lo": {
+   "id": "c:bench:v1:learned:pr_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3919,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_rank; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:pr_auc_rank.hi": {
+   "id": "c:bench:v1:learned:pr_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5764,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_rank; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:roc_auc_rank": {
+   "id": "c:bench:v1:learned:roc_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.505,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_rank; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:roc_auc_rank.lo": {
+   "id": "c:bench:v1:learned:roc_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4022,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_rank; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:roc_auc_rank.hi": {
+   "id": "c:bench:v1:learned:roc_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6147,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_rank; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:coverage": {
+   "id": "c:bench:v1:learned:coverage",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "coverage; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:coverage.lo": {
+   "id": "c:bench:v1:learned:coverage.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; coverage; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:coverage.hi": {
+   "id": "c:bench:v1:learned:coverage.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; coverage; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:brier": {
+   "id": "c:bench:v1:learned:brier",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.306,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "brier; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:brier.lo": {
+   "id": "c:bench:v1:learned:brier.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2693,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; brier; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:brier.hi": {
+   "id": "c:bench:v1:learned:brier.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3418,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; brier; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:cal_slope": {
+   "id": "c:bench:v1:learned:cal_slope",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0007,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "cal_slope; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:cal_slope.lo": {
+   "id": "c:bench:v1:learned:cal_slope.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": -0.2877,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; cal_slope; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:learned:cal_slope.hi": {
+   "id": "c:bench:v1:learned:cal_slope.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3236,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; cal_slope; baseline learned (learned) on 114 open cells of benchmark v1"
+  },
   "c:bench:v1:learned:deposit:n": {
    "id": "c:bench:v1:learned:deposit:n",
    "kind": "stat",
@@ -20819,7 +21350,7 @@
    "id": "c:bench:v1:learned:deposit:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1111,
+   "value": 0.1667,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the deposit cells; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20846,7 +21377,7 @@
    "id": "c:bench:v1:learned:occurrence:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1562,
+   "value": 0.1875,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the occurrence cells; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20873,7 +21404,7 @@
    "id": "c:bench:v1:learned:negative:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.9219,
+   "value": 0.875,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the negative cells; baseline learned (learned) on 114 open cells of benchmark v1"
@@ -20918,7 +21449,7 @@
    "id": "c:bench:v1:effort:f1",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5682,
+   "value": 0.5116,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "f1; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20927,7 +21458,7 @@
    "id": "c:bench:v1:effort:f1.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.439,
+   "value": 0.375,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; f1; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20936,7 +21467,7 @@
    "id": "c:bench:v1:effort:f1.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6889,
+   "value": 0.6223,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; f1; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20945,7 +21476,7 @@
    "id": "c:bench:v1:effort:precision",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6579,
+   "value": 0.6111,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "precision; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20954,7 +21485,7 @@
    "id": "c:bench:v1:effort:precision.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5366,
+   "value": 0.4722,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; precision; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20963,7 +21494,7 @@
    "id": "c:bench:v1:effort:precision.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7931,
+   "value": 0.7429,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; precision; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20972,7 +21503,7 @@
    "id": "c:bench:v1:effort:recall",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5,
+   "value": 0.44,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "recall; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20981,7 +21512,7 @@
    "id": "c:bench:v1:effort:recall.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.36,
+   "value": 0.3,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; recall; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20990,7 +21521,7 @@
    "id": "c:bench:v1:effort:recall.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.64,
+   "value": 0.58,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; recall; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -20999,7 +21530,7 @@
    "id": "c:bench:v1:effort:pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6593,
+   "value": 0.6212,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21008,7 +21539,7 @@
    "id": "c:bench:v1:effort:pr_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5557,
+   "value": 0.5206,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21017,7 +21548,7 @@
    "id": "c:bench:v1:effort:pr_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7757,
+   "value": 0.7352,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21026,7 +21557,7 @@
    "id": "c:bench:v1:effort:roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6675,
+   "value": 0.6619,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21035,7 +21566,7 @@
    "id": "c:bench:v1:effort:roc_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.559,
+   "value": 0.5518,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21044,7 +21575,7 @@
    "id": "c:bench:v1:effort:roc_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7644,
+   "value": 0.7538,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21053,7 +21584,7 @@
    "id": "c:bench:v1:effort:pr_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6593,
+   "value": 0.6212,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc_all; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21062,7 +21593,7 @@
    "id": "c:bench:v1:effort:pr_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5557,
+   "value": 0.5206,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc_all; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21071,7 +21602,7 @@
    "id": "c:bench:v1:effort:pr_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7757,
+   "value": 0.7352,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc_all; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21080,7 +21611,7 @@
    "id": "c:bench:v1:effort:roc_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6675,
+   "value": 0.6619,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc_all; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21089,7 +21620,7 @@
    "id": "c:bench:v1:effort:roc_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.559,
+   "value": 0.5518,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc_all; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21098,7 +21629,7 @@
    "id": "c:bench:v1:effort:roc_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7644,
+   "value": 0.7538,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc_all; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21107,7 +21638,7 @@
    "id": "c:bench:v1:effort:ece",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.17,
+   "value": 0.1918,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "ece; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21116,7 +21647,7 @@
    "id": "c:bench:v1:effort:ece.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1255,
+   "value": 0.1427,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; ece; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21125,7 +21656,7 @@
    "id": "c:bench:v1:effort:ece.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2631,
+   "value": 0.2788,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; ece; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21157,6 +21688,141 @@
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; abstain_rate; baseline effort (effort) on 114 open cells of benchmark v1"
   },
+  "c:bench:v1:effort:pr_auc_rank": {
+   "id": "c:bench:v1:effort:pr_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6212,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_rank; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:pr_auc_rank.lo": {
+   "id": "c:bench:v1:effort:pr_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5206,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_rank; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:pr_auc_rank.hi": {
+   "id": "c:bench:v1:effort:pr_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7352,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_rank; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:roc_auc_rank": {
+   "id": "c:bench:v1:effort:roc_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.6619,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_rank; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:roc_auc_rank.lo": {
+   "id": "c:bench:v1:effort:roc_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5518,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_rank; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:roc_auc_rank.hi": {
+   "id": "c:bench:v1:effort:roc_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7538,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_rank; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:coverage": {
+   "id": "c:bench:v1:effort:coverage",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "coverage; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:coverage.lo": {
+   "id": "c:bench:v1:effort:coverage.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; coverage; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:coverage.hi": {
+   "id": "c:bench:v1:effort:coverage.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; coverage; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:brier": {
+   "id": "c:bench:v1:effort:brier",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2504,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "brier; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:brier.lo": {
+   "id": "c:bench:v1:effort:brier.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2081,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; brier; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:brier.hi": {
+   "id": "c:bench:v1:effort:brier.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.299,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; brier; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:cal_slope": {
+   "id": "c:bench:v1:effort:cal_slope",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3731,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "cal_slope; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:cal_slope.lo": {
+   "id": "c:bench:v1:effort:cal_slope.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.13,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; cal_slope; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:effort:cal_slope.hi": {
+   "id": "c:bench:v1:effort:cal_slope.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.642,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; cal_slope; baseline effort (effort) on 114 open cells of benchmark v1"
+  },
   "c:bench:v1:effort:deposit:n": {
    "id": "c:bench:v1:effort:deposit:n",
    "kind": "stat",
@@ -21170,7 +21836,7 @@
    "id": "c:bench:v1:effort:deposit:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7778,
+   "value": 0.6667,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the deposit cells; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21197,7 +21863,7 @@
    "id": "c:bench:v1:effort:occurrence:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3438,
+   "value": 0.3125,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the occurrence cells; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21224,7 +21890,7 @@
    "id": "c:bench:v1:effort:negative:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7969,
+   "value": 0.7812,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the negative cells; baseline effort (effort) on 114 open cells of benchmark v1"
@@ -21269,7 +21935,7 @@
    "id": "c:bench:v1:criteria:f1",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5811,
+   "value": 0.5507,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "f1; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21278,7 +21944,7 @@
    "id": "c:bench:v1:criteria:f1.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5278,
+   "value": 0.4848,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; f1; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21287,7 +21953,7 @@
    "id": "c:bench:v1:criteria:f1.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6275,
+   "value": 0.6154,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; f1; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21296,7 +21962,7 @@
    "id": "c:bench:v1:criteria:precision",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4388,
+   "value": 0.4318,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "precision; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21305,7 +21971,7 @@
    "id": "c:bench:v1:criteria:precision.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4021,
+   "value": 0.3846,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; precision; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21314,7 +21980,7 @@
    "id": "c:bench:v1:criteria:precision.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4742,
+   "value": 0.4783,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; precision; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21323,7 +21989,7 @@
    "id": "c:bench:v1:criteria:recall",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.86,
+   "value": 0.76,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "recall; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21332,7 +21998,7 @@
    "id": "c:bench:v1:criteria:recall.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.76,
+   "value": 0.64,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; recall; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21341,7 +22007,7 @@
    "id": "c:bench:v1:criteria:recall.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.94,
+   "value": 0.88,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; recall; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21350,7 +22016,7 @@
    "id": "c:bench:v1:criteria:pr_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4453,
+   "value": 0.4687,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21359,7 +22025,7 @@
    "id": "c:bench:v1:criteria:pr_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3827,
+   "value": 0.3941,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21368,7 +22034,7 @@
    "id": "c:bench:v1:criteria:pr_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5574,
+   "value": 0.5803,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21377,7 +22043,7 @@
    "id": "c:bench:v1:criteria:roc_auc",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4919,
+   "value": 0.513,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21386,7 +22052,7 @@
    "id": "c:bench:v1:criteria:roc_auc.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3797,
+   "value": 0.4001,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21395,7 +22061,7 @@
    "id": "c:bench:v1:criteria:roc_auc.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6005,
+   "value": 0.615,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21404,7 +22070,7 @@
    "id": "c:bench:v1:criteria:pr_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4453,
+   "value": 0.4687,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21413,7 +22079,7 @@
    "id": "c:bench:v1:criteria:pr_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3827,
+   "value": 0.3941,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21422,7 +22088,7 @@
    "id": "c:bench:v1:criteria:pr_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.5574,
+   "value": 0.5803,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; pr_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21431,7 +22097,7 @@
    "id": "c:bench:v1:criteria:roc_auc_all",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.4919,
+   "value": 0.513,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21440,7 +22106,7 @@
    "id": "c:bench:v1:criteria:roc_auc_all.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3797,
+   "value": 0.4001,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21449,7 +22115,7 @@
    "id": "c:bench:v1:criteria:roc_auc_all.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.6005,
+   "value": 0.615,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; roc_auc_all; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21458,7 +22124,7 @@
    "id": "c:bench:v1:criteria:ece",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.2997,
+   "value": 0.1985,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "ece; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21467,7 +22133,7 @@
    "id": "c:bench:v1:criteria:ece.lo",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.267,
+   "value": 0.1605,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "lower bound of the 95% interval; ece; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21476,7 +22142,7 @@
    "id": "c:bench:v1:criteria:ece.hi",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.3867,
+   "value": 0.2734,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; ece; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21508,6 +22174,141 @@
    "fmt": "ratio3",
    "note": "upper bound of the 95% interval; abstain_rate; baseline criteria (criteria) on 114 open cells of benchmark v1"
   },
+  "c:bench:v1:criteria:pr_auc_rank": {
+   "id": "c:bench:v1:criteria:pr_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4687,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "pr_auc_rank; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:pr_auc_rank.lo": {
+   "id": "c:bench:v1:criteria:pr_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3941,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; pr_auc_rank; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:pr_auc_rank.hi": {
+   "id": "c:bench:v1:criteria:pr_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.5803,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; pr_auc_rank; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:roc_auc_rank": {
+   "id": "c:bench:v1:criteria:roc_auc_rank",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.513,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "roc_auc_rank; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:roc_auc_rank.lo": {
+   "id": "c:bench:v1:criteria:roc_auc_rank.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.4001,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; roc_auc_rank; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:roc_auc_rank.hi": {
+   "id": "c:bench:v1:criteria:roc_auc_rank.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.615,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; roc_auc_rank; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:coverage": {
+   "id": "c:bench:v1:criteria:coverage",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "coverage; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:coverage.lo": {
+   "id": "c:bench:v1:criteria:coverage.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; coverage; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:coverage.hi": {
+   "id": "c:bench:v1:criteria:coverage.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 1.0,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; coverage; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:brier": {
+   "id": "c:bench:v1:criteria:brier",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2871,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "brier; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:brier.lo": {
+   "id": "c:bench:v1:criteria:brier.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.2638,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; brier; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:brier.hi": {
+   "id": "c:bench:v1:criteria:brier.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.3115,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; brier; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:cal_slope": {
+   "id": "c:bench:v1:criteria:cal_slope",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.0794,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "cal_slope; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:cal_slope.lo": {
+   "id": "c:bench:v1:criteria:cal_slope.lo",
+   "kind": "stat",
+   "as_printed": null,
+   "value": -0.6022,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "lower bound of the 95% interval; cal_slope; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
+  "c:bench:v1:criteria:cal_slope.hi": {
+   "id": "c:bench:v1:criteria:cal_slope.hi",
+   "kind": "stat",
+   "as_printed": null,
+   "value": 0.7787,
+   "unit_as_printed": null,
+   "fmt": "ratio3",
+   "note": "upper bound of the 95% interval; cal_slope; baseline criteria (criteria) on 114 open cells of benchmark v1"
+  },
   "c:bench:v1:criteria:deposit:n": {
    "id": "c:bench:v1:criteria:deposit:n",
    "kind": "stat",
@@ -21521,7 +22322,7 @@
    "id": "c:bench:v1:criteria:deposit:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 1.0,
+   "value": 0.8889,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the deposit cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21548,7 +22349,7 @@
    "id": "c:bench:v1:criteria:occurrence:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.7812,
+   "value": 0.6875,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the occurrence cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21575,7 +22376,7 @@
    "id": "c:bench:v1:criteria:negative:accuracy",
    "kind": "stat",
    "as_printed": null,
-   "value": 0.1406,
+   "value": 0.2188,
    "unit_as_printed": null,
    "fmt": "ratio3",
    "note": "accuracy over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
@@ -21590,5 +22391,5 @@
    "note": "abstain_rate over the negative cells; baseline criteria (criteria) on 114 open cells of benchmark v1"
   }
  },
- "build_id": "346bb37bad1f"
+ "build_id": "f7498b8bea84"
 }
