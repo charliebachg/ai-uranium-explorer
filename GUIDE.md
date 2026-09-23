@@ -960,7 +960,8 @@ file that forgets a switch is not an arm, and the file's `name` must match its s
 **Running it.** `ue arm run --arm <name> --version <bench>` runs one arm over the open cells of a frozen
 benchmark: cached, budgeted, traced, scored against the key, one MLflow run per arm; `--cells` names bench
 ids, `--workers` cells in parallel, `--backend claude|auto|replay`, `--resume <run id>` carries finished
-cells forward, exit 3 on the budget and 75 on a usage limit. `ue arm chain --enabled` (or `--cells`) runs the
+cells forward, `--sample N` asks the same question again as its own calls and its own table row
+(`<arm>~s<N>`; sample 0 is the arm itself and keeps its cache), exit 3 on the budget and 75 on a usage limit. `ue arm chain --enabled` (or `--cells`) runs the
 staged loop over real cells for the dashboard in one-connection mode and publishes the chains into the agent
 tier. `ue arm score --run` scores a run's cells against the key, `ue arm regate --run` re-applies the current
 gate to stored v0 answers and re-scores with no model call, `ue arm table` merges every arm's latest run with
@@ -1264,9 +1265,17 @@ counts abstaining: `insufficient` is a verdict the analyst may give, so precisio
 abstained cell as not positive, the abstain rate is reported with its denominator, the ranking metrics are
 given over the committed cells and over every cell with an abstention at 0.5, an answer the gate refused is
 an abstention too with the rejection rate beside it, probes are reported only as an abstain rate, and every
-interval is a bootstrap over cells. The baselines answer the question every arm row invites: chance (analytic
-and drawn), an analyst that copies the out-of-fold learned score, and the three fitted scores at a 0.5
-threshold. A staged arm adds the per-stage columns: chains counted, the node gate's rejection rate over
+interval is a bootstrap over cells. The ranking the page sorts by is the model's own: every cell ranked by
+its published probability whatever the verdict (an insufficient cell still ranks), a refused or failed cell at
+0.5, with the coverage of usable probabilities, the Brier score and the calibration slope beside it. The
+baselines answer the question every arm row invites: chance (analytic and drawn), an analyst that copies the
+out-of-fold learned score, and the fitted scores at a 0.5 threshold, read from the benchmark's own
+out-of-fold file (its seed and folds), the extended model among them where the benchmark carries it. Two kinds
+of row cost no call (`analyst/compare.py`): the vote over an arm's samples (`<arm>-vote<N>`: the mean published
+probability, abstaining when most samples abstained, else the committed majority) and, for a v2 arm, weights
+fitted out of fold over its four reading strengths (`<arm>-fitted`). The table also reports the comparisons
+listed in `compare.CONTRASTS`, fixed before any run, as paired bootstrap differences in the ranking PR-AUC with
+McNemar's exact test on the verdicts. A staged arm adds the per-stage columns: chains counted, the node gate's rejection rate over
 executor attempts, the share of chains a round validated, the share the verifier refused at least once, rounds
 over the chains that validated, nodes re-executed on the verifier's feedback, and how often the verifier's
 label and the weighted decider agreed with the final verdict.
@@ -1400,7 +1409,7 @@ Every `ue` command, grouped as the CLI groups them; every flag is in that comman
 
 **`ue bench`**: `build [--version V]` (write `data/bench/<V>/` from the spec and the store, resumable), `audit [--version V]` (re-hash every file and scan every pack and passage for anything that places or names the ground), `show [--version V]` (counts per stratum and split, shortfalls, hashes), `oof-scores [--seed N] [--write/--no-write]` (out-of-fold learned, effort and criteria scores for every scorable cell under 30 km spatial folds), and `interface build|audit|show [--version V]` (the interface track's tiers 1 and 3).
 
-**`ue arm`**: `run [--version V] [--arm A] [--budget-usd N] [--workers N] [--cells ID ...] [--track/--no-track] [--backend claude|auto|replay] [--resume RUN]` (one arm over a frozen benchmark's open cells; exit 3 on the budget, 75 on a usage limit), `chain [--arm A] [--cells ID ... | --enabled] [--budget-usd N] [--workers N] [--track/--no-track] [--backend ...]` (the staged analyst over real cells for the dashboard, chains into the agent tier), `score --run RUN [--version V]` (score a run against the key), `regate --run RUN ... [--version V]` (re-apply the current gate to stored answers and re-score, no model call), `table [--version V]` (every arm's latest run beside the baselines into `table.json` and `derived.metric`), `baselines [--version V]` (the baseline rows alone).
+**`ue arm`**: `run [--version V] [--arm A] [--budget-usd N] [--workers N] [--cells ID ...] [--track/--no-track] [--backend claude|auto|replay] [--resume RUN] [--sample N]` (one arm over a frozen benchmark's open cells; `--sample` repeats it as its own row; exit 3 on the budget, 75 on a usage limit), `chain [--arm A] [--cells ID ... | --enabled] [--budget-usd N] [--workers N] [--track/--no-track] [--backend ...]` (the staged analyst over real cells for the dashboard, chains into the agent tier), `score --run RUN [--version V]` (score a run against the key), `regate --run RUN ... [--version V]` (re-apply the current gate to stored answers and re-score, no model call), `table [--version V]` (every arm's latest run and sample beside the baselines, the votes and fitted deciders, and the fixed comparisons, into `table.json` and `derived.metric`), `baselines [--version V]` (the baseline rows alone).
 
 **`ue run`**: `phase1 [--workers N] [--fetch-all/--no-fetch-all]` (select, fetch, lock, render, OCR, route; idempotent), `phase2 [--config ID] [--files ...] [--max-calls N] [--fetch-lith/--no-fetch-lith] [--public-safe]` (extract, assemble, validate, crs, crosscheck, store, export-reports).
 
