@@ -326,13 +326,16 @@ def check_manifest(doc: Any, path: str = "manifest.json") -> Errors:
 PROSPECT_ROLES = {"feature", "label", "context"}
 PROSPECT_TIERS = {"native", "read", "derived"}
 GAP_STATUS = {"not_addressable", "not_published", "not_public", "unverified", "published_not_pulled"}
-BENCH_KINDS = {"arm", "baseline"}
+BENCH_KINDS = {"arm", "baseline", "derived"}
+#: rows that are arithmetic on other rows or on the fitted scores, so they name no run of their own
+BENCH_UNRUN = {"baseline", "derived"}
 
 
 def check_bench(e: Errors, where: str, b: Any, known: set[str]) -> None:
     """The analyst benchmark block: every number resolves, and every arm names the run it was scored from.
 
-    A baseline is the one row allowed no run id: it is arithmetic on the fitted scores, not a tracked run."""
+    A baseline (arithmetic on the fitted scores) and a derived row (a vote over an arm's samples, weights fitted
+    over its readings) are the rows allowed no run id; the fixed comparisons' numbers resolve like the rest."""
     if not isinstance(b, dict) or not b.get("version") or not isinstance(b.get("rows"), list):
         e.add(where, "the benchmark block must name its version and carry rows")
         return
@@ -342,7 +345,7 @@ def check_bench(e: Errors, where: str, b: Any, known: set[str]) -> None:
             e.add(w, "a row is an object")
             continue
         _enum(e, f"{w}.kind", r.get("kind"), BENCH_KINDS)
-        if not r.get("run_id") and r.get("kind") != "baseline":
+        if not r.get("run_id") and r.get("kind") not in BENCH_UNRUN:
             e.add(w, "no run id: an arm without a tracked run is not reportable")
         _ref(e, f"{w}.n", r.get("n"), known)
         _ref(e, f"{w}.n_pos", r.get("n_pos"), known, nullable=True)
@@ -359,6 +362,16 @@ def check_bench(e: Errors, where: str, b: Any, known: set[str]) -> None:
         for stratum, cell in (r.get("strata") or {}).items():
             for key, vid in (cell or {}).items():
                 _ref(e, f"{w}.strata.{stratum}.{key}", vid, known)
+    for i, c in enumerate(b.get("contrasts") or []):
+        w = f"{where}.contrasts[{i}]"
+        if not isinstance(c, dict) or not c.get("first") or not c.get("second"):
+            e.add(w, "a comparison names the two rows it compares")
+            continue
+        _ref(e, f"{w}.diff", c.get("diff"), known)
+        for j, bound in enumerate(c.get("diff_ci") or []):
+            _ref(e, f"{w}.diff_ci[{j}]", bound, known)
+        for key, vid in (c.get("mcnemar") or {}).items():
+            _ref(e, f"{w}.mcnemar.{key}", vid, known)
 
 
 def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:

@@ -135,3 +135,22 @@ def test_a_stage_the_run_never_had_is_absent_from_the_export(tmp_path: Path) -> 
     assert set(b["rows"][0]["stages"]) == {"n_chains", "gate_rejection_rate", "valid_rate", "reexecuted_mean",
                                            "decider_agreement_rate"}
     assert json.dumps(b["rows"][0]["stages"])  # plain ids, serialisable as written
+
+
+def test_a_derived_row_needs_no_run_and_a_comparison_must_resolve(tmp_path: Path) -> None:
+    vote = {**BASELINE, "name": "d1-vote5", "kind": "derived", "model": "claude-opus-5", "pr_auc_rank": 0.61}
+    (tmp_path / "v2").mkdir(parents=True)
+    (tmp_path / "v2" / "table.json").write_text(json.dumps({
+        "version": "v2", "computed_at": "2026-09-23T10:00:00+00:00", "manifest_sha256": "c" * 64, "rows": [vote],
+        "contrasts": [{"first": "d1-vote5", "second": "extended", "question": "q", "diff": 0.09,
+                       "diff_ci": [-0.02, 0.2], "cells": 40, "mcnemar": {"b": 21, "c": 12, "p": 0.16}}]}))
+    vals: list[dict] = []
+    b = X._bench_block(vals, tmp_path)
+    e = Errors()
+    known = check_registry(e, "values", registry(*vals))
+    check_bench(e, "bench", b, known)
+    assert list(e) == []
+    b["contrasts"][0]["diff"] = "c:bench:v2:contrast:nowhere"
+    e = Errors()
+    check_bench(e, "bench", b, known)
+    assert any("contrasts[0].diff" in err for err in e), "a comparison's number must resolve like any other"

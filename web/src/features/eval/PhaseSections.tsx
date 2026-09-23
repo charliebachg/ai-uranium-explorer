@@ -422,7 +422,7 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
   return (
     <Section
       title="The analyst benchmark"
-      hint="Every row on the same open cells of the frozen benchmark. Ranked by the model's own probability over every cell; a refused answer ranks at 0.5."
+      hint="Every row on the same open cells of the frozen benchmark. Ranked by the model's own probability over every cell; a refused answer ranks in the middle, as a coin flip."
     >
       {/* eight stage columns need eight definitions; they belong under the table, not across the top of it */}
       <details className="mb-2" data-testid="bench-columns">
