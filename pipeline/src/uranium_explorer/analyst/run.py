@@ -277,7 +277,7 @@ def run_arm(
     version: str, arm: ArmConfig | str, backend_factory: Factory, budget_usd: float | None,
     log: Callable[[str], None] = print, cells: list[str] | None = None, workers: int | None = None,
     track: bool = True, resume: str | None = None, seed: int = 0, boot: int = SC.BOOT,
-    cache_root: Path | None = None, session_factory: SessionFactory = open_session,
+    cache_root: Path | None = None, session_factory: SessionFactory = open_session, sample: int = 0,
 ) -> dict[str, Any]:
     """One arm over the benchmark's open cells (or the named open cells). Returns the run summary, which is
     also written to `<run_dir>/summary.json` and `data/out/bench/<version>/arms/<arm>.json`.
@@ -363,9 +363,9 @@ def run_arm(
                     row = _run_staged(backend, bench, cell, arm, cfg, criteria, rd, run_id, shared,
                                       session_factory=session_factory)
                 elif arm.agent == "v2":
-                    row = FAM.run_cell(backend, bench.pack(bench_id), card, arm)
+                    row = FAM.run_cell(backend, bench.pack(bench_id), card, arm, sample=sample)
                 else:
-                    row = V0.run_cell(backend, bench.pack(bench_id), card, bench.passages(bench_id), arm)
+                    row = V0.run_cell(backend, bench.pack(bench_id), card, bench.passages(bench_id), arm, sample=sample)
         except (BudgetExhausted, UsageLimitReached) as signal:
             stop.set()
             with lock:
@@ -427,7 +427,7 @@ def run_arm(
         "usage_limited": isinstance(stopped, UsageLimitReached),
         "resets_at_text": getattr(stopped, "resets_at_text", None), "resumed_from": resume,
         "started_at": started, "finished_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
-        "score": None, "mlflow_run_id": None,
+        "score": None, "mlflow_run_id": None, "sample": int(sample),
     }
     if SC.read_cells(rd):
         summary["score"] = SC.score_run(rd, bench.key, boot=boot, seed=seed)
@@ -448,7 +448,7 @@ def run_arm(
             tags={"kind": KIND, "arm": arm.name, "bench": version, "run_id": run_id},
             artifacts={"summary.json": summary})
     (rd / "summary.json").write_text(json.dumps(TR.jsonable(summary), indent=1) + "\n")
-    pointer = SC.out_dir(version) / "arms" / f"{arm.name}.json"
+    pointer = SC.out_dir(version) / "arms" / f"{SC.sample_name(arm.name, sample)}.json"
     pointer.parent.mkdir(parents=True, exist_ok=True)
     pointer.write_text(json.dumps(TR.jsonable(summary), indent=1) + "\n")
     return summary

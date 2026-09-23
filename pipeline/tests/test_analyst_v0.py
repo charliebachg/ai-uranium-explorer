@@ -242,3 +242,14 @@ def test_the_evidence_guide_is_added_only_for_an_arm_shown_the_evidence() -> Non
     rich = V0.system_for(A.load_arm("d1").switches)
     assert plain == V0.default_system_prompt()
     assert rich.startswith(plain) and V0.EVIDENCE_GUIDE in rich and not V0.place_names_in(rich)
+
+
+def test_a_sample_past_the_first_is_its_own_call_and_sample_0_keeps_the_key_it_had() -> None:
+    from dataclasses import asdict
+
+    from uranium_explorer.ids import sha256_json, short
+
+    arm = A.load_arm("v0")
+    before = short(sha256_json({"bench_id": "b01", "inputs": asdict(arm.inputs), "switches": arm.switches.keyed()}))
+    assert V0.context_hash("b01", arm) == V0.context_hash("b01", arm, 0) == before
+    assert len({V0.context_hash("b01", arm, s) for s in range(5)}) == 5

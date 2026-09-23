@@ -40,6 +40,8 @@ BINS = 10
 POSITIVE_LABELS = ("deposit", "occurrence")
 LABEL_STRATA = ("deposit", "occurrence", "negative")
 BASELINE_MODELS = ("learned", "effort", "criteria")
+#: the learned model given the extended evidence, a baseline where the benchmark carries it
+EXTENDED = "extended"
 FOLD_KIND = "spatial"
 #: the staged loop's per-stage columns the bench table carries for an arm, each with the formatter
 #: the store's metric row and the Eval page print it with. A v0 arm and a baseline have no stages, so their
@@ -55,7 +57,8 @@ STAGE_COLUMNS: dict[str, str] = {
     "stage_decider_agreement_rate": "ratio3",
 }
 #: the metrics a table row carries into derived.metric, when finite
-TABLE_METRICS = ("precision", "recall", "f1", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all", "ece",
+TABLE_METRICS = ("precision", "recall", "f1", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all",
+                 "pr_auc_rank", "roc_auc_rank", "coverage", "brier", "cal_slope", "ece",
                  "ece_committed", "abstain_rate", "gate_rejection_rate", "probe_abstain_rate",
                  "cost_usd_per_cell", "latency_s_per_cell", *STAGE_COLUMNS)
 NAN = float("nan")
@@ -90,6 +93,35 @@ def ece(y: np.ndarray, p: np.ndarray, bins: int = BINS) -> float:
     return float(total)
 
 
+def brier(y: np.ndarray, p: np.ndarray) -> float:
+    """Mean squared error of the stated probability, over the cells that state one."""
+    ok = np.isfinite(p)
+    return float(np.mean((p[ok] - y[ok]) ** 2)) if ok.any() else NAN
+
+
+def calibration_slope(y: np.ndarray, p: np.ndarray, iters: int = 25) -> float:
+    """The slope of a logistic fit of the outcome on the logit of the stated probability: 1 is calibrated,
+    below 1 is overconfident, above 1 underconfident, near 0 says the probability carries no ranking. A plain
+    Newton fit in two parameters, so a bootstrap of a thousand draws costs nothing."""
+    ok = np.isfinite(p)
+    y, p = y[ok].astype(float), np.clip(p[ok], 1e-4, 1 - 1e-4)
+    if len(y) < 3 or y.min() == y.max() or np.ptp(p) < 1e-9:
+        return NAN
+    x = np.column_stack([np.ones_like(p), np.log(p / (1 - p))])
+    b = np.zeros(2)
+    for _ in range(iters):
+        mu = 1.0 / (1.0 + np.exp(-(x @ b)))
+        w = mu * (1 - mu) + 1e-9
+        try:
+            step = np.linalg.solve(x.T @ (x * w[:, None]), x.T @ (y - mu))
+        except np.linalg.LinAlgError:
+            return NAN
+        b = b + step
+        if np.max(np.abs(step)) < 1e-8:
+            break
+    return float(b[1]) if np.all(np.isfinite(b)) and abs(b[1]) < 1e3 else NAN
+
+
 def _point(y: np.ndarray, p: np.ndarray, pred_pos: np.ndarray, ab: np.ndarray) -> dict[str, float]:
     tp = int((pred_pos & (y == 1)).sum())
     fp = int((pred_pos & (y == 0)).sum())
@@ -107,6 +139,14 @@ def _point(y: np.ndarray, p: np.ndarray, pred_pos: np.ndarray, ab: np.ndarray) -
         "roc_auc_all": _roc_auc(y, p_all),
         "ece": ece(y, p_all),
         "ece_committed": ece(y[committed], p[committed]),
+        # the ranking the model gives whatever its verdict: every cell with a published probability ranks by it,
+        # an insufficient verdict included; a refused or failed cell has none and sits at 0.5, and coverage says
+        # how many did
+        "pr_auc_rank": _pr_auc(y, np.where(np.isfinite(p), p, 0.5)),
+        "roc_auc_rank": _roc_auc(y, np.where(np.isfinite(p), p, 0.5)),
+        "coverage": float(np.isfinite(p).mean()) if len(p) else NAN,
+        "brier": brier(y, p),
+        "cal_slope": calibration_slope(y, p),
     }
 
 
@@ -306,6 +346,25 @@ def _row(name: str, model: str, y: np.ndarray, p: np.ndarray, abstain: np.ndarra
             "mlflow_run_id": None, "cost_usd": 0.0, **dict.fromkeys(STAGE_COLUMNS), **m, **extra}
 
 
+def bench_oof_scores(version: str, cell_ids: list[str]) -> tuple[dict[str, dict[str, float]], str | None]:
+    """Out-of-fold scores by model from the benchmark's own `oof_scores.csv`, which the build writes under the
+    spec's seed and folds. The store's table is filled by `ue bench oof-scores --write` under its own seed, a
+    different draw of folds and background, so a benchmark's baselines are read from the benchmark."""
+    bench = F.load_bench(version)
+    path = bench.dir / "oof_scores.csv"
+    if not path.is_file():
+        return {}, f"{path} is missing"
+    cell_of = {str(c["bench_id"]): str(c["cell_id"]) for c in bench.cells}
+    wanted = set(cell_ids)
+    df = pd.read_csv(path)
+    out: dict[str, dict[str, float]] = {}
+    for bid, model, score in df[["bench_id", "model", "score"]].itertuples(index=False):
+        cid = cell_of.get(str(bid))
+        if cid in wanted and score == score:
+            out.setdefault(str(model), {})[cid] = float(score)
+    return out, None if out else f"{path} holds no scores for these cells"
+
+
 def oof_scores(con: Any, cell_ids: list[str], fold_kind: str = FOLD_KIND) -> tuple[dict[str, dict[str, float]], str | None]:
     """Out-of-fold scores by model for the given cells, or an empty map and the reason."""
     exists = con.execute(
@@ -349,7 +408,10 @@ def baselines(version: str, con: Any, boot: int = BOOT, seed: int = 0, fold_kind
     rng = np.random.default_rng(seed)
     rows.append(_row("random", "random", y, rng.random(n), never, labels, boot, seed,
                      note=f"one uniform draw, seed {seed}, 0.5 threshold"))
-    scores, note = oof_scores(con, ids, fold_kind)
+    scores, note = bench_oof_scores(version, ids)
+    if note:
+        log(f"  {note}; falling back to the store's out-of-fold table")
+        scores, note = oof_scores(con, ids, fold_kind)
     if note:
         log(f"  {note}")
         return rows
@@ -358,7 +420,7 @@ def baselines(version: str, con: Any, boot: int = BOOT, seed: int = 0, fold_kind
     rows.append(_row("copy_learned", "learned", y, p, ~np.isfinite(p), labels, boot, seed,
                      n_missing=int((~np.isfinite(p)).sum()),
                      note="an analyst that copies the out-of-fold learned score and abstains where there is none"))
-    for model in BASELINE_MODELS:
+    for model in (*BASELINE_MODELS, *((EXTENDED,) if EXTENDED in scores else ())):
         s = scores.get(model, {})
         raw = np.array([s.get(c, NAN) for c in ids], dtype=float)
         rows.append(_row(model, model, y, np.where(np.isfinite(raw), raw, 0.5), never, labels, boot, seed,
@@ -394,13 +456,19 @@ def _stages_of(summary: dict[str, Any]) -> dict[str, float]:
     return stage_metrics(read_cells(Path(rd)))
 
 
+def sample_name(arm: str, sample: int = 0) -> str:
+    """The row and pointer name of one sample of an arm: the arm's own name for sample 0, `<arm>~s<N>` after."""
+    return f"{arm}~s{int(sample)}" if sample else arm
+
+
 def arm_row(summary: dict[str, Any]) -> dict[str, Any]:
     """A table row from the summary `run_arm` wrote for an arm: its score as written, the per-stage columns
     re-derived from the run's cells, and null under a stage the arm never had (a v0 arm has no verifier and
     no rounds), so every row carries the same columns."""
     score = dict(summary.get("score") or {}) | _stages_of(summary)
     stages = {k: float(score[k]) if _number(score.get(k)) else None for k in STAGE_COLUMNS}
-    return {"name": summary["arm"], "kind": "arm", "model": summary.get("model"), "effort": _effort_of(summary),
+    return {"name": sample_name(summary["arm"], int(summary.get("sample") or 0)), "kind": "arm",
+            "model": summary.get("model"), "effort": _effort_of(summary),
             "n_cells": int(score.get("n", 0)), "run_id": summary.get("run_id"),
             "mlflow_run_id": summary.get("mlflow_run_id"), "cost_usd": float(score.get("cost_usd_total") or 0.0),
             "pending": len(summary.get("pending") or []), **score, **stages}
@@ -409,16 +477,21 @@ def arm_row(summary: dict[str, Any]) -> dict[str, Any]:
 def table(version: str, con: Any = None, boot: int = BOOT, seed: int = 0, write: bool = True,
           log: Callable[[str], None] = lambda _m: None) -> dict[str, Any]:
     """Arms and baselines in one table: `data/out/bench/<version>/table.json`, and the store's metric rows."""
+    from . import compare as CMP
+
     d = out_dir(version)
     arm_files = sorted((d / "arms").glob("*.json")) if (d / "arms").is_dir() else []
-    rows = [arm_row(json.loads(p.read_text())) for p in arm_files]
+    summaries = [json.loads(p.read_text()) for p in arm_files]
+    rows = [arm_row(s) for s in summaries]
     own = con is None
     con = con if con is not None else connect()
     try:
         rows += baselines(version, con, boot=boot, seed=seed, log=log)
+        derived, contrasts = CMP.extras(version, summaries, boot=boot, seed=seed)
+        rows += derived
         now = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
         out = {"version": version, "computed_at": now, "manifest_sha256": F.load_bench(version).manifest_sha256,
-               "rows": rows}
+               "rows": rows, "contrasts": contrasts}
         if write:
             d.mkdir(parents=True, exist_ok=True)
             (d / "table.json").write_text(json.dumps(TR.jsonable(out), indent=1) + "\n")

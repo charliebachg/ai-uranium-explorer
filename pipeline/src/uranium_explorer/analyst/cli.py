@@ -63,6 +63,8 @@ def run_cmd(
     track: bool = typer.Option(True, "--track/--no-track", help="log one MLflow run for the arm"),
     backend: str = typer.Option("auto", "--backend", help="auto (API first: OpenRouter for vendor/model and claude-* ids, OpenAI for gpt-* ids), claude (the local CLI, a developer's option) or replay"),
     resume: str = typer.Option(None, "--resume", help="carry finished cells forward from this run id"),
+    sample: int = typer.Option(0, "--sample", help="ask the same question again: sample N is its own set of "
+                                                   "calls and its own table row (0 is the arm itself)"),
 ) -> None:
     """Run one arm over the open cells of a frozen benchmark. Exits 3 on budget, 75 on a usage limit."""
     from .arms import load_arm
@@ -71,7 +73,7 @@ def run_cmd(
     ids = [x.strip() for c in (cells or []) for x in c.split(",") if x.strip()]
     try:
         summary = run_arm(version, load_arm(arm), _factory(backend), budget_usd, typer.echo, cells=ids or None,
-                          workers=workers, track=track, resume=resume)
+                          workers=workers, track=track, resume=resume, sample=sample)
     except PermissionError as e:
         typer.echo(f"refused: {e}")
         raise typer.Exit(2) from e

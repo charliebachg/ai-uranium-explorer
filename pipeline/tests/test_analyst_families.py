@@ -171,3 +171,21 @@ def test_the_summary_length_is_the_gates_to_refuse_not_the_schemas() -> None:
     geo = next(f for f in FAM.FAMILIES if f.name == "geochemistry")
     long = {**ReadingBackend().reading("geochemistry", "b01"), "summary": "x" * (FAM.SUMMARY_MAX + 1)}
     assert any("summary is" in p for p in FAM.gate_reading(long, FAM.share(rich_pack(), geo)))
+
+
+def test_a_sample_is_asked_again_and_scored_as_its_own_row(monkeypatch, tmp_path) -> None:
+    rt = install_runtime(monkeypatch, tmp_path)
+    bench = make_bench(tmp_path)
+    arm = replace(d2_arm(), switches=A.load_arm("v0").switches)
+    backend = ReadingBackend()
+    kw = dict(budget_usd=5.0, log=lambda *_: None, workers=1, track=False, cache_root=rt.cache, boot=5)
+    first = RUN.run_arm(bench.version, arm, lambda _arm: backend, **kw)
+    calls = len(backend.requests)
+    again = RUN.run_arm(bench.version, arm, lambda _arm: backend, **kw)
+    assert len(backend.requests) == calls, "the same sample is answered from the cache"
+    second = RUN.run_arm(bench.version, arm, lambda _arm: backend, sample=1, **kw)
+    assert len(backend.requests) == 2 * calls, "another sample is asked again"
+    assert (first["sample"], again["sample"], second["sample"]) == (0, 0, 1)
+    arms = SC.out_dir(bench.version) / "arms"
+    assert {p.stem for p in arms.glob("*.json")} == {"d2", "d2~s1"}
+    assert SC.arm_row(second)["name"] == "d2~s1"

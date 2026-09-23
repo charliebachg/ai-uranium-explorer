@@ -215,8 +215,8 @@ def _request(task: str, system: str, user: str, schema: dict[str, Any], files: l
     )
 
 
-def read_family(backend: Any, shown: dict[str, Any], family: Family, arm: ArmConfig, stage: Path
-                ) -> dict[str, Any]:
+def read_family(backend: Any, shown: dict[str, Any], family: Family, arm: ArmConfig, stage: Path,
+                sample: int = 0) -> dict[str, Any]:
     """One reader, gated, with one retry told what failed. Returns the reading and its accounting."""
     bench_id = str(shown.get("bench_id", "?"))
     part = share(shown, family)
@@ -231,7 +231,8 @@ def read_family(backend: Any, shown: dict[str, Any], family: Family, arm: ArmCon
     for attempt in (1, 2):
         req = _request(TASK_STAGE, system, stage_user(bench_id, family, problems), READING_SCHEMA,
                        [(d / V0.PACK_FILE, V0.PACK_FILE)], (), arm,
-                       {"bench_id": bench_id, "family": family.name, "attempt": attempt})
+                       {"bench_id": bench_id, "family": family.name, "attempt": attempt,
+                        **({"sample": int(sample)} if sample else {})})
         resp = backend.call(req)
         out["attempts"] = attempt
         out["cost_usd"] += float(resp.cost_usd or 0.0)
@@ -276,20 +277,21 @@ def rank_user(bench_id: str, card: bool) -> str:
 
 
 def run_cell(backend: Any, pack: dict[str, Any], card_path: Path | None, arm: ArmConfig,
-             stage: Path | None = None) -> dict[str, Any]:
+             stage: Path | None = None, sample: int = 0) -> dict[str, Any]:
     """Four readings, then the ranking call and v0's gate. Backend errors propagate, as in v0."""
     own_stage = stage is None
     stage = stage or Path(tempfile.mkdtemp(prefix="ue_analyst_v2_"))
     try:
         shown = V0.apply_switches(pack, arm.switches)
         bench_id = str(shown.get("bench_id", "?"))
-        readings = [read_family(backend, shown, f, arm, stage) for f in FAMILIES]
+        readings = [read_family(backend, shown, f, arm, stage, sample) for f in FAMILIES]
         (stage / V0.PACK_FILE).write_text(V0.pack_text(shown))
         (stage / READINGS_FILE).write_text(readings_text(readings))
         images = (card_path,) if arm.inputs.card and card_path else ()
         req = _request(TASK_RANK, V0.system_for(arm.switches), rank_user(bench_id, bool(images)), V0.ANSWER_SCHEMA,
                        [(stage / V0.PACK_FILE, V0.PACK_FILE), (stage / READINGS_FILE, READINGS_FILE)], images, arm,
-                       {"bench_id": bench_id, "readings": sha256_json([r.get("answer") for r in readings])})
+                       {"bench_id": bench_id, "readings": sha256_json([r.get("answer") for r in readings]),
+                        **({"sample": int(sample)} if sample else {})})
         resp = backend.call(req)
     finally:
         if own_stage:

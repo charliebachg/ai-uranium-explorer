@@ -160,7 +160,8 @@ def test_baselines_with_no_oof_scores_give_only_chance(tmp_path, monkeypatch) ->
     finally:
         con.close()
     assert [r["name"] for r in rows] == ["random_expected", "random"]
-    assert notes and "cell_score_oof" in notes[0]
+    assert "oof_scores.csv is missing" in notes[0], "the benchmark's own file is read first"
+    assert any("cell_score_oof" in n for n in notes), "then the store's table, and it says what it lacks"
 
 
 def test_table_merges_arms_and_baselines_and_writes_metrics(store) -> None:
@@ -192,3 +193,42 @@ def test_table_merges_arms_and_baselines_and_writes_metrics(store) -> None:
     SC.table(bench.version, con, boot=10)
     assert con.execute("select count(*) from derived.metric").fetchone()[0] == n, "a rerun replaces, never duplicates"
     assert F.load_bench(bench.version).heldout == {"b06"}
+
+
+def test_the_ranking_uses_every_published_probability_whatever_the_verdict() -> None:
+    y = np.array([1, 1, 0, 0])
+    p = np.array([0.9, 0.6, 0.4, np.nan])        # the last cell's answer was refused: no probability
+    v = ["supports_closer_look", "insufficient", "insufficient", ""]
+    ab = np.array([False, True, True, True])
+    m = SC.metrics(y, p, v, ab, boot=0)
+    assert m["pr_auc_rank"] == 1.0 and m["roc_auc_rank"] == 1.0, "the two insufficient cells still rank"
+    assert m["coverage"] == 0.75
+    assert m["brier"] == pytest.approx(np.mean([(0.9 - 1) ** 2, (0.6 - 1) ** 2, 0.4 ** 2]))
+
+
+def test_the_calibration_slope_is_one_for_a_calibrated_probability_and_near_zero_for_noise() -> None:
+    rng = np.random.default_rng(0)
+    p = rng.uniform(0.05, 0.95, 4000)
+    y = (rng.random(4000) < p).astype(int)
+    assert SC.calibration_slope(y, p) == pytest.approx(1.0, abs=0.1)
+    assert abs(SC.calibration_slope(y, rng.uniform(0.05, 0.95, 4000))) < 0.2
+    squashed = 0.5 + (p - 0.5) * 0.5            # an underconfident model: slope well above one
+    assert SC.calibration_slope(y, squashed) > 1.5
+    assert np.isnan(SC.calibration_slope(np.array([1, 1]), np.array([0.2, 0.3])))
+
+
+def test_the_baselines_are_read_from_the_benchmarks_own_out_of_fold_file(tmp_path, monkeypatch) -> None:
+    install_runtime(monkeypatch, tmp_path)
+    bench = make_bench(tmp_path)
+    rows = ["bench_id,model,fold_kind,fold,score"]
+    for b in bench.cells:
+        for model, score in (("learned", 0.7), ("effort", 0.2), ("criteria", 0.5), ("extended", 0.6)):
+            rows.append(f"{b},{model},spatial,0,{score}")
+    (bench.dir / "oof_scores.csv").write_text("\n".join(rows) + "\n")
+    con = connect(tmp_path / "empty.duckdb")
+    try:
+        out = SC.baselines(bench.version, con, boot=5)
+    finally:
+        con.close()
+    names = [r["name"] for r in out]
+    assert names[-4:] == ["learned", "effort", "criteria", "extended"], "the extended model rides along"

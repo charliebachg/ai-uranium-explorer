@@ -409,16 +409,18 @@ def render_passages(passages: list[dict[str, Any]]) -> str:
 
 # ---------------------------------------------------------------- the request
 
-def context_hash(bench_id: str, arm: ArmConfig) -> str:
+def context_hash(bench_id: str, arm: ArmConfig, sample: int = 0) -> str:
     """The bench id and the switches, so two arms over one cell can never share a cached answer, even when a
-    switch happens to remove nothing from this particular pack."""
+    switch happens to remove nothing from this particular pack. A sample past the first is a repeat of the same
+    question, asked again on purpose (to measure run-to-run variation, or to vote), so it carries its number and
+    is never answered from another sample's cache; sample 0 keeps the key it always had."""
     return short(sha256_json({"bench_id": bench_id, "inputs": asdict(arm.inputs),
-                              "switches": arm.switches.keyed()}))
+                              "switches": arm.switches.keyed(), **({"sample": int(sample)} if sample else {})}))
 
 
 def build_request(
     pack: dict[str, Any], card_path: Path | None, passages: list[dict[str, Any]] | None, arm: ArmConfig,
-    prompt_version: str | None = None, stage: Path | None = None, system: str | None = None,
+    prompt_version: str | None = None, stage: Path | None = None, system: str | None = None, sample: int = 0,
 ) -> ExtractionRequest:
     """Stage what the arm allows and ask once. `stage` is where the rendered files are written; the backend
     copies them into its own stage under the same names, so the directory only has to outlive the call."""
@@ -448,7 +450,7 @@ def build_request(
         prompt_version=prompt_version or arm.prompt_version,
         model=arm.model,
         effort=arm.effort,
-        context_hash=context_hash(bench_id, arm),
+        context_hash=context_hash(bench_id, arm, sample),
     )
 
 
@@ -509,14 +511,14 @@ def gate(answer: dict[str, Any], pack: dict[str, Any], context: str | None = Non
 
 def run_cell(
     backend: Any, pack: dict[str, Any], card_path: Path | None, passages: list[dict[str, Any]] | None,
-    arm: ArmConfig, stage: Path | None = None,
+    arm: ArmConfig, stage: Path | None = None, sample: int = 0,
 ) -> dict[str, Any]:
     """One call, one gate. Backend errors propagate; the harness decides what a failed cell is."""
     own_stage = stage is None
     stage = stage or Path(tempfile.mkdtemp(prefix="ue_analyst_"))
     try:
         shown = apply_switches(pack, arm.switches)
-        req = build_request(pack, card_path, passages, arm, stage=stage)
+        req = build_request(pack, card_path, passages, arm, stage=stage, sample=sample)
         response = backend.call(req)
     finally:
         if own_stage:
