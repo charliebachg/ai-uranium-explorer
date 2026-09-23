@@ -93,7 +93,7 @@ def seed_scores(version: str, n_seeds: int = 5, log: Callable[[str], None] = pri
                 fit: Fit | None = None, df: pd.DataFrame | None = None) -> pd.DataFrame:
     """The fitted models' out-of-fold scores for a benchmark's cells under `n_seeds` fold draws: the spec's seed
     and the next `n_seeds - 1`. One fold draw moves the extended model's PR-AUC on the benchmark cells by 0.02 to
-    0.05; the pre-registered comparison is against the mean over draws. Written beside the benchmark."""
+    0.05; the pre-registered comparison is against the mean over draws. Written beside the benchmark's results."""
     import json
 
     from ..prospect import extended as X
@@ -117,5 +117,10 @@ def seed_scores(version: str, n_seeds: int = 5, log: Callable[[str], None] = pri
     table = pd.concat(frames, ignore_index=True)
     table["bench_id"] = table["cell_id"].map(bench_of)
     table = table[["bench_id", "model", "seed", "fold", "score"]].sort_values(["bench_id", "model", "seed"])
-    (out / SEEDS_FILE).write_text(table.to_csv(index=False, lineterminator="\n"))
+    from ..analyst.score import out_dir
+
+    # beside the results, not in the frozen benchmark: the benchmark's files are hashed in its manifest
+    dest = out_dir(version) / SEEDS_FILE
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(table.to_csv(index=False, lineterminator="\n"))
     return table

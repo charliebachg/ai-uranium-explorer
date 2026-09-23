@@ -212,6 +212,42 @@ def prose(s: str) -> bool:
     return sum(w.lower() in FUNCTION_WORDS for w in words) >= 0.15 * len(words)
 
 
+#: a capitalised name before one of these is a place, whatever words it is made of ("Big Rock Bay", "Middle Lake")
+GEOGRAPHIC = ("Lakes?|Bays?|Rivers?|Creeks?|Islands?|Inlets?|Hills?|Points?|Channels?|Falls|Rapids|Narrows|"
+              "Peninsula|Portage|Mountains?|Ridges?|Valley|Road|Airstrip")
+#: before one of these, only the words that are not description name ground ("Shear Zone" does not)
+WORKINGS = "Grids?|Property|Project|Claims?|Trend|Corridor|Area|Zones?|Deposits?|Prospects?|Showings?|Mines?|Camp"
+LOCAL = re.compile(r"\b((?:[A-Z][A-Za-z'’.]*[ -]){1,3})(" + GEOGRAPHIC + "|" + WORKINGS + r")\b")
+CODE = re.compile(r"\b(Grids?|Zones?|Conductors?|Lines?|Anomal(?:y|ies))\s+[A-Z]{1,3}\b")
+#: basin-wide stratigraphy, not a place
+KEEP_LOCAL = frozenset({"manitou falls"})
+_GEOGRAPHIC = re.compile(r"^(?:" + GEOGRAPHIC + r")$")
+
+
+def scrub_local(text: str) -> str:
+    """Local place names the store and the gazetteer do not hold: the lakes, bays, rivers, grids and zones a
+    report names its ground by. A recognition probe on benchmark v3's first build named properties and grids
+    from exactly these ("Wolf Lake / Snowshoe / Elk grids")."""
+    from .pack import LABEL_GENERIC, NAME_STOPWORDS
+
+    generic = FUNCTION_WORDS | LABEL_GENERIC | NAME_STOPWORDS | {"upper", "lower", "middle", "geology", "shear",
+                                                                "fault", "basement", "conductive", "magnetic"}
+
+    def sub(m: re.Match[str]) -> str:
+        head, noun = m.group(1), m.group(2)
+        if (head.strip() + " " + noun).lower().removeprefix("the ") in KEEP_LOCAL:
+            return m.group(0)
+        geographic = bool(_GEOGRAPHIC.match(noun))
+        out = []
+        for i, w in enumerate(re.split(r"([ -])", head)):
+            keep = w in (" ", "-", "") or (i == 0 and w.lower() == "the") or (
+                not geographic and w.lower().strip(".") in generic)
+            out.append(w if keep else "[redacted]")
+        return re.sub(r"\[redacted\](?:[ -]\[redacted\])+", "[redacted]", "".join(out)) + noun
+
+    return CODE.sub(lambda m: f"{m.group(1)} [n]", LOCAL.sub(sub, text))
+
+
 def redact(sentence: str, scrub: Callable[[str], str]) -> str | None:
     """A sentence as an arm may read it, or None when it states an outcome."""
     # a unit glued to a number ("1000cps") is only a word once the digits are blanked
@@ -351,7 +387,7 @@ def build_texts(cells: list[tuple[str, str]], spec: TextSpec, con: Any, forbidde
     on_disk = documents_on_disk(log=lambda _m: None)
     names = set(forbidden) | hole_names(con)
     names |= {h for h in holes["hole"] if len(h) >= 4}
-    scrub = lambda t: scrub_text(t, names)  # noqa: E731
+    scrub = lambda t: scrub_local(scrub_text(t, names))  # noqa: E731
     pages_cache: dict[str, dict[str, Any]] = {}
     cands: dict[str, dict[str, list[dict[str, Any]]]] = {}
     no_docs = 0

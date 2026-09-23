@@ -108,3 +108,14 @@ def test_no_digit_survives_and_a_unit_glued_to_a_number_is_still_an_outcome() ->
     assert out is not None and not any(c.isdigit() for c in out)
     assert "zone near conductor [n] and hole [n]" in out
     assert CT.redact("Readings of 1000cps were logged in the altered sandstone above the unconformity.", scrub) is None
+
+
+def test_local_place_names_go_and_descriptive_zones_and_basin_stratigraphy_stay() -> None:
+    """The first v3 build's recognition probe named properties and grids from local lake, bay and grid names
+    ("Wolf Lake / Snowshoe / Elk grids"); these are removed by pattern, geology is not."""
+    f = CT.scrub_local
+    assert f("The Wedge Lake Grid lies east of Big Rock Bay.") == "The [redacted] Lake Grid lies east of [redacted] Bay."
+    assert f("La Rocque Lake Zone and Middle Lake.") == "[redacted] Lake Zone and [redacted] Lake."
+    assert f("A Shear Zone and the Fault Zone cut the Manitou Falls Formation.") == \
+        "A Shear Zone and the Fault Zone cut the Manitou Falls Formation."
+    assert f("Drilling on Zone K and Grid A.") == "Drilling on Zone [n] and Grid [n]."

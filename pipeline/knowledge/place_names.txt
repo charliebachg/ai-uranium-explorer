@@ -97,3 +97,8 @@ Mudjatik
 Taltson
 Needle Falls
 Black Lake
+# companies whose naming word is under four letters, which the store's company cleaner drops
+JNR
+UEM
+Amok
+Esso

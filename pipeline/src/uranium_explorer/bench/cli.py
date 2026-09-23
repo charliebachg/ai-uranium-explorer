@@ -176,7 +176,7 @@ def oof_seeds_cmd(version: str = typer.Option("v3", "--version"), seeds: int = t
     from .oof import SEEDS_FILE, seed_scores
 
     table = seed_scores(version, n_seeds=seeds, log=typer.echo)
-    typer.echo(f"  wrote {len(table):,} rows to data/bench/{version}/{SEEDS_FILE}")
+    typer.echo(f"  wrote {len(table):,} rows to data/out/bench/{version}/{SEEDS_FILE}")
 
 
 @bench_app.command("pilot")
