@@ -375,7 +375,7 @@ def _phase_blocks(vals: list[dict[str, Any]], out_dir: Path | None = None) -> di
 
 #: the metrics the Eval page prints per benchmark row; the rest stay in table.json and the tracker
 BENCH_METRICS = ("f1", "precision", "recall", "pr_auc", "roc_auc", "pr_auc_all", "roc_auc_all", "ece", "abstain_rate",
-                 "pr_auc_rank", "roc_auc_rank", "coverage", "brier", "cal_slope")
+                 "pr_auc_rank", "pr_auc_own", "roc_auc_rank", "coverage", "brier", "cal_slope")
 #: what only an arm can report, with the formatter each takes: the gate, the probes, and what a cell cost
 BENCH_EXTRA = {"gate_rejection_rate": "ratio3", "probe_abstain_rate": "ratio3", "cost_usd_per_cell": "m2",
                "latency_s_per_cell": "m1"}
@@ -536,6 +536,19 @@ def _bench_contrasts(version: str, contrasts: list[dict[str, Any]], vals: list[d
             vals.append(stat(f"{pre}:mcnemar_p", round(float(mc["p"]), 4), fmt="ratio3",
                              note=f"McNemar's exact two-sided p over the cells the two disagree on; {note}"))
             entry["mcnemar"] = {"b": f"{pre}:mcnemar_b", "c": f"{pre}:mcnemar_c", "p": f"{pre}:mcnemar_p"}
+        own = c.get("own") or {}
+        if _num(own.get("diff")) is not None and _num(own.get("perm_p")) is not None and _num(own.get("cells")):
+            n_own = int(own["cells"])
+            own_note = f"{first} against {second}, each answer at its own probability, on {n_own} cells both answered"
+            vals.append(stat(f"{pre}:own:diff", round(float(own["diff"]), 4), fmt="ratio3",
+                             note=f"PR-AUC of the ranking, {first} minus {second}; {own_note}"))
+            vals.append(stat(f"{pre}:own:p", round(float(own["perm_p"]), 4), fmt="ratio3",
+                             note=f"one-sided paired permutation p that {first} ranks better; {own_note}"))
+            vals.append(stat(f"{pre}:own:cells", n_own, note=f"cells in the comparison; {own_note}"))
+            entry["own"] = {"diff": f"{pre}:own:diff", "p": f"{pre}:own:p", "cells": f"{pre}:own:cells"}
+            ob = _interval(vals, f"{pre}:own:diff", own.get("diff_ci"), f"the paired difference; {own_note}")
+            if ob:
+                entry["own"]["diff_ci"] = ob
         out.append(entry)
     return out
 

@@ -372,6 +372,12 @@ def check_bench(e: Errors, where: str, b: Any, known: set[str]) -> None:
             _ref(e, f"{w}.diff_ci[{j}]", bound, known)
         for key, vid in (c.get("mcnemar") or {}).items():
             _ref(e, f"{w}.mcnemar.{key}", vid, known)
+        own = c.get("own") or {}
+        for key in ("diff", "p", "cells"):
+            if own:
+                _ref(e, f"{w}.own.{key}", own.get(key), known)
+        for j, bound in enumerate(own.get("diff_ci") or []):
+            _ref(e, f"{w}.own.diff_ci[{j}]", bound, known)
 
 
 def check_readiness(doc: Any, path: str = "prospect/readiness.json") -> Errors:

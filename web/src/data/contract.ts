@@ -724,6 +724,8 @@ export const BenchMetric = z.enum([
   "abstain_rate",
   /** the ranking by the model's own probability over every cell, whatever its verdict */
   "pr_auc_rank",
+  /** the same, a refused answer at the probability it stated rather than at a tie (the pre-registered rule) */
+  "pr_auc_own",
   "roc_auc_rank",
   /** the share of cells with a probability the ranking could use */
   "coverage",
@@ -801,6 +803,11 @@ export const BenchContrast = z.object({
   diff: StatRef,
   diff_ci: z.tuple([StatRef, StatRef]).optional(),
   mcnemar: z.object({ b: StatRef, c: StatRef, p: StatRef }).optional(),
+  /** the same difference with every answer at its own probability, its interval and the one-sided paired
+   * permutation p, over the cells both sides answered */
+  own: z
+    .object({ diff: StatRef, diff_ci: z.tuple([StatRef, StatRef]).optional(), p: StatRef, cells: StatRef })
+    .optional(),
 });
 export type BenchContrast = z.infer<typeof BenchContrast>;
 

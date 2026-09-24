@@ -525,7 +525,7 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
           </span>
         ) : null
       }
-      hint="Ranked by the model's own probability over every cell; a refusal counts as a coin flip."
+      hint="Ranked by the probability each answer stated, refused or not; a missing answer counts as a coin flip."
     >
       <BenchTableView table={block} />
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[300px_1fr]">
@@ -553,8 +553,18 @@ export function BenchSection({ block }: { block?: BenchBlock }) {
   );
 }
 
+/** The ranking a row is read by: every answer at the probability it stated (the pre-registered rule), or, for a
+ * row scored before that rule existed, a refusal at a tie. */
+function rankId(r: BenchRow | undefined): string | undefined {
+  return r?.metrics.pr_auc_own ?? r?.metrics.pr_auc_rank;
+}
+
+function rankCi(r: BenchRow): [string, string] | undefined {
+  return r.metrics.pr_auc_own ? r.ci?.pr_auc_own : r.ci?.pr_auc_rank;
+}
+
 function rankOf(r: BenchRow): number | null {
-  return numberOf(r.metrics.pr_auc_rank);
+  return numberOf(rankId(r));
 }
 
 function signature(r: BenchRow): string {
@@ -604,7 +614,7 @@ function BenchTableView({ table }: { table: BenchTable }) {
               <Th left>Row</Th>
               <Th left>Type</Th>
               {oneModel ? null : <Th left>Model</Th>}
-              <Th title="Every cell ranked by the stated probability, whatever the verdict; a refusal counts as a coin flip. Interval: bootstrap over cells.">
+              <Th title="Every cell ranked by the probability its answer stated, whatever the verdict, refused or not; a missing answer counts as a coin flip. Interval: bootstrap over cells.">
                 Rank PR-AUC
               </Th>
               <Th title="F1 of the verdicts.">
@@ -650,7 +660,7 @@ function BenchLine({ row, showModel }: { row: BenchRow; showModel: boolean }) {
         </td>
       ) : null}
       <td className="py-1.5 text-right">
-        <Metric id={row.metrics.pr_auc_rank} ci={row.ci?.pr_auc_rank} />
+        <Metric id={rankId(row)} ci={rankCi(row)} />
       </td>
       <td className="py-1.5 text-right">
         <Metric id={row.metrics.f1} />
@@ -687,7 +697,7 @@ function Ablation({ table }: { table: BenchTable }) {
     return (
       <td className="rounded-lg bg-black/25 px-3 py-2 text-right" data-testid="ablation-cell" data-row={name}>
         <div className="text-[18px] text-ink leading-none">
-          <Metric id={r?.metrics.pr_auc_rank} />
+          <Metric id={rankId(r)} />
         </div>
         {design ? <div className="mt-1 text-[10.5px] text-ink-3">{design}</div> : null}
       </td>
@@ -732,7 +742,8 @@ function Ablation({ table }: { table: BenchTable }) {
   );
 }
 
-/** The comparisons fixed before the runs: a paired difference in rank PR-AUC, and McNemar on verdicts. */
+/** The comparisons fixed before the runs: a paired difference in rank PR-AUC with its permutation test, and
+ * McNemar on verdicts. */
 function BenchContrasts({ table }: { table: BenchTable }) {
   if (!table.contrasts.length) return null;
   return (
@@ -742,9 +753,13 @@ function BenchContrasts({ table }: { table: BenchTable }) {
         <thead className="text-[10.5px] text-ink-3 uppercase tracking-wider">
           <tr>
             <Th left>A vs B</Th>
-            <Th title="Rank PR-AUC of A minus B on the same cells, with a paired bootstrap interval.">Δ</Th>
+            <Th title="Rank PR-AUC of A minus B, every answer at its own probability, on the cells both answered; paired bootstrap interval.">
+              Δ
+            </Th>
             <Th title="Cells only A got right, and only B.">Only A · B</Th>
-            <Th title="McNemar's exact test on which cells each got right.">p</Th>
+            <Th title="One-sided paired permutation test that A ranks better; McNemar's test on verdicts for a comparison scored before it existed.">
+              p
+            </Th>
           </tr>
         </thead>
         <tbody>
@@ -758,8 +773,10 @@ function BenchContrasts({ table }: { table: BenchTable }) {
 }
 
 function ContrastLine({ c }: { c: BenchContrast }) {
-  const lo = numberOf(c.diff_ci?.[0]);
-  const hi = numberOf(c.diff_ci?.[1]);
+  const diff = c.own?.diff ?? c.diff;
+  const ci = c.own ? c.own.diff_ci : c.diff_ci;
+  const lo = numberOf(ci?.[0]);
+  const hi = numberOf(ci?.[1]);
   const tone = lo !== null && lo > 0 ? "text-st-pass" : hi !== null && hi < 0 ? "text-st-miss" : "text-ink-2";
   return (
     <tr className="border-line border-t" data-testid="bench-contrast" title={c.question}>
@@ -773,8 +790,8 @@ function ContrastLine({ c }: { c: BenchContrast }) {
         </span>
       </td>
       <td className="py-1.5 text-right">
-        <V id={c.diff} className={tone} />
-        <Interval ci={c.diff_ci} />
+        <V id={diff} className={tone} />
+        <Interval ci={ci} />
       </td>
       <td className="py-1.5 text-right text-ink-3">
         {c.mcnemar ? (
@@ -786,7 +803,7 @@ function ContrastLine({ c }: { c: BenchContrast }) {
         )}
       </td>
       <td className="py-1.5 text-right">
-        <Metric id={c.mcnemar?.p} />
+        <Metric id={c.own?.p ?? c.mcnemar?.p} />
       </td>
     </tr>
   );

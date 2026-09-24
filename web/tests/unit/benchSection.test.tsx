@@ -256,3 +256,65 @@ describe("the plain names", () => {
     expect(rowLabel("v0-qwen38")).toBe("v0-qwen38");
   });
 });
+
+describe("the pre-registered scoring on the page", () => {
+  const D3 = "c:bench:v3:d3";
+  const CON = "c:bench:v3:contrast:d3~extended-avg5";
+  const values: ValRegistry = Object.fromEntries(
+    [
+      stat(`${D3}:n`, 114, "int"),
+      stat(`${D3}:pr_auc_rank`, 0.446, "ratio3"),
+      stat(`${D3}:pr_auc_own`, 0.449, "ratio3"),
+      stat(`${CON}:diff`, -0.061, "ratio3"),
+      stat(`${CON}:own:diff`, -0.013, "ratio3"),
+      stat(`${CON}:own:p`, 0.574, "ratio3"),
+      stat(`${CON}:own:cells`, 114, "int"),
+    ].map((v) => [v.id, v]),
+  );
+  const own = BenchBlock.parse({
+    version: "v3",
+    manifest_sha256: "c".repeat(64),
+    computed_at: "2026-09-24T10:00:00+00:00",
+    versions: [],
+    rows: [
+      {
+        name: "d3",
+        kind: "arm",
+        model: "claude-opus-5",
+        effort: "medium",
+        n: `${D3}:n`,
+        n_pos: null,
+        n_neg: null,
+        run_id: "20260924T021906Z-bench",
+        mlflow_run_id: null,
+        metrics: { pr_auc_rank: `${D3}:pr_auc_rank`, pr_auc_own: `${D3}:pr_auc_own` },
+      },
+    ],
+    contrasts: [
+      {
+        first: "d3",
+        second: "extended-avg5",
+        question: "primary",
+        diff: `${CON}:diff`,
+        own: { diff: `${CON}:own:diff`, p: `${CON}:own:p`, cells: `${CON}:own:cells` },
+      },
+    ],
+  });
+
+  it("reads a row by every answer at its own probability, and a comparison by its permutation test", () => {
+    registerValues(values, { notify: false });
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    act(() => {
+      root?.render(<BenchSection block={own} />);
+    });
+    const row = container.querySelector('[data-testid="bench-table"]')?.textContent ?? "";
+    expect(row).toContain("0.449");
+    expect(row).not.toContain("0.446");
+    const line = container.querySelector('[data-testid="bench-contrast"]')?.textContent ?? "";
+    expect(line).toContain("-0.013");
+    expect(line).toContain("0.574");
+    expect(line).not.toContain("-0.061");
+  });
+});
