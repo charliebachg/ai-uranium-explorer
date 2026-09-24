@@ -401,3 +401,20 @@ describe("the chat panel replaying a recording", () => {
     expect(serviceCalls).toEqual([]);
   });
 });
+
+describe("leaving the tour", () => {
+  it("hands the chat back to the live agent however the tour ends, not only from the walkthrough card", () => {
+    const s = useStore.getState();
+    s.setTour({ step: 7, startedAt: Date.now() });
+    s.setChatReplay({ cellId: "0145_0019", turns: 3 });
+    // the top bar's button and the G key end the tour this way, without the card's exit handler
+    useStore.getState().setTour({ step: -1, startedAt: null });
+    expect(useStore.getState().chatReplay).toBeNull();
+    // moving between steps leaves the replay to the step that set it
+    s.setTour({ step: 7, startedAt: Date.now() });
+    s.setChatReplay({ cellId: "0145_0019", turns: 3 });
+    useStore.getState().setTour({ step: 8 });
+    expect(useStore.getState().chatReplay).toEqual({ cellId: "0145_0019", turns: 3 });
+    useStore.getState().setTour({ step: -1, startedAt: null });
+  });
+});

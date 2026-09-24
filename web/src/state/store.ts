@@ -149,7 +149,10 @@ export const useStore = create<AppState>()(
     setDatum: (patch) => set((s) => ({ datum: { ...s.datum, ...patch } })),
     setArrowExaggeration: (arrowExaggeration) => set({ arrowExaggeration }),
     setTimeline: (patch) => set((s) => ({ timeline: { ...s.timeline, ...patch } })),
-    setTour: (patch) => set((s) => ({ tour: { ...s.tour, ...patch } })),
+    // the recorded session belongs to the tour: however the tour ends (the card, the top bar, G), the chat goes
+    // back to the live agent
+    setTour: (patch) =>
+      set((s) => ({ tour: { ...s.tour, ...patch }, ...(patch.step === -1 ? { chatReplay: null } : {}) })),
     setPalette: (palette) => set({ palette }),
     setChatReplay: (chatReplay) => set({ chatReplay }),
     setIntro: (intro) => set({ intro }),
