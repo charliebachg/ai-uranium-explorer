@@ -222,6 +222,27 @@ def table_cmd(version: str = typer.Option("v1", "--version")) -> None:
     typer.echo(f"  wrote {out_dir(version) / 'table.json'} and derived.metric bench.{version}.*")
 
 
+@bench_run_app.command("sensitivity")
+def sensitivity_cmd(version: str = typer.Option("v3", "--version")) -> None:
+    """The key contrasts on the pre-registered subsets (cells not recognised, cells with passages, deposits or
+    occurrences against the negatives), written to data/out/bench/<version>/sensitivity.json."""
+    import json
+
+    from .compare import sensitivity
+    from .score import out_dir
+
+    d = out_dir(version)
+    summaries = [json.loads(p.read_text()) for p in sorted((d / "arms").glob("*.json"))]
+    out = sensitivity(version, summaries)
+    (d / "sensitivity.json").write_text(json.dumps(out, indent=1) + "\n")
+    for name, block in out["subsets"].items():
+        typer.echo(f"  {name}: {block['cells']} cells, {block['positives']} positive")
+        for c in block["contrasts"]:
+            typer.echo(f"    {c['first']:>5} - {c['second']:<14} {c['cells']:>4} cells  {c['first_pr_auc']:.3f} vs {c['second_pr_auc']:.3f}  "
+                       f"{c['diff']:+.3f} [{c['diff_ci'][0]:+.3f}, {c['diff_ci'][1]:+.3f}]  p {c['perm_p']:.3f}")
+    typer.echo(f"  wrote {d / 'sensitivity.json'}")
+
+
 @bench_run_app.command("baselines")
 def baselines_cmd(version: str = typer.Option("v1", "--version")) -> None:
     """The baseline rows alone: chance, copy-the-learned-score, and the three fitted scores."""

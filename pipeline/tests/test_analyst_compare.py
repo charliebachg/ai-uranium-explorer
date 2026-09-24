@@ -123,3 +123,12 @@ def test_the_incremental_test_finds_added_information_and_not_its_absence() -> N
     noise = rng.random(114)
     assert CMP.incremental(y, noise, fitted)["p"] > 0.05
     assert CMP.incremental(y, 1 - adds, fitted)["p"] > 0.5, "one-sided: an LLM that ranks backwards adds nothing"
+
+
+def test_a_sample_run_on_a_subset_never_enters_the_outer_level() -> None:
+    """d3's second sample covered only the 30 pilot cells; pooled as a run, its other cells sat at a tie and
+    moved the primary from -0.013 to -0.036. The outer level takes only runs over the same cells."""
+    whole = {f"b{i:03d}": {} for i in range(130)}
+    pilot = {f"b{i:03d}": {} for i in range(30)}
+    assert CMP.full_runs([(0, None, whole), (1, None, pilot)]) == [0]
+    assert CMP.full_runs([(0, None, whole), (1, None, dict(whole))]) == [0, 1]

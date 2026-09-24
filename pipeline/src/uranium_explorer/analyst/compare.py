@@ -91,6 +91,13 @@ def cell_view_own(row: dict[str, Any]) -> tuple[float, str, bool]:
     return p, v, v == ABSTAIN or not row.get("published")
 
 
+def full_runs(samples: list[tuple[int, Any, dict[str, Any]]]) -> list[int]:
+    """The sample numbers whose runs cover the cells sample 0 covered (90% of them at least): a sample run on a
+    subset, like a pilot, would put every other cell at a tie if it were pooled as a run."""
+    base = next((len(rows) for n, _s, rows in samples if n == 0), 0)
+    return [n for n, _s, rows in samples if base and len(rows) >= 0.9 * base]
+
+
 def vote(samples: list[dict[str, dict[str, Any]]]) -> dict[str, tuple[float, str, bool]]:
     """Per bench id: the mean published probability and the voted verdict (abstain when most samples
     abstained, else the majority among the committed, a tie going to the side the mean probability is on)."""
@@ -229,13 +236,23 @@ def contrast(y: np.ndarray, a: dict[str, Any], b: dict[str, Any], boot: int, see
     out = {**d, "pr_auc_rank_first": M.pr_auc(y, pa), "pr_auc_rank_second": M.pr_auc(y, pb),
            "mcnemar": mcnemar(right(a["v"]), right(b["v"]))}
     if a_own is not None and b_own is not None:
+        # a side run on a subset of the cells (a pilot arm) is compared on the cells both sides answered;
+        # otherwise every cell counts, a missing answer at a tie
+        common = np.isfinite(a_own["p"]) & np.isfinite(b_own["p"])
+        partial = min(np.isfinite(a_own["p"]).mean(), np.isfinite(b_own["p"]).mean()) < 0.9
+        keep = common if partial else np.ones(len(y), dtype=bool)
+        y = y[keep]
+        a_own = {**a_own, "p": a_own["p"][keep],
+                 **({"samples": [r[keep] for r in a_own["samples"]]} if a_own.get("samples") else {})}
+        b_own = {**b_own, "p": b_own["p"][keep],
+                 **({"samples": [r[keep] for r in b_own["samples"]]} if b_own.get("samples") else {})}
         oa = np.where(np.isfinite(a_own["p"]), a_own["p"], 0.5)
         ob = np.where(np.isfinite(b_own["p"]), b_own["p"], 0.5)
         runs_a, runs_b = a_own.get("samples") or [oa], b_own.get("samples") or [ob]
         own = two_level(y, runs_a, runs_b, n=boot, seed=seed) if len(runs_a) > 1 or len(runs_b) > 1 \
             else paired_difference(y, oa, ob, M.pr_auc, n=boot, seed=seed)
         rho = spearmanr(oa, ob).statistic
-        out["own"] = {"diff": own["diff"], "diff_ci": own["diff_ci"], "first": M.pr_auc(y, oa),
+        out["own"] = {"diff": own["diff"], "diff_ci": own["diff_ci"], "cells": int(len(y)), "first": M.pr_auc(y, oa),
                       "second": M.pr_auc(y, ob), "perm_p": rank_permutation(y, oa, ob, n=perms, seed=seed),
                       "spearman": float(rho) if np.isfinite(rho) else None,
                       "runs": [len(runs_a), len(runs_b)]}
@@ -330,9 +347,11 @@ def extras(version: str, summaries: list[dict[str, Any]], boot: int, seed: int, 
                 sum(float((s.get("score") or {}).get("cost_usd_total") or 0.0) for _n, s, _r in samples), boot, seed,
                 f"samples {', '.join(str(n) for n, _s, _r in samples)} of {arm}: the mean published probability, "
                 "abstaining when most samples abstained, else the majority among the committed"))
-            # the arm itself, compared with its runs as the outer level of the bootstrap
-            own[arm] = {**own[arm], "samples": [np.where(np.isfinite(o["p"]), o["p"], 0.5) for o in (
-                own[SC.sample_name(arm, n)] for n, _s, _r in samples)]}
+            # the arm itself, compared with its runs as the outer level of the bootstrap; only runs over the
+            # same cells: a sample run on a subset (a pilot) would put every other cell at a tie
+            full = [own[SC.sample_name(arm, n)] for n in full_runs(samples)]
+            if len(full) >= 2:
+                own[arm] = {**own[arm], "samples": [np.where(np.isfinite(o["p"]), o["p"], 0.5) for o in full]}
         first = next(((s, rows) for n, s, rows in samples if n == 0), None)
         if first and any(isinstance(r.get("readings"), dict) for r in first[1].values()):
             strengths = reading_strengths(first[1], tuple(f.name for f in FAMILIES))
@@ -406,4 +425,64 @@ def own_columns(version: str, summaries: list[dict[str, Any]], boot: int, seed: 
         out[SC.sample_name(s["arm"], int(s.get("sample") or 0))] = {
             "pr_auc_own": M.pr_auc(y, p), "pr_auc_own_ci": H.bootstrap_ci(y, p, M.pr_auc, n=boot, seed=seed),
             "refused_by_label": refused}
+    return out
+
+
+#: the pre-registered sensitivity subsets of benchmark v3 (configs/bench/prereg-v3.toml, [scoring] and [checks])
+SUBSET_CONTRASTS = (("d3", "extended-avg5"), ("d3", "d2"), ("d3", "d3-swap"), ("d3", "criteria"),
+                    ("d2", "extended-avg5"))
+
+
+def sensitivity(version: str, summaries: list[dict[str, Any]], boot: int = 2000, seed: int = 0,
+                perms: int = 5000) -> dict[str, Any]:
+    """The key contrasts on the pre-registered subsets: every labelled cell, the cells the recognition probe did
+    not recognise, the cells with passages, and deposits or occurrences against the negatives. Own rule."""
+    import json
+
+    from . import score as SC
+
+    ids, y, _folds, cell_of = labelled(version)
+    bench = F.load_bench(version)
+    stratum = {b: str(bench.key[b].get("stratum")) for b in ids}
+    rec_path = SC.out_dir(version) / "recognise.json"
+    recognised = {r["bench_id"] for r in json.loads(rec_path.read_text()).get("recognised", [])} \
+        if rec_path.is_file() else set()
+    has_text = {b for b in ids if bench.passages(b)}
+    own: dict[str, np.ndarray] = {}
+    for s in summaries:
+        if int(s.get("sample") or 0) == 0:
+            rows = run_cells(s)
+            own[s["arm"]] = _arrays(ids, {b: cell_view_own(r) for b, r in rows.items()})["p"]
+    scores, _note = SC.bench_oof_scores(version, list(cell_of.values()))
+    for model, sc in scores.items():
+        own[model] = np.array([sc.get(cell_of[b], NAN) for b in ids], dtype=float)
+    subsets = {
+        "all": np.ones(len(ids), dtype=bool),
+        "not recognised": np.array([b not in recognised for b in ids]),
+        "with passages": np.array([b in has_text for b in ids]),
+        "deposits vs negatives": np.array([stratum[b] in ("deposit", "negative") for b in ids]),
+        "occurrences vs negatives": np.array([stratum[b] in ("occurrence", "negative") for b in ids]),
+    }
+    from ..prospect import models as M
+    from ..prospect.extended import paired_difference
+
+    out: dict[str, Any] = {"version": version, "recognised": sorted(recognised), "subsets": {}}
+    for name, mask in subsets.items():
+        yy = y[mask]
+        block = {"cells": int(mask.sum()), "positives": int(yy.sum()), "contrasts": []}
+        for a, b in SUBSET_CONTRASTS:
+            if a not in own or b not in own:
+                continue
+            fa, fb = np.isfinite(own[a][mask]), np.isfinite(own[b][mask])
+            keep = fa & fb if min(fa.mean(), fb.mean()) < 0.9 else np.ones(int(mask.sum()), dtype=bool)
+            ys = yy[keep]
+            pa = np.where(fa, own[a][mask], 0.5)[keep]
+            pb = np.where(fb, own[b][mask], 0.5)[keep]
+            if ys.sum() == 0 or ys.sum() == len(ys):
+                continue
+            d = paired_difference(ys, pa, pb, M.pr_auc, n=boot, seed=seed)
+            block["contrasts"].append({"first": a, "second": b, "cells": int(len(ys)), "first_pr_auc": M.pr_auc(ys, pa),
+                                       "second_pr_auc": M.pr_auc(ys, pb), "diff": d["diff"], "diff_ci": d["diff_ci"],
+                                       "perm_p": rank_permutation(ys, pa, pb, n=perms, seed=seed)})
+        out["subsets"][name] = block
     return out
