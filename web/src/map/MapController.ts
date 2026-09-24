@@ -480,7 +480,9 @@ export class MapController {
     this.selectionMarker?.remove();
     this.selectionMarker = null;
     let at: [number, number] | null = null;
-    if (st.selected && (st.selected.dataset === "compilation" || st.selected.dataset === "geods"))
+    // a cell is a point on the map too: the agent rail's cell gets the ring, so "centre on this cell" lands on
+    // something visible among thirty thousand dots that look alike
+    if (st.selected && ["compilation", "geods", "cell"].includes(st.selected.dataset))
       at = st.selected.lngLat;
     else if (st.report && st.hole) {
       const r = this.reportIndex?.reports.find((x) => x.file_num === st.report);

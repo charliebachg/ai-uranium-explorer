@@ -1,4 +1,4 @@
-import { Bot, X } from "lucide-react";
+import { Bot, Crosshair, X } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { V } from "@/components/values/V";
 import type { Candidate } from "@/data/contract";
@@ -15,6 +15,7 @@ import type { ServiceState } from "@/features/prospect/OfflineNotice";
 import { serviceState, useCandidates, useEvidence, useServiceHealth } from "@/features/prospect/queries";
 import { cn } from "@/lib/cn";
 import { formatLatLon } from "@/lib/format";
+import { mapController } from "@/map/MapView";
 import { useStore } from "@/state/store";
 import { JobsStrip } from "./JobsStrip";
 
@@ -55,6 +56,9 @@ export function AgentRail() {
   const error = evidenceQ.error ? String(evidenceQ.error) : null;
 
   const replay = useStore((s) => s.chatReplay);
+  // a map click records where it landed; the evidence record carries the cell's own centre
+  const centre: [number, number] | null =
+    record?.lon != null && record?.lat != null ? [record.lon, record.lat] : (selected?.lngLat ?? null);
 
   // the walkthrough opens a conversation, so it should land on the conversation rather than behind a tab
   useEffect(() => {
@@ -88,12 +92,21 @@ export function AgentRail() {
               {cellId}
             </span>
             <span className="tabular text-[11px] text-ink-3" data-instrument="cell-centre">
-              {formatLatLon(selected?.lngLat[0] ?? 0, selected?.lngLat[1] ?? 0)}
+              {formatLatLon(centre?.[0] ?? 0, centre?.[1] ?? 0)}
             </span>
             <button
               type="button"
-              onClick={() => select(null)}
+              onClick={() => centre && mapController()?.flyTo(centre)}
               className="ml-auto rounded-md p-1 text-ink-3 hover:bg-white/5 hover:text-ink"
+              aria-label="Centre the map on this cell"
+              title="Centre the map on this cell"
+            >
+              <Crosshair className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => select(null)}
+              className="rounded-md p-1 text-ink-3 hover:bg-white/5 hover:text-ink"
               aria-label="Clear the selected cell"
             >
               <X className="size-3.5" />
